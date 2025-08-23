@@ -12,6 +12,7 @@ This plan outlines the phased development of the kollector-scrum web application
 - Produce and maintain documentation throughout development of this app
 - Add comments for all classes and methods.
 - Swagger documentation to be produced as appropriate
+- tick off steps and phases in this plan when completed.
 
 ## Technology Stack
 - **Backend**: C# .NET 8 Web API (following Microsoft coding standards)
@@ -23,18 +24,18 @@ This plan outlines the phased development of the kollector-scrum web application
 
 ## Phase 1: Project Setup and Infrastructure
 ### 1.1 Repository and Solution Setup
-- [ ] Initialize Git repository with proper .gitignore
-- [ ] Create solution structure with separate projects
-- [ ] Set up GitHub repository and initial commit
-- [ ] Create README.md with project overview
+- [x] Initialize Git repository with proper .gitignore
+- [x] Create solution structure with separate projects
+- [x] Set up GitHub repository and initial commit
+- [x] Create README.md with project overview
 
 ### 1.2 Backend API Project Setup
-- [ ] Create ASP.NET Core Web API project
-- [ ] Configure project structure (Controllers, Models, Services, Data)
-- [ ] Set up dependency injection container
-- [ ] Configure logging and error handling middleware
-- [ ] Add Swagger/OpenAPI documentation
-- [ ] Create basic health check endpoint
+- [x] Create ASP.NET Core Web API project
+- [x] Configure project structure (Controllers, Models, Services, Data)
+- [x] Set up dependency injection container
+- [x] Configure logging and error handling middleware
+- [x] Add Swagger/OpenAPI documentation
+- [x] Create basic health check endpoint
 
 ### 1.3 Database Setup
 - [ ] Install PostgreSQL locally or configure cloud instance
