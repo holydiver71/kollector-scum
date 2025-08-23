@@ -13,6 +13,7 @@ This plan outlines the phased development of the kollector-scrum web application
 - Add comments for all classes and methods.
 - Swagger documentation to be produced as appropriate
 - tick off steps and phases in this plan when completed.
+- Follow security best practices and implement measures to counteract OWASP top 10
 
 ## Technology Stack
 - **Backend**: C# .NET 8 Web API (following Microsoft coding standards)
