@@ -4,7 +4,7 @@ This plan outlines the phased development of the kollector-scrum web application
 
 ## Notes and Guidelines
 - Each phase should result in a working, testable application
-- All code should be committed to GitHub at the end of each task
+- All code should be committed to GitHub at the end of each task, each new phase a new branch.
 - Follow SOLID principles throughout development
 - Maintain high code coverage with meaningful tests
 - Regular code reviews and refactoring sessions
