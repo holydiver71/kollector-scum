@@ -39,11 +39,11 @@ This plan outlines the phased development of the kollector-scrum web application
 - [x] Create basic health check endpoint
 
 ### 1.3 Database Setup
-- [ ] Install PostgreSQL locally or configure cloud instance
-- [ ] Set up Entity Framework Core with PostgreSQL provider
-- [ ] Create database context and connection configuration
-- [ ] Set up database migrations infrastructure
-- [ ] Create initial migration for basic project structure
+- [x] Install PostgreSQL locally or configure cloud instance
+- [x] Set up Entity Framework Core with PostgreSQL provider
+- [x] Create database context and connection configuration
+- [x] Set up database migrations infrastructure
+- [x] Create initial migration for basic project structure
 
 ### 1.4 Frontend Project Setup
 - [ ] Create Next.js project with TypeScript
