@@ -1,0 +1,6 @@
+@KollectorScum.Api_HostAddress = http://localhost:5072
+
+GET {{KollectorScum.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
