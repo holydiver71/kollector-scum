@@ -13,6 +13,7 @@ This plan outlines the phased development of the kollector-scrum web application
 - Add comments for all classes and methods.
 - Swagger documentation to be produced as appropriate
 - tick off steps and phases in this plan when completed.
+- at the end of each phase step create a summary in markdown of that step. Place the md file in the documentation folder. for example see 'Phase 1-3 - Database Setup Summary.md' 
 - Follow security best practices and implement measures to counteract OWASP top 10
 
 ## Technology Stack
@@ -47,13 +48,9 @@ This plan outlines the phased development of the kollector-scrum web application
 
 ### 1.4 Frontend Project Setup
  [x] Create Next.js project with TypeScript
-
  [x] Configure ESLint and Prettier
-
  [x] Set up Tailwind CSS or preferred styling framework
-
  [x] Configure API client setup (fetch/axios)
-
  [x] Create basic routing structure
  [x] Set up environment configuration
 

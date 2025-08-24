@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("KollectorScrum.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fd125d49770989ec476affd7375727ed3b83b71b")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9d2de0fe04ebc5d7832446beb90a4402c96e8992")]
 [assembly: System.Reflection.AssemblyProductAttribute("KollectorScrum.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("KollectorScrum.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
