@@ -46,12 +46,16 @@ This plan outlines the phased development of the kollector-scrum web application
 - [x] Create initial migration for basic project structure
 
 ### 1.4 Frontend Project Setup
-- [ ] Create Next.js project with TypeScript
-- [ ] Configure ESLint and Prettier
-- [ ] Set up Tailwind CSS or preferred styling framework
-- [ ] Configure API client setup (fetch/axios)
-- [ ] Create basic routing structure
-- [ ] Set up environment configuration
+ [x] Create Next.js project with TypeScript
+
+ [x] Configure ESLint and Prettier
+
+ [x] Set up Tailwind CSS or preferred styling framework
+
+ [x] Configure API client setup (fetch/axios)
+
+ [x] Create basic routing structure
+ [x] Set up environment configuration
 
 ### 1.5 Testing Infrastructure
 - [ ] Set up xUnit test project for backend
