@@ -2,13 +2,22 @@
 /// Entry point for the Kollector Scrum API application.
 /// </summary>
 
+
 using KollectorScrum.Api.Middleware;
+using KollectorScrum.Api.Data;
+using Microsoft.EntityFrameworkCore;
+
 
 var builder = WebApplication.CreateBuilder(args);
+
 
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddHealthChecks();
+
+// Register KollectorScrumDbContext with PostgreSQL
+builder.Services.AddDbContext<KollectorScrumDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

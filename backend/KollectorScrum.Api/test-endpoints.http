@@ -1,0 +1,8 @@
+### Health Check Endpoint
+GET http://localhost:5072/api/health
+
+### Built-in Health Check
+GET http://localhost:5072/health
+
+### Swagger Documentation
+GET http://localhost:5072/swagger/v1/swagger.json
