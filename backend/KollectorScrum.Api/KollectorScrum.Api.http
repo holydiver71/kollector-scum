@@ -1,6 +1,0 @@
-@KollectorScrum.Api_HostAddress = http://localhost:5072
-
-GET {{KollectorScrum.Api_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
