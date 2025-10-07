@@ -6,3 +6,37 @@ GET http://localhost:5072/health
 
 ### Swagger Documentation
 GET http://localhost:5072/swagger/v1/swagger.json
+
+### Data Seeding Endpoints
+
+### Seed All Lookup Data
+POST http://localhost:5072/api/seed/all
+Content-Type: application/json
+
+### Seed Countries
+POST http://localhost:5072/api/seed/countries
+Content-Type: application/json
+
+### Seed Stores
+POST http://localhost:5072/api/seed/stores
+Content-Type: application/json
+
+### Seed Formats
+POST http://localhost:5072/api/seed/formats
+Content-Type: application/json
+
+### Seed Genres
+POST http://localhost:5072/api/seed/genres
+Content-Type: application/json
+
+### Seed Labels
+POST http://localhost:5072/api/seed/labels
+Content-Type: application/json
+
+### Seed Artists
+POST http://localhost:5072/api/seed/artists
+Content-Type: application/json
+
+### Seed Packagings
+POST http://localhost:5072/api/seed/packagings
+Content-Type: application/json
