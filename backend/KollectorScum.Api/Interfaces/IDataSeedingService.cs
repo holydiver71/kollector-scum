@@ -52,5 +52,11 @@ namespace KollectorScum.Api.Interfaces
         /// </summary>
         /// <returns>Task representing the async operation</returns>
         Task SeedPackagingsAsync();
+
+        /// <summary>
+        /// Seeds music release data from JSON file
+        /// </summary>
+        /// <returns>Task representing the async operation</returns>
+        Task SeedMusicReleasesAsync();
     }
 }

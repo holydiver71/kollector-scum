@@ -1,4 +1,5 @@
 using KollectorScum.Api.Data;
+using KollectorScum.Api.DTOs;
 using KollectorScum.Api.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
@@ -76,6 +77,25 @@ namespace KollectorScum.Api.Repositories
         public virtual async Task<T?> GetByIdAsync(int id)
         {
             return await _dbSet.FindAsync(id);
+        }
+
+        /// <summary>
+        /// Gets an entity by its ID asynchronously with includes
+        /// </summary>
+        /// <param name="id">Entity ID</param>
+        /// <param name="includeProperties">Navigation properties to include</param>
+        /// <returns>Entity or null if not found</returns>
+        public virtual async Task<T?> GetByIdAsync(int id, string includeProperties)
+        {
+            IQueryable<T> query = _dbSet;
+
+            foreach (var includeProperty in includeProperties.Split
+                (new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                query = query.Include(includeProperty.Trim());
+            }
+
+            return await query.FirstOrDefaultAsync(e => EF.Property<int>(e, "Id") == id);
         }
 
         /// <summary>
@@ -225,7 +245,7 @@ namespace KollectorScum.Api.Repositories
         /// <param name="orderBy">Optional ordering function</param>
         /// <param name="includeProperties">Optional navigation properties to include</param>
         /// <returns>Paginated results</returns>
-        public virtual async Task<(IEnumerable<T> Items, int TotalCount)> GetPagedAsync(
+        public virtual async Task<PagedResult<T>> GetPagedAsync(
             int pageNumber,
             int pageSize,
             Expression<Func<T, bool>>? filter = null,
@@ -260,7 +280,26 @@ namespace KollectorScum.Api.Repositories
                 .Take(pageSize)
                 .ToListAsync();
 
-            return (items, totalCount);
+            var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+
+            return new PagedResult<T>
+            {
+                Items = items,
+                Page = pageNumber,
+                PageSize = pageSize,
+                TotalCount = totalCount,
+                TotalPages = totalPages
+            };
+        }
+
+        /// <summary>
+        /// Checks if an entity exists by ID
+        /// </summary>
+        /// <param name="id">Entity ID</param>
+        /// <returns>True if exists, false otherwise</returns>
+        public virtual async Task<bool> ExistsAsync(int id)
+        {
+            return await _dbSet.AnyAsync(e => EF.Property<int>(e, "Id") == id);
         }
     }
 }

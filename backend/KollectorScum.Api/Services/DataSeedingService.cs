@@ -373,5 +373,79 @@ namespace KollectorScum.Api.Services
                 _logger.LogInformation("Seeded {Count} packagings", packagings.Count);
             }
         }
+
+        /// <summary>
+        /// Seeds music release data from JSON file
+        /// </summary>
+        public async Task SeedMusicReleasesAsync()
+        {
+            // Check if MusicReleases already exist
+            if (await _context.MusicReleases.AnyAsync())
+            {
+                _logger.LogInformation("MusicReleases already exist, skipping seeding");
+                return;
+            }
+
+            var filePath = Path.Combine(_dataPath, "musicreleases.json");
+            _logger.LogInformation("Seeding music releases from: {FilePath}", filePath);
+
+            if (!File.Exists(filePath))
+            {
+                _logger.LogWarning("Music releases JSON file not found at {FilePath}", filePath);
+                return;
+            }
+
+            var jsonContent = await File.ReadAllTextAsync(filePath);
+            var musicReleaseList = JsonSerializer.Deserialize<List<MusicReleaseImportDto>>(jsonContent, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            if (musicReleaseList != null && musicReleaseList.Any())
+            {
+                var musicReleases = new List<MusicRelease>();
+
+                foreach (var dto in musicReleaseList)
+                {
+                    var musicRelease = new MusicRelease
+                    {
+                        Id = dto.Id,
+                        Title = dto.Title,
+                        ReleaseYear = DateTime.TryParse(dto.ReleaseYear, out var releaseYear) ? DateTime.SpecifyKind(releaseYear, DateTimeKind.Utc) : null,
+                        OrigReleaseYear = DateTime.TryParse(dto.OrigReleaseYear, out var origReleaseYear) ? DateTime.SpecifyKind(origReleaseYear, DateTimeKind.Utc) : null,
+                        Artists = dto.Artists != null && dto.Artists.Any() ? JsonSerializer.Serialize(dto.Artists) : null,
+                        Genres = dto.Genres != null && dto.Genres.Any() ? JsonSerializer.Serialize(dto.Genres) : null,
+                        Live = dto.Live,
+                        LabelId = dto.LabelId > 0 ? dto.LabelId : null,
+                        CountryId = dto.CountryId > 0 ? dto.CountryId : null,
+                        LabelNumber = dto.LabelNumber,
+                        LengthInSeconds = int.TryParse(dto.LengthInSeconds, out var length) ? length : null,
+                        FormatId = dto.FormatId > 0 ? dto.FormatId : null,
+                        PackagingId = dto.PackagingId > 0 ? dto.PackagingId : null,
+                        Images = dto.Images != null ? JsonSerializer.Serialize(dto.Images) : null,
+                        Links = dto.Links != null && dto.Links.Any() ? JsonSerializer.Serialize(dto.Links) : null,
+                        Media = dto.Media != null && dto.Media.Any() ? JsonSerializer.Serialize(dto.Media) : null,
+                        PurchaseInfo = dto.PurchaseInfo != null ? JsonSerializer.Serialize(dto.PurchaseInfo) : null,
+                        DateAdded = DateTime.SpecifyKind(dto.DateAdded, DateTimeKind.Utc),
+                        LastModified = DateTime.SpecifyKind(dto.LastModified, DateTimeKind.Utc)
+                    };
+
+                    musicReleases.Add(musicRelease);
+                }
+
+                // Process in batches to avoid memory issues
+                const int batchSize = 1000;
+                for (int i = 0; i < musicReleases.Count; i += batchSize)
+                {
+                    var batch = musicReleases.Skip(i).Take(batchSize).ToList();
+                    await _context.MusicReleases.AddRangeAsync(batch);
+                    await _context.SaveChangesAsync();
+                    _logger.LogInformation("Processed music releases batch {BatchNumber} of {TotalBatches}", 
+                        (i / batchSize) + 1, (musicReleases.Count + batchSize - 1) / batchSize);
+                }
+
+                _logger.LogInformation("Seeded {Count} music releases", musicReleases.Count);
+            }
+        }
     }
 }

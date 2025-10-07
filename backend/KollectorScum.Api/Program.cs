@@ -21,9 +21,22 @@ builder.Services.AddHealthChecks();
 builder.Services.AddDbContext<KollectorScumDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Register services
-builder.Services.AddScoped<IDataSeedingService, DataSeedingService>();
-builder.Services.AddScoped<IMusicReleaseImportService, MusicReleaseImportService>();
+// Register services with explicit constructor selection
+builder.Services.AddScoped<IDataSeedingService>(serviceProvider =>
+{
+    var context = serviceProvider.GetRequiredService<KollectorScumDbContext>();
+    var logger = serviceProvider.GetRequiredService<ILogger<DataSeedingService>>();
+    var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+    return new DataSeedingService(context, logger, configuration);
+});
+
+builder.Services.AddScoped<IMusicReleaseImportService>(serviceProvider =>
+{
+    var unitOfWork = serviceProvider.GetRequiredService<IUnitOfWork>();
+    var logger = serviceProvider.GetRequiredService<ILogger<MusicReleaseImportService>>();
+    var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+    return new MusicReleaseImportService(unitOfWork, logger, configuration);
+});
 
 // Register repository layer
 builder.Services.AddScoped(typeof(IRepository<>), typeof(KollectorScum.Api.Repositories.Repository<>));
@@ -76,3 +89,6 @@ app.MapControllers();
 app.MapHealthChecks("/health");
 
 app.Run();
+
+// Make Program class accessible for integration testing
+public partial class Program { }
