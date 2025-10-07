@@ -27,6 +27,18 @@ namespace KollectorScum.Api.Services
             _dataPath = _configuration["DataPath"] ?? throw new InvalidOperationException("DataPath configuration is missing");
         }
 
+        // Constructor for testing that allows specifying the data path directly
+        public MusicReleaseImportService(
+            IUnitOfWork unitOfWork,
+            ILogger<MusicReleaseImportService> logger,
+            string? dataPath = null)
+        {
+            _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _configuration = null!; // Not used in test constructor
+            _dataPath = dataPath ?? Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "data");
+        }
+
         /// <summary>
         /// Imports music releases from JSON file
         /// </summary>

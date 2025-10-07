@@ -31,6 +31,22 @@ namespace KollectorScum.Api.Services
             }
         }
 
+        // Constructor for testing that allows specifying the data path directly
+        public DataSeedingService(KollectorScumDbContext context, ILogger<DataSeedingService> logger, string? dataPath = null)
+        {
+            _context = context;
+            _logger = logger;
+            
+            // Use provided path or calculate default
+            _dataPath = dataPath ?? Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "data");
+            
+            // Ensure the data path is absolute
+            if (!Path.IsPathRooted(_dataPath))
+            {
+                _dataPath = Path.GetFullPath(_dataPath);
+            }
+        }
+
         /// <summary>
         /// Seeds all lookup table data from JSON files
         /// </summary>
