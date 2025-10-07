@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using KollectorScum.Api.DTOs;
 
 namespace KollectorScum.Api.Interfaces
 {
@@ -32,6 +33,14 @@ namespace KollectorScum.Api.Interfaces
         /// <param name="id">Entity ID</param>
         /// <returns>Entity or null if not found</returns>
         Task<T?> GetByIdAsync(int id);
+
+        /// <summary>
+        /// Gets an entity by its ID asynchronously with includes
+        /// </summary>
+        /// <param name="id">Entity ID</param>
+        /// <param name="includeProperties">Navigation properties to include</param>
+        /// <returns>Entity or null if not found</returns>
+        Task<T?> GetByIdAsync(int id, string includeProperties);
 
         /// <summary>
         /// Gets the first entity matching the filter
@@ -102,6 +111,13 @@ namespace KollectorScum.Api.Interfaces
         Task<int> CountAsync(Expression<Func<T, bool>>? filter = null);
 
         /// <summary>
+        /// Checks if an entity exists by ID
+        /// </summary>
+        /// <param name="id">Entity ID</param>
+        /// <returns>True if exists, false otherwise</returns>
+        Task<bool> ExistsAsync(int id);
+
+        /// <summary>
         /// Gets paginated results
         /// </summary>
         /// <param name="pageNumber">Page number (1-based)</param>
@@ -110,7 +126,7 @@ namespace KollectorScum.Api.Interfaces
         /// <param name="orderBy">Optional ordering function</param>
         /// <param name="includeProperties">Optional navigation properties to include</param>
         /// <returns>Paginated results</returns>
-        Task<(IEnumerable<T> Items, int TotalCount)> GetPagedAsync(
+        Task<PagedResult<T>> GetPagedAsync(
             int pageNumber,
             int pageSize,
             Expression<Func<T, bool>>? filter = null,
