@@ -45,3 +45,17 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+backend/KollectorScum.Api/bin/Debug/net8.0/KollectorScum.Api.dll
+backend/KollectorScum.Api/bin/Debug/net8.0/KollectorScum.Api.pdb
+backend/KollectorScum.Api/obj/Debug/net8.0/KollectorScum.Api.AssemblyInfo.cs
+backend/KollectorScum.Api/obj/Debug/net8.0/KollectorScum.Api.AssemblyInfoInputs.cache
+backend/KollectorScum.Api/obj/Debug/net8.0/KollectorScum.Api.csproj.CoreCompileInputs.cache
+backend/KollectorScum.Api/obj/Debug/net8.0/KollectorScum.Api.dll
+backend/KollectorScum.Api/obj/Debug/net8.0/KollectorScum.Api.pdb
+backend/KollectorScum.Api/obj/Debug/net8.0/KollectorScum.Api.sourcelink.json
+backend/KollectorScum.Api/obj/Debug/net8.0/ref/KollectorScum.Api.dll
+backend/KollectorScum.Api/obj/Debug/net8.0/refint/KollectorScum.Api.dll
+backend/KollectorScum.Tests/obj/Debug/net8.0/KollectorScum.Tests.AssemblyInfo.cs
+backend/KollectorScum.Tests/obj/Debug/net8.0/KollectorScum.Tests.AssemblyInfoInputs.cache
+backend/KollectorScum.Tests/obj/Debug/net8.0/KollectorScum.Tests.assets.cache
+backend/KollectorScum.Tests/obj/Debug/net8.0/KollectorScum.Tests.csproj.AssemblyReference.cache
