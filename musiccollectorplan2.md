@@ -65,29 +65,29 @@ This plan outlines the phased development of the kollector-scrum web application
 
 ## Phase 2: Database Schema and Data Models
 ### 2.1 Lookup Table Models and Entities
-- [ ] Create Country entity and DbSet
-- [ ] Create Store entity and DbSet
-- [ ] Create Format entity and DbSet
-- [ ] Create Genre entity and DbSet
-- [ ] Create Label entity and DbSet
-- [ ] Create Artist entity and DbSet
-- [ ] Create Packaging entity and DbSet
+- [x] Create Country entity and DbSet
+- [x] Create Store entity and DbSet
+- [x] Create Format entity and DbSet
+- [x] Create Genre entity and DbSet
+- [x] Create Label entity and DbSet
+- [x] Create Artist entity and DbSet
+- [x] Create Packaging entity and DbSet
 
 ### 2.2 Main Music Release Model
-- [ ] Create MusicRelease entity with relationships
-- [ ] Configure Entity Framework relationships and navigation properties
-- [ ] Create value objects for complex types (Images, Links, Media)
-- [ ] Set up proper indexing and constraints
+- [x] Create MusicRelease entity with relationships
+- [x] Configure Entity Framework relationships and navigation properties
+- [x] Create value objects for complex types (Images, Links, Media)
+- [x] Set up proper indexing and constraints
 
 ### 2.3 Database Migrations
-- [ ] Create and run migrations for all entities
+- [x] Create and run migrations for all entities
 - [ ] Seed database with lookup table data from JSON files
-- [ ] Validate foreign key relationships
-- [ ] Create database indexes for performance
+- [x] Validate foreign key relationships
+- [x] Create database indexes for performance
 
 ### 2.4 Unit Tests for Data Layer
-- [ ] Write unit tests for entity relationships
-- [ ] Test database context configuration
+- [x] Write unit tests for entity relationships
+- [x] Test database context configuration
 - [ ] Validate seed data integrity
 
 **Milestone**: Complete database schema with seeded lookup data
