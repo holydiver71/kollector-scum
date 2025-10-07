@@ -5,6 +5,8 @@
 
 using KollectorScum.Api.Middleware;
 using KollectorScum.Api.Data;
+using KollectorScum.Api.Interfaces;
+using KollectorScum.Api.Services;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -18,6 +20,14 @@ builder.Services.AddHealthChecks();
 // Register KollectorScumDbContext with PostgreSQL
 builder.Services.AddDbContext<KollectorScumDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Register services
+builder.Services.AddScoped<IDataSeedingService, DataSeedingService>();
+builder.Services.AddScoped<IMusicReleaseImportService, MusicReleaseImportService>();
+
+// Register repository layer
+builder.Services.AddScoped(typeof(IRepository<>), typeof(KollectorScum.Api.Repositories.Repository<>));
+builder.Services.AddScoped<IUnitOfWork, KollectorScum.Api.Repositories.UnitOfWork>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
