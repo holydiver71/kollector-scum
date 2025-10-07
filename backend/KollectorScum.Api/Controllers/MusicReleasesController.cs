@@ -1,0 +1,458 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using KollectorScum.Api.Interfaces;
+using KollectorScum.Api.Models;
+using KollectorScum.Api.DTOs;
+using System.Linq.Expressions;
+using System.Text.Json;
+
+namespace KollectorScum.Api.Controllers
+{
+    /// <summary>
+    /// API controller for managing music releases
+    /// </summary>
+    [ApiController]
+    [Route("api/[controller]")]
+    public class MusicReleasesController : ControllerBase
+    {
+        private readonly IRepository<MusicRelease> _musicReleaseRepository;
+        private readonly IRepository<Artist> _artistRepository;
+        private readonly IRepository<Genre> _genreRepository;
+        private readonly IRepository<Label> _labelRepository;
+        private readonly IRepository<Country> _countryRepository;
+        private readonly IRepository<Format> _formatRepository;
+        private readonly IRepository<Packaging> _packagingRepository;
+        private readonly IRepository<Store> _storeRepository;
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly ILogger<MusicReleasesController> _logger;
+
+        public MusicReleasesController(
+            IRepository<MusicRelease> musicReleaseRepository,
+            IRepository<Artist> artistRepository,
+            IRepository<Genre> genreRepository,
+            IRepository<Label> labelRepository,
+            IRepository<Country> countryRepository,
+            IRepository<Format> formatRepository,
+            IRepository<Packaging> packagingRepository,
+            IRepository<Store> storeRepository,
+            IUnitOfWork unitOfWork,
+            ILogger<MusicReleasesController> logger)
+        {
+            _musicReleaseRepository = musicReleaseRepository;
+            _artistRepository = artistRepository;
+            _genreRepository = genreRepository;
+            _labelRepository = labelRepository;
+            _countryRepository = countryRepository;
+            _formatRepository = formatRepository;
+            _packagingRepository = packagingRepository;
+            _storeRepository = storeRepository;
+            _unitOfWork = unitOfWork;
+            _logger = logger;
+        }
+
+        /// <summary>
+        /// Gets a paginated list of music releases
+        /// </summary>
+        /// <param name="search">Search term to filter by title or artist name</param>
+        /// <param name="artistId">Filter by artist ID</param>
+        /// <param name="genreId">Filter by genre ID</param>
+        /// <param name="labelId">Filter by label ID</param>
+        /// <param name="countryId">Filter by country ID</param>
+        /// <param name="formatId">Filter by format ID</param>
+        /// <param name="live">Filter by live recordings</param>
+        /// <param name="page">Page number (default: 1)</param>
+        /// <param name="pageSize">Page size (default: 50)</param>
+        /// <returns>Paginated list of music release summaries</returns>
+        [HttpGet]
+        [ProducesResponseType(typeof(PagedResult<MusicReleaseSummaryDto>), 200)]
+        public async Task<ActionResult<PagedResult<MusicReleaseSummaryDto>>> GetMusicReleases(
+            [FromQuery] string? search,
+            [FromQuery] int? artistId,
+            [FromQuery] int? genreId,
+            [FromQuery] int? labelId,
+            [FromQuery] int? countryId,
+            [FromQuery] int? formatId,
+            [FromQuery] bool? live,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 50)
+        {
+            try
+            {
+                _logger.LogInformation("Getting music releases - Page: {Page}, PageSize: {PageSize}, Search: {Search}, ArtistId: {ArtistId}, GenreId: {GenreId}",
+                    page, pageSize, search, artistId, genreId);
+
+                // Build filter expression
+                Expression<Func<MusicRelease, bool>>? filter = null;
+
+                if (!string.IsNullOrEmpty(search) || artistId.HasValue || genreId.HasValue || 
+                    labelId.HasValue || countryId.HasValue || formatId.HasValue || live.HasValue)
+                {
+                    filter = mr => 
+                        (string.IsNullOrEmpty(search) || mr.Title.ToLower().Contains(search.ToLower())) &&
+                        (!artistId.HasValue || (mr.Artists != null && mr.Artists.Contains(artistId.Value.ToString()))) &&
+                        (!genreId.HasValue || (mr.Genres != null && mr.Genres.Contains(genreId.Value.ToString()))) &&
+                        (!labelId.HasValue || mr.LabelId == labelId.Value) &&
+                        (!countryId.HasValue || mr.CountryId == countryId.Value) &&
+                        (!formatId.HasValue || mr.FormatId == formatId.Value) &&
+                        (!live.HasValue || mr.Live == live.Value);
+                }
+
+                var pagedResult = await _musicReleaseRepository.GetPagedAsync(
+                    page,
+                    pageSize,
+                    filter,
+                    mr => mr.OrderBy(x => x.Title),
+                    "Label,Country,Format"
+                );
+
+                var summaryDtos = await Task.Run(() => pagedResult.Items.Select(MapToSummaryDto).ToList());
+
+                var result = new PagedResult<MusicReleaseSummaryDto>
+                {
+                    Items = summaryDtos,
+                    Page = pagedResult.Page,
+                    PageSize = pagedResult.PageSize,
+                    TotalCount = pagedResult.TotalCount,
+                    TotalPages = pagedResult.TotalPages
+                };
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting music releases");
+                return StatusCode(500, "An error occurred while retrieving music releases");
+            }
+        }
+
+        /// <summary>
+        /// Gets a specific music release by ID
+        /// </summary>
+        /// <param name="id">Music release ID</param>
+        /// <returns>Music release details</returns>
+        [HttpGet("{id}")]
+        [ProducesResponseType(typeof(MusicReleaseDto), 200)]
+        [ProducesResponseType(404)]
+        public async Task<ActionResult<MusicReleaseDto>> GetMusicRelease(int id)
+        {
+            try
+            {
+                _logger.LogInformation("Getting music release by ID: {Id}", id);
+
+                var musicRelease = await _musicReleaseRepository.GetByIdAsync(id, "Label,Country,Format,Packaging");
+
+                if (musicRelease == null)
+                {
+                    _logger.LogWarning("Music release not found: {Id}", id);
+                    return NotFound($"Music release with ID {id} not found");
+                }
+
+                var dto = await MapToFullDto(musicRelease);
+                return Ok(dto);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting music release by ID: {Id}", id);
+                return StatusCode(500, "An error occurred while retrieving the music release");
+            }
+        }
+
+        /// <summary>
+        /// Creates a new music release
+        /// </summary>
+        /// <param name="createDto">Music release data</param>
+        /// <returns>Created music release</returns>
+        [HttpPost]
+        [ProducesResponseType(typeof(MusicReleaseDto), 201)]
+        [ProducesResponseType(400)]
+        public async Task<ActionResult<MusicReleaseDto>> CreateMusicRelease([FromBody] CreateMusicReleaseDto createDto)
+        {
+            try
+            {
+                _logger.LogInformation("Creating music release: {Title}", createDto.Title);
+
+                // Validate relationships exist
+                var validationResult = await ValidateRelationships(createDto.LabelId, createDto.CountryId, 
+                    createDto.FormatId, createDto.PackagingId, createDto.ArtistIds, createDto.GenreIds);
+                
+                if (validationResult != null)
+                    return validationResult;
+
+                var musicRelease = new MusicRelease
+                {
+                    Title = createDto.Title,
+                    ReleaseYear = createDto.ReleaseYear,
+                    OrigReleaseYear = createDto.OrigReleaseYear,
+                    Artists = createDto.ArtistIds != null ? JsonSerializer.Serialize(createDto.ArtistIds) : null,
+                    Genres = createDto.GenreIds != null ? JsonSerializer.Serialize(createDto.GenreIds) : null,
+                    Live = createDto.Live,
+                    LabelId = createDto.LabelId,
+                    CountryId = createDto.CountryId,
+                    LabelNumber = createDto.LabelNumber,
+                    LengthInSeconds = createDto.LengthInSeconds,
+                    FormatId = createDto.FormatId,
+                    PackagingId = createDto.PackagingId,
+                    PurchaseInfo = createDto.PurchaseInfo != null ? JsonSerializer.Serialize(createDto.PurchaseInfo) : null,
+                    Images = createDto.Images != null ? JsonSerializer.Serialize(createDto.Images) : null,
+                    Links = createDto.Links != null ? JsonSerializer.Serialize(createDto.Links) : null,
+                    Media = createDto.Media != null ? JsonSerializer.Serialize(createDto.Media) : null,
+                    DateAdded = DateTime.UtcNow,
+                    LastModified = DateTime.UtcNow
+                };
+
+                await _musicReleaseRepository.AddAsync(musicRelease);
+                await _unitOfWork.SaveChangesAsync();
+
+                var createdDto = await MapToFullDto(musicRelease);
+                return CreatedAtAction(nameof(GetMusicRelease), new { id = musicRelease.Id }, createdDto);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating music release: {Title}", createDto.Title);
+                return StatusCode(500, "An error occurred while creating the music release");
+            }
+        }
+
+        /// <summary>
+        /// Updates an existing music release
+        /// </summary>
+        /// <param name="id">Music release ID</param>
+        /// <param name="updateDto">Updated music release data</param>
+        /// <returns>Updated music release</returns>
+        [HttpPut("{id}")]
+        [ProducesResponseType(typeof(MusicReleaseDto), 200)]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(404)]
+        public async Task<ActionResult<MusicReleaseDto>> UpdateMusicRelease(int id, [FromBody] UpdateMusicReleaseDto updateDto)
+        {
+            try
+            {
+                _logger.LogInformation("Updating music release: {Id}", id);
+
+                var existingMusicRelease = await _musicReleaseRepository.GetByIdAsync(id);
+                if (existingMusicRelease == null)
+                {
+                    return NotFound($"Music release with ID {id} not found");
+                }
+
+                // Validate relationships exist
+                var validationResult = await ValidateRelationships(updateDto.LabelId, updateDto.CountryId, 
+                    updateDto.FormatId, updateDto.PackagingId, updateDto.ArtistIds, updateDto.GenreIds);
+                
+                if (validationResult != null)
+                    return validationResult;
+
+                // Update properties
+                existingMusicRelease.Title = updateDto.Title;
+                existingMusicRelease.ReleaseYear = updateDto.ReleaseYear;
+                existingMusicRelease.OrigReleaseYear = updateDto.OrigReleaseYear;
+                existingMusicRelease.Artists = updateDto.ArtistIds != null ? JsonSerializer.Serialize(updateDto.ArtistIds) : null;
+                existingMusicRelease.Genres = updateDto.GenreIds != null ? JsonSerializer.Serialize(updateDto.GenreIds) : null;
+                existingMusicRelease.Live = updateDto.Live;
+                existingMusicRelease.LabelId = updateDto.LabelId;
+                existingMusicRelease.CountryId = updateDto.CountryId;
+                existingMusicRelease.LabelNumber = updateDto.LabelNumber;
+                existingMusicRelease.LengthInSeconds = updateDto.LengthInSeconds;
+                existingMusicRelease.FormatId = updateDto.FormatId;
+                existingMusicRelease.PackagingId = updateDto.PackagingId;
+                existingMusicRelease.PurchaseInfo = updateDto.PurchaseInfo != null ? JsonSerializer.Serialize(updateDto.PurchaseInfo) : null;
+                existingMusicRelease.Images = updateDto.Images != null ? JsonSerializer.Serialize(updateDto.Images) : null;
+                existingMusicRelease.Links = updateDto.Links != null ? JsonSerializer.Serialize(updateDto.Links) : null;
+                existingMusicRelease.Media = updateDto.Media != null ? JsonSerializer.Serialize(updateDto.Media) : null;
+                existingMusicRelease.LastModified = DateTime.UtcNow;
+
+                _musicReleaseRepository.Update(existingMusicRelease);
+                await _unitOfWork.SaveChangesAsync();
+
+                var updatedDto = await MapToFullDto(existingMusicRelease);
+                return Ok(updatedDto);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating music release: {Id}", id);
+                return StatusCode(500, "An error occurred while updating the music release");
+            }
+        }
+
+        /// <summary>
+        /// Deletes a music release
+        /// </summary>
+        /// <param name="id">Music release ID</param>
+        /// <returns>No content</returns>
+        [HttpDelete("{id}")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(404)]
+        public async Task<IActionResult> DeleteMusicRelease(int id)
+        {
+            try
+            {
+                _logger.LogInformation("Deleting music release: {Id}", id);
+
+                var musicRelease = await _musicReleaseRepository.GetByIdAsync(id);
+                if (musicRelease == null)
+                {
+                    return NotFound($"Music release with ID {id} not found");
+                }
+
+                _musicReleaseRepository.Delete(musicRelease);
+                await _unitOfWork.SaveChangesAsync();
+
+                _logger.LogInformation("Music release deleted successfully: {Id}", id);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting music release: {Id}", id);
+                return StatusCode(500, "An error occurred while deleting the music release");
+            }
+        }
+
+        // Private helper methods
+        
+        private async Task<ActionResult?> ValidateRelationships(
+            int? labelId, int? countryId, int? formatId, int? packagingId,
+            List<int>? artistIds, List<int>? genreIds)
+        {
+            if (labelId.HasValue && !await _labelRepository.ExistsAsync(labelId.Value))
+                return BadRequest($"Label with ID {labelId} does not exist");
+
+            if (countryId.HasValue && !await _countryRepository.ExistsAsync(countryId.Value))
+                return BadRequest($"Country with ID {countryId} does not exist");
+
+            if (formatId.HasValue && !await _formatRepository.ExistsAsync(formatId.Value))
+                return BadRequest($"Format with ID {formatId} does not exist");
+
+            if (packagingId.HasValue && !await _packagingRepository.ExistsAsync(packagingId.Value))
+                return BadRequest($"Packaging with ID {packagingId} does not exist");
+
+            if (artistIds != null)
+            {
+                foreach (var artistId in artistIds)
+                {
+                    if (!await _artistRepository.ExistsAsync(artistId))
+                        return BadRequest($"Artist with ID {artistId} does not exist");
+                }
+            }
+
+            if (genreIds != null)
+            {
+                foreach (var genreId in genreIds)
+                {
+                    if (!await _genreRepository.ExistsAsync(genreId))
+                        return BadRequest($"Genre with ID {genreId} does not exist");
+                }
+            }
+
+            return null;
+        }
+
+        private MusicReleaseSummaryDto MapToSummaryDto(MusicRelease musicRelease)
+        {
+            var artistIds = string.IsNullOrEmpty(musicRelease.Artists) 
+                ? null 
+                : JsonSerializer.Deserialize<List<int>>(musicRelease.Artists);
+            
+            var genreIds = string.IsNullOrEmpty(musicRelease.Genres) 
+                ? null 
+                : JsonSerializer.Deserialize<List<int>>(musicRelease.Genres);
+
+            var images = string.IsNullOrEmpty(musicRelease.Images) 
+                ? null 
+                : JsonSerializer.Deserialize<MusicReleaseImageDto>(musicRelease.Images);
+
+            return new MusicReleaseSummaryDto
+            {
+                Id = musicRelease.Id,
+                Title = musicRelease.Title,
+                ReleaseYear = musicRelease.ReleaseYear,
+                ArtistNames = artistIds?.Select(id => GetArtistName(id)).ToList(),
+                GenreNames = genreIds?.Select(id => GetGenreName(id)).ToList(),
+                LabelName = musicRelease.Label?.Name,
+                FormatName = musicRelease.Format?.Name,
+                CountryName = musicRelease.Country?.Name,
+                CoverImageUrl = images?.CoverFront ?? images?.Thumbnail,
+                DateAdded = musicRelease.DateAdded
+            };
+        }
+
+        private async Task<MusicReleaseDto> MapToFullDto(MusicRelease musicRelease)
+        {
+            var artistIds = string.IsNullOrEmpty(musicRelease.Artists) 
+                ? null 
+                : JsonSerializer.Deserialize<List<int>>(musicRelease.Artists);
+            
+            var genreIds = string.IsNullOrEmpty(musicRelease.Genres) 
+                ? null 
+                : JsonSerializer.Deserialize<List<int>>(musicRelease.Genres);
+
+            List<ArtistDto>? artists = null;
+            if (artistIds != null)
+            {
+                artists = new List<ArtistDto>();
+                foreach (var id in artistIds)
+                {
+                    var artist = await _artistRepository.GetByIdAsync(id);
+                    if (artist != null)
+                        artists.Add(new ArtistDto { Id = artist.Id, Name = artist.Name });
+                }
+            }
+
+            List<GenreDto>? genres = null;
+            if (genreIds != null)
+            {
+                genres = new List<GenreDto>();
+                foreach (var id in genreIds)
+                {
+                    var genre = await _genreRepository.GetByIdAsync(id);
+                    if (genre != null)
+                        genres.Add(new GenreDto { Id = genre.Id, Name = genre.Name });
+                }
+            }
+
+            return new MusicReleaseDto
+            {
+                Id = musicRelease.Id,
+                Title = musicRelease.Title,
+                ReleaseYear = musicRelease.ReleaseYear,
+                OrigReleaseYear = musicRelease.OrigReleaseYear,
+                Artists = artists,
+                Genres = genres,
+                Live = musicRelease.Live,
+                Label = musicRelease.Label != null ? new LabelDto { Id = musicRelease.Label.Id, Name = musicRelease.Label.Name } : null,
+                Country = musicRelease.Country != null ? new CountryDto { Id = musicRelease.Country.Id, Name = musicRelease.Country.Name } : null,
+                LabelNumber = musicRelease.LabelNumber,
+                LengthInSeconds = musicRelease.LengthInSeconds,
+                Format = musicRelease.Format != null ? new FormatDto { Id = musicRelease.Format.Id, Name = musicRelease.Format.Name } : null,
+                Packaging = musicRelease.Packaging != null ? new PackagingDto { Id = musicRelease.Packaging.Id, Name = musicRelease.Packaging.Name } : null,
+                PurchaseInfo = string.IsNullOrEmpty(musicRelease.PurchaseInfo) 
+                    ? null 
+                    : JsonSerializer.Deserialize<MusicReleasePurchaseInfoDto>(musicRelease.PurchaseInfo),
+                Images = string.IsNullOrEmpty(musicRelease.Images) 
+                    ? null 
+                    : JsonSerializer.Deserialize<MusicReleaseImageDto>(musicRelease.Images),
+                Links = string.IsNullOrEmpty(musicRelease.Links) 
+                    ? null 
+                    : JsonSerializer.Deserialize<List<MusicReleaseLinkDto>>(musicRelease.Links),
+                Media = string.IsNullOrEmpty(musicRelease.Media) 
+                    ? null 
+                    : JsonSerializer.Deserialize<List<MusicReleaseMediaDto>>(musicRelease.Media),
+                DateAdded = musicRelease.DateAdded,
+                LastModified = musicRelease.LastModified
+            };
+        }
+
+        private string GetArtistName(int id)
+        {
+            // This is synchronous for performance in list mapping - could be optimized with caching
+            var artist = _artistRepository.GetByIdAsync(id).Result;
+            return artist?.Name ?? $"Artist {id}";
+        }
+
+        private string GetGenreName(int id)
+        {
+            // This is synchronous for performance in list mapping - could be optimized with caching
+            var genre = _genreRepository.GetByIdAsync(id).Result;
+            return genre?.Name ?? $"Genre {id}";
+        }
+    }
+}
