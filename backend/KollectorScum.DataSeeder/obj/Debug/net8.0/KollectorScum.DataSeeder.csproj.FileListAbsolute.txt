@@ -1,6 +1,0 @@
-/home/andy/Projects/kollector-scum/backend/KollectorScum.DataSeeder/obj/Debug/net8.0/KollectorScum.DataSeeder.csproj.AssemblyReference.cache
-/home/andy/Projects/kollector-scum/backend/KollectorScum.DataSeeder/obj/Debug/net8.0/KollectorScum.DataSeeder.GeneratedMSBuildEditorConfig.editorconfig
-/home/andy/Projects/kollector-scum/backend/KollectorScum.DataSeeder/obj/Debug/net8.0/KollectorScum.DataSeeder.AssemblyInfoInputs.cache
-/home/andy/Projects/kollector-scum/backend/KollectorScum.DataSeeder/obj/Debug/net8.0/KollectorScum.DataSeeder.AssemblyInfo.cs
-/home/andy/Projects/kollector-scum/backend/KollectorScum.DataSeeder/obj/Debug/net8.0/KollectorScum.DataSeeder.csproj.CoreCompileInputs.cache
-/home/andy/Projects/kollector-scum/backend/KollectorScum.DataSeeder/obj/Debug/net8.0/KollectorScum.DataSeeder.sourcelink.json
