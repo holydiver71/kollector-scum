@@ -23,6 +23,11 @@ builder.Services.AddDbContext<KollectorScumDbContext>(options =>
 
 // Register services
 builder.Services.AddScoped<IDataSeedingService, DataSeedingService>();
+builder.Services.AddScoped<IMusicReleaseImportService, MusicReleaseImportService>();
+
+// Register repository layer
+builder.Services.AddScoped(typeof(IRepository<>), typeof(KollectorScum.Api.Repositories.Repository<>));
+builder.Services.AddScoped<IUnitOfWork, KollectorScum.Api.Repositories.UnitOfWork>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
