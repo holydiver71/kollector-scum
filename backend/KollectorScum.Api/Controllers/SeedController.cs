@@ -11,11 +11,16 @@ namespace KollectorScum.Api.Controllers
     public class SeedController : ControllerBase
     {
         private readonly IDataSeedingService _dataSeedingService;
+        private readonly IMusicReleaseImportService _musicReleaseImportService;
         private readonly ILogger<SeedController> _logger;
 
-        public SeedController(IDataSeedingService dataSeedingService, ILogger<SeedController> logger)
+        public SeedController(
+            IDataSeedingService dataSeedingService, 
+            IMusicReleaseImportService musicReleaseImportService,
+            ILogger<SeedController> logger)
         {
             _dataSeedingService = dataSeedingService;
+            _musicReleaseImportService = musicReleaseImportService;
             _logger = logger;
         }
 
@@ -169,6 +174,113 @@ namespace KollectorScum.Api.Controllers
             {
                 _logger.LogError(ex, "Error occurred during packagings seeding");
                 return StatusCode(500, new { Message = "Error occurred during packagings seeding", Error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Imports all music releases from JSON file
+        /// </summary>
+        /// <returns>Result of import operation</returns>
+        [HttpPost("music-releases")]
+        public async Task<ActionResult> ImportMusicReleases()
+        {
+            try
+            {
+                _logger.LogInformation("Starting music releases import via API");
+                var importedCount = await _musicReleaseImportService.ImportMusicReleasesAsync();
+                return Ok(new { Message = $"Music releases import completed successfully. Imported {importedCount} releases." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred during music releases import");
+                return StatusCode(500, new { Message = "Error occurred during music releases import", Error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Imports a batch of music releases from JSON file
+        /// </summary>
+        /// <param name="batchSize">Size of batch to import (default: 100)</param>
+        /// <param name="skipCount">Number of records to skip (default: 0)</param>
+        /// <returns>Result of import operation</returns>
+        [HttpPost("music-releases/batch")]
+        public async Task<ActionResult> ImportMusicReleasesBatch([FromQuery] int batchSize = 100, [FromQuery] int skipCount = 0)
+        {
+            try
+            {
+                _logger.LogInformation("Starting music releases batch import via API (size: {BatchSize}, skip: {SkipCount})", batchSize, skipCount);
+                var importedCount = await _musicReleaseImportService.ImportMusicReleasesBatchAsync(batchSize, skipCount);
+                return Ok(new { Message = $"Music releases batch import completed. Imported {importedCount} releases." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred during music releases batch import");
+                return StatusCode(500, new { Message = "Error occurred during music releases batch import", Error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Gets import progress information
+        /// </summary>
+        /// <returns>Import progress details</returns>
+        [HttpGet("music-releases/progress")]
+        public async Task<ActionResult> GetImportProgress()
+        {
+            try
+            {
+                var progress = await _musicReleaseImportService.GetImportProgressAsync();
+                return Ok(progress);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while getting import progress");
+                return StatusCode(500, new { Message = "Error occurred while getting progress", Error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Validates that lookup data is ready for music release import
+        /// </summary>
+        /// <returns>Validation result</returns>
+        [HttpGet("music-releases/validate")]
+        public async Task<ActionResult> ValidateLookupData()
+        {
+            try
+            {
+                var (isValid, errors) = await _musicReleaseImportService.ValidateLookupDataAsync();
+                
+                if (isValid)
+                {
+                    return Ok(new { IsValid = true, Message = "Lookup data validation passed" });
+                }
+                else
+                {
+                    return BadRequest(new { IsValid = false, Errors = errors });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred during lookup data validation");
+                return StatusCode(500, new { Message = "Error occurred during validation", Error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Gets the total count of music releases available for import
+        /// </summary>
+        /// <returns>Count of music releases</returns>
+        [HttpGet("music-releases/count")]
+        public async Task<ActionResult> GetMusicReleaseCount()
+        {
+            try
+            {
+                var count = await _musicReleaseImportService.GetMusicReleaseCountAsync();
+                return Ok(new { Count = count });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred while getting music release count");
+                return StatusCode(500, new { Message = "Error occurred while getting count", Error = ex.Message });
             }
         }
     }
