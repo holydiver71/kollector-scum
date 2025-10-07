@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("KollectorScum.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d4ee03e401cea80a3741d7280b0f5f3149acde57")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6f4359023042bed5371686cb521902a5c3683b0e")]
 [assembly: System.Reflection.AssemblyProductAttribute("KollectorScum.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("KollectorScum.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
