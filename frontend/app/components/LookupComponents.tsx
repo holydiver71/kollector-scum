@@ -150,9 +150,29 @@ export function useLookupData<T extends LookupItem>(endpoint: string) {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetchJson(`/api/${endpoint}?pageSize=1000`);
-      setData(response.items || []);
+      
+      let allItems: T[] = [];
+      let currentPage = 1;
+      let hasMore = true;
+      
+      // Fetch all pages
+      while (hasMore) {
+        const response = await fetchJson(`/api/${endpoint}?pageSize=1000&page=${currentPage}`);
+        console.log(`Fetched ${endpoint} page ${currentPage}:`, response);
+        
+        const items = response.items || response || [];
+        allItems = [...allItems, ...items];
+        
+        // Check if there are more pages
+        hasMore = response.hasNext || (response.totalPages && currentPage < response.totalPages);
+        currentPage++;
+      }
+      
+      setData(allItems);
+      console.log(`Loaded ${allItems.length} total ${endpoint}, first: ${allItems[0]?.name}, last: ${allItems[allItems.length - 1]?.name}`);
+      
     } catch (err) {
+      console.error(`Error fetching ${endpoint}:`, err);
       setError(err instanceof Error ? err.message : "Failed to load data");
     } finally {
       setLoading(false);

@@ -39,7 +39,7 @@ namespace KollectorScum.Api.Controllers
             try
             {
                 if (page < 1) return BadRequest("Page must be greater than 0");
-                if (pageSize < 1 || pageSize > 100) return BadRequest("Page size must be between 1 and 100");
+                if (pageSize < 1 || pageSize > 5000) return BadRequest("Page size must be between 1 and 5000");
 
                 var filter = !string.IsNullOrEmpty(search)
             ? (Expression<Func<Artist, bool>>)(a => a.Name.ToLower().Contains(search.ToLower()))
