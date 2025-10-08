@@ -10,12 +10,20 @@ data/musicreleases.json
 data/packagings.json
 data/stores.json
 
+# Cover images
+frontend/public/images/
+*.jpg
+*.jpeg
+*.png
+
 # Node modules
 node_modules/
 
 # Build outputs
 dist/
 build/
+bin/
+obj/
 
 # Environment variables
 .env
@@ -59,3 +67,4 @@ backend/KollectorScum.Tests/obj/Debug/net8.0/KollectorScum.Tests.AssemblyInfo.cs
 backend/KollectorScum.Tests/obj/Debug/net8.0/KollectorScum.Tests.AssemblyInfoInputs.cache
 backend/KollectorScum.Tests/obj/Debug/net8.0/KollectorScum.Tests.assets.cache
 backend/KollectorScum.Tests/obj/Debug/net8.0/KollectorScum.Tests.csproj.AssemblyReference.cache
+TestResults/_andy-Latitude-E7440_2025-10-08_21_49_49.trx
