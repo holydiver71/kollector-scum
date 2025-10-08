@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import React, { useState } from 'react';
 import { CountryDropdown, GenreDropdown, ArtistDropdown, LabelDropdown, FormatDropdown } from "./LookupComponents";
 
 interface SearchFilters {
@@ -183,7 +183,7 @@ export function SearchAndFilter({ onFiltersChange, initialFilters = {} }: Search
             <div className="flex flex-wrap gap-2">
               {filters.search && (
                 <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                  Search: "{filters.search}"
+                  Search: &ldquo;{filters.search}&rdquo;
                   <button
                     onClick={() => updateFilters({ search: undefined })}
                     className="ml-1 text-blue-600 hover:text-blue-800"

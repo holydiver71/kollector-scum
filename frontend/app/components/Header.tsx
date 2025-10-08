@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 
 interface HeaderProps {
   title?: string;
@@ -21,24 +22,24 @@ const Header: React.FC<HeaderProps> = ({ title = "Kollector Sküm" }) => {
 
           {/* Navigation */}
           <nav className="hidden md:flex space-x-8">
-            <a 
+            <Link 
               href="/" 
               className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
             >
               Dashboard
-            </a>
-            <a 
+            </Link>
+            <Link 
               href="/collection" 
               className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
             >
               Collection
-            </a>
-            <a 
+            </Link>
+            <Link 
               href="/search" 
               className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
             >
               Search
-            </a>
+            </Link>
           </nav>
 
           {/* Mobile menu button */}

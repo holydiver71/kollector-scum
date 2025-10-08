@@ -8,6 +8,12 @@ interface LookupItem {
   name: string;
 }
 
+interface PaginatedResponse<T> {
+  items?: T[];
+  hasNext?: boolean;
+  totalPages?: number;
+}
+
 interface Country extends LookupItem {
   iso: string;
 }
@@ -25,14 +31,6 @@ interface Label extends LookupItem {
 }
 
 interface Format extends LookupItem {
-  description?: string;
-}
-
-interface Store extends LookupItem {
-  country?: string;
-}
-
-interface Packaging extends LookupItem {
   description?: string;
 }
 
@@ -157,14 +155,20 @@ export function useLookupData<T extends LookupItem>(endpoint: string) {
       
       // Fetch all pages
       while (hasMore) {
-        const response = await fetchJson(`/api/${endpoint}?pageSize=1000&page=${currentPage}`);
+        const response = await fetchJson<PaginatedResponse<T> | T[]>(`/api/${endpoint}?pageSize=1000&page=${currentPage}`);
         console.log(`Fetched ${endpoint} page ${currentPage}:`, response);
         
-        const items = response.items || response || [];
-        allItems = [...allItems, ...items];
+        // Handle both paginated response and direct array response
+        let items: T[] = [];
+        if (Array.isArray(response)) {
+          items = response;
+          hasMore = false; // Direct array means no pagination
+        } else {
+          items = response.items || [];
+          hasMore = response.hasNext || (response.totalPages ? currentPage < response.totalPages : false);
+        }
         
-        // Check if there are more pages
-        hasMore = response.hasNext || (response.totalPages && currentPage < response.totalPages);
+        allItems = [...allItems, ...items];
         currentPage++;
       }
       

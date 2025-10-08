@@ -2,8 +2,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { LoadingSpinner, Skeleton } from "./components/LoadingComponents";
-import { ErrorMessage } from "./components/ErrorBoundary";
-import { getHealth, getPagedCount, API_BASE_URL, ApiError } from "./lib/api";
+
+import { getHealth, getPagedCount, ApiError } from "./lib/api";
 
 // Data contracts
 interface HealthData { status: string; timestamp: string; service: string; version: string; }
