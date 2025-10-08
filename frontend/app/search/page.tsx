@@ -1,7 +1,7 @@
 "use client";
 
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { SearchAndFilter } from "../components/SearchAndFilter";
 import { MusicReleaseList } from "../components/MusicReleaseList";
 import { QuickSearch } from "../components/SearchAndFilter";

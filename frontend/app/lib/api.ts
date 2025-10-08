@@ -13,7 +13,7 @@ export const API_BASE_URL =
 
 export interface ApiError extends Error {
   status?: number;
-  details?: any;
+  details?: unknown;
   url?: string;
 }
 
@@ -22,7 +22,7 @@ interface FetchJsonOptions extends RequestInit {
   parse?: boolean; // allow head / no body
 }
 
-export async function fetchJson<T = any>(path: string, options: FetchJsonOptions = {}): Promise<T> {
+export async function fetchJson<T = unknown>(path: string, options: FetchJsonOptions = {}): Promise<T> {
   const { timeoutMs = DEFAULT_TIMEOUT_MS, parse = true, ...init } = options;
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeoutMs);
@@ -36,7 +36,7 @@ export async function fetchJson<T = any>(path: string, options: FetchJsonOptions
     const res = await fetch(url, { ...init, signal: controller.signal });
     clearTimeout(id);
     if (!res.ok) {
-      let body: any = null;
+      let body: unknown = null;
       try { body = await res.json(); } catch { /* ignore */ }
       const err: ApiError = new Error(`Request failed (${res.status}) ${res.statusText}`);
       err.status = res.status;
@@ -47,14 +47,14 @@ export async function fetchJson<T = any>(path: string, options: FetchJsonOptions
     if (!parse) return undefined as unknown as T;
     try {
       return await res.json();
-    } catch (e) {
+    } catch {
       const err: ApiError = new Error(`Failed to parse JSON for ${url}`);
       err.url = url;
       throw err;
     }
-  } catch (e: any) {
+  } catch (e: unknown) {
     clearTimeout(id);
-    if (e?.name === 'AbortError') {
+    if (e && typeof e === 'object' && 'name' in e && e.name === 'AbortError') {
       const err: ApiError = new Error(`Request timeout after ${timeoutMs}ms: ${url}`);
       err.url = url;
       throw err;
@@ -66,11 +66,22 @@ export async function fetchJson<T = any>(path: string, options: FetchJsonOptions
   }
 }
 
-export async function getHealth() {
-  return fetchJson('/api/health');
+interface HealthResponse {
+  status: string;
+  timestamp: string;
+  service: string;
+  version: string;
+}
+
+export async function getHealth(): Promise<HealthResponse> {
+  return fetchJson<HealthResponse>('/api/health');
+}
+
+interface PagedResponse {
+  totalCount?: number;
 }
 
 export async function getPagedCount(endpoint: string): Promise<number> {
-  const data = await fetchJson(`${endpoint}?pageSize=1`);
+  const data = await fetchJson<PagedResponse>(`${endpoint}?pageSize=1`);
   return data?.totalCount || 0;
 }
