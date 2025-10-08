@@ -57,9 +57,9 @@ namespace KollectorScum.Api.Controllers
                     return BadRequest("Page must be greater than 0");
                 }
 
-                if (pageSize < 1 || pageSize > 100)
+                if (pageSize < 1 || pageSize > 5000)
                 {
-                    return BadRequest("Page size must be between 1 and 100");
+                    return BadRequest("Page size must be between 1 and 5000");
                 }
 
                 _logger.LogInformation("Getting formats - Page: {Page}, PageSize: {PageSize}, Search: {Search}",
