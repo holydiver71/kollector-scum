@@ -1,0 +1,266 @@
+"use client";
+import { useState, useEffect } from "react";
+import { CountryDropdown, GenreDropdown, ArtistDropdown, LabelDropdown, FormatDropdown } from "./LookupComponents";
+
+interface SearchFilters {
+  search?: string;
+  artistId?: number;
+  genreId?: number;
+  labelId?: number;
+  countryId?: number;
+  formatId?: number;
+  live?: boolean;
+}
+
+interface SearchAndFilterProps {
+  onFiltersChange: (filters: SearchFilters) => void;
+  initialFilters?: SearchFilters;
+}
+
+export function SearchAndFilter({ onFiltersChange, initialFilters = {} }: SearchAndFilterProps) {
+  const [filters, setFilters] = useState<SearchFilters>(initialFilters);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
+  // Update filters when they change
+  const updateFilters = (newFilters: Partial<SearchFilters>) => {
+    const updatedFilters = { ...filters, ...newFilters };
+    setFilters(updatedFilters);
+    onFiltersChange(updatedFilters);
+  };
+
+  // Clear all filters
+  const clearFilters = () => {
+    const emptyFilters: SearchFilters = {};
+    setFilters(emptyFilters);
+    onFiltersChange(emptyFilters);
+  };
+
+  // Check if any filters are active
+  const hasActiveFilters = Object.keys(filters).some(key => {
+    const value = filters[key as keyof SearchFilters];
+    return value !== undefined && value !== null && value !== '';
+  });
+
+  return (
+    <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+      <div className="space-y-4">
+        {/* Search Input */}
+        <div>
+          <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
+            Search Releases
+          </label>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <input
+              id="search"
+              type="text"
+              placeholder="Search by title, artist, or label..."
+              value={filters.search || ''}
+              onChange={(e) => updateFilters({ search: e.target.value || undefined })}
+              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+        </div>
+
+        {/* Toggle Advanced Filters */}
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700"
+          >
+            <span>{showAdvanced ? 'Hide' : 'Show'} Advanced Filters</span>
+            <svg 
+              className={`h-4 w-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`}
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          {hasActiveFilters && (
+            <button
+              onClick={clearFilters}
+              className="text-sm font-medium text-red-600 hover:text-red-700"
+            >
+              Clear All Filters
+            </button>
+          )}
+        </div>
+
+        {/* Advanced Filters */}
+        {showAdvanced && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4 border-t border-gray-200">
+            {/* Artist Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Artist
+              </label>
+              <ArtistDropdown
+                value={filters.artistId}
+                onSelect={(artist) => updateFilters({ artistId: artist?.id })}
+              />
+            </div>
+
+            {/* Genre Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Genre
+              </label>
+              <GenreDropdown
+                value={filters.genreId}
+                onSelect={(genre) => updateFilters({ genreId: genre?.id })}
+              />
+            </div>
+
+            {/* Label Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Label
+              </label>
+              <LabelDropdown
+                value={filters.labelId}
+                onSelect={(label) => updateFilters({ labelId: label?.id })}
+              />
+            </div>
+
+            {/* Country Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Country
+              </label>
+              <CountryDropdown
+                value={filters.countryId}
+                onSelect={(country) => updateFilters({ countryId: country?.id })}
+              />
+            </div>
+
+            {/* Format Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Format
+              </label>
+              <FormatDropdown
+                value={filters.formatId}
+                onSelect={(format) => updateFilters({ formatId: format?.id })}
+              />
+            </div>
+
+            {/* Live Recording Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Recording Type
+              </label>
+              <select
+                value={filters.live === undefined ? '' : filters.live.toString()}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  updateFilters({ 
+                    live: value === '' ? undefined : value === 'true' 
+                  });
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">All recordings</option>
+                <option value="false">Studio recordings</option>
+                <option value="true">Live recordings</option>
+              </select>
+            </div>
+          </div>
+        )}
+
+        {/* Active Filters Display */}
+        {hasActiveFilters && (
+          <div className="pt-4 border-t border-gray-200">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-sm font-medium text-gray-700">Active filters:</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {filters.search && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  Search: "{filters.search}"
+                  <button
+                    onClick={() => updateFilters({ search: undefined })}
+                    className="ml-1 text-blue-600 hover:text-blue-800"
+                  >
+                    ×
+                  </button>
+                </span>
+              )}
+              {filters.live !== undefined && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                  {filters.live ? 'Live recordings' : 'Studio recordings'}
+                  <button
+                    onClick={() => updateFilters({ live: undefined })}
+                    className="ml-1 text-purple-600 hover:text-purple-800"
+                  >
+                    ×
+                  </button>
+                </span>
+              )}
+              {/* Add more filter chips as needed */}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Quick search component for smaller spaces
+export function QuickSearch({ 
+  onSearch, 
+  placeholder = "Search releases..." 
+}: { 
+  onSearch: (query: string) => void;
+  placeholder?: string;
+}) {
+  const [query, setQuery] = useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSearch(query);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="relative">
+      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+      <input
+        type="text"
+        placeholder={placeholder}
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        className="block w-full pl-10 pr-12 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+      />
+      {query && (
+        <button
+          type="button"
+          onClick={() => {
+            setQuery('');
+            onSearch('');
+          }}
+          className="absolute inset-y-0 right-8 flex items-center text-gray-400 hover:text-gray-600"
+        >
+          ×
+        </button>
+      )}
+      <button
+        type="submit"
+        className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+      >
+        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+        </svg>
+      </button>
+    </form>
+  );
+}
