@@ -41,7 +41,7 @@ export default function CollectionPage() {
         {/* Results */}
         <MusicReleaseList 
           filters={filters}
-          pageSize={20}
+          pageSize={60}
         />
       </div>
     </div>

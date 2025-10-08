@@ -8,19 +8,14 @@ import { LoadingSpinner, Skeleton } from "./LoadingComponents";
 interface MusicRelease {
   id: number;
   title: string;
-  releaseYear: number;
-  origReleaseYear?: number;
-  artists?: string[];
-  genres?: string[];
-  live: boolean;
+  releaseYear: string; // Backend returns DateTime as string
+  artistNames?: string[]; // Backend DTO field name
+  genreNames?: string[];  // Backend DTO field name
   labelName?: string;
   countryName?: string;
   formatName?: string;
-  labelNumber?: string;
-  lengthInSeconds?: number;
-  images?: Array<{ type: string; uri: string; height: number; width: number }>;
+  coverImageUrl?: string; // Backend DTO field name
   dateAdded: string;
-  lastModified: string;
 }
 
 interface PagedResult<T> {
@@ -47,107 +42,88 @@ interface MusicReleaseListProps {
 }
 
 export function MusicReleaseCard({ release }: { release: MusicRelease }) {
-  const formatDuration = (seconds?: number) => {
-    if (!seconds) return null;
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  const getCoverImageUrl = () => {
+    if (release.coverImageUrl) {
+      // Serve images through the backend API - use full backend URL
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5072';
+      return `${apiBaseUrl}/api/images/${release.coverImageUrl}`;
+    }
+    return '/placeholder-album.svg'; // Default placeholder
   };
 
-  const getCoverImage = () => {
-    const coverImage = release.images?.find(img => img.type === "primary");
-    return coverImage?.uri;
-  };
+  const [imageError, setImageError] = useState(false);
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-      <div className="p-6">
+      <div className="p-4">
         <div className="flex items-start gap-4">
-          {/* Cover Art */}
+          {/* Cover Art - Left */}
           <div className="flex-shrink-0">
-            {getCoverImage() ? (
+            {!imageError ? (
               <img
-                src={getCoverImage()}
+                src={getCoverImageUrl()}
                 alt={`${release.title} cover`}
-                className="w-16 h-16 rounded-md object-cover"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
+                className="w-36 h-36 rounded-md object-contain border border-gray-200 bg-white"
+                onError={() => setImageError(true)}
+                onLoad={() => setImageError(false)}
               />
             ) : (
-              <div className="w-16 h-16 bg-gray-200 rounded-md flex items-center justify-center">
-                <span className="text-gray-400 text-2xl">🎵</span>
+              <div className="w-36 h-36 bg-gray-100 rounded-md flex items-center justify-center border border-gray-200">
+                <span className="text-gray-400 text-4xl">🎵</span>
               </div>
             )}
           </div>
 
-          {/* Release Info */}
+          {/* Release Info - Right */}
           <div className="flex-grow min-w-0">
-            <div className="flex items-start justify-between">
-              <div className="min-w-0 flex-grow">
-                <h3 className="text-lg font-medium text-gray-900 truncate">
-                  <Link 
-                    href={`/releases/${release.id}`}
-                    className="hover:text-blue-600 transition-colors"
+            <h3 className="text-lg font-medium text-gray-900 truncate mb-1">
+              <Link 
+                href={`/releases/${release.id}`}
+                className="hover:text-blue-600 transition-colors"
+              >
+                {release.title}
+              </Link>
+            </h3>
+            
+            {release.artistNames && release.artistNames.length > 0 && (
+              <p className="text-sm text-gray-600 mb-2 truncate">
+                {release.artistNames.join(", ")}
+              </p>
+            )}
+
+            <div className="flex items-center gap-2 mb-2 text-sm text-gray-500">
+              {release.releaseYear && <span>{new Date(release.releaseYear).getFullYear()}</span>}
+              {release.formatName && <span>• {release.formatName}</span>}
+            </div>
+
+            <div className="flex flex-wrap gap-1 mb-2">
+              {release.labelName && (
+                <span className="bg-gray-100 px-2 py-1 rounded text-xs">
+                  {release.labelName}
+                </span>
+              )}
+              {release.countryName && (
+                <span className="bg-gray-100 px-2 py-1 rounded text-xs">
+                  {release.countryName}
+                </span>
+              )}
+            </div>
+
+            {release.genreNames && release.genreNames.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {release.genreNames.slice(0, 3).map((genre: string, index: number) => (
+                  <span
+                    key={index}
+                    className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
                   >
-                    {release.title}
-                  </Link>
-                  {release.live && (
-                    <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
-                      LIVE
-                    </span>
-                  )}
-                </h3>
-                
-                {release.artists && release.artists.length > 0 && (
-                  <p className="text-sm text-gray-600 mt-1">
-                    {release.artists.join(", ")}
-                  </p>
-                )}
-
-                <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                  <span>{release.releaseYear}</span>
-                  {release.origReleaseYear && release.origReleaseYear !== release.releaseYear && (
-                    <span>(orig. {release.origReleaseYear})</span>
-                  )}
-                  {release.formatName && <span>{release.formatName}</span>}
-                  {release.lengthInSeconds && (
-                    <span>{formatDuration(release.lengthInSeconds)}</span>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
-                  {release.labelName && (
-                    <span className="bg-gray-100 px-2 py-1 rounded text-xs">
-                      {release.labelName}
-                    </span>
-                  )}
-                  {release.countryName && (
-                    <span className="bg-gray-100 px-2 py-1 rounded text-xs">
-                      {release.countryName}
-                    </span>
-                  )}
-                  {release.labelNumber && (
-                    <span className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">
-                      {release.labelNumber}
-                    </span>
-                  )}
-                </div>
-
-                {release.genres && release.genres.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {release.genres.map((genre, index) => (
-                      <span
-                        key={index}
-                        className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
-                      >
-                        {genre}
-                      </span>
-                    ))}
-                  </div>
+                    {genre}
+                  </span>
+                ))}
+                {release.genreNames.length > 3 && (
+                  <span className="text-xs text-gray-500">+{release.genreNames.length - 3}</span>
                 )}
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
@@ -155,7 +131,7 @@ export function MusicReleaseCard({ release }: { release: MusicRelease }) {
   );
 }
 
-export function MusicReleaseList({ filters = {}, pageSize = 20 }: MusicReleaseListProps) {
+export function MusicReleaseList({ filters = {}, pageSize = 60 }: MusicReleaseListProps) {
   const [releases, setReleases] = useState<MusicRelease[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -265,8 +241,8 @@ export function MusicReleaseList({ filters = {}, pageSize = 20 }: MusicReleaseLi
         {loading && <LoadingSpinner />}
       </div>
 
-      {/* Release Cards */}
-      <div className="space-y-4 mb-8">
+      {/* Release Cards - 3 per row grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         {releases.map((release) => (
           <MusicReleaseCard key={release.id} release={release} />
         ))}
@@ -284,25 +260,40 @@ export function MusicReleaseList({ filters = {}, pageSize = 20 }: MusicReleaseLi
           </button>
 
           <div className="flex items-center gap-1">
-            {[...Array(Math.min(5, totalPages))].map((_, i) => {
-              const pageNum = Math.max(1, Math.min(currentPage - 2 + i, totalPages - 4 + i));
-              const isCurrentPage = pageNum === currentPage;
+            {(() => {
+              const maxPagesToShow = 5;
+              let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+              let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
               
-              return (
-                <button
-                  key={pageNum}
-                  onClick={() => handlePageChange(pageNum)}
-                  disabled={loading}
-                  className={`px-3 py-2 text-sm border rounded-md disabled:cursor-not-allowed ${
-                    isCurrentPage
-                      ? "bg-blue-600 text-white border-blue-600"
-                      : "border-gray-300 hover:bg-gray-50"
-                  }`}
-                >
-                  {pageNum}
-                </button>
-              );
-            })}
+              // Adjust startPage if we're near the end
+              if (endPage - startPage < maxPagesToShow - 1) {
+                startPage = Math.max(1, endPage - maxPagesToShow + 1);
+              }
+              
+              const pages = [];
+              for (let pageNum = startPage; pageNum <= endPage; pageNum++) {
+                pages.push(pageNum);
+              }
+              
+              return pages.map((pageNum) => {
+                const isCurrentPage = pageNum === currentPage;
+                
+                return (
+                  <button
+                    key={`page-${pageNum}`}
+                    onClick={() => handlePageChange(pageNum)}
+                    disabled={loading}
+                    className={`px-3 py-2 text-sm border rounded-md disabled:cursor-not-allowed ${
+                      isCurrentPage
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "border-gray-300 hover:bg-gray-50"
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              });
+            })()}
           </div>
 
           <button
