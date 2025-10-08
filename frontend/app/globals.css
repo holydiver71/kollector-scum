@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
-/* Metal Mania provided via next/font; variable: --font-metal */
+/* Clean modern styling */
 
 :root {
   --background: #ffffff;
   --foreground: #171717;
 }
 
-/* Theme vars (removed experimental @theme at-rule) */
+/* Theme vars */
 :root {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -27,36 +27,3 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
-
-/* Utility class for the metal title */
-.font-metal {
-  font-family: var(--font-metal), 'Inter', system-ui, sans-serif;
-  font-weight: 400; /* Metal Mania only has 400 */
-  font-synthesis: none;
-  letter-spacing: 0.06em;
-  text-shadow: 0 0 6px rgba(220,38,38,0.55), 0 0 18px rgba(0,0,0,0.9);
-  position: relative;
-}
-
-.font-metal::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  bottom: -12px;
-  width: 60%;
-  height: 4px;
-  transform: translateX(-50%);
-  background: linear-gradient(90deg, rgba(127,29,29,0) 0%, rgba(220,38,38,0.8) 50%, rgba(127,29,29,0) 100%);
-  filter: blur(1px);
-}
-
-/* Blood splatter subtle overlay helper (optional reuse) */
-.blood-splatter-overlay {
-  background-image: url('/images/blood-splatter.png');
-  background-size: cover;
-  background-position: center;
-  opacity: 0.10;
-  pointer-events: none;
-}
-
-/* (Removed flicker animation per user request) */

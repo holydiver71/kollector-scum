@@ -47,62 +47,60 @@ export default function Dashboard() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-black via-gray-950 to-red-950 flex items-center justify-center p-6">
-        <div className="max-w-md w-full text-center bg-black/70 backdrop-blur border border-red-700 rounded-xl p-8 shadow-2xl shadow-red-900/50">
-          <div className="text-6xl mb-4">💀</div>
-          <h1 className="text-red-400 font-black tracking-widest text-2xl mb-2">SYSTEM ERROR</h1>
-          <p className="text-gray-300 text-sm mb-6">{error}</p>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+        <div className="max-w-md w-full text-center bg-white border border-gray-200 rounded-lg p-8 shadow-lg">
+          <div className="text-6xl mb-4">⚠️</div>
+          <h1 className="text-gray-900 font-semibold text-xl mb-2">Connection Error</h1>
+          <p className="text-gray-600 text-sm mb-6">{error}</p>
           <button
             onClick={() => location.reload()}
-            className="px-6 py-3 font-bold tracking-wide rounded-md bg-gradient-to-r from-red-700 to-red-900 hover:from-red-600 hover:to-red-800 text-white shadow-lg shadow-red-900/40 transition-transform hover:scale-105"
-          >RELOAD SKÜM</button>
+            className="px-6 py-2 font-medium rounded-md bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+          >Reload SKÜM</button>
         </div>
       </div>
     );
   }
 
   const statCards = [
-    { key: "releases", label: "RELEASES", value: stats?.totalReleases || 0, gradient: "from-red-700 to-red-900", icon: "🎵" },
-    { key: "artists", label: "ARTISTS", value: stats?.totalArtists || 0, gradient: "from-orange-600 to-red-800", icon: "🤘" },
-    { key: "genres", label: "GENRES", value: stats?.totalGenres || 0, gradient: "from-yellow-600 to-orange-700", icon: "⚡" },
-    { key: "labels", label: "LABELS", value: stats?.totalLabels || 0, gradient: "from-red-950 to-black", icon: "🔥" }
+    { key: "releases", label: "Releases", value: stats?.totalReleases || 0, color: "blue", icon: "🎵" },
+    { key: "artists", label: "Artists", value: stats?.totalArtists || 0, color: "green", icon: "👤" },
+    { key: "genres", label: "Genres", value: stats?.totalGenres || 0, color: "purple", icon: "🏷️" },
+    { key: "labels", label: "Labels", value: stats?.totalLabels || 0, color: "orange", icon: "🏢" }
   ];
 
   const actions = [
-    { title: "BROWSE COLLECTION", href: "/collection", desc: "Explore your metal archives", icon: "📻", gradient: "from-gray-800 to-black" },
-    { title: "SEEK & DESTROY", href: "/search", desc: "Find specific releases", icon: "🔍", gradient: "from-red-900 to-black" },
-    { title: "ADD TO SKÜM", href: "/add", desc: "Expand your collection", icon: "➕", gradient: "from-orange-900 to-red-900" },
-    { title: "METAL GENRES", href: "/genres", desc: "Browse by style", icon: "⚡", gradient: "from-yellow-900 to-orange-900" },
-    { title: "METAL GODS", href: "/artists", desc: "Browse artists", icon: "🤘", gradient: "from-red-950 to-black" },
-  { title: "SKÜM SETTINGS", href: "/settings", desc: "Configure collection", icon: "⚙️", gradient: "from-gray-900 to-black" }
+    { title: "Browse Collection", href: "/collection", desc: "Explore your music library", icon: "📻", color: "gray" },
+    { title: "Search Music", href: "/search", desc: "Find specific releases", icon: "🔍", color: "blue" },
+    { title: "Add Release", href: "/add", desc: "Add new music to collection", icon: "➕", color: "green" },
+    { title: "Genres", href: "/genres", desc: "Browse by genre", icon: "⚡", color: "purple" },
+    { title: "Artists", href: "/artists", desc: "Browse artists", icon: "👤", color: "indigo" },
+    { title: "Settings", href: "/settings", desc: "Configure application", icon: "⚙️", color: "gray" }
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-950 to-red-950 text-gray-100">
+    <div className="min-h-screen bg-gray-50">
       {/* Hero / Banner */}
-      <section className="relative overflow-hidden border-b border-red-800/50">
-        <div className="absolute inset-0 bg-[url('/images/blood-splatter.png')] bg-cover opacity-10 pointer-events-none" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(185,28,28,0.25),transparent_70%)]" />
-        <div className="max-w-7xl mx-auto px-4 py-14 relative">
-          <h1
-            aria-label="Kollector Sküm"
-            className="text-5xl md:text-7xl tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-orange-400 to-red-600 drop-shadow-[0_0_8px_rgba(220,38,38,0.45)] -skew-x-6 font-metal select-none"
-          >
-            <span aria-hidden="true">KOLLECTOR SKÜM</span>
+      <section className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 py-12">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
+            KOLLECTOR SKÜM
           </h1>
-          <p className="mt-4 text-sm md:text-base tracking-widest text-gray-300 font-semibold">
-            CURATING THE SONIC ARMORY
+          <p className="text-lg text-gray-600 mb-6">
+            Organize and discover your music library
           </p>
-          <div className="mt-6 flex items-center gap-4">
-            <div className="flex items-center text-xs font-mono tracking-wider">
-              <span className="mr-2 text-gray-400">API:</span>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center text-sm">
+              <span className="mr-2 text-gray-500">Status:</span>
               {health?.status === "Healthy" ? (
-                <span className="flex items-center text-green-400 font-bold">
-                  <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse mr-2" />
-                  LIVE & BRUTAL
+                <span className="flex items-center text-green-600 font-medium">
+                  <span className="w-2 h-2 rounded-full bg-green-500 mr-2" />
+                  Online
                 </span>
               ) : (
-                <span className="text-red-400 font-bold">OFFLINE</span>
+                <span className="flex items-center text-red-600 font-medium">
+                  <span className="w-2 h-2 rounded-full bg-red-500 mr-2" />
+                  Offline
+                </span>
               )}
             </div>
             {loading && <LoadingSpinner />}
@@ -112,24 +110,23 @@ export default function Dashboard() {
 
       <main className="max-w-7xl mx-auto px-4 py-12">
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-14">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           {loading ? (
             [...Array(4)].map((_, i) => (
-              <div key={i} className="rounded-xl border border-red-900/40 bg-black/40 p-6">
-                <Skeleton lines={4} />
+              <div key={i} className="rounded-lg border border-gray-200 bg-white p-6">
+                <Skeleton lines={3} />
               </div>
             ))
           ) : (
             statCards.map(card => (
               <div
                 key={card.key}
-                className={`group relative rounded-xl border-2 border-gray-900 bg-gradient-to-br ${card.gradient} p-6 shadow-xl shadow-black/50 overflow-hidden transition-all hover:scale-[1.03] hover:border-red-600`}
+                className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow"
               >
-                <div className="absolute -top-6 -right-6 w-24 h-24 bg-red-800/20 rounded-full blur-2xl group-hover:bg-red-600/30 transition-colors" />
-                <div className="relative text-center">
-                  <div className="text-4xl mb-2 drop-shadow">{card.icon}</div>
-                  <div className="text-3xl font-black tracking-wider">{card.value.toLocaleString()}</div>
-                  <div className="mt-1 text-xs font-semibold tracking-[0.35em] text-gray-200">
+                <div className="text-center">
+                  <div className="text-3xl mb-3">{card.icon}</div>
+                  <div className="text-2xl font-bold text-gray-900 mb-1">{card.value.toLocaleString()}</div>
+                  <div className="text-sm font-medium text-gray-600">
                     {card.label}
                   </div>
                 </div>
@@ -139,48 +136,47 @@ export default function Dashboard() {
         </div>
 
         {/* Quick Actions */}
-        <h2 className="text-xl font-black tracking-wider text-red-400 mb-6 flex items-center gap-3">
-          <span className="text-2xl">⚔️</span> OPERATIONS CONSOLE
+        <h2 className="text-xl font-semibold text-gray-900 mb-6">
+          Quick Actions
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
           {actions.map(a => (
             <Link
               key={a.title}
               href={a.href}
-              className={`group relative rounded-xl border border-gray-800 bg-gradient-to-br ${a.gradient} p-6 overflow-hidden shadow-lg shadow-black/40 transition-all hover:shadow-red-900/40 hover:border-red-600 hover:scale-[1.03]`}
+              className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md transition-all hover:border-blue-300"
             >
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[radial-gradient(circle_at_center,rgba(255,0,0,0.15),transparent_70%)]" />
-              <div className="relative text-center">
-                <div className="text-4xl mb-3 group-hover:animate-pulse">{a.icon}</div>
-                <h3 className="font-black tracking-wider text-sm text-gray-100 group-hover:text-red-300 transition-colors">
+              <div className="text-center">
+                <div className="text-3xl mb-3">{a.icon}</div>
+                <h3 className="font-medium text-gray-900 mb-2">
                   {a.title}
                 </h3>
-                <p className="mt-2 text-xs text-gray-300 tracking-wide">{a.desc}</p>
+                <p className="text-sm text-gray-600">{a.desc}</p>
               </div>
             </Link>
           ))}
         </div>
 
         {/* Recent Activity placeholder */}
-        <div className="rounded-xl border border-red-900/40 bg-black/50 p-8 backdrop-blur shadow-lg shadow-black/50">
-          <h3 className="font-black tracking-wider text-sm text-red-300 mb-4 flex items-center gap-2">
-            <span className="text-lg">🩸</span> RECENT ACTIVITY
+        <div className="bg-white rounded-lg border border-gray-200 p-8 shadow-sm">
+          <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+            <span className="text-xl">📈</span> Recent Activity
           </h3>
-          <div className="text-center py-10 text-gray-400">
-            <div className="text-5xl mb-4">⏱️</div>
-            <p className="font-semibold tracking-wide">Activity tracking coming soon</p>
-            <p className="text-xs mt-2 text-gray-500">This module will chronicle your latest Sküm operations.</p>
+          <div className="text-center py-8 text-gray-500">
+            <div className="text-4xl mb-4">⏱️</div>
+            <p className="font-medium mb-2">Activity tracking coming soon</p>
+            <p className="text-sm">View your recent collection updates and changes here.</p>
           </div>
         </div>
 
         {/* System Info */}
-        <div className="mt-14 text-center">
-          <div className="inline-block px-6 py-4 rounded-lg border border-red-800/60 bg-black/60 backdrop-blur-sm shadow-inner shadow-red-900/20">
-            <p className="text-[10px] tracking-[0.35em] font-semibold text-gray-400">
-              POWERED BY <span className="text-red-400">{health?.service}</span> v{health?.version}
+        <div className="mt-8 text-center">
+          <div className="inline-block px-4 py-2 rounded border border-gray-200 bg-gray-50">
+            <p className="text-xs text-gray-600">
+              Powered by <span className="font-medium">{health?.service}</span> v{health?.version}
             </p>
-            <p className="text-[10px] mt-2 tracking-widest text-gray-500">
-              LAST SYNC: {health?.timestamp ? new Date(health.timestamp).toLocaleString() : "UNKNOWN"}
+            <p className="text-xs mt-1 text-gray-500">
+              Last sync: {health?.timestamp ? new Date(health.timestamp).toLocaleString() : "Unknown"}
             </p>
           </div>
         </div>
