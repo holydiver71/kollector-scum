@@ -59,19 +59,24 @@ export function MusicReleaseCard({ release }: { release: MusicRelease }) {
         <div className="flex items-start gap-4">
           {/* Cover Art - Left */}
           <div className="flex-shrink-0">
-            {!imageError ? (
-              <img
-                src={getCoverImageUrl()}
-                alt={`${release.title} cover`}
-                className="w-36 h-36 rounded-md object-contain border border-gray-200 bg-white"
-                onError={() => setImageError(true)}
-                onLoad={() => setImageError(false)}
-              />
-            ) : (
-              <div className="w-36 h-36 bg-gray-100 rounded-md flex items-center justify-center border border-gray-200">
-                <span className="text-gray-400 text-4xl">🎵</span>
-              </div>
-            )}
+            <Link 
+              href={`/releases/${release.id}`}
+              className="block hover:opacity-80 transition-opacity"
+            >
+              {!imageError ? (
+                <img
+                  src={getCoverImageUrl()}
+                  alt={`${release.title} cover`}
+                  className="w-36 h-36 rounded-md object-contain border border-gray-200 bg-white cursor-pointer"
+                  onError={() => setImageError(true)}
+                  onLoad={() => setImageError(false)}
+                />
+              ) : (
+                <div className="w-36 h-36 bg-gray-100 rounded-md flex items-center justify-center border border-gray-200 cursor-pointer">
+                  <span className="text-gray-400 text-4xl">🎵</span>
+                </div>
+              )}
+            </Link>
           </div>
 
           {/* Release Info - Right */}
