@@ -433,9 +433,7 @@ namespace KollectorScum.Api.Controllers
                 Links = string.IsNullOrEmpty(musicRelease.Links) 
                     ? null 
                     : JsonSerializer.Deserialize<List<MusicReleaseLinkDto>>(musicRelease.Links),
-                Media = string.IsNullOrEmpty(musicRelease.Media) 
-                    ? null 
-                    : JsonSerializer.Deserialize<List<MusicReleaseMediaDto>>(musicRelease.Media),
+                Media = await ResolveMediaArtists(musicRelease.Media),
                 DateAdded = musicRelease.DateAdded,
                 LastModified = musicRelease.LastModified
             };
@@ -453,6 +451,68 @@ namespace KollectorScum.Api.Controllers
             // This is synchronous for performance in list mapping - could be optimized with caching
             var genre = _genreRepository.GetByIdAsync(id).Result;
             return genre?.Name ?? $"Genre {id}";
+        }
+
+        private async Task<List<MusicReleaseMediaDto>?> ResolveMediaArtists(string? mediaJson)
+        {
+            if (string.IsNullOrEmpty(mediaJson))
+                return null;
+
+            var mediaList = JsonSerializer.Deserialize<List<MusicReleaseMediaDto>>(mediaJson);
+            if (mediaList == null) return null;
+
+            foreach (var media in mediaList)
+            {
+                if (media.Tracks != null)
+                {
+                    foreach (var track in media.Tracks)
+                    {
+                        // Resolve artist IDs to names
+                        if (track.Artists != null && track.Artists.Count > 0)
+                        {
+                            var resolvedArtists = new List<string>();
+                            foreach (var artistIdStr in track.Artists)
+                            {
+                                // Try to parse as ID, if it's numeric
+                                if (int.TryParse(artistIdStr, out int artistId))
+                                {
+                                    var artist = await _artistRepository.GetByIdAsync(artistId);
+                                    resolvedArtists.Add(artist?.Name ?? artistIdStr);
+                                }
+                                else
+                                {
+                                    // Already a name, keep as is
+                                    resolvedArtists.Add(artistIdStr);
+                                }
+                            }
+                            track.Artists = resolvedArtists;
+                        }
+
+                        // Resolve genre IDs to names
+                        if (track.Genres != null && track.Genres.Count > 0)
+                        {
+                            var resolvedGenres = new List<string>();
+                            foreach (var genreIdStr in track.Genres)
+                            {
+                                // Try to parse as ID, if it's numeric
+                                if (int.TryParse(genreIdStr, out int genreId))
+                                {
+                                    var genre = await _genreRepository.GetByIdAsync(genreId);
+                                    resolvedGenres.Add(genre?.Name ?? genreIdStr);
+                                }
+                                else
+                                {
+                                    // Already a name, keep as is
+                                    resolvedGenres.Add(genreIdStr);
+                                }
+                            }
+                            track.Genres = resolvedGenres;
+                        }
+                    }
+                }
+            }
+
+            return mediaList;
         }
     }
 }
