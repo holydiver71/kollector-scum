@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using KollectorScum.Api.Interfaces;
 using KollectorScum.Api.Models;
+using KollectorScum.Api.Models.ValueObjects;
 using KollectorScum.Api.DTOs;
 using System.Linq.Expressions;
 using System.Text.Json;
@@ -424,9 +425,7 @@ namespace KollectorScum.Api.Controllers
                 LengthInSeconds = musicRelease.LengthInSeconds,
                 Format = musicRelease.Format != null ? new FormatDto { Id = musicRelease.Format.Id, Name = musicRelease.Format.Name } : null,
                 Packaging = musicRelease.Packaging != null ? new PackagingDto { Id = musicRelease.Packaging.Id, Name = musicRelease.Packaging.Name } : null,
-                PurchaseInfo = string.IsNullOrEmpty(musicRelease.PurchaseInfo) 
-                    ? null 
-                    : JsonSerializer.Deserialize<MusicReleasePurchaseInfoDto>(musicRelease.PurchaseInfo),
+                PurchaseInfo = await ResolvePurchaseInfo(musicRelease.PurchaseInfo),
                 Images = string.IsNullOrEmpty(musicRelease.Images) 
                     ? null 
                     : JsonSerializer.Deserialize<MusicReleaseImageDto>(musicRelease.Images),
@@ -513,6 +512,49 @@ namespace KollectorScum.Api.Controllers
             }
 
             return mediaList;
+        }
+
+        /// <summary>
+        /// Resolves purchase information from JSON string to DTO with store name resolution
+        /// </summary>
+        /// <param name="purchaseInfoJson">JSON string containing purchase information</param>
+        /// <returns>Resolved purchase info DTO</returns>
+        private async Task<MusicReleasePurchaseInfoDto?> ResolvePurchaseInfo(string? purchaseInfoJson)
+        {
+            if (string.IsNullOrEmpty(purchaseInfoJson))
+                return null;
+
+            try
+            {
+                // Deserialize the original JSON structure
+                var purchaseInfo = JsonSerializer.Deserialize<Models.ValueObjects.PurchaseInfo>(purchaseInfoJson);
+                if (purchaseInfo == null)
+                    return null;
+
+                // Resolve store name if StoreID is provided
+                string? storeName = null;
+                if (purchaseInfo.StoreID.HasValue)
+                {
+                    var store = await _storeRepository.GetByIdAsync(purchaseInfo.StoreID.Value);
+                    storeName = store?.Name;
+                }
+
+                // Map to DTO
+                return new MusicReleasePurchaseInfoDto
+                {
+                    StoreId = purchaseInfo.StoreID,
+                    StoreName = storeName,
+                    Price = purchaseInfo.Price,
+                    Currency = "GBP", // Default currency - assuming GBP for UK-based collection
+                    PurchaseDate = purchaseInfo.Date,
+                    Notes = purchaseInfo.Notes
+                };
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogWarning(ex, "Failed to parse purchase info JSON: {Json}", purchaseInfoJson);
+                return null;
+            }
         }
     }
 }

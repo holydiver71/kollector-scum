@@ -277,37 +277,60 @@ export default function ReleaseDetailPage() {
             {/* Purchase Info */}
             {release.purchaseInfo && (
               <div className="bg-white rounded-lg border border-gray-200 p-6 mt-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Purchase Info</h3>
-                <dl className="space-y-3">
-                  {release.purchaseInfo.storeName && (
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Purchase Information</h3>
+                <dl className="space-y-4">
+                  {/* Store Information */}
+                  {(release.purchaseInfo.storeName || release.purchaseInfo.storeId) && (
                     <div>
                       <dt className="text-sm font-medium text-gray-500">Store</dt>
-                      <dd className="text-sm text-gray-900">{release.purchaseInfo.storeName}</dd>
-                    </div>
-                  )}
-                  {release.purchaseInfo.price && (
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">Price</dt>
                       <dd className="text-sm text-gray-900">
-                        {release.purchaseInfo.currency || '$'}{release.purchaseInfo.price}
+                        {release.purchaseInfo.storeName || `Store ID: ${release.purchaseInfo.storeId}`}
                       </dd>
                     </div>
                   )}
+                  
+                  {/* Price Information */}
+                  {release.purchaseInfo.price && (
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">Purchase Price</dt>
+                      <dd className="text-sm text-gray-900">
+                        <span className="font-medium">
+                          {release.purchaseInfo.currency === 'GBP' || !release.purchaseInfo.currency 
+                            ? `£${release.purchaseInfo.price.toFixed(2)}`
+                            : `${release.purchaseInfo.currency} ${release.purchaseInfo.price.toFixed(2)}`
+                          }
+                        </span>
+                      </dd>
+                    </div>
+                  )}
+                  
+                  {/* Purchase Date */}
                   {release.purchaseInfo.purchaseDate && (
                     <div>
                       <dt className="text-sm font-medium text-gray-500">Purchase Date</dt>
                       <dd className="text-sm text-gray-900">
-                        {new Date(release.purchaseInfo.purchaseDate).toLocaleDateString()}
+                        {new Date(release.purchaseInfo.purchaseDate).toLocaleDateString('en-US', {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        })}
                       </dd>
                     </div>
                   )}
+                  
+                  {/* Purchase Notes */}
                   {release.purchaseInfo.notes && (
                     <div>
                       <dt className="text-sm font-medium text-gray-500">Notes</dt>
-                      <dd className="text-sm text-gray-900">{release.purchaseInfo.notes}</dd>
+                      <dd className="text-sm text-gray-900 bg-gray-50 p-3 rounded-md border">
+                        {release.purchaseInfo.notes}
+                      </dd>
                     </div>
                   )}
+
                 </dl>
+
               </div>
             )}
           </div>
