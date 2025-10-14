@@ -126,24 +126,7 @@ export function TrackList({ media, albumArtists = [] }: TrackListProps) {
                             </p>
                           )}
 
-                          {/* Track Genres */}
-                          {track.genres && track.genres.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              {track.genres.slice(0, 2).map((genre, genreIndex) => (
-                                <span
-                                  key={genreIndex}
-                                  className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700"
-                                >
-                                  {genre}
-                                </span>
-                              ))}
-                              {track.genres.length > 2 && (
-                                <span className="text-xs text-gray-500">
-                                  +{track.genres.length - 2}
-                                </span>
-                              )}
-                            </div>
-                          )}
+
                         </div>
 
                         {/* Duration */}
