@@ -1,6 +1,8 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { CountryDropdown, GenreDropdown, ArtistDropdown, LabelDropdown, FormatDropdown } from "./LookupComponents";
+import { getSearchSuggestions, SearchSuggestion } from '../lib/api';
 
 interface SearchFilters {
   search?: string;
@@ -10,16 +12,106 @@ interface SearchFilters {
   countryId?: number;
   formatId?: number;
   live?: boolean;
+  yearFrom?: number;
+  yearTo?: number;
 }
 
 interface SearchAndFilterProps {
   onFiltersChange: (filters: SearchFilters) => void;
   initialFilters?: SearchFilters;
+  enableUrlSync?: boolean; // Enable URL parameter synchronization
 }
 
-export function SearchAndFilter({ onFiltersChange, initialFilters = {} }: SearchAndFilterProps) {
+export function SearchAndFilter({ onFiltersChange, initialFilters = {}, enableUrlSync = false }: SearchAndFilterProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [filters, setFilters] = useState<SearchFilters>(initialFilters);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [suggestionIndex, setSuggestionIndex] = useState(-1);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+
+  // Load filters from URL on mount
+  useEffect(() => {
+    if (enableUrlSync && searchParams) {
+      const urlFilters: SearchFilters = {};
+      const search = searchParams.get('search');
+      const artistId = searchParams.get('artistId');
+      const genreId = searchParams.get('genreId');
+      const labelId = searchParams.get('labelId');
+      const countryId = searchParams.get('countryId');
+      const formatId = searchParams.get('formatId');
+      const live = searchParams.get('live');
+      const yearFrom = searchParams.get('yearFrom');
+      const yearTo = searchParams.get('yearTo');
+
+      if (search) urlFilters.search = search;
+      if (artistId) urlFilters.artistId = parseInt(artistId);
+      if (genreId) urlFilters.genreId = parseInt(genreId);
+      if (labelId) urlFilters.labelId = parseInt(labelId);
+      if (countryId) urlFilters.countryId = parseInt(countryId);
+      if (formatId) urlFilters.formatId = parseInt(formatId);
+      if (live) urlFilters.live = live === 'true';
+      if (yearFrom) urlFilters.yearFrom = parseInt(yearFrom);
+      if (yearTo) urlFilters.yearTo = parseInt(yearTo);
+
+      if (Object.keys(urlFilters).length > 0) {
+        setFilters(urlFilters);
+        onFiltersChange(urlFilters);
+      }
+    }
+  }, []); // Only run on mount
+
+  // Update URL when filters change
+  useEffect(() => {
+    if (enableUrlSync) {
+      const params = new URLSearchParams();
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.set(key, value.toString());
+        }
+      });
+      const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname;
+      router.replace(newUrl, { scroll: false });
+    }
+  }, [filters, enableUrlSync, router]);
+
+  // Fetch suggestions when search text changes
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      if (filters.search && filters.search.length >= 2) {
+        try {
+          const results = await getSearchSuggestions(filters.search);
+          setSuggestions(results);
+          setShowSuggestions(true);
+        } catch (error) {
+          console.error('Failed to fetch suggestions:', error);
+          setSuggestions([]);
+        }
+      } else {
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    };
+
+    const timeoutId = setTimeout(fetchSuggestions, 300); // Debounce
+    return () => clearTimeout(timeoutId);
+  }, [filters.search]);
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(event.target as Node) &&
+          searchInputRef.current && !searchInputRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Update filters when they change
   const updateFilters = (newFilters: Partial<SearchFilters>) => {
@@ -33,6 +125,53 @@ export function SearchAndFilter({ onFiltersChange, initialFilters = {} }: Search
     const emptyFilters: SearchFilters = {};
     setFilters(emptyFilters);
     onFiltersChange(emptyFilters);
+    setSuggestions([]);
+    setShowSuggestions(false);
+  };
+
+  // Handle suggestion selection
+  const handleSuggestionClick = (suggestion: SearchSuggestion) => {
+    if (suggestion.type === 'release') {
+      router.push(`/releases/${suggestion.id}`);
+    } else if (suggestion.type === 'artist') {
+      updateFilters({ search: undefined, artistId: suggestion.id });
+    } else if (suggestion.type === 'label') {
+      updateFilters({ search: undefined, labelId: suggestion.id });
+    }
+    setShowSuggestions(false);
+    setSuggestionIndex(-1);
+  };
+
+  // Handle keyboard navigation
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!showSuggestions || suggestions.length === 0) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSuggestionIndex(prev => (prev < suggestions.length - 1 ? prev + 1 : prev));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSuggestionIndex(prev => (prev > 0 ? prev - 1 : -1));
+    } else if (e.key === 'Enter' && suggestionIndex >= 0) {
+      e.preventDefault();
+      handleSuggestionClick(suggestions[suggestionIndex]);
+    } else if (e.key === 'Escape') {
+      setShowSuggestions(false);
+      setSuggestionIndex(-1);
+    }
+  };
+
+  // Copy filter URL to clipboard
+  const copyFilterUrl = () => {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.set(key, value.toString());
+      }
+    });
+    const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+    navigator.clipboard.writeText(url);
+    alert('Filter URL copied to clipboard!');
   };
 
   // Check if any filters are active
@@ -44,7 +183,7 @@ export function SearchAndFilter({ onFiltersChange, initialFilters = {} }: Search
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
       <div className="space-y-4">
-        {/* Search Input */}
+        {/* Search Input with Autocomplete */}
         <div>
           <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
             Search Releases
@@ -56,17 +195,47 @@ export function SearchAndFilter({ onFiltersChange, initialFilters = {} }: Search
               </svg>
             </div>
             <input
+              ref={searchInputRef}
               id="search"
               type="text"
               placeholder="Search by title, artist, or label..."
               value={filters.search || ''}
               onChange={(e) => updateFilters({ search: e.target.value || undefined })}
+              onKeyDown={handleKeyDown}
+              onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
               className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              autoComplete="off"
             />
+            
+            {/* Autocomplete Suggestions */}
+            {showSuggestions && suggestions.length > 0 && (
+              <div 
+                ref={suggestionsRef}
+                className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"
+              >
+                {suggestions.map((suggestion, index) => (
+                  <button
+                    key={`${suggestion.type}-${suggestion.id}`}
+                    onClick={() => handleSuggestionClick(suggestion)}
+                    className={`w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center justify-between ${
+                      index === suggestionIndex ? 'bg-blue-50' : ''
+                    }`}
+                  >
+                    <div>
+                      <div className="font-medium text-gray-900">{suggestion.name}</div>
+                      {suggestion.subtitle && (
+                        <div className="text-sm text-gray-500">{suggestion.subtitle}</div>
+                      )}
+                    </div>
+                    <span className="text-xs text-gray-400 capitalize">{suggestion.type}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Toggle Advanced Filters */}
+        {/* Toggle Advanced Filters & Share Button */}
         <div className="flex items-center justify-between">
           <button
             onClick={() => setShowAdvanced(!showAdvanced)}
@@ -83,14 +252,28 @@ export function SearchAndFilter({ onFiltersChange, initialFilters = {} }: Search
             </svg>
           </button>
 
-          {hasActiveFilters && (
-            <button
-              onClick={clearFilters}
-              className="text-sm font-medium text-red-600 hover:text-red-700"
-            >
-              Clear All Filters
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {hasActiveFilters && enableUrlSync && (
+              <button
+                onClick={copyFilterUrl}
+                className="text-sm font-medium text-green-600 hover:text-green-700 flex items-center gap-1"
+                title="Copy shareable link"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                Share
+              </button>
+            )}
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="text-sm font-medium text-red-600 hover:text-red-700"
+              >
+                Clear All Filters
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Advanced Filters */}
@@ -171,6 +354,37 @@ export function SearchAndFilter({ onFiltersChange, initialFilters = {} }: Search
                 <option value="true">Live recordings</option>
               </select>
             </div>
+
+            {/* Year Range Filters */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                From Year
+              </label>
+              <input
+                type="number"
+                placeholder="e.g., 1970"
+                value={filters.yearFrom || ''}
+                onChange={(e) => updateFilters({ yearFrom: e.target.value ? parseInt(e.target.value) : undefined })}
+                min="1900"
+                max={new Date().getFullYear()}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                To Year
+              </label>
+              <input
+                type="number"
+                placeholder="e.g., 2024"
+                value={filters.yearTo || ''}
+                onChange={(e) => updateFilters({ yearTo: e.target.value ? parseInt(e.target.value) : undefined })}
+                min="1900"
+                max={new Date().getFullYear()}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
           </div>
         )}
 
@@ -203,7 +417,28 @@ export function SearchAndFilter({ onFiltersChange, initialFilters = {} }: Search
                   </button>
                 </span>
               )}
-              {/* Add more filter chips as needed */}
+              {filters.yearFrom && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  From: {filters.yearFrom}
+                  <button
+                    onClick={() => updateFilters({ yearFrom: undefined })}
+                    className="ml-1 text-green-600 hover:text-green-800"
+                  >
+                    ×
+                  </button>
+                </span>
+              )}
+              {filters.yearTo && (
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  To: {filters.yearTo}
+                  <button
+                    onClick={() => updateFilters({ yearTo: undefined })}
+                    className="ml-1 text-green-600 hover:text-green-800"
+                  >
+                    ×
+                  </button>
+                </span>
+              )}
             </div>
           </div>
         )}
