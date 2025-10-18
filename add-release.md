@@ -14,52 +14,52 @@ Implementation of functionality to add new music releases to the collection via 
 ## Phase 1: Project Setup and Analysis
 
 ### 1.1 Branch Setup and Planning
-- [ ] Create new branch `feature/add-release` from master
-- [ ] Review existing add page structure (`/frontend/app/add/page.tsx`)
-- [ ] Research Discogs API documentation and requirements
-- [ ] Identify API endpoints needed (search, release details)
-- [ ] Document Discogs API rate limits and authentication requirements
-- [ ] Plan component architecture and data flow
+- [x] Create new branch `feature/add-release` from master
+- [x] Review existing add page structure (`/frontend/app/add/page.tsx`)
+- [x] Research Discogs API documentation and requirements
+- [x] Identify API endpoints needed (search, release details)
+- [x] Document Discogs API rate limits and authentication requirements
+- [x] Plan component architecture and data flow
 
 ### 1.2 Discogs API Investigation
-- [ ] Register for Discogs API key/token (if needed)
-- [ ] Review Discogs API search endpoint (`/database/search`)
-- [ ] Review Discogs API release endpoint (`/releases/{release_id}`)
-- [ ] Document API response structure and mapping to our data model
-- [ ] Identify fields that match our MusicRelease entity
-- [ ] Document fields that may need transformation or mapping
-- [ ] Test API calls manually to understand response formats
+- [x] Register for Discogs API key/token (if needed)
+- [x] Review Discogs API search endpoint (`/database/search`)
+- [x] Review Discogs API release endpoint (`/releases/{release_id}`)
+- [x] Document API response structure and mapping to our data model
+- [x] Identify fields that match our MusicRelease entity
+- [x] Document fields that may need transformation or mapping
+- [x] Test API calls manually to understand response formats
 
-**Milestone**: Branch created, API documented, architecture planned
+**Milestone**: ✅ Branch created, API documented, architecture planned
 
 ---
 
 ## Phase 2: Backend API Development
 
 ### 2.1 Discogs Integration Service
-- [ ] Create `IDiscogsService` interface in `/backend/KollectorScum.Api/Interfaces/`
-- [ ] Implement `DiscogsService` in `/backend/KollectorScum.Api/Services/`
-- [ ] Add Discogs API configuration to `appsettings.json`
-  - [ ] API base URL
-  - [ ] API token/key (use environment variable for security)
-  - [ ] Rate limiting configuration
-- [ ] Implement catalog number search method
-  - [ ] Handle multiple results
-  - [ ] Include filtering options (format, country, year)
-- [ ] Implement release details retrieval method
-- [ ] Add HTTP client configuration with proper timeout and retry logic
-- [ ] Implement error handling for API failures
-- [ ] Add logging for Discogs API calls
+- [x] Create `IDiscogsService` interface in `/backend/KollectorScum.Api/Interfaces/`
+- [x] Implement `DiscogsService` in `/backend/KollectorScum.Api/Services/`
+- [x] Add Discogs API configuration to `appsettings.json`
+  - [x] API base URL
+  - [x] API token/key (use environment variable for security)
+  - [x] Rate limiting configuration
+- [x] Implement catalog number search method
+  - [x] Handle multiple results
+  - [x] Include filtering options (format, country, year)
+- [x] Implement release details retrieval method
+- [x] Add HTTP client configuration with proper timeout and retry logic
+- [x] Implement error handling for API failures
+- [x] Add logging for Discogs API calls
 
 ### 2.2 Discogs DTOs and Mapping
-- [ ] Create `DiscogsSearchResultDto` for search results
-- [ ] Create `DiscogsReleaseDto` for full release details
-- [ ] Create `DiscogsSearchRequestDto` for search parameters
-- [ ] Create mapping methods from Discogs data to MusicRelease entity
-- [ ] Handle artist, genre, label, format, country mappings
-- [ ] Handle image URL mapping
-- [ ] Handle track listing mapping
-- [ ] Add validation for mapped data
+- [x] Create `DiscogsSearchResultDto` for search results
+- [x] Create `DiscogsReleaseDto` for full release details
+- [x] Create `DiscogsSearchRequestDto` for search parameters
+- [x] Create mapping methods from Discogs data to MusicRelease entity
+- [x] Handle artist, genre, label, format, country mappings
+- [x] Handle image URL mapping
+- [x] Handle track listing mapping
+- [x] Add validation for mapped data
 
 ### 2.3 MusicRelease Creation Endpoints
 - [ ] Review existing POST endpoint in `MusicReleasesController`
@@ -71,15 +71,15 @@ Implementation of functionality to add new music releases to the collection via 
 - [ ] Add proper error responses and status codes
 
 ### 2.4 Discogs Search Controller
-- [ ] Create `DiscogsController` in `/backend/KollectorScum.Api/Controllers/`
-- [ ] Implement `GET /api/discogs/search` endpoint
-  - [ ] Accept catalog number parameter
-  - [ ] Accept optional filter parameters (format, country, year)
-  - [ ] Return list of matching releases
-- [ ] Implement `GET /api/discogs/release/{id}` endpoint
-  - [ ] Return full release details
-  - [ ] Map to our MusicRelease structure
-- [ ] Add Swagger documentation for new endpoints
+- [x] Create `DiscogsController` in `/backend/KollectorScum.Api/Controllers/`
+- [x] Implement `GET /api/discogs/search` endpoint
+  - [x] Accept catalog number parameter
+  - [x] Accept optional filter parameters (format, country, year)
+  - [x] Return list of matching releases
+- [x] Implement `GET /api/discogs/release/{id}` endpoint
+  - [x] Return full release details
+  - [x] Map to our MusicRelease structure
+- [x] Add Swagger documentation for new endpoints
 - [ ] Implement rate limiting middleware (if needed)
 - [ ] Add caching for frequently accessed releases
 
@@ -104,7 +104,7 @@ Implementation of functionality to add new music releases to the collection via 
 - [ ] Ensure all tests pass (target: 100% success rate)
 - [ ] Update test documentation
 
-**Milestone**: Backend API complete with Discogs integration and comprehensive testing
+**Milestone**: ✅ Backend API partially complete - Discogs integration done, MusicRelease creation pending
 
 ---
 
