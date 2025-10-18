@@ -70,6 +70,166 @@ namespace KollectorScum.Api.DTOs
         public string? Subtitle { get; set; }
     }
 
+    /// <summary>
+    /// DTO for collection statistics
+    /// </summary>
+    public class CollectionStatisticsDto
+    {
+        /// <summary>
+        /// Total number of releases in collection
+        /// </summary>
+        public int TotalReleases { get; set; }
+
+        /// <summary>
+        /// Total number of unique artists
+        /// </summary>
+        public int TotalArtists { get; set; }
+
+        /// <summary>
+        /// Total number of unique genres
+        /// </summary>
+        public int TotalGenres { get; set; }
+
+        /// <summary>
+        /// Total number of unique labels
+        /// </summary>
+        public int TotalLabels { get; set; }
+
+        /// <summary>
+        /// Releases by year statistics
+        /// </summary>
+        public List<YearStatisticDto> ReleasesByYear { get; set; } = new();
+
+        /// <summary>
+        /// Releases by genre statistics
+        /// </summary>
+        public List<GenreStatisticDto> ReleasesByGenre { get; set; } = new();
+
+        /// <summary>
+        /// Releases by format statistics
+        /// </summary>
+        public List<FormatStatisticDto> ReleasesByFormat { get; set; } = new();
+
+        /// <summary>
+        /// Releases by country statistics
+        /// </summary>
+        public List<CountryStatisticDto> ReleasesByCountry { get; set; } = new();
+
+        /// <summary>
+        /// Total collection value (sum of purchase prices)
+        /// </summary>
+        public decimal? TotalValue { get; set; }
+
+        /// <summary>
+        /// Average release price
+        /// </summary>
+        public decimal? AveragePrice { get; set; }
+
+        /// <summary>
+        /// Most expensive release
+        /// </summary>
+        public MusicReleaseSummaryDto? MostExpensiveRelease { get; set; }
+
+        /// <summary>
+        /// Recently added releases (last 10)
+        /// </summary>
+        public List<MusicReleaseSummaryDto> RecentlyAdded { get; set; } = new();
+    }
+
+    /// <summary>
+    /// DTO for year-based statistics
+    /// </summary>
+    public class YearStatisticDto
+    {
+        /// <summary>
+        /// Year
+        /// </summary>
+        public int Year { get; set; }
+
+        /// <summary>
+        /// Number of releases from this year
+        /// </summary>
+        public int Count { get; set; }
+    }
+
+    /// <summary>
+    /// DTO for genre-based statistics
+    /// </summary>
+    public class GenreStatisticDto
+    {
+        /// <summary>
+        /// Genre ID
+        /// </summary>
+        public int GenreId { get; set; }
+
+        /// <summary>
+        /// Genre name
+        /// </summary>
+        public string GenreName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Number of releases with this genre
+        /// </summary>
+        public int Count { get; set; }
+
+        /// <summary>
+        /// Percentage of total collection
+        /// </summary>
+        public decimal Percentage { get; set; }
+    }
+
+    /// <summary>
+    /// DTO for format-based statistics
+    /// </summary>
+    public class FormatStatisticDto
+    {
+        /// <summary>
+        /// Format ID
+        /// </summary>
+        public int FormatId { get; set; }
+
+        /// <summary>
+        /// Format name
+        /// </summary>
+        public string FormatName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Number of releases in this format
+        /// </summary>
+        public int Count { get; set; }
+
+        /// <summary>
+        /// Percentage of total collection
+        /// </summary>
+        public decimal Percentage { get; set; }
+    }
+
+    /// <summary>
+    /// DTO for country-based statistics
+    /// </summary>
+    public class CountryStatisticDto
+    {
+        /// <summary>
+        /// Country ID
+        /// </summary>
+        public int CountryId { get; set; }
+
+        /// <summary>
+        /// Country name
+        /// </summary>
+        public string CountryName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Number of releases from this country
+        /// </summary>
+        public int Count { get; set; }
+
+        /// <summary>
+        /// Percentage of total collection
+        /// </summary>
+        public decimal Percentage { get; set; }
+    }
+
     // Country DTOs
     /// <summary>
     /// DTO for country data

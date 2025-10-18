@@ -244,6 +244,209 @@ namespace KollectorScum.Api.Controllers
         }
 
         /// <summary>
+        /// Gets comprehensive collection statistics
+        /// </summary>
+        /// <returns>Collection statistics including counts, distributions, and value metrics</returns>
+        [HttpGet("statistics")]
+        [ProducesResponseType(typeof(CollectionStatisticsDto), 200)]
+        public async Task<ActionResult<CollectionStatisticsDto>> GetCollectionStatistics()
+        {
+            try
+            {
+                _logger.LogInformation("Getting collection statistics");
+
+                var statistics = new CollectionStatisticsDto();
+
+                // Get all releases for processing
+                var allReleases = await _musicReleaseRepository.GetAllAsync();
+                var releasesList = allReleases.ToList();
+
+                // Basic counts
+                statistics.TotalReleases = releasesList.Count;
+                
+                // Count unique artists
+                var uniqueArtistIds = new HashSet<int>();
+                foreach (var release in releasesList.Where(r => !string.IsNullOrEmpty(r.Artists)))
+                {
+                    try
+                    {
+                        var artistIds = JsonSerializer.Deserialize<List<int>>(release.Artists!);
+                        if (artistIds != null)
+                        {
+                            foreach (var id in artistIds)
+                            {
+                                uniqueArtistIds.Add(id);
+                            }
+                        }
+                    }
+                    catch { /* Skip invalid JSON */ }
+                }
+                statistics.TotalArtists = uniqueArtistIds.Count;
+
+                // Count unique genres
+                var uniqueGenreIds = new HashSet<int>();
+                foreach (var release in releasesList.Where(r => !string.IsNullOrEmpty(r.Genres)))
+                {
+                    try
+                    {
+                        var genreIds = JsonSerializer.Deserialize<List<int>>(release.Genres!);
+                        if (genreIds != null)
+                        {
+                            foreach (var id in genreIds)
+                            {
+                                uniqueGenreIds.Add(id);
+                            }
+                        }
+                    }
+                    catch { /* Skip invalid JSON */ }
+                }
+                statistics.TotalGenres = uniqueGenreIds.Count;
+
+                // Count unique labels
+                statistics.TotalLabels = releasesList.Where(r => r.LabelId.HasValue).Select(r => r.LabelId).Distinct().Count();
+
+                // Releases by year
+                var releasesByYear = releasesList
+                    .Where(r => r.ReleaseYear.HasValue)
+                    .GroupBy(r => r.ReleaseYear!.Value.Year)
+                    .Select(g => new YearStatisticDto
+                    {
+                        Year = g.Key,
+                        Count = g.Count()
+                    })
+                    .OrderBy(y => y.Year)
+                    .ToList();
+                statistics.ReleasesByYear = releasesByYear;
+
+                // Releases by format
+                var releasesByFormat = releasesList
+                    .Where(r => r.FormatId.HasValue)
+                    .GroupBy(r => r.FormatId!.Value)
+                    .Select(g => new
+                    {
+                        FormatId = g.Key,
+                        Count = g.Count()
+                    })
+                    .ToList();
+
+                var formats = await _formatRepository.GetAllAsync();
+                var formatDict = formats.ToDictionary(f => f.Id, f => f.Name);
+
+                statistics.ReleasesByFormat = releasesByFormat
+                    .Select(f => new FormatStatisticDto
+                    {
+                        FormatId = f.FormatId,
+                        FormatName = formatDict.ContainsKey(f.FormatId) ? formatDict[f.FormatId] : "Unknown",
+                        Count = f.Count,
+                        Percentage = statistics.TotalReleases > 0 ? Math.Round((decimal)f.Count / statistics.TotalReleases * 100, 2) : 0
+                    })
+                    .OrderByDescending(f => f.Count)
+                    .ToList();
+
+                // Releases by country
+                var releasesByCountry = releasesList
+                    .Where(r => r.CountryId.HasValue)
+                    .GroupBy(r => r.CountryId!.Value)
+                    .Select(g => new
+                    {
+                        CountryId = g.Key,
+                        Count = g.Count()
+                    })
+                    .ToList();
+
+                var countries = await _countryRepository.GetAllAsync();
+                var countryDict = countries.ToDictionary(c => c.Id, c => c.Name);
+
+                statistics.ReleasesByCountry = releasesByCountry
+                    .Select(c => new CountryStatisticDto
+                    {
+                        CountryId = c.CountryId,
+                        CountryName = countryDict.ContainsKey(c.CountryId) ? countryDict[c.CountryId] : "Unknown",
+                        Count = c.Count,
+                        Percentage = statistics.TotalReleases > 0 ? Math.Round((decimal)c.Count / statistics.TotalReleases * 100, 2) : 0
+                    })
+                    .OrderByDescending(c => c.Count)
+                    .Take(10) // Top 10 countries
+                    .ToList();
+
+                // Releases by genre
+                var genreCountMap = new Dictionary<int, int>();
+                foreach (var release in releasesList.Where(r => !string.IsNullOrEmpty(r.Genres)))
+                {
+                    try
+                    {
+                        var genreIds = JsonSerializer.Deserialize<List<int>>(release.Genres!);
+                        if (genreIds != null)
+                        {
+                            foreach (var genreId in genreIds)
+                            {
+                                if (!genreCountMap.ContainsKey(genreId))
+                                    genreCountMap[genreId] = 0;
+                                genreCountMap[genreId]++;
+                            }
+                        }
+                    }
+                    catch { /* Skip invalid JSON */ }
+                }
+
+                var genres = await _genreRepository.GetAllAsync();
+                var genreDict = genres.ToDictionary(g => g.Id, g => g.Name);
+
+                statistics.ReleasesByGenre = genreCountMap
+                    .Select(kvp => new GenreStatisticDto
+                    {
+                        GenreId = kvp.Key,
+                        GenreName = genreDict.ContainsKey(kvp.Key) ? genreDict[kvp.Key] : "Unknown",
+                        Count = kvp.Value,
+                        Percentage = statistics.TotalReleases > 0 ? Math.Round((decimal)kvp.Value / statistics.TotalReleases * 100, 2) : 0
+                    })
+                    .OrderByDescending(g => g.Count)
+                    .Take(15) // Top 15 genres
+                    .ToList();
+
+                // Calculate collection value
+                var releasesWithPurchaseInfo = new List<(MusicRelease release, decimal price)>();
+                foreach (var release in releasesList.Where(r => !string.IsNullOrEmpty(r.PurchaseInfo)))
+                {
+                    try
+                    {
+                        var purchaseInfo = JsonSerializer.Deserialize<PurchaseInfo>(release.PurchaseInfo!);
+                        if (purchaseInfo?.Price != null && purchaseInfo.Price > 0)
+                        {
+                            releasesWithPurchaseInfo.Add((release, purchaseInfo.Price.Value));
+                        }
+                    }
+                    catch { /* Skip invalid JSON */ }
+                }
+
+                if (releasesWithPurchaseInfo.Any())
+                {
+                    statistics.TotalValue = releasesWithPurchaseInfo.Sum(r => r.price);
+                    statistics.AveragePrice = Math.Round(releasesWithPurchaseInfo.Average(r => r.price), 2);
+
+                    // Most expensive release
+                    var mostExpensive = releasesWithPurchaseInfo.OrderByDescending(r => r.price).First();
+                    statistics.MostExpensiveRelease = MapToSummaryDto(mostExpensive.release);
+                }
+
+                // Recently added releases
+                var recentReleases = releasesList
+                    .OrderByDescending(r => r.DateAdded)
+                    .Take(10)
+                    .Select(MapToSummaryDto)
+                    .ToList();
+                statistics.RecentlyAdded = recentReleases;
+
+                return Ok(statistics);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting collection statistics");
+                return StatusCode(500, "An error occurred while retrieving collection statistics");
+            }
+        }
+
+        /// <summary>
         /// Creates a new music release
         /// </summary>
         /// <param name="createDto">Music release data</param>
