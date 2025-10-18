@@ -1,0 +1,106 @@
+
+> frontend@0.1.0 build
+> next build --turbopack
+
+   ▲ Next.js 15.5.0 (Turbopack)
+
+   Creating an optimized production build ...
+ ✓ Finished writing to disk in 33ms
+ ✓ Compiled successfully in 6.3s
+   Linting and checking validity of types ...
+
+Failed to compile.
+
+./app/__tests__/page.test.tsx
+3:10  Warning: 'fireEvent' is defined but never used.  @typescript-eslint/no-unused-vars
+9:10  Error: Component definition is missing display name  react/display-name
+134:54  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./app/collection/__tests__/page.test.tsx
+7:40  Warning: 'initialFilters' is defined but never used.  @typescript-eslint/no-unused-vars
+7:56  Warning: 'enableUrlSync' is defined but never used.  @typescript-eslint/no-unused-vars
+7:73  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+16:24  Warning: 'filters' is defined but never used.  @typescript-eslint/no-unused-vars
+16:45  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./app/components/ImageGallery.tsx
+55:11  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+83:17  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+./app/components/LookupComponents.tsx
+188:6  Warning: React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/components/MusicReleaseList.tsx
+69:17  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+184:6  Warning: React Hook useEffect has a missing dependency: 'fetchReleases'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./app/components/SearchAndFilter.tsx
+65:6  Warning: React Hook useEffect has missing dependencies: 'enableUrlSync', 'onFiltersChange', and 'searchParams'. Either include them or remove the dependency array. If 'onFiltersChange' changes too often, find the parent component that defines it and wrap that definition in useCallback.  react-hooks/exhaustive-deps
+
+./app/components/StatisticsCharts.tsx
+5:3  Warning: 'GenreStatistic' is defined but never used.  @typescript-eslint/no-unused-vars
+6:3  Warning: 'FormatStatistic' is defined but never used.  @typescript-eslint/no-unused-vars
+7:3  Warning: 'CountryStatistic' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/components/__tests__/ErrorBoundary.test.tsx
+2:26  Warning: 'fireEvent' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/components/__tests__/Header.test.tsx
+7:10  Error: Component definition is missing display name  react/display-name
+
+./app/components/__tests__/ImageGallery.test.tsx
+92:13  Warning: 'container' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./app/components/__tests__/LookupComponents.test.tsx
+2:18  Warning: 'screen' is defined but never used.  @typescript-eslint/no-unused-vars
+2:26  Warning: 'fireEvent' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./app/components/__tests__/MusicReleaseList.test.tsx
+2:26  Warning: 'fireEvent' is defined but never used.  @typescript-eslint/no-unused-vars
+11:10  Error: Component definition is missing display name  react/display-name
+
+./app/components/__tests__/Navigation.test.tsx
+7:10  Error: Component definition is missing display name  react/display-name
+16:25  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
+119:11  Warning: 'text' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./app/components/__tests__/SearchAndFilter.test.tsx
+17:41  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+23:40  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+29:40  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+35:42  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+41:41  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./app/components/__tests__/TrackList.test.tsx
+180:11  Warning: 'discHeaders' is assigned a value but never used.  @typescript-eslint/no-unused-vars
+
+./app/releases/[id]/__tests__/page.test.tsx
+12:23  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
+13:23  Error: A `require()` style import is forbidden.  @typescript-eslint/no-require-imports
+17:10  Error: Component definition is missing display name  react/display-name
+33:20  Warning: 'images' is defined but never used.  @typescript-eslint/no-unused-vars
+33:30  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+37:17  Warning: 'tracks' is defined but never used.  @typescript-eslint/no-unused-vars
+37:27  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+41:20  Warning: 'links' is defined but never used.  @typescript-eslint/no-unused-vars
+41:29  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./app/search/__tests__/page.test.tsx
+7:42  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+13:31  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+26:35  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./app/statistics/__tests__/page.test.tsx
+8:10  Error: Component definition is missing display name  react/display-name
+24:32  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+30:16  Warning: 'data' is defined but never used.  @typescript-eslint/no-unused-vars
+30:31  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+33:17  Warning: 'data' is defined but never used.  @typescript-eslint/no-unused-vars
+33:32  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+36:18  Warning: 'data' is defined but never used.  @typescript-eslint/no-unused-vars
+36:33  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+
+./app/statistics/page.tsx
+275:23  Warning: Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
