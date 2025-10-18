@@ -61,6 +61,8 @@ namespace KollectorScum.Api.Controllers
         /// <param name="countryId">Filter by country ID</param>
         /// <param name="formatId">Filter by format ID</param>
         /// <param name="live">Filter by live recordings</param>
+        /// <param name="yearFrom">Filter by minimum release year (inclusive)</param>
+        /// <param name="yearTo">Filter by maximum release year (inclusive)</param>
         /// <param name="page">Page number (default: 1)</param>
         /// <param name="pageSize">Page size (default: 50)</param>
         /// <returns>Paginated list of music release summaries</returns>
@@ -74,19 +76,22 @@ namespace KollectorScum.Api.Controllers
             [FromQuery] int? countryId,
             [FromQuery] int? formatId,
             [FromQuery] bool? live,
+            [FromQuery] int? yearFrom,
+            [FromQuery] int? yearTo,
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 50)
         {
             try
             {
-                _logger.LogInformation("Getting music releases - Page: {Page}, PageSize: {PageSize}, Search: {Search}, ArtistId: {ArtistId}, GenreId: {GenreId}",
-                    page, pageSize, search, artistId, genreId);
+                _logger.LogInformation("Getting music releases - Page: {Page}, PageSize: {PageSize}, Search: {Search}, ArtistId: {ArtistId}, GenreId: {GenreId}, YearFrom: {YearFrom}, YearTo: {YearTo}",
+                    page, pageSize, search, artistId, genreId, yearFrom, yearTo);
 
                 // Build filter expression
                 Expression<Func<MusicRelease, bool>>? filter = null;
 
                 if (!string.IsNullOrEmpty(search) || artistId.HasValue || genreId.HasValue || 
-                    labelId.HasValue || countryId.HasValue || formatId.HasValue || live.HasValue)
+                    labelId.HasValue || countryId.HasValue || formatId.HasValue || live.HasValue ||
+                    yearFrom.HasValue || yearTo.HasValue)
                 {
                     filter = mr => 
                         (string.IsNullOrEmpty(search) || mr.Title.ToLower().Contains(search.ToLower())) &&
@@ -95,7 +100,9 @@ namespace KollectorScum.Api.Controllers
                         (!labelId.HasValue || mr.LabelId == labelId.Value) &&
                         (!countryId.HasValue || mr.CountryId == countryId.Value) &&
                         (!formatId.HasValue || mr.FormatId == formatId.Value) &&
-                        (!live.HasValue || mr.Live == live.Value);
+                        (!live.HasValue || mr.Live == live.Value) &&
+                        (!yearFrom.HasValue || (mr.ReleaseYear.HasValue && mr.ReleaseYear.Value.Year >= yearFrom.Value)) &&
+                        (!yearTo.HasValue || (mr.ReleaseYear.HasValue && mr.ReleaseYear.Value.Year <= yearTo.Value));
                 }
 
                 var pagedResult = await _musicReleaseRepository.GetPagedAsync(
@@ -155,6 +162,84 @@ namespace KollectorScum.Api.Controllers
             {
                 _logger.LogError(ex, "Error getting music release by ID: {Id}", id);
                 return StatusCode(500, "An error occurred while retrieving the music release");
+            }
+        }
+
+        /// <summary>
+        /// Gets search suggestions based on a partial search term
+        /// </summary>
+        /// <param name="query">Partial search term</param>
+        /// <param name="limit">Maximum number of suggestions to return (default: 10)</param>
+        /// <returns>List of search suggestions</returns>
+        [HttpGet("suggestions")]
+        [ProducesResponseType(typeof(List<SearchSuggestionDto>), 200)]
+        public async Task<ActionResult<List<SearchSuggestionDto>>> GetSearchSuggestions(
+            [FromQuery] string query,
+            [FromQuery] int limit = 10)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(query) || query.Length < 2)
+                {
+                    return Ok(new List<SearchSuggestionDto>());
+                }
+
+                _logger.LogInformation("Getting search suggestions for query: {Query}", query);
+
+                var queryLower = query.ToLower();
+                var suggestions = new List<SearchSuggestionDto>();
+
+                // Get release title suggestions
+                var releases = await _musicReleaseRepository.GetAsync(
+                    mr => mr.Title.ToLower().Contains(queryLower),
+                    mr => mr.OrderBy(x => x.Title)
+                );
+
+                suggestions.AddRange(releases.Take(limit).Select(r => new SearchSuggestionDto
+                {
+                    Type = "release",
+                    Id = r.Id,
+                    Name = r.Title,
+                    Subtitle = r.ReleaseYear?.Year.ToString()
+                }));
+
+                // Get artist suggestions
+                var artists = await _artistRepository.GetAsync(
+                    a => a.Name.ToLower().Contains(queryLower),
+                    a => a.OrderBy(x => x.Name)
+                );
+
+                suggestions.AddRange(artists.Take(limit).Select(a => new SearchSuggestionDto
+                {
+                    Type = "artist",
+                    Id = a.Id,
+                    Name = a.Name
+                }));
+
+                // Get label suggestions
+                var labels = await _labelRepository.GetAsync(
+                    l => l.Name.ToLower().Contains(queryLower),
+                    l => l.OrderBy(x => x.Name)
+                );
+
+                suggestions.AddRange(labels.Take(limit).Select(l => new SearchSuggestionDto
+                {
+                    Type = "label",
+                    Id = l.Id,
+                    Name = l.Name
+                }));
+
+                // Return top suggestions, prioritizing exact matches
+                return Ok(suggestions
+                    .OrderBy(s => !s.Name.ToLower().StartsWith(queryLower))
+                    .ThenBy(s => s.Name)
+                    .Take(limit)
+                    .ToList());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting search suggestions for query: {Query}", query);
+                return StatusCode(500, "An error occurred while retrieving search suggestions");
             }
         }
 
