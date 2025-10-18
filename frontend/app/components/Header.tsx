@@ -40,6 +40,12 @@ const Header: React.FC<HeaderProps> = ({ title = "Kollector Sküm" }) => {
             >
               Search
             </Link>
+            <Link 
+              href="/statistics" 
+              className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+            >
+              Statistics
+            </Link>
           </nav>
 
           {/* Mobile menu button */}
