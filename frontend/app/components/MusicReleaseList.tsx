@@ -1,6 +1,7 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { fetchJson } from "../lib/api";
 import { LoadingSpinner, Skeleton } from "./LoadingComponents";
 
@@ -63,16 +64,21 @@ export function MusicReleaseCard({ release }: { release: MusicRelease }) {
           <div className="flex-shrink-0">
             <Link 
               href={`/releases/${release.id}`}
-              className="block hover:opacity-80 transition-opacity"
+              className="block hover:opacity-80 transition-opacity relative"
             >
               {!imageError ? (
-                <img
-                  src={getCoverImageUrl()}
-                  alt={`${release.title} cover`}
-                  className="w-36 h-36 rounded-md object-contain border border-gray-200 bg-white cursor-pointer"
-                  onError={() => setImageError(true)}
-                  onLoad={() => setImageError(false)}
-                />
+                <div className="w-36 h-36 relative">
+                  <Image
+                    src={getCoverImageUrl()}
+                    alt={`${release.title} cover`}
+                    fill
+                    sizes="144px"
+                    className="rounded-md object-contain border border-gray-200 bg-white cursor-pointer"
+                    onError={() => setImageError(true)}
+                    onLoad={() => setImageError(false)}
+                    loading="lazy"
+                  />
+                </div>
               ) : (
                 <div className="w-36 h-36 bg-gray-100 rounded-md flex items-center justify-center border border-gray-200 cursor-pointer">
                   <span className="text-gray-400 text-4xl">🎵</span>
@@ -146,7 +152,7 @@ export function MusicReleaseList({ filters = {}, pageSize = 60 }: MusicReleaseLi
   const [totalPages, setTotalPages] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
 
-  const fetchReleases = async (page: number = 1) => {
+  const fetchReleases = useCallback(async (page: number = 1) => {
     try {
       setLoading(true);
       setError(null);
@@ -176,12 +182,12 @@ export function MusicReleaseList({ filters = {}, pageSize = 60 }: MusicReleaseLi
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters, pageSize]);
 
   useEffect(() => {
     setCurrentPage(1);
     fetchReleases(1);
-  }, [filters, pageSize]);
+  }, [fetchReleases]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
