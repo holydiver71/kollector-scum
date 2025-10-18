@@ -98,3 +98,62 @@ export async function getSearchSuggestions(query: string, limit: number = 10): P
   if (!query || query.length < 2) return [];
   return fetchJson<SearchSuggestion[]>(`/api/musicreleases/suggestions?query=${encodeURIComponent(query)}&limit=${limit}`);
 }
+
+// Collection Statistics
+export interface YearStatistic {
+  year: number;
+  count: number;
+}
+
+export interface GenreStatistic {
+  genreId: number;
+  genreName: string;
+  count: number;
+  percentage: number;
+}
+
+export interface FormatStatistic {
+  formatId: number;
+  formatName: string;
+  count: number;
+  percentage: number;
+}
+
+export interface CountryStatistic {
+  countryId: number;
+  countryName: string;
+  count: number;
+  percentage: number;
+}
+
+export interface MusicReleaseSummary {
+  id: number;
+  title: string;
+  releaseYear: string;
+  artistNames?: string[];
+  genreNames?: string[];
+  labelName?: string;
+  countryName?: string;
+  formatName?: string;
+  coverImageUrl?: string;
+  dateAdded: string;
+}
+
+export interface CollectionStatistics {
+  totalReleases: number;
+  totalArtists: number;
+  totalGenres: number;
+  totalLabels: number;
+  releasesByYear: YearStatistic[];
+  releasesByGenre: GenreStatistic[];
+  releasesByFormat: FormatStatistic[];
+  releasesByCountry: CountryStatistic[];
+  totalValue?: number;
+  averagePrice?: number;
+  mostExpensiveRelease?: MusicReleaseSummary;
+  recentlyAdded: MusicReleaseSummary[];
+}
+
+export async function getCollectionStatistics(): Promise<CollectionStatistics> {
+  return fetchJson<CollectionStatistics>('/api/musicreleases/statistics');
+}
