@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import Image from "next/image";
 
 interface ReleaseImages {
   coverFront?: string;
@@ -52,13 +51,11 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
     <>
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         {/* Main Image */}
-        <div className="aspect-square mb-4 relative">
-          <Image
+        <div className="aspect-square mb-4">
+          <img
             src={getImageUrl(selectedImage || primaryImage.path) || ''}
             alt={`${title} - ${selectedImage ? availableImages.find(img => img.path === selectedImage)?.label : primaryImage.label}`}
-            fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            className="object-contain rounded-lg border border-gray-200 bg-white cursor-pointer hover:shadow-lg transition-shadow"
+            className="w-full h-full object-contain rounded-lg border border-gray-200 bg-white cursor-pointer hover:shadow-lg transition-shadow"
             onError={() => handleImageError(selectedImage || primaryImage.path!)}
             onClick={() => {
               // Open full-size image in a modal or new tab
@@ -67,7 +64,6 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
                 window.open(imageUrl, '_blank');
               }
             }}
-            priority={!selectedImage} // Priority load for the first image
           />
         </div>
 
@@ -78,20 +74,17 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
               <button
                 key={image.key}
                 onClick={() => setSelectedImage(image.path!)}
-                className={`aspect-square rounded border-2 overflow-hidden transition-all relative ${
+                className={`aspect-square rounded border-2 overflow-hidden transition-all ${
                   (selectedImage || primaryImage.path) === image.path
                     ? 'border-blue-500 ring-2 ring-blue-200'
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
-                <Image
+                <img
                   src={getImageUrl(image.path) || ''}
                   alt={`${title} - ${image.label}`}
-                  fill
-                  sizes="(max-width: 768px) 33vw, 150px"
-                  className="object-contain bg-white"
+                  className="w-full h-full object-contain bg-white"
                   onError={() => handleImageError(image.path!)}
-                  loading="lazy"
                 />
               </button>
             ))}

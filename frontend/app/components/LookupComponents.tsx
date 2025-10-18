@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { fetchJson } from "../lib/api";
 
 // Type definitions for lookup data
@@ -144,7 +144,7 @@ export function useLookupData<T extends LookupItem>(endpoint: string) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
       setError(null);
@@ -181,11 +181,11 @@ export function useLookupData<T extends LookupItem>(endpoint: string) {
     } finally {
       setLoading(false);
     }
-  }, [endpoint]);
+  };
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+  }, [endpoint]);
 
   return { data, loading, error, refetch: fetchData };
 }

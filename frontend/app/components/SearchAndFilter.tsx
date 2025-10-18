@@ -62,8 +62,7 @@ export function SearchAndFilter({ onFiltersChange, initialFilters = {}, enableUr
         onFiltersChange(urlFilters);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Only run on mount to initialize from URL params
+  }, []); // Only run on mount
 
   // Update URL when filters change
   useEffect(() => {
