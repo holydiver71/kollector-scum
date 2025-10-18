@@ -85,3 +85,16 @@ export async function getPagedCount(endpoint: string): Promise<number> {
   const data = await fetchJson<PagedResponse>(`${endpoint}?pageSize=1`);
   return data?.totalCount || 0;
 }
+
+// Search Suggestions
+export interface SearchSuggestion {
+  type: string; // 'release', 'artist', 'label'
+  id: number;
+  name: string;
+  subtitle?: string;
+}
+
+export async function getSearchSuggestions(query: string, limit: number = 10): Promise<SearchSuggestion[]> {
+  if (!query || query.length < 2) return [];
+  return fetchJson<SearchSuggestion[]>(`/api/musicreleases/suggestions?query=${encodeURIComponent(query)}&limit=${limit}`);
+}

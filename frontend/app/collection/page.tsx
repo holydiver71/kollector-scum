@@ -11,6 +11,8 @@ interface SearchFilters {
   countryId?: number;
   formatId?: number;
   live?: boolean;
+  yearFrom?: number;
+  yearTo?: number;
 }
 
 export default function CollectionPage() {
@@ -36,6 +38,7 @@ export default function CollectionPage() {
         <SearchAndFilter 
           onFiltersChange={handleFiltersChange}
           initialFilters={filters}
+          enableUrlSync={true}
         />
 
         {/* Results */}

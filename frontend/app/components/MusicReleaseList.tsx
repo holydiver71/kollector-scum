@@ -34,6 +34,8 @@ interface MusicReleaseFilters {
   countryId?: number;
   formatId?: number;
   live?: boolean;
+  yearFrom?: number;
+  yearTo?: number;
 }
 
 interface MusicReleaseListProps {
@@ -158,7 +160,9 @@ export function MusicReleaseList({ filters = {}, pageSize = 60 }: MusicReleaseLi
         ...(filters.labelId && { labelId: filters.labelId.toString() }),
         ...(filters.countryId && { countryId: filters.countryId.toString() }),
         ...(filters.formatId && { formatId: filters.formatId.toString() }),
-        ...(filters.live !== undefined && { live: filters.live.toString() })
+        ...(filters.live !== undefined && { live: filters.live.toString() }),
+        ...(filters.yearFrom && { yearFrom: filters.yearFrom.toString() }),
+        ...(filters.yearTo && { yearTo: filters.yearTo.toString() })
       });
 
       const response: PagedResult<MusicRelease> = await fetchJson(`/api/musicreleases?${params}`);

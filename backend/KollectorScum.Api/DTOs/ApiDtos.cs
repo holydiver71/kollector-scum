@@ -44,6 +44,32 @@ namespace KollectorScum.Api.DTOs
         public bool HasNext => Page < TotalPages;
     }
 
+    /// <summary>
+    /// DTO for search suggestions/autocomplete
+    /// </summary>
+    public class SearchSuggestionDto
+    {
+        /// <summary>
+        /// Type of suggestion (release, artist, label, etc.)
+        /// </summary>
+        public string Type { get; set; } = string.Empty;
+
+        /// <summary>
+        /// ID of the suggested item
+        /// </summary>
+        public int Id { get; set; }
+
+        /// <summary>
+        /// Display name of the suggestion
+        /// </summary>
+        public string Name { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Optional subtitle (e.g., year for releases)
+        /// </summary>
+        public string? Subtitle { get; set; }
+    }
+
     // Country DTOs
     /// <summary>
     /// DTO for country data
