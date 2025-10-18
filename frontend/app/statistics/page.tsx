@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import { getCollectionStatistics, CollectionStatistics } from '../lib/api';
 import { LoadingSpinner } from '../components/LoadingComponents';
 import { StatCard, BarChart, LineChart, DonutChart } from '../components/StatisticsCharts';
@@ -272,14 +271,11 @@ export default function StatisticsPage() {
                     href={`/releases/${release.id}`}
                     className="group"
                   >
-                    <div className="aspect-square mb-2 overflow-hidden rounded-md border border-gray-200 relative">
-                      <Image
+                    <div className="aspect-square mb-2 overflow-hidden rounded-md border border-gray-200">
+                      <img
                         src={imageUrl}
                         alt={release.title}
-                        fill
-                        sizes="(max-width: 768px) 50vw, 200px"
-                        className="object-cover group-hover:scale-105 transition-transform"
-                        loading="lazy"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                       />
                     </div>
                     <p className="text-sm font-medium text-gray-900 line-clamp-1 group-hover:text-blue-600">
