@@ -5,10 +5,49 @@ Implementation of functionality to add new music releases to the collection via 
 1. **Manual Data Entry**: Complete form-based data entry
 2. **Discogs API Lookup**: Automated data retrieval from Discogs API by catalog number
 
+**Key Feature**: Automatic creation of new lookup entities (artists, labels, genres) when not present in database. User reviews and confirms before submission.
+
 **Branch**: `feature/add-release`  
 **Start Date**: October 18, 2025  
 **Last Updated**: October 20, 2025  
 **Status**: Phase 2 (Backend) Complete ✅ - 64 tests passing
+
+---
+
+## Critical Workflow: Handling New Lookup Entities
+
+When adding a release from Discogs (or manual entry), new artists/labels/genres/countries/formats/packaging may not exist in the database:
+
+1. **User Action**: Search Discogs or enter data manually
+2. **System Detection**: Identify which lookup entities are new (not in DB)
+   - Artists, Labels, Genres, Countries, Formats, Packaging
+3. **Preview & Highlight**: Show user what will be created 
+   - Example: "This will create: 2 new artists, 1 new label, 1 new country"
+4. **User Confirmation**: User reviews and confirms creation
+5. **Atomic Creation**: Backend creates new lookup entities + release in single transaction
+6. **Purchase Info Prompt (Optional)**: After release created, prompt for purchase information
+   - User can "Skip for Now" or "Add Purchase Info"
+   - If adding: collect store, price, currency, date, notes
+   - Can create new store if not in list
+   - Updates release with PATCH request
+7. **Success Feedback**: "Release added + created 2 new artists, 1 new label, 1 new country"
+   - If purchase info added: "Release added! Purchase info saved."
+
+This ensures:
+- No orphaned or invalid foreign key references
+- User knows exactly what's being added to the database
+- Duplicate detection (case-insensitive matching for all lookup types)
+- Transaction safety (all-or-nothing)
+- Low-friction workflow (purchase info is optional)
+
+**Lookup Types with Auto-Creation:**
+- ✅ Artists (from Discogs or manual)
+- ✅ Labels (from Discogs or manual)
+- ✅ Genres (from Discogs or manual)
+- ✅ Countries (from Discogs or manual)
+- ✅ Formats (from Discogs or manual)
+- ✅ Packaging (from Discogs or manual)
+- ⚠️ Stores (manual entry only, not from Discogs, created during purchase info step)
 
 ---
 
@@ -73,6 +112,23 @@ Implementation of functionality to add new music releases to the collection via 
   - [x] Return BadRequest with duplicate info if found
 - [x] Implement transaction handling for atomic operations *(already using UnitOfWork)*
 - [x] Add proper error responses and status codes *(already present)*
+- [ ] **NEW: Auto-create missing lookup entities from Discogs data**
+  - [ ] Modify CreateMusicReleaseDto to accept name-based lookup data
+  - [ ] Add support for creating new artists during release creation
+  - [ ] Add support for creating new labels during release creation
+  - [ ] Add support for creating new genres during release creation
+  - [ ] Add support for creating new countries during release creation
+  - [ ] Add support for creating new formats during release creation
+  - [ ] Add support for creating new packaging types during release creation
+  - [ ] Check for existing entries before creating (case-insensitive)
+  - [ ] Return mapping of new entity names → IDs in response
+  - [ ] Wrap in transaction to ensure atomicity
+- [ ] **NEW: Support updating purchase info after creation**
+  - [ ] Enhance UpdateMusicReleaseDto to support partial updates
+  - [ ] Add support for creating new stores during purchase info update
+  - [ ] Accept StoreName in addition to StoreId
+  - [ ] Create new store if name provided and doesn't exist
+  - [ ] Update only purchase info fields without affecting other data
 
 ### 2.4 Discogs Search Controller
 - [x] Create `DiscogsController` in `/backend/KollectorScum.Api/Controllers/`
@@ -84,6 +140,13 @@ Implementation of functionality to add new music releases to the collection via 
   - [x] Return full release details
   - [x] Map to our MusicRelease structure
 - [x] Add Swagger documentation for new endpoints
+- [ ] **NEW: Implement `POST /api/discogs/collection/add` endpoint**
+  - [ ] Add release to user's Discogs collection
+  - [ ] Requires Discogs authentication (OAuth or user token)
+  - [ ] Accept release ID and optional folder (e.g., "Collection", "Wishlist")
+  - [ ] Handle rate limiting
+  - [ ] Return success/failure response
+  - [ ] Log operation for audit trail
 - [ ] Implement rate limiting middleware (if needed)
 - [ ] Add caching for frequently accessed releases
 
@@ -175,12 +238,22 @@ Implementation of functionality to add new music releases to the collection via 
 
 ### 3.3 Form Integration with Lookup Data
 - [ ] Integrate existing lookup dropdown components
+- [ ] **Implement combo-box functionality: select existing OR type new value**
+  - [ ] Dropdown shows existing artists with search/filter
+  - [ ] User can also type new artist name (not in list)
+  - [ ] Same for labels, genres, countries, formats, packaging
+  - [ ] Show badge/indicator for "Will create new entry"
 - [ ] Implement "Add new" functionality for lookup items
-  - [ ] Quick-add artist modal
-  - [ ] Quick-add label modal
-  - [ ] Quick-add genre modal
+  - [ ] Quick-add artist modal (optional alternative)
+  - [ ] Quick-add label modal (optional alternative)
+  - [ ] Quick-add genre modal (optional alternative)
+  - [ ] Quick-add country modal (optional alternative)
+  - [ ] Quick-add format modal (optional alternative)
+  - [ ] Quick-add packaging modal (optional alternative)
 - [ ] Add validation for lookup selections
 - [ ] Handle lookup data loading states
+- [ ] **Store new lookup names temporarily until submission**
+- [ ] **Backend handles creation of new entities during release save**
 
 ### 3.4 Track List Component
 - [ ] Create `TrackListEditor` component
@@ -225,25 +298,46 @@ Implementation of functionality to add new music releases to the collection via 
 - [ ] Fetch full release details on selection
 - [ ] Display comprehensive release information
 - [ ] Show all mapped fields
+- [ ] **Highlight new lookup values (artists, labels, genres, countries, formats, packaging not in database)**
+  - [ ] Badge/indicator for "New Artist", "New Label", "New Country", "New Format", etc.
+  - [ ] Show which entities will be created
+  - [ ] Allow user to review before submission
 - [ ] Highlight missing or incomplete data
 - [ ] Add "Edit" button to modify in manual form
 - [ ] Add "Add to Collection" button
 - [ ] Show comparison with existing releases (duplicate check)
+- [ ] **Preview shows: "This will create 2 new artists, 1 new label, 1 new country" etc.**
 
 ### 4.4 Integration Flow
 - [ ] Create tabbed interface or toggle for Manual vs Discogs
 - [ ] Implement "Start with Discogs" flow:
   1. [ ] User searches by catalog number
   2. [ ] User selects from results
-  3. [ ] Preview release details
-  4. [ ] Edit in manual form (pre-populated)
-  5. [ ] Save to collection
+  3. [ ] Preview release details **with new lookup entities highlighted**
+  4. [ ] **User reviews and confirms new entities to be created**
+  5. [ ] Edit in manual form (pre-populated) if needed
+  6. [ ] **User submits release (creates release + new entities)**
+     - [ ] **Checkbox: "Also add to my Discogs collection"**
+     - [ ] User can optionally add to Discogs collection
+  7. [ ] **After successful database save:**
+     - [ ] If checkbox selected, add to Discogs collection via API
+     - [ ] Show status: "Adding to Discogs..." → "Added to Discogs!" or error message
+  8. [ ] **System prompts for purchase information (optional)**
+     - [ ] Show "Add Purchase Info?" dialog/modal
+     - [ ] Allow user to skip and add later
+     - [ ] If provided, collect: store, price, currency, purchase date, notes
+     - [ ] Support creating new store if not in list
+  9. [ ] Save to collection with purchase info (if provided)
 - [ ] Implement "Start Manually" flow:
   1. [ ] User enters data directly
-  2. [ ] Optional Discogs lookup for verification
-  3. [ ] Save to collection
+  2. [ ] **User can type new artist/label/genre names (not just select from dropdown)**
+  3. [ ] Optional Discogs lookup for verification
+  4. [ ] **User submits release**
+  5. [ ] **System prompts for purchase information (optional)**
+  6. [ ] Save to collection
 - [ ] Add smooth transitions between views
 - [ ] Preserve data when switching between tabs
+- [ ] **Show confirmation dialog summarizing what will be created**
 
 ### 4.5 API Client Updates
 - [ ] Add Discogs API methods to `/frontend/app/lib/api.ts`
@@ -253,7 +347,54 @@ Implementation of functionality to add new music releases to the collection via 
 - [ ] Add error handling for API calls
 - [ ] Implement request caching (optional)
 
-**Milestone**: Complete Discogs integration with search, selection, and preview functionality
+### 4.6 Purchase Information Component
+- [ ] Create `PurchaseInfoModal` component
+- [ ] Trigger after successful release creation (and optional Discogs add)
+- [ ] **Modal workflow:**
+  - [ ] Show "Add Purchase Information?" prompt
+  - [ ] Option to "Skip" or "Add Now"
+  - [ ] If "Add Now": show purchase form
+  - [ ] If "Skip": close modal and show success message
+- [ ] **Purchase form fields:**
+  - [ ] Store dropdown/combo-box (with new store creation)
+  - [ ] Price (decimal input)
+  - [ ] Currency (dropdown: USD, EUR, GBP, etc.)
+  - [ ] Purchase Date (date picker)
+  - [ ] Notes (textarea)
+- [ ] **Store selection:**
+  - [ ] Dropdown shows existing stores
+  - [ ] Allow typing new store name
+  - [ ] Show "Will create new store" indicator
+  - [ ] Backend creates new store during update
+- [ ] **API integration:**
+  - [ ] PATCH `/api/musicreleases/{id}` to update purchase info
+  - [ ] Support creating new store atomically
+- [ ] Show success message: "Release added! Purchase info saved."
+- [ ] **Future enhancement note:** User can edit purchase info later via release edit
+
+### 4.7 Discogs Collection Integration Component
+- [ ] **Add checkbox to release submission form:**
+  - [ ] "Also add this release to my Discogs collection"
+  - [ ] Default: unchecked
+  - [ ] Only visible when adding from Discogs (has Discogs release ID)
+- [ ] **Post-creation workflow:**
+  - [ ] After successful database save, check if Discogs checkbox was selected
+  - [ ] If selected, call Discogs collection API
+  - [ ] Show loading state: "Adding to Discogs collection..."
+  - [ ] Handle success: "✓ Added to your Discogs collection!"
+  - [ ] Handle errors gracefully:
+    - [ ] Authentication error: "Not connected to Discogs"
+    - [ ] Rate limit: "Discogs rate limit reached, try again later"
+    - [ ] Already exists: "Already in your Discogs collection"
+    - [ ] Generic error: "Failed to add to Discogs, but saved locally"
+- [ ] **Don't block purchase info prompt on Discogs add failure**
+  - [ ] Show Discogs status, then continue to purchase info modal
+- [ ] **Configuration requirement:**
+  - [ ] User needs to connect Discogs account (OAuth or token)
+  - [ ] Store Discogs user token securely
+  - [ ] Show "Connect to Discogs" if not authenticated
+
+**Milestone**: Complete Discogs integration with search, selection, preview, post-creation purchase info workflow, and optional Discogs collection sync
 
 ---
 
@@ -326,11 +467,24 @@ Implementation of functionality to add new music releases to the collection via 
   - [ ] Test successful requests
   - [ ] Test validation errors
   - [ ] Test authentication/authorization
+  - [ ] **Test collection add endpoint**
+  - [ ] **Test error handling (401, 404, 422, 429)**
+  - [ ] **Test rate limiting**
 - [ ] Test MusicRelease creation
   - [ ] Test with manual data
   - [ ] Test with Discogs data
   - [ ] Test duplicate detection
   - [ ] Test relationship resolution
+  - [ ] **Test auto-creation of new artists**
+  - [ ] **Test auto-creation of new labels**
+  - [ ] **Test auto-creation of new genres**
+  - [ ] **Test auto-creation of new countries**
+  - [ ] **Test auto-creation of new formats**
+  - [ ] **Test auto-creation of new packaging types**
+  - [ ] **Test case-insensitive duplicate detection for all lookup types**
+  - [ ] **Test mixed scenario (some existing, some new entities)**
+  - [ ] **Test transaction rollback on failure**
+  - [ ] **Test concurrent requests don't create duplicate entities**
 - [ ] Ensure all backend tests pass
 - [ ] Aim for high code coverage (>80%)
 
@@ -340,6 +494,10 @@ Implementation of functionality to add new music releases to the collection via 
   - [ ] Test form validation
   - [ ] Test form submission
   - [ ] Test error handling
+  - [ ] **Test combo-box functionality for all lookup types**
+  - [ ] **Test "new entity" indicators**
+  - [ ] **Test preview with new entities highlighted**
+  - [ ] **Test Discogs sync checkbox behavior**
 - [ ] Test DiscogsSearch component
   - [ ] Test search functionality
   - [ ] Test filter application
@@ -350,6 +508,20 @@ Implementation of functionality to add new music releases to the collection via 
 - [ ] Test TrackListEditor component
   - [ ] Test add/remove tracks
   - [ ] Test track validation
+- [ ] **Test PurchaseInfoModal component**
+  - [ ] **Test modal trigger after release creation**
+  - [ ] **Test "Skip" functionality**
+  - [ ] **Test "Add Now" functionality**
+  - [ ] **Test new store creation workflow**
+  - [ ] **Test form validation**
+- [ ] **Test DiscogsCollectionSync component/functionality**
+  - [ ] **Test checkbox rendering (conditional)**
+  - [ ] **Test loading states**
+  - [ ] **Test success messages**
+  - [ ] **Test error messages (auth, rate limit, already exists)**
+  - [ ] **Test that failures don't block workflow**
+  - [ ] Test form validation
+  - [ ] Test submission
 - [ ] Test API client methods
   - [ ] Test Discogs API calls
   - [ ] Test error handling
@@ -361,25 +533,36 @@ Implementation of functionality to add new music releases to the collection via 
   - [ ] Fill form and submit
   - [ ] Verify data saved correctly
   - [ ] Verify relationships created
+  - [ ] **Test purchase info modal appears**
+  - [ ] **Test adding purchase info with new store**
 - [ ] Test complete Discogs workflow
   - [ ] Search by catalog number
   - [ ] Select result
   - [ ] Preview and edit
   - [ ] Save to collection
+  - [ ] **Test purchase info modal appears**
+  - [ ] **Test skipping purchase info**
 - [ ] Test duplicate detection
 - [ ] Test error recovery scenarios
 - [ ] Test with various data combinations
+- [ ] **Test new store creation during purchase info update**
 
 ### 6.4 End-to-End Tests
 - [ ] Create Playwright test: `add-release-manual.spec.ts`
   - [ ] Test manual form entry
   - [ ] Test form validation
   - [ ] Test successful submission
+  - [ ] **Test purchase info modal workflow**
 - [ ] Create Playwright test: `add-release-discogs.spec.ts`
   - [ ] Test Discogs search
   - [ ] Test result selection
   - [ ] Test data preview and edit
   - [ ] Test saving Discogs data
+  - [ ] **Test purchase info modal (skip and add)**
+- [ ] Create Playwright test: `add-release-purchase-info.spec.ts`
+  - [ ] Test adding purchase info with existing store
+  - [ ] Test creating new store during purchase info
+  - [ ] Test skipping purchase info
 - [ ] Test cross-browser compatibility
 - [ ] Test responsive behavior
 - [ ] Ensure all E2E tests pass
@@ -529,6 +712,196 @@ Implementation of functionality to add new music releases to the collection via 
 - **Data Mapping**: Not all Discogs fields map 1:1 to our schema
 - **Validation**: Balance between strict validation and user flexibility
 - **Error Recovery**: Users should be able to save data even if Discogs lookup fails
+
+### Auto-Creation of Lookup Entities Strategy
+
+When a user adds a release from Discogs or manual entry with new artists/labels/genres:
+
+**Backend Approach:**
+1. **Modified CreateMusicReleaseDto**: Support both ID-based and name-based data
+   ```csharp
+   // Can provide either artistIds OR artistNames (or both)
+   public List<int>? ArtistIds { get; set; }
+   public List<string>? ArtistNames { get; set; }  // NEW
+   
+   public int? LabelId { get; set; }
+   public string? LabelName { get; set; }          // NEW (in addition to LabelId)
+   
+   public List<int>? GenreIds { get; set; }
+   public List<string>? GenreNames { get; set; }   // NEW
+   
+   public int? CountryId { get; set; }
+   public string? CountryName { get; set; }        // NEW
+   
+   public int? FormatId { get; set; }
+   public string? FormatName { get; set; }         // NEW
+   
+   public int? PackagingId { get; set; }
+   public string? PackagingName { get; set; }      // NEW
+   ```
+
+2. **Lookup Resolution Logic** (in CreateMusicRelease endpoint):
+   - For each lookup type (Artists, Labels, Genres, Countries, Formats, Packaging):
+     - If Name(s) provided, resolve or create:
+       - Check if entity exists (case-insensitive)
+       - If exists, use existing ID
+       - If not, create new entity, get ID
+   - Store resolved IDs in appropriate fields
+   - Same logic for all lookup types
+
+3. **Transaction Safety**:
+   - Use UnitOfWork transaction
+   - Create all new lookup entities first
+   - Then create MusicRelease with resolved IDs
+   - Rollback everything if any step fails
+
+4. **Return Enhanced Response**:
+   ```json
+   {
+     "release": { /* created release */ },
+     "created": {
+       "artists": [{ "id": 123, "name": "New Artist" }],
+       "labels": [{ "id": 45, "name": "New Label" }],
+       "genres": [{ "id": 12, "name": "New Genre" }],
+       "countries": [{ "id": 78, "name": "New Country" }],
+       "formats": [{ "id": 9, "name": "New Format" }],
+       "packagings": []
+     }
+   }
+   ```
+
+**Frontend Approach:**
+1. **Combo-box/Autocomplete Components**: Allow typing new values
+2. **Preview Before Submit**: Show "Will create 2 new artists, 1 new label, 1 new country"
+3. **Confirmation Dialog**: User explicitly confirms creation
+4. **Success Message**: "Added release + created 2 new artists, 1 new label, 1 new country"
+
+**Database Constraints:**
+- Unique constraints on Artist.Name, Label.Name, Genre.Name, Country.Name, Format.Name, Packaging.Name (case-insensitive)
+- Prevents duplicates even with concurrent requests
+
+**Note on Stores:**
+- Stores are only used for purchase info (manual entry)
+- Not retrieved from Discogs
+- Can optionally support new store creation in manual entry flow
+
+### Purchase Information Two-Step Workflow
+
+Purchase information is collected **after** release creation, not during:
+
+**Why Two-Step?**
+1. Discogs doesn't provide purchase information
+2. User may not have purchase details readily available
+3. Reduces friction in the main release creation flow
+4. Purchase info is optional metadata, not core release data
+
+**Frontend Flow:**
+1. User adds release from Discogs or manual entry
+2. Release is created in database
+3. **Modal/Dialog appears:** "Add Purchase Information?"
+   - Option A: "Skip for Now" → Done, show success
+   - Option B: "Add Purchase Info" → Show purchase form
+4. If adding purchase info:
+   - User fills in: Store, Price, Currency, Date, Notes
+   - User can type new store name (not in dropdown)
+   - Submit updates the release with PATCH request
+5. Success message includes both release + purchase info saved
+
+**Backend Approach:**
+1. **UpdateMusicReleaseDto** enhanced to support:
+   ```csharp
+   public MusicReleasePurchaseInfoDto? PurchaseInfo { get; set; }
+   // Inside PurchaseInfoDto:
+   public int? StoreId { get; set; }
+   public string? StoreName { get; set; }  // NEW - for creating new store
+   ```
+
+2. **Update Logic:**
+   - If StoreName provided and StoreId null:
+     - Check if store exists (case-insensitive)
+     - If exists, use existing ID
+     - If not, create new store, get ID
+   - Update MusicRelease.PurchaseInfo JSON
+   - Transaction ensures atomicity
+
+**User Experience:**
+- Low friction: Can skip purchase info entirely
+- Can add/edit later via release edit (future feature)
+- Clear indication of what's being created ("New store: Record Shop")
+- Single success message for entire operation
+
+### Discogs Collection Sync Strategy
+
+Optional feature to add releases to user's Discogs collection after local database save:
+
+**Why Optional Checkbox?**
+1. Not all users want releases automatically added to Discogs
+2. Some may use Discogs for wishlist/tracking, not ownership
+3. Keeps local collection and Discogs collection in sync if desired
+4. User has full control over what syncs
+
+**Frontend Flow:**
+1. When adding from Discogs search results, show checkbox:
+   - "☐ Also add this release to my Discogs collection"
+2. User submits release (creates in local database first)
+3. **After successful local save:**
+   - If checkbox checked AND Discogs authenticated:
+     - Call `POST /api/discogs/collection/add`
+     - Show loading: "Adding to Discogs..."
+     - Show result: "✓ Added!" or "⚠ Failed to add to Discogs"
+   - If not authenticated:
+     - Show: "Connect Discogs account to sync collection"
+4. Continue to purchase info modal regardless of Discogs result
+5. Final success includes Discogs status
+
+**Backend Approach:**
+1. **New endpoint:** `POST /api/discogs/collection/add`
+   ```csharp
+   public async Task<ActionResult> AddToDiscogsCollection(
+       [FromBody] DiscogsCollectionAddDto dto)
+   {
+       // dto contains: DiscogsReleaseId, FolderId (optional)
+       // Uses user's Discogs token from configuration/user profile
+       // Calls Discogs API: POST /users/{username}/collection/folders/{folder_id}/releases/{release_id}
+       // Returns success/failure
+   }
+   ```
+
+2. **Discogs API Authentication:**
+   - Requires user Discogs token or OAuth
+   - Store in appsettings (dev) or user profile (future)
+   - Include in Authorization header for API calls
+
+3. **Error Handling:**
+   - 401: User not authenticated with Discogs
+   - 404: Release not found on Discogs
+   - 422: Already in collection (treat as success)
+   - 429: Rate limit exceeded (retry later)
+   - 500: Generic Discogs error
+
+4. **Rate Limiting:**
+   - Discogs has rate limits (60 requests/minute authenticated)
+   - Track requests, handle 429 gracefully
+   - Don't block local save if Discogs fails
+
+**Configuration Requirements:**
+```json
+"Discogs": {
+  "Token": "",  // User's Discogs personal access token
+  "Username": "",  // User's Discogs username
+  "CollectionFolderId": "1"  // Default folder (1 = main collection)
+}
+```
+
+**Future Enhancements:**
+- Multi-user support with per-user Discogs tokens
+- OAuth flow for better user experience
+- Bulk sync from local → Discogs
+- Two-way sync (Discogs → local)
+- Folder selection dropdown
+
+
+
 
 ### Future Enhancements (Out of Scope)
 - [ ] Barcode scanning integration
