@@ -460,6 +460,24 @@ namespace KollectorScum.Api.Controllers
             {
                 _logger.LogInformation("Creating music release: {Title}", createDto.Title);
 
+                // Check for duplicates
+                var duplicates = await CheckForDuplicates(createDto.Title, createDto.LabelNumber, createDto.ArtistIds);
+                if (duplicates.Any())
+                {
+                    _logger.LogWarning("Potential duplicate detected for: {Title}", createDto.Title);
+                    return BadRequest(new
+                    {
+                        message = "Potential duplicate release found",
+                        duplicates = duplicates.Select(d => new
+                        {
+                            id = d.Id,
+                            title = d.Title,
+                            labelNumber = d.LabelNumber,
+                            year = d.ReleaseYear
+                        })
+                    });
+                }
+
                 // Validate relationships exist
                 var validationResult = await ValidateRelationships(createDto.LabelId, createDto.CountryId, 
                     createDto.FormatId, createDto.PackagingId, createDto.ArtistIds, createDto.GenreIds);
@@ -598,6 +616,53 @@ namespace KollectorScum.Api.Controllers
 
         // Private helper methods
         
+        /// <summary>
+        /// Check for potential duplicate releases based on title, catalog number, or artist
+        /// </summary>
+        /// <param name="title">Release title</param>
+        /// <param name="labelNumber">Catalog/label number</param>
+        /// <param name="artistIds">Artist IDs</param>
+        /// <returns>List of potential duplicates</returns>
+        private async Task<List<MusicRelease>> CheckForDuplicates(string title, string? labelNumber, List<int>? artistIds)
+        {
+            var duplicates = new List<MusicRelease>();
+
+            // Check by exact catalog number (strongest indicator of duplicate)
+            if (!string.IsNullOrWhiteSpace(labelNumber))
+            {
+                var normalizedCatalog = labelNumber.Trim().ToLower();
+                var catalogMatches = await _musicReleaseRepository.GetAsync(
+                    filter: r => r.LabelNumber != null && r.LabelNumber.ToLower() == normalizedCatalog);
+                duplicates.AddRange(catalogMatches);
+            }
+
+            // If no catalog number match, check by title + artist combination
+            if (!duplicates.Any() && artistIds != null && artistIds.Any())
+            {
+                // Normalize title for comparison (lowercase, trim)
+                var normalizedTitle = title.Trim().ToLower();
+                
+                var allReleases = await _musicReleaseRepository.GetAllAsync();
+                var titleArtistMatches = allReleases.Where(r =>
+                {
+                    // Check title similarity
+                    if (r.Title.Trim().ToLower() != normalizedTitle)
+                        return false;
+
+                    // Check if at least one artist matches
+                    if (string.IsNullOrEmpty(r.Artists))
+                        return false;
+
+                    var releaseArtistIds = JsonSerializer.Deserialize<List<int>>(r.Artists);
+                    return releaseArtistIds != null && releaseArtistIds.Intersect(artistIds).Any();
+                });
+
+                duplicates.AddRange(titleArtistMatches);
+            }
+
+            return duplicates.Distinct().ToList();
+        }
+
         private async Task<ActionResult?> ValidateRelationships(
             int? labelId, int? countryId, int? formatId, int? packagingId,
             List<int>? artistIds, List<int>? genreIds)

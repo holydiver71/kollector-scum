@@ -283,6 +283,319 @@ namespace KollectorScum.Tests.Services
             Assert.Null(result);
         }
 
+        // Edge case tests
+
+        [Fact]
+        public async Task SearchByCatalogNumberAsync_WithMalformedJson_ReturnsEmptyList()
+        {
+            // Arrange
+            var httpMessageHandler = CreateMockHttpMessageHandler(
+                HttpStatusCode.OK,
+                "{ invalid json }");
+
+            var httpClient = new HttpClient(httpMessageHandler.Object);
+            var service = new DiscogsService(
+                httpClient,
+                Options.Create(_settings),
+                _mockLogger.Object);
+
+            // Act
+            var results = await service.SearchByCatalogNumberAsync("TEST001");
+
+            // Assert
+            Assert.NotNull(results);
+            Assert.Empty(results);
+        }
+
+        [Fact]
+        public async Task SearchByCatalogNumberAsync_WithMissingResultsProperty_ReturnsEmptyList()
+        {
+            // Arrange
+            var mockResponse = new { data = new object[] { } }; // Missing "results"
+            var httpMessageHandler = CreateMockHttpMessageHandler(
+                HttpStatusCode.OK,
+                JsonSerializer.Serialize(mockResponse));
+
+            var httpClient = new HttpClient(httpMessageHandler.Object);
+            var service = new DiscogsService(
+                httpClient,
+                Options.Create(_settings),
+                _mockLogger.Object);
+
+            // Act
+            var results = await service.SearchByCatalogNumberAsync("TEST001");
+
+            // Assert
+            Assert.NotNull(results);
+            Assert.Empty(results);
+        }
+
+        [Fact]
+        public async Task SearchByCatalogNumberAsync_WithNullResultsArray_ReturnsEmptyList()
+        {
+            // Arrange
+            var mockResponse = new { results = (object[]?)null };
+            var httpMessageHandler = CreateMockHttpMessageHandler(
+                HttpStatusCode.OK,
+                JsonSerializer.Serialize(mockResponse));
+
+            var httpClient = new HttpClient(httpMessageHandler.Object);
+            var service = new DiscogsService(
+                httpClient,
+                Options.Create(_settings),
+                _mockLogger.Object);
+
+            // Act
+            var results = await service.SearchByCatalogNumberAsync("TEST001");
+
+            // Assert
+            Assert.NotNull(results);
+            Assert.Empty(results);
+        }
+
+        [Fact]
+        public async Task SearchByCatalogNumberAsync_WithPartialData_MapsAvailableFields()
+        {
+            // Arrange
+            var mockResponse = new
+            {
+                results = new[]
+                {
+                    new
+                    {
+                        id = 123456L,
+                        title = "Test Album"
+                        // Missing optional fields: artist, year, format, label, catno, country, thumb, cover_image
+                    }
+                }
+            };
+
+            var httpMessageHandler = CreateMockHttpMessageHandler(
+                HttpStatusCode.OK,
+                JsonSerializer.Serialize(mockResponse));
+
+            var httpClient = new HttpClient(httpMessageHandler.Object);
+            var service = new DiscogsService(
+                httpClient,
+                Options.Create(_settings),
+                _mockLogger.Object);
+
+            // Act
+            var results = await service.SearchByCatalogNumberAsync("TEST001");
+
+            // Assert
+            Assert.NotNull(results);
+            Assert.Single(results);
+            Assert.Equal("123456", results[0].Id);
+            Assert.Equal("Test Album", results[0].Title);
+        }
+
+        [Fact]
+        public async Task GetReleaseDetailsAsync_WithMalformedJson_ReturnsNull()
+        {
+            // Arrange
+            var httpMessageHandler = CreateMockHttpMessageHandler(
+                HttpStatusCode.OK,
+                "{ malformed json }");
+
+            var httpClient = new HttpClient(httpMessageHandler.Object);
+            var service = new DiscogsService(
+                httpClient,
+                Options.Create(_settings),
+                _mockLogger.Object);
+
+            // Act
+            var result = await service.GetReleaseDetailsAsync("123456");
+
+            // Assert
+            Assert.Null(result);
+        }
+
+        [Fact]
+        public async Task GetReleaseDetailsAsync_WithMinimalData_MapsAvailableFields()
+        {
+            // Arrange
+            var mockResponse = new
+            {
+                id = 123456L,
+                title = "Minimal Album"
+                // Missing optional fields
+            };
+
+            var httpMessageHandler = CreateMockHttpMessageHandler(
+                HttpStatusCode.OK,
+                JsonSerializer.Serialize(mockResponse));
+
+            var httpClient = new HttpClient(httpMessageHandler.Object);
+            var service = new DiscogsService(
+                httpClient,
+                Options.Create(_settings),
+                _mockLogger.Object);
+
+            // Act
+            var result = await service.GetReleaseDetailsAsync("123456");
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal("123456", result.Id);
+            Assert.Equal("Minimal Album", result.Title);
+            Assert.NotNull(result.Genres);
+            Assert.NotNull(result.Artists);
+            Assert.NotNull(result.Labels);
+        }
+
+        [Fact]
+        public async Task GetReleaseDetailsAsync_WithEmptyArrays_ReturnsEmptyCollections()
+        {
+            // Arrange
+            var mockResponse = new
+            {
+                id = 123456L,
+                title = "Test Album",
+                artists = new object[] { },
+                labels = new object[] { },
+                formats = new object[] { },
+                images = new object[] { },
+                tracklist = new object[] { },
+                identifiers = new object[] { },
+                genres = new string[] { },
+                styles = new string[] { }
+            };
+
+            var httpMessageHandler = CreateMockHttpMessageHandler(
+                HttpStatusCode.OK,
+                JsonSerializer.Serialize(mockResponse));
+
+            var httpClient = new HttpClient(httpMessageHandler.Object);
+            var service = new DiscogsService(
+                httpClient,
+                Options.Create(_settings),
+                _mockLogger.Object);
+
+            // Act
+            var result = await service.GetReleaseDetailsAsync("123456");
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Empty(result.Artists);
+            Assert.Empty(result.Labels);
+            Assert.Empty(result.Formats);
+            Assert.Empty(result.Images);
+            Assert.Empty(result.Tracklist);
+            Assert.Empty(result.Identifiers);
+            Assert.Empty(result.Genres);
+        }
+
+        [Fact]
+        public async Task SearchByCatalogNumberAsync_With401Unauthorized_ReturnsEmptyList()
+        {
+            // Arrange
+            var httpMessageHandler = CreateMockHttpMessageHandler(
+                HttpStatusCode.Unauthorized,
+                "Unauthorized");
+
+            var httpClient = new HttpClient(httpMessageHandler.Object);
+            var service = new DiscogsService(
+                httpClient,
+                Options.Create(_settings),
+                _mockLogger.Object);
+
+            // Act
+            var results = await service.SearchByCatalogNumberAsync("TEST001");
+
+            // Assert
+            Assert.NotNull(results);
+            Assert.Empty(results);
+        }
+
+        [Fact]
+        public async Task GetReleaseDetailsAsync_With429RateLimitExceeded_ReturnsNull()
+        {
+            // Arrange
+            var httpMessageHandler = CreateMockHttpMessageHandler(
+                (HttpStatusCode)429, // Too Many Requests
+                "Rate limit exceeded");
+
+            var httpClient = new HttpClient(httpMessageHandler.Object);
+            var service = new DiscogsService(
+                httpClient,
+                Options.Create(_settings),
+                _mockLogger.Object);
+
+            // Act
+            var result = await service.GetReleaseDetailsAsync("123456");
+
+            // Assert
+            Assert.Null(result);
+        }
+
+        [Fact]
+        public async Task SearchByCatalogNumberAsync_WithVeryLongCatalogNumber_CallsService()
+        {
+            // Arrange
+            var longCatalogNumber = new string('A', 200);
+            var mockResponse = new { results = new object[] { } };
+            var httpMessageHandler = CreateMockHttpMessageHandler(
+                HttpStatusCode.OK,
+                JsonSerializer.Serialize(mockResponse));
+
+            var httpClient = new HttpClient(httpMessageHandler.Object);
+            var service = new DiscogsService(
+                httpClient,
+                Options.Create(_settings),
+                _mockLogger.Object);
+
+            // Act
+            var results = await service.SearchByCatalogNumberAsync(longCatalogNumber);
+
+            // Assert
+            Assert.NotNull(results);
+            Assert.Empty(results);
+        }
+
+        [Fact]
+        public async Task SearchByCatalogNumberAsync_WithSpecialCharacters_EncodesCorrectly()
+        {
+            // Arrange
+            var catalogNumber = "TEST&123/456";
+            var mockResponse = new { results = new object[] { } };
+            var capturedUri = string.Empty;
+
+            var httpMessageHandler = new Mock<HttpMessageHandler>();
+            httpMessageHandler
+                .Protected()
+                .Setup<Task<HttpResponseMessage>>(
+                    "SendAsync",
+                    ItExpr.IsAny<HttpRequestMessage>(),
+                    ItExpr.IsAny<CancellationToken>())
+                .Callback<HttpRequestMessage, CancellationToken>((request, _) =>
+                {
+                    capturedUri = request.RequestUri?.ToString() ?? string.Empty;
+                })
+                .ReturnsAsync(new HttpResponseMessage
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    Content = new StringContent(JsonSerializer.Serialize(mockResponse))
+                });
+
+            var httpClient = new HttpClient(httpMessageHandler.Object)
+            {
+                BaseAddress = new Uri(_settings.BaseUrl)
+            };
+
+            var service = new DiscogsService(
+                httpClient,
+                Options.Create(_settings),
+                _mockLogger.Object);
+
+            // Act
+            await service.SearchByCatalogNumberAsync(catalogNumber);
+
+            // Assert
+            // URL encoding should convert & to %26 and / to %2F
+            Assert.Contains("catno=", capturedUri);
+        }
+
         private Mock<HttpMessageHandler> CreateMockHttpMessageHandler(
             HttpStatusCode statusCode,
             string content)
