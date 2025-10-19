@@ -422,6 +422,7 @@ namespace KollectorScum.Api.Services
                         LengthInSeconds = int.TryParse(dto.LengthInSeconds, out var length) ? length : null,
                         FormatId = dto.FormatId > 0 ? dto.FormatId : null,
                         PackagingId = dto.PackagingId > 0 ? dto.PackagingId : null,
+                        Upc = dto.Upc,
                         Images = dto.Images != null ? JsonSerializer.Serialize(dto.Images) : null,
                         Links = dto.Links != null && dto.Links.Any() ? JsonSerializer.Serialize(dto.Links) : null,
                         Media = dto.Media != null && dto.Media.Any() ? JsonSerializer.Serialize(dto.Media) : null,

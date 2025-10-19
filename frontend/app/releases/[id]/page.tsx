@@ -86,6 +86,7 @@ interface DetailedMusicRelease {
   label?: Label;
   country?: Country;
   labelNumber?: string;
+  upc?: string;
   lengthInSeconds?: number;
   format?: Format;
   packaging?: Packaging;
@@ -168,7 +169,7 @@ export default function ReleaseDetailPage() {
   }
 
   const formatDuration = (seconds?: number) => {
-    if (!seconds) return null;
+    if (!seconds || seconds === 0) return null;
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const remainingSeconds = seconds % 60;
@@ -253,18 +254,24 @@ export default function ReleaseDetailPage() {
                     <dd className="text-sm text-gray-900">{release.labelNumber}</dd>
                   </div>
                 )}
+                {release.upc && (
+                  <div>
+                    <dt className="text-sm font-medium text-gray-500">UPC/Barcode</dt>
+                    <dd className="text-sm text-gray-900 font-mono">{release.upc}</dd>
+                  </div>
+                )}
                 {release.country && (
                   <div>
                     <dt className="text-sm font-medium text-gray-500">Country</dt>
                     <dd className="text-sm text-gray-900">{release.country.name}</dd>
                   </div>
                 )}
-                {release.lengthInSeconds && (
+                {(release.lengthInSeconds && release.lengthInSeconds > 0) ? (
                   <div>
                     <dt className="text-sm font-medium text-gray-500">Duration</dt>
                     <dd className="text-sm text-gray-900">{formatDuration(release.lengthInSeconds)}</dd>
                   </div>
-                )}
+                ) : null}
                 {release.live && (
                   <div>
                     <dt className="text-sm font-medium text-gray-500">Type</dt>
