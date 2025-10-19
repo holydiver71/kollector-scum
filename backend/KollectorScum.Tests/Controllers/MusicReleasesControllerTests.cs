@@ -829,22 +829,6 @@ namespace KollectorScum.Tests.Controllers
             Assert.Empty(pagedResult.Items);
         }
 
-        [Fact]
-        public async Task GetMusicReleases_Returns500_OnException()
-        {
-            // Arrange
-            _mockMusicReleaseRepository
-                .Setup(r => r.GetPagedAsync(
-                    It.IsAny<int>(), It.IsAny<int>(), It.IsAny<Expression<Func<MusicRelease, bool>>>(), It.IsAny<Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>>>(), It.IsAny<string>()))
-                .ThrowsAsync(new Exception("DB error"));
-
-            // Act
-            var result = await _controller.GetMusicReleases(null, null, null, null, null, null, null, null, null, 1, 50);
-
-            // Assert
-            var statusResult = Assert.IsType<ObjectResult>(result.Result);
-            Assert.Equal(500, statusResult.StatusCode);
-        }
 
         #endregion
 
@@ -887,21 +871,6 @@ namespace KollectorScum.Tests.Controllers
             Assert.Contains("not found", notFound.Value.ToString());
         }
 
-        [Fact]
-        public async Task GetMusicRelease_Returns500_OnException()
-        {
-            // Arrange
-            _mockMusicReleaseRepository
-                .Setup(r => r.GetByIdAsync(It.IsAny<int>(), It.IsAny<string>()))
-                .ThrowsAsync(new Exception("DB error"));
-
-            // Act
-            var result = await _controller.GetMusicRelease(1);
-
-            // Assert
-            var statusResult = Assert.IsType<ObjectResult>(result.Result);
-            Assert.Equal(500, statusResult.StatusCode);
-        }
 
         #endregion
 
@@ -1011,17 +980,6 @@ namespace KollectorScum.Tests.Controllers
             Assert.Contains(suggestions, s => s.Type == "label");
         }
 
-        [Fact]
-        public async Task GetSearchSuggestions_Returns500_OnException()
-        {
-            // Arrange
-            _mockMusicReleaseRepository.Setup(r => r.GetAsync(It.IsAny<Expression<Func<MusicRelease, bool>>>(), It.IsAny<Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>>>(), It.IsAny<string>())).ThrowsAsync(new Exception("DB error"));
-
-            // Act
-            var result = await _controller.GetSearchSuggestions("Metal");
-            var statusResult = Assert.IsType<ObjectResult>(result.Result);
-            Assert.Equal(500, statusResult.StatusCode);
-        }
 
         #endregion
 
@@ -1079,19 +1037,6 @@ namespace KollectorScum.Tests.Controllers
             Assert.Equal(0, stats.TotalLabels);
         }
 
-        [Fact]
-        public async Task GetCollectionStatistics_Returns500_OnException()
-        {
-            // Arrange
-            _mockMusicReleaseRepository.Setup(r => r.GetAllAsync()).ThrowsAsync(new Exception("DB error"));
-
-            // Act
-            var result = await _controller.GetCollectionStatistics();
-
-            // Assert
-            var statusResult = Assert.IsType<ObjectResult>(result.Result);
-            Assert.Equal(500, statusResult.StatusCode);
-        }
 
         #endregion
 
@@ -1148,23 +1093,6 @@ namespace KollectorScum.Tests.Controllers
             Assert.Contains("does not exist", badRequest.Value.ToString());
         }
 
-        [Fact]
-        public async Task UpdateMusicRelease_Returns500_OnException()
-        {
-            // Arrange
-            var release = new MusicRelease { Id = 1, Title = "Old" };
-            var updateDto = new UpdateMusicReleaseDto { Title = "New" };
-            _mockMusicReleaseRepository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(release);
-            _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ThrowsAsync(new Exception("DB error"));
-            _mockMusicReleaseRepository.Setup(r => r.Update(It.IsAny<MusicRelease>())).Callback<MusicRelease>(r => throw new Exception("DB error"));
-
-            // Act
-            var result = await _controller.UpdateMusicRelease(1, updateDto);
-
-            // Assert
-            var statusResult = Assert.IsType<ObjectResult>(result.Result);
-            Assert.Equal(500, statusResult.StatusCode);
-        }
 
         #endregion
 
@@ -1202,22 +1130,6 @@ namespace KollectorScum.Tests.Controllers
             _mockUnitOfWork.Verify(u => u.SaveChangesAsync(), Times.Once);
         }
 
-        [Fact]
-        public async Task DeleteMusicRelease_Returns500_OnException()
-        {
-            // Arrange
-            var release = new MusicRelease { Id = 1, Title = "To Delete" };
-            _mockMusicReleaseRepository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(release);
-            _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ThrowsAsync(new Exception("DB error"));
-            _mockMusicReleaseRepository.Setup(r => r.DeleteAsync(It.IsAny<int>())).ThrowsAsync(new Exception("DB error"));
-
-            // Act
-            var result = await _controller.DeleteMusicRelease(1);
-
-            // Assert
-            var statusResult = Assert.IsType<ObjectResult>(result);
-            Assert.Equal(500, statusResult.StatusCode);
-        }
 
         #endregion
 
@@ -1246,6 +1158,80 @@ namespace KollectorScum.Tests.Controllers
                 .ReturnsAsync(new List<MusicRelease>());
         }
 
+        #endregion
+
+        #region Exception Handling Coverage
+        [Fact]
+        public async Task GetMusicReleases_Returns500_OnRepositoryException()
+        {
+            _mockMusicReleaseRepository.Setup(r => r.GetPagedAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<Expression<Func<MusicRelease, bool>>>(), It.IsAny<Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>>>(), It.IsAny<string>())).ThrowsAsync(new Exception("DB error"));
+            var result = await _controller.GetMusicReleases(null, null, null, null, null, null, null, null, null, 1, 50);
+            var statusResult = Assert.IsType<ObjectResult>(result.Result);
+            Assert.Equal(500, statusResult.StatusCode);
+        }
+
+        [Fact]
+        public async Task GetMusicRelease_Returns500_OnRepositoryException()
+        {
+            _mockMusicReleaseRepository.Setup(r => r.GetByIdAsync(It.IsAny<int>(), It.IsAny<string>())).ThrowsAsync(new Exception("DB error"));
+            var result = await _controller.GetMusicRelease(1);
+            var statusResult = Assert.IsType<ObjectResult>(result.Result);
+            Assert.Equal(500, statusResult.StatusCode);
+        }
+
+        [Fact]
+        public async Task GetSearchSuggestions_Returns500_OnRepositoryException()
+        {
+            _mockMusicReleaseRepository.Setup(r => r.GetAsync(It.IsAny<Expression<Func<MusicRelease, bool>>>(), It.IsAny<Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>>>(), It.IsAny<string>())).ThrowsAsync(new Exception("DB error"));
+            var result = await _controller.GetSearchSuggestions("Metal");
+            var statusResult = Assert.IsType<ObjectResult>(result.Result);
+            Assert.Equal(500, statusResult.StatusCode);
+        }
+
+        [Fact]
+        public async Task GetCollectionStatistics_Returns500_OnRepositoryException()
+        {
+            _mockMusicReleaseRepository.Setup(r => r.GetAllAsync()).ThrowsAsync(new Exception("DB error"));
+            var result = await _controller.GetCollectionStatistics();
+            var statusResult = Assert.IsType<ObjectResult>(result.Result);
+            Assert.Equal(500, statusResult.StatusCode);
+        }
+
+        [Fact]
+        public async Task CreateMusicRelease_Returns500_OnRepositoryException()
+        {
+            var createDto = new CreateMusicReleaseDto { Title = "Test Album", ReleaseYear = new DateTime(2020, 1, 1) };
+            _mockUnitOfWork.Setup(u => u.BeginTransactionAsync()).Returns(Task.CompletedTask);
+            _mockMusicReleaseRepository.Setup(r => r.AddAsync(It.IsAny<MusicRelease>())).ThrowsAsync(new Exception("DB error"));
+            var result = await _controller.CreateMusicRelease(createDto);
+            var statusResult = Assert.IsType<ObjectResult>(result.Result);
+            Assert.Equal(500, statusResult.StatusCode);
+        }
+
+        [Fact]
+        public async Task UpdateMusicRelease_Returns500_OnRepositoryException()
+        {
+            var release = new MusicRelease { Id = 1, Title = "Old" };
+            var updateDto = new UpdateMusicReleaseDto { Title = "New" };
+            _mockMusicReleaseRepository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(release);
+            _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ThrowsAsync(new Exception("DB error"));
+            _mockMusicReleaseRepository.Setup(r => r.Update(It.IsAny<MusicRelease>())).Callback<MusicRelease>(r => throw new Exception("DB error"));
+            var result = await _controller.UpdateMusicRelease(1, updateDto);
+            var statusResult = Assert.IsType<ObjectResult>(result.Result);
+            Assert.Equal(500, statusResult.StatusCode);
+        }
+
+        [Fact]
+        public async Task DeleteMusicRelease_Returns500_OnRepositoryException()
+        {
+            var release = new MusicRelease { Id = 1, Title = "To Delete" };
+            _mockMusicReleaseRepository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(release);
+            _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ThrowsAsync(new Exception("DB error"));
+            _mockMusicReleaseRepository.Setup(r => r.DeleteAsync(It.IsAny<int>())).ThrowsAsync(new Exception("DB error"));
+            var result = await _controller.DeleteMusicRelease(1);
+            var statusResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(500, statusResult.StatusCode);
+        }
         #endregion
     }
 }
