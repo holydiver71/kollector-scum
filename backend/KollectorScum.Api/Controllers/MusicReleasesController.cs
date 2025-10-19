@@ -778,6 +778,7 @@ namespace KollectorScum.Api.Controllers
                 LengthInSeconds = musicRelease.LengthInSeconds,
                 Format = musicRelease.Format != null ? new FormatDto { Id = musicRelease.Format.Id, Name = musicRelease.Format.Name } : null,
                 Packaging = musicRelease.Packaging != null ? new PackagingDto { Id = musicRelease.Packaging.Id, Name = musicRelease.Packaging.Name } : null,
+                Upc = musicRelease.Upc,
                 PurchaseInfo = await ResolvePurchaseInfo(musicRelease.PurchaseInfo),
                 Images = string.IsNullOrEmpty(musicRelease.Images) 
                     ? null 

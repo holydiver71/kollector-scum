@@ -107,6 +107,12 @@ namespace KollectorScum.Api.Models
         public virtual Packaging? Packaging { get; set; }
 
         /// <summary>
+        /// Gets or sets the UPC barcode
+        /// </summary>
+        [StringLength(50)]
+        public string? Upc { get; set; }
+
+        /// <summary>
         /// Gets or sets the image information (stored as JSON)
         /// </summary>
         public string? Images { get; set; }

@@ -38,6 +38,12 @@ namespace KollectorScum.Api.Interfaces
         /// </summary>
         /// <returns>Import progress details</returns>
         Task<ImportProgressInfo> GetImportProgressAsync();
+
+        /// <summary>
+        /// Updates UPC values for existing music releases from JSON file
+        /// </summary>
+        /// <returns>Number of releases updated</returns>
+        Task<int> UpdateUpcValuesAsync();
     }
 
     /// <summary>
