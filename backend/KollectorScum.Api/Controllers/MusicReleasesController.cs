@@ -448,70 +448,141 @@ namespace KollectorScum.Api.Controllers
 
         /// <summary>
         /// Creates a new music release
+        /// Supports auto-creation of new lookup entities (artists, labels, genres, etc.)
         /// </summary>
         /// <param name="createDto">Music release data</param>
-        /// <returns>Created music release</returns>
+        /// <returns>Created music release with details about auto-created entities</returns>
         [HttpPost]
-        [ProducesResponseType(typeof(MusicReleaseDto), 201)]
+        [ProducesResponseType(typeof(CreateMusicReleaseResponseDto), 201)]
         [ProducesResponseType(400)]
-        public async Task<ActionResult<MusicReleaseDto>> CreateMusicRelease([FromBody] CreateMusicReleaseDto createDto)
+        public async Task<ActionResult<CreateMusicReleaseResponseDto>> CreateMusicRelease([FromBody] CreateMusicReleaseDto createDto)
         {
             try
             {
                 _logger.LogInformation("Creating music release: {Title}", createDto.Title);
 
-                // Check for duplicates
-                var duplicates = await CheckForDuplicates(createDto.Title, createDto.LabelNumber, createDto.ArtistIds);
-                if (duplicates.Any())
+                // Track what entities we create
+                var createdEntities = new CreatedEntitiesDto();
+
+                // Resolve or create all lookup entities within a transaction
+                await _unitOfWork.BeginTransactionAsync();
+                try
                 {
-                    _logger.LogWarning("Potential duplicate detected for: {Title}", createDto.Title);
-                    return BadRequest(new
+                    // Resolve artists (IDs + names)
+                    var resolvedArtistIds = await ResolveOrCreateArtists(
+                        createDto.ArtistIds, 
+                        createDto.ArtistNames, 
+                        createdEntities);
+
+                    // Resolve genres (IDs + names)
+                    var resolvedGenreIds = await ResolveOrCreateGenres(
+                        createDto.GenreIds, 
+                        createDto.GenreNames, 
+                        createdEntities);
+
+                    // Resolve label (ID or name)
+                    var resolvedLabelId = await ResolveOrCreateLabel(
+                        createDto.LabelId, 
+                        createDto.LabelName, 
+                        createdEntities);
+
+                    // Resolve country (ID or name)
+                    var resolvedCountryId = await ResolveOrCreateCountry(
+                        createDto.CountryId, 
+                        createDto.CountryName, 
+                        createdEntities);
+
+                    // Resolve format (ID or name)
+                    var resolvedFormatId = await ResolveOrCreateFormat(
+                        createDto.FormatId, 
+                        createDto.FormatName, 
+                        createdEntities);
+
+                    // Resolve packaging (ID or name)
+                    var resolvedPackagingId = await ResolveOrCreatePackaging(
+                        createDto.PackagingId, 
+                        createDto.PackagingName, 
+                        createdEntities);
+
+                    // Check for duplicates
+                    var duplicates = await CheckForDuplicates(createDto.Title, createDto.LabelNumber, resolvedArtistIds);
+                    if (duplicates.Any())
                     {
-                        message = "Potential duplicate release found",
-                        duplicates = duplicates.Select(d => new
+                        await _unitOfWork.RollbackTransactionAsync();
+                        _logger.LogWarning("Potential duplicate detected for: {Title}", createDto.Title);
+                        return BadRequest(new
                         {
-                            id = d.Id,
-                            title = d.Title,
-                            labelNumber = d.LabelNumber,
-                            year = d.ReleaseYear
-                        })
-                    });
+                            message = "Potential duplicate release found",
+                            duplicates = duplicates.Select(d => new
+                            {
+                                id = d.Id,
+                                title = d.Title,
+                                labelNumber = d.LabelNumber,
+                                year = d.ReleaseYear
+                            })
+                        });
+                    }
+
+                    // Create the music release with resolved IDs
+                    var musicRelease = new MusicRelease
+                    {
+                        Title = createDto.Title,
+                        ReleaseYear = createDto.ReleaseYear,
+                        OrigReleaseYear = createDto.OrigReleaseYear,
+                        Artists = resolvedArtistIds != null ? JsonSerializer.Serialize(resolvedArtistIds) : null,
+                        Genres = resolvedGenreIds != null ? JsonSerializer.Serialize(resolvedGenreIds) : null,
+                        Live = createDto.Live,
+                        LabelId = resolvedLabelId,
+                        CountryId = resolvedCountryId,
+                        LabelNumber = createDto.LabelNumber,
+                        Upc = createDto.Upc,
+                        LengthInSeconds = createDto.LengthInSeconds,
+                        FormatId = resolvedFormatId,
+                        PackagingId = resolvedPackagingId,
+                        PurchaseInfo = createDto.PurchaseInfo != null ? JsonSerializer.Serialize(createDto.PurchaseInfo) : null,
+                        Images = createDto.Images != null ? JsonSerializer.Serialize(createDto.Images) : null,
+                        Links = createDto.Links != null ? JsonSerializer.Serialize(createDto.Links) : null,
+                        Media = createDto.Media != null ? JsonSerializer.Serialize(createDto.Media) : null,
+                        DateAdded = DateTime.UtcNow,
+                        LastModified = DateTime.UtcNow
+                    };
+
+                    await _musicReleaseRepository.AddAsync(musicRelease);
+                    await _unitOfWork.SaveChangesAsync();
+                    await _unitOfWork.CommitTransactionAsync();
+
+                    _logger.LogInformation("Successfully created music release {Title} with ID {Id}", 
+                        musicRelease.Title, musicRelease.Id);
+
+                    // Log what was created
+                    if (createdEntities.Artists?.Any() == true)
+                        _logger.LogInformation("Created {Count} new artists", createdEntities.Artists.Count);
+                    if (createdEntities.Labels?.Any() == true)
+                        _logger.LogInformation("Created {Count} new labels", createdEntities.Labels.Count);
+                    if (createdEntities.Genres?.Any() == true)
+                        _logger.LogInformation("Created {Count} new genres", createdEntities.Genres.Count);
+                    if (createdEntities.Countries?.Any() == true)
+                        _logger.LogInformation("Created {Count} new countries", createdEntities.Countries.Count);
+                    if (createdEntities.Formats?.Any() == true)
+                        _logger.LogInformation("Created {Count} new formats", createdEntities.Formats.Count);
+                    if (createdEntities.Packagings?.Any() == true)
+                        _logger.LogInformation("Created {Count} new packagings", createdEntities.Packagings.Count);
+
+                    var createdDto = await MapToFullDto(musicRelease);
+                    
+                    var response = new CreateMusicReleaseResponseDto
+                    {
+                        Release = createdDto,
+                        Created = HasCreatedEntities(createdEntities) ? createdEntities : null
+                    };
+
+                    return CreatedAtAction(nameof(GetMusicRelease), new { id = musicRelease.Id }, response);
                 }
-
-                // Validate relationships exist
-                var validationResult = await ValidateRelationships(createDto.LabelId, createDto.CountryId, 
-                    createDto.FormatId, createDto.PackagingId, createDto.ArtistIds, createDto.GenreIds);
-                
-                if (validationResult != null)
-                    return validationResult;
-
-                var musicRelease = new MusicRelease
+                catch (Exception)
                 {
-                    Title = createDto.Title,
-                    ReleaseYear = createDto.ReleaseYear,
-                    OrigReleaseYear = createDto.OrigReleaseYear,
-                    Artists = createDto.ArtistIds != null ? JsonSerializer.Serialize(createDto.ArtistIds) : null,
-                    Genres = createDto.GenreIds != null ? JsonSerializer.Serialize(createDto.GenreIds) : null,
-                    Live = createDto.Live,
-                    LabelId = createDto.LabelId,
-                    CountryId = createDto.CountryId,
-                    LabelNumber = createDto.LabelNumber,
-                    LengthInSeconds = createDto.LengthInSeconds,
-                    FormatId = createDto.FormatId,
-                    PackagingId = createDto.PackagingId,
-                    PurchaseInfo = createDto.PurchaseInfo != null ? JsonSerializer.Serialize(createDto.PurchaseInfo) : null,
-                    Images = createDto.Images != null ? JsonSerializer.Serialize(createDto.Images) : null,
-                    Links = createDto.Links != null ? JsonSerializer.Serialize(createDto.Links) : null,
-                    Media = createDto.Media != null ? JsonSerializer.Serialize(createDto.Media) : null,
-                    DateAdded = DateTime.UtcNow,
-                    LastModified = DateTime.UtcNow
-                };
-
-                await _musicReleaseRepository.AddAsync(musicRelease);
-                await _unitOfWork.SaveChangesAsync();
-
-                var createdDto = await MapToFullDto(musicRelease);
-                return CreatedAtAction(nameof(GetMusicRelease), new { id = musicRelease.Id }, createdDto);
+                    await _unitOfWork.RollbackTransactionAsync();
+                    throw;
+                }
             }
             catch (Exception ex)
             {
@@ -698,6 +769,308 @@ namespace KollectorScum.Api.Controllers
             }
 
             return null;
+        }
+
+        // ===== LOOKUP ENTITY RESOLUTION/CREATION METHODS =====
+
+        /// <summary>
+        /// Resolves artist IDs or creates new artists from names
+        /// </summary>
+        private async Task<List<int>?> ResolveOrCreateArtists(
+            List<int>? artistIds, 
+            List<string>? artistNames, 
+            CreatedEntitiesDto createdEntities)
+        {
+            var resolvedIds = new List<int>();
+
+            // Add existing IDs
+            if (artistIds != null)
+            {
+                resolvedIds.AddRange(artistIds);
+            }
+
+            // Create or find artists by name
+            if (artistNames != null && artistNames.Any())
+            {
+                foreach (var name in artistNames.Where(n => !string.IsNullOrWhiteSpace(n)))
+                {
+                    var trimmedName = name.Trim();
+                    
+                    // Check if artist already exists (case-insensitive)
+                    var existing = await _artistRepository.GetFirstOrDefaultAsync(
+                        a => a.Name.ToLower() == trimmedName.ToLower());
+
+                    if (existing != null)
+                    {
+                        resolvedIds.Add(existing.Id);
+                        _logger.LogDebug("Found existing artist: {Name} (ID: {Id})", existing.Name, existing.Id);
+                    }
+                    else
+                    {
+                        // Create new artist
+                        var newArtist = new Artist { Name = trimmedName };
+                        await _artistRepository.AddAsync(newArtist);
+                        await _unitOfWork.SaveChangesAsync(); // Save to get ID
+                        
+                        resolvedIds.Add(newArtist.Id);
+                        
+                        // Track created entity
+                        createdEntities.Artists ??= new List<ArtistDto>();
+                        createdEntities.Artists.Add(new ArtistDto { Id = newArtist.Id, Name = newArtist.Name });
+                        
+                        _logger.LogInformation("Created new artist: {Name} (ID: {Id})", newArtist.Name, newArtist.Id);
+                    }
+                }
+            }
+
+            return resolvedIds.Any() ? resolvedIds : null;
+        }
+
+        /// <summary>
+        /// Resolves genre IDs or creates new genres from names
+        /// </summary>
+        private async Task<List<int>?> ResolveOrCreateGenres(
+            List<int>? genreIds, 
+            List<string>? genreNames, 
+            CreatedEntitiesDto createdEntities)
+        {
+            var resolvedIds = new List<int>();
+
+            // Add existing IDs
+            if (genreIds != null)
+            {
+                resolvedIds.AddRange(genreIds);
+            }
+
+            // Create or find genres by name
+            if (genreNames != null && genreNames.Any())
+            {
+                foreach (var name in genreNames.Where(n => !string.IsNullOrWhiteSpace(n)))
+                {
+                    var trimmedName = name.Trim();
+                    
+                    // Check if genre already exists (case-insensitive)
+                    var existing = await _genreRepository.GetFirstOrDefaultAsync(
+                        g => g.Name.ToLower() == trimmedName.ToLower());
+
+                    if (existing != null)
+                    {
+                        resolvedIds.Add(existing.Id);
+                        _logger.LogDebug("Found existing genre: {Name} (ID: {Id})", existing.Name, existing.Id);
+                    }
+                    else
+                    {
+                        // Create new genre
+                        var newGenre = new Genre { Name = trimmedName };
+                        await _genreRepository.AddAsync(newGenre);
+                        await _unitOfWork.SaveChangesAsync(); // Save to get ID
+                        
+                        resolvedIds.Add(newGenre.Id);
+                        
+                        // Track created entity
+                        createdEntities.Genres ??= new List<GenreDto>();
+                        createdEntities.Genres.Add(new GenreDto { Id = newGenre.Id, Name = newGenre.Name });
+                        
+                        _logger.LogInformation("Created new genre: {Name} (ID: {Id})", newGenre.Name, newGenre.Id);
+                    }
+                }
+            }
+
+            return resolvedIds.Any() ? resolvedIds : null;
+        }
+
+        /// <summary>
+        /// Resolves label ID or creates new label from name
+        /// </summary>
+        private async Task<int?> ResolveOrCreateLabel(
+            int? labelId, 
+            string? labelName, 
+            CreatedEntitiesDto createdEntities)
+        {
+            // If ID provided, use it
+            if (labelId.HasValue)
+                return labelId;
+
+            // If name provided, find or create
+            if (!string.IsNullOrWhiteSpace(labelName))
+            {
+                var trimmedName = labelName.Trim();
+                
+                // Check if label already exists (case-insensitive)
+                var existing = await _labelRepository.GetFirstOrDefaultAsync(
+                    l => l.Name.ToLower() == trimmedName.ToLower());
+
+                if (existing != null)
+                {
+                    _logger.LogDebug("Found existing label: {Name} (ID: {Id})", existing.Name, existing.Id);
+                    return existing.Id;
+                }
+                else
+                {
+                    // Create new label
+                    var newLabel = new Label { Name = trimmedName };
+                    await _labelRepository.AddAsync(newLabel);
+                    await _unitOfWork.SaveChangesAsync(); // Save to get ID
+                    
+                    // Track created entity
+                    createdEntities.Labels ??= new List<LabelDto>();
+                    createdEntities.Labels.Add(new LabelDto { Id = newLabel.Id, Name = newLabel.Name });
+                    
+                    _logger.LogInformation("Created new label: {Name} (ID: {Id})", newLabel.Name, newLabel.Id);
+                    return newLabel.Id;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Resolves country ID or creates new country from name
+        /// </summary>
+        private async Task<int?> ResolveOrCreateCountry(
+            int? countryId, 
+            string? countryName, 
+            CreatedEntitiesDto createdEntities)
+        {
+            // If ID provided, use it
+            if (countryId.HasValue)
+                return countryId;
+
+            // If name provided, find or create
+            if (!string.IsNullOrWhiteSpace(countryName))
+            {
+                var trimmedName = countryName.Trim();
+                
+                // Check if country already exists (case-insensitive)
+                var existing = await _countryRepository.GetFirstOrDefaultAsync(
+                    c => c.Name.ToLower() == trimmedName.ToLower());
+
+                if (existing != null)
+                {
+                    _logger.LogDebug("Found existing country: {Name} (ID: {Id})", existing.Name, existing.Id);
+                    return existing.Id;
+                }
+                else
+                {
+                    // Create new country
+                    var newCountry = new Country { Name = trimmedName };
+                    await _countryRepository.AddAsync(newCountry);
+                    await _unitOfWork.SaveChangesAsync(); // Save to get ID
+                    
+                    // Track created entity
+                    createdEntities.Countries ??= new List<CountryDto>();
+                    createdEntities.Countries.Add(new CountryDto { Id = newCountry.Id, Name = newCountry.Name });
+                    
+                    _logger.LogInformation("Created new country: {Name} (ID: {Id})", newCountry.Name, newCountry.Id);
+                    return newCountry.Id;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Resolves format ID or creates new format from name
+        /// </summary>
+        private async Task<int?> ResolveOrCreateFormat(
+            int? formatId, 
+            string? formatName, 
+            CreatedEntitiesDto createdEntities)
+        {
+            // If ID provided, use it
+            if (formatId.HasValue)
+                return formatId;
+
+            // If name provided, find or create
+            if (!string.IsNullOrWhiteSpace(formatName))
+            {
+                var trimmedName = formatName.Trim();
+                
+                // Check if format already exists (case-insensitive)
+                var existing = await _formatRepository.GetFirstOrDefaultAsync(
+                    f => f.Name.ToLower() == trimmedName.ToLower());
+
+                if (existing != null)
+                {
+                    _logger.LogDebug("Found existing format: {Name} (ID: {Id})", existing.Name, existing.Id);
+                    return existing.Id;
+                }
+                else
+                {
+                    // Create new format
+                    var newFormat = new Format { Name = trimmedName };
+                    await _formatRepository.AddAsync(newFormat);
+                    await _unitOfWork.SaveChangesAsync(); // Save to get ID
+                    
+                    // Track created entity
+                    createdEntities.Formats ??= new List<FormatDto>();
+                    createdEntities.Formats.Add(new FormatDto { Id = newFormat.Id, Name = newFormat.Name });
+                    
+                    _logger.LogInformation("Created new format: {Name} (ID: {Id})", newFormat.Name, newFormat.Id);
+                    return newFormat.Id;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Resolves packaging ID or creates new packaging from name
+        /// </summary>
+        private async Task<int?> ResolveOrCreatePackaging(
+            int? packagingId, 
+            string? packagingName, 
+            CreatedEntitiesDto createdEntities)
+        {
+            // If ID provided, use it
+            if (packagingId.HasValue)
+                return packagingId;
+
+            // If name provided, find or create
+            if (!string.IsNullOrWhiteSpace(packagingName))
+            {
+                var trimmedName = packagingName.Trim();
+                
+                // Check if packaging already exists (case-insensitive)
+                var existing = await _packagingRepository.GetFirstOrDefaultAsync(
+                    p => p.Name.ToLower() == trimmedName.ToLower());
+
+                if (existing != null)
+                {
+                    _logger.LogDebug("Found existing packaging: {Name} (ID: {Id})", existing.Name, existing.Id);
+                    return existing.Id;
+                }
+                else
+                {
+                    // Create new packaging
+                    var newPackaging = new Packaging { Name = trimmedName };
+                    await _packagingRepository.AddAsync(newPackaging);
+                    await _unitOfWork.SaveChangesAsync(); // Save to get ID
+                    
+                    // Track created entity
+                    createdEntities.Packagings ??= new List<PackagingDto>();
+                    createdEntities.Packagings.Add(new PackagingDto { Id = newPackaging.Id, Name = newPackaging.Name });
+                    
+                    _logger.LogInformation("Created new packaging: {Name} (ID: {Id})", newPackaging.Name, newPackaging.Id);
+                    return newPackaging.Id;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Checks if any entities were created
+        /// </summary>
+        private bool HasCreatedEntities(CreatedEntitiesDto createdEntities)
+        {
+            return (createdEntities.Artists?.Any() == true) ||
+                   (createdEntities.Labels?.Any() == true) ||
+                   (createdEntities.Genres?.Any() == true) ||
+                   (createdEntities.Countries?.Any() == true) ||
+                   (createdEntities.Formats?.Any() == true) ||
+                   (createdEntities.Packagings?.Any() == true) ||
+                   (createdEntities.Stores?.Any() == true);
         }
 
         private MusicReleaseSummaryDto MapToSummaryDto(MusicRelease musicRelease)
