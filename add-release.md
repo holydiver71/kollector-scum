@@ -112,17 +112,17 @@ This ensures:
   - [x] Return BadRequest with duplicate info if found
 - [x] Implement transaction handling for atomic operations *(already using UnitOfWork)*
 - [x] Add proper error responses and status codes *(already present)*
-- [ ] **NEW: Auto-create missing lookup entities from Discogs data**
-  - [ ] Modify CreateMusicReleaseDto to accept name-based lookup data
-  - [ ] Add support for creating new artists during release creation
-  - [ ] Add support for creating new labels during release creation
-  - [ ] Add support for creating new genres during release creation
-  - [ ] Add support for creating new countries during release creation
-  - [ ] Add support for creating new formats during release creation
-  - [ ] Add support for creating new packaging types during release creation
-  - [ ] Check for existing entries before creating (case-insensitive)
-  - [ ] Return mapping of new entity names → IDs in response
-  - [ ] Wrap in transaction to ensure atomicity
+- [x] **NEW: Auto-create missing lookup entities from Discogs data**
+  - [x] Modify CreateMusicReleaseDto to accept name-based lookup data
+  - [x] Add support for creating new artists during release creation
+  - [x] Add support for creating new labels during release creation
+  - [x] Add support for creating new genres during release creation
+  - [x] Add support for creating new countries during release creation
+  - [x] Add support for creating new formats during release creation
+  - [x] Add support for creating new packaging types during release creation
+  - [x] Check for existing entries before creating (case-insensitive)
+  - [x] Return mapping of new entity names → IDs in response
+  - [x] Wrap in transaction to ensure atomicity
 - [ ] **NEW: Support updating purchase info after creation**
   - [ ] Enhance UpdateMusicReleaseDto to support partial updates
   - [ ] Add support for creating new stores during purchase info update

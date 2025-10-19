@@ -535,6 +535,7 @@ namespace KollectorScum.Api.DTOs
 
     /// <summary>
     /// DTO for creating a music release
+    /// Supports both ID-based and name-based lookup data for auto-creation
     /// </summary>
     public class CreateMusicReleaseDto
     {
@@ -544,18 +545,41 @@ namespace KollectorScum.Api.DTOs
         
         public DateTime? ReleaseYear { get; set; }
         public DateTime? OrigReleaseYear { get; set; }
+        
+        // Artist lookup - can provide IDs OR names (or both)
         public List<int>? ArtistIds { get; set; }
+        public List<string>? ArtistNames { get; set; }
+        
+        // Genre lookup - can provide IDs OR names (or both)
         public List<int>? GenreIds { get; set; }
+        public List<string>? GenreNames { get; set; }
+        
         public bool Live { get; set; }
+        
+        // Label lookup - can provide ID OR name
         public int? LabelId { get; set; }
+        public string? LabelName { get; set; }
+        
+        // Country lookup - can provide ID OR name
         public int? CountryId { get; set; }
+        public string? CountryName { get; set; }
         
         [StringLength(100)]
         public string? LabelNumber { get; set; }
         
+        [StringLength(50)]
+        public string? Upc { get; set; }
+        
         public int? LengthInSeconds { get; set; }
+        
+        // Format lookup - can provide ID OR name
         public int? FormatId { get; set; }
+        public string? FormatName { get; set; }
+        
+        // Packaging lookup - can provide ID OR name
         public int? PackagingId { get; set; }
+        public string? PackagingName { get; set; }
+        
         public MusicReleasePurchaseInfoDto? PurchaseInfo { get; set; }
         public MusicReleaseImageDto? Images { get; set; }
         public List<MusicReleaseLinkDto>? Links { get; set; }
@@ -616,6 +640,63 @@ namespace KollectorScum.Api.DTOs
         public List<MusicReleaseMediaDto>? Media { get; set; }
         public DateTime DateAdded { get; set; }
         public DateTime LastModified { get; set; }
+    }
+
+    /// <summary>
+    /// DTO for create music release response with auto-creation details
+    /// </summary>
+    public class CreateMusicReleaseResponseDto
+    {
+        /// <summary>
+        /// The created music release
+        /// </summary>
+        public MusicReleaseDto Release { get; set; } = new();
+
+        /// <summary>
+        /// Details about what lookup entities were created during this operation
+        /// </summary>
+        public CreatedEntitiesDto? Created { get; set; }
+    }
+
+    /// <summary>
+    /// DTO containing information about entities that were auto-created
+    /// </summary>
+    public class CreatedEntitiesDto
+    {
+        /// <summary>
+        /// Artists that were created
+        /// </summary>
+        public List<ArtistDto>? Artists { get; set; }
+
+        /// <summary>
+        /// Labels that were created
+        /// </summary>
+        public List<LabelDto>? Labels { get; set; }
+
+        /// <summary>
+        /// Genres that were created
+        /// </summary>
+        public List<GenreDto>? Genres { get; set; }
+
+        /// <summary>
+        /// Countries that were created
+        /// </summary>
+        public List<CountryDto>? Countries { get; set; }
+
+        /// <summary>
+        /// Formats that were created
+        /// </summary>
+        public List<FormatDto>? Formats { get; set; }
+
+        /// <summary>
+        /// Packagings that were created
+        /// </summary>
+        public List<PackagingDto>? Packagings { get; set; }
+
+        /// <summary>
+        /// Stores that were created
+        /// </summary>
+        public List<StoreDto>? Stores { get; set; }
     }
 
     /// <summary>
