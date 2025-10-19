@@ -7,6 +7,9 @@
 
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    
+    <!-- Suppress warnings about EF Core version conflicts (Npgsql uses 9.0.1, we use 9.0.8) -->
+    <NoWarn>MSB3277</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
