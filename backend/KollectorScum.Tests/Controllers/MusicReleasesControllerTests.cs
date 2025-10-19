@@ -741,6 +741,486 @@ namespace KollectorScum.Tests.Controllers
 
         #endregion
 
+        #region GetMusicReleases
+
+        [Fact]
+        public async Task GetMusicReleases_ReturnsAllReleases_WhenNoFiltersApplied()
+        {
+            // Arrange
+            var releases = new List<MusicRelease>
+            {
+                new MusicRelease { Id = 1, Title = "Album 1", ReleaseYear = new DateTime(2020, 1, 1) },
+                new MusicRelease { Id = 2, Title = "Album 2", ReleaseYear = new DateTime(2021, 1, 1) }
+            };
+            _mockMusicReleaseRepository
+                .Setup(r => r.GetPagedAsync(
+                    1, 50, null, It.IsAny<Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>>>(), "Label,Country,Format"))
+                .ReturnsAsync(new PagedResult<MusicRelease> { Items = releases, Page = 1, PageSize = 50, TotalCount = 2, TotalPages = 1 });
+
+            // Act
+            var result = await _controller.GetMusicReleases(null, null, null, null, null, null, null, null, null, 1, 50);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var pagedResult = Assert.IsType<PagedResult<MusicReleaseSummaryDto>>(okResult.Value);
+            Assert.Equal(2, pagedResult.Items.Count());
+        }
+
+        [Fact]
+        public async Task GetMusicReleases_FiltersBySearchTerm()
+        {
+            // Arrange
+            var releases = new List<MusicRelease>
+            {
+                new MusicRelease { Id = 1, Title = "Metal Album" },
+                new MusicRelease { Id = 2, Title = "Jazz Album" }
+            };
+            _mockMusicReleaseRepository
+                .Setup(r => r.GetPagedAsync(
+                    1, 50, It.IsAny<Expression<Func<MusicRelease, bool>>>(), It.IsAny<Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>>>(), "Label,Country,Format"))
+                .ReturnsAsync(new PagedResult<MusicRelease> { Items = releases.Where(r => r.Title.Contains("Metal")).ToList(), Page = 1, PageSize = 50, TotalCount = 1, TotalPages = 1 });
+
+            // Act
+            var result = await _controller.GetMusicReleases("Metal", null, null, null, null, null, null, null, null, 1, 50);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var pagedResult = Assert.IsType<PagedResult<MusicReleaseSummaryDto>>(okResult.Value);
+            Assert.Single(pagedResult.Items);
+            Assert.Equal("Metal Album", pagedResult.Items.First().Title);
+        }
+
+        [Fact]
+        public async Task GetMusicReleases_AppliesPagination()
+        {
+            // Arrange
+            var releases = Enumerable.Range(1, 30).Select(i => new MusicRelease { Id = i, Title = $"Album {i}" }).ToList();
+            _mockMusicReleaseRepository
+                .Setup(r => r.GetPagedAsync(
+                    2, 10, null, It.IsAny<Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>>>(), "Label,Country,Format"))
+                .ReturnsAsync(new PagedResult<MusicRelease> { Items = releases.Skip(10).Take(10).ToList(), Page = 2, PageSize = 10, TotalCount = 30, TotalPages = 3 });
+
+            // Act
+            var result = await _controller.GetMusicReleases(null, null, null, null, null, null, null, null, null, 2, 10);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var pagedResult = Assert.IsType<PagedResult<MusicReleaseSummaryDto>>(okResult.Value);
+            Assert.Equal(10, pagedResult.Items.Count());
+            Assert.Equal(2, pagedResult.Page);
+            Assert.Equal(10, pagedResult.PageSize);
+        }
+
+        [Fact]
+        public async Task GetMusicReleases_ReturnsEmpty_WhenNoResults()
+        {
+            // Arrange
+            _mockMusicReleaseRepository
+                .Setup(r => r.GetPagedAsync(
+                    1, 50, null, It.IsAny<Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>>>(), "Label,Country,Format"))
+                .ReturnsAsync(new PagedResult<MusicRelease> { Items = new List<MusicRelease>(), Page = 1, PageSize = 50, TotalCount = 0, TotalPages = 0 });
+
+            // Act
+            var result = await _controller.GetMusicReleases(null, null, null, null, null, null, null, null, null, 1, 50);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var pagedResult = Assert.IsType<PagedResult<MusicReleaseSummaryDto>>(okResult.Value);
+            Assert.Empty(pagedResult.Items);
+        }
+
+        [Fact]
+        public async Task GetMusicReleases_Returns500_OnException()
+        {
+            // Arrange
+            _mockMusicReleaseRepository
+                .Setup(r => r.GetPagedAsync(
+                    It.IsAny<int>(), It.IsAny<int>(), It.IsAny<Expression<Func<MusicRelease, bool>>>(), It.IsAny<Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>>>(), It.IsAny<string>()))
+                .ThrowsAsync(new Exception("DB error"));
+
+            // Act
+            var result = await _controller.GetMusicReleases(null, null, null, null, null, null, null, null, null, 1, 50);
+
+            // Assert
+            var statusResult = Assert.IsType<ObjectResult>(result.Result);
+            Assert.Equal(500, statusResult.StatusCode);
+        }
+
+        #endregion
+
+        #region GetMusicRelease
+
+        [Fact]
+        public async Task GetMusicRelease_ReturnsRelease_WhenFound()
+        {
+            // Arrange
+            var release = new MusicRelease { Id = 1, Title = "Test Album", ReleaseYear = new DateTime(2020, 1, 1) };
+            _mockMusicReleaseRepository
+                .Setup(r => r.GetByIdAsync(1, "Label,Country,Format,Packaging"))
+                .ReturnsAsync(release);
+            _mockArtistRepository.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync(new Artist { Id = 1, Name = "Artist" });
+            _mockGenreRepository.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync(new Genre { Id = 1, Name = "Genre" });
+
+            // Act
+            var result = await _controller.GetMusicRelease(1);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var dto = Assert.IsType<MusicReleaseDto>(okResult.Value);
+            Assert.Equal(1, dto.Id);
+            Assert.Equal("Test Album", dto.Title);
+        }
+
+        [Fact]
+        public async Task GetMusicRelease_ReturnsNotFound_WhenMissing()
+        {
+            // Arrange
+            _mockMusicReleaseRepository
+                .Setup(r => r.GetByIdAsync(999, "Label,Country,Format,Packaging"))
+                .ReturnsAsync((MusicRelease)null);
+
+            // Act
+            var result = await _controller.GetMusicRelease(999);
+
+            // Assert
+            var notFound = Assert.IsType<NotFoundObjectResult>(result.Result);
+            Assert.Contains("not found", notFound.Value.ToString());
+        }
+
+        [Fact]
+        public async Task GetMusicRelease_Returns500_OnException()
+        {
+            // Arrange
+            _mockMusicReleaseRepository
+                .Setup(r => r.GetByIdAsync(It.IsAny<int>(), It.IsAny<string>()))
+                .ThrowsAsync(new Exception("DB error"));
+
+            // Act
+            var result = await _controller.GetMusicRelease(1);
+
+            // Assert
+            var statusResult = Assert.IsType<ObjectResult>(result.Result);
+            Assert.Equal(500, statusResult.StatusCode);
+        }
+
+        #endregion
+
+        #region GetSearchSuggestions
+
+        [Fact]
+        public async Task GetSearchSuggestions_ReturnsEmpty_WhenQueryIsNullOrShort()
+        {
+            // Act
+            var result = await _controller.GetSearchSuggestions(null);
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var suggestions = Assert.IsType<List<SearchSuggestionDto>>(okResult.Value);
+            Assert.Empty(suggestions);
+
+            result = await _controller.GetSearchSuggestions("");
+            okResult = Assert.IsType<OkObjectResult>(result.Result);
+            suggestions = Assert.IsType<List<SearchSuggestionDto>>(okResult.Value);
+            Assert.Empty(suggestions);
+
+            result = await _controller.GetSearchSuggestions("a");
+            okResult = Assert.IsType<OkObjectResult>(result.Result);
+            suggestions = Assert.IsType<List<SearchSuggestionDto>>(okResult.Value);
+            Assert.Empty(suggestions);
+        }
+
+        [Fact]
+        public async Task GetSearchSuggestions_ReturnsReleaseSuggestions()
+        {
+            // Arrange
+            var releases = new List<MusicRelease> { new MusicRelease { Id = 1, Title = "Metal Album", ReleaseYear = new DateTime(2020, 1, 1) } };
+            _mockMusicReleaseRepository.Setup(r => r.GetAsync(It.IsAny<Expression<Func<MusicRelease, bool>>>(), It.IsAny<Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>>>(), It.IsAny<string>())).ReturnsAsync(releases);
+
+            // Act
+            var result = await _controller.GetSearchSuggestions("Metal");
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var suggestions = Assert.IsType<List<SearchSuggestionDto>>(okResult.Value);
+            Assert.Single(suggestions);
+            Assert.Equal("release", suggestions[0].Type);
+            Assert.Equal("Metal Album", suggestions[0].Name);
+        }
+
+        [Fact]
+        public async Task GetSearchSuggestions_ReturnsArtistSuggestions()
+        {
+            // Arrange
+            var artists = new List<Artist> { new Artist { Id = 1, Name = "Metal Band" } };
+            _mockArtistRepository.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Artist, bool>>>(), It.IsAny<Func<IQueryable<Artist>, IOrderedQueryable<Artist>>>(), It.IsAny<string>())).ReturnsAsync(artists);
+
+            // Act
+            var result = await _controller.GetSearchSuggestions("Metal");
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var suggestions = Assert.IsType<List<SearchSuggestionDto>>(okResult.Value);
+            Assert.Single(suggestions);
+            Assert.Equal("artist", suggestions[0].Type);
+            Assert.Equal("Metal Band", suggestions[0].Name);
+        }
+
+        [Fact]
+        public async Task GetSearchSuggestions_ReturnsLabelSuggestions()
+        {
+            // Arrange
+            var labels = new List<Label> { new Label { Id = 1, Name = "Metal Label" } };
+            _mockLabelRepository.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Label, bool>>>(), It.IsAny<Func<IQueryable<Label>, IOrderedQueryable<Label>>>(), It.IsAny<string>())).ReturnsAsync(labels);
+
+            // Act
+            var result = await _controller.GetSearchSuggestions("Metal");
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var suggestions = Assert.IsType<List<SearchSuggestionDto>>(okResult.Value);
+            Assert.Single(suggestions);
+            Assert.Equal("label", suggestions[0].Type);
+            Assert.Equal("Metal Label", suggestions[0].Name);
+        }
+
+        [Fact]
+        public async Task GetSearchSuggestions_ReturnsCombinedSuggestions_AndLimits()
+        {
+            // Arrange
+            var releases = new List<MusicRelease> {
+                new MusicRelease { Id = 0, Title = "AMetal Album 0" }
+            };
+            releases.AddRange(Enumerable.Range(1, 5).Select(i => new MusicRelease { Id = i, Title = $"ZMetal Album {i}" }));
+            var artists = new List<Artist> {
+                new Artist { Id = 1, Name = "BMetal Band 1" },
+                new Artist { Id = 2, Name = "CMetal Band 2" },
+                new Artist { Id = 3, Name = "DMetal Band 3" },
+                new Artist { Id = 4, Name = "EMetal Band 4" },
+                new Artist { Id = 5, Name = "FMetal Band 5" }
+            };
+            var labels = new List<Label> {
+                new Label { Id = 1, Name = "BMetal Label 1" },
+                new Label { Id = 2, Name = "CMetal Label 2" },
+                new Label { Id = 3, Name = "DMetal Label 3" },
+                new Label { Id = 4, Name = "EMetal Label 4" },
+                new Label { Id = 5, Name = "FMetal Label 5" }
+            };
+            _mockMusicReleaseRepository.Setup(r => r.GetAsync(It.IsAny<Expression<Func<MusicRelease, bool>>>(), It.IsAny<Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>>>(), It.IsAny<string>())).ReturnsAsync(releases);
+            _mockArtistRepository.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Artist, bool>>>(), It.IsAny<Func<IQueryable<Artist>, IOrderedQueryable<Artist>>>(), It.IsAny<string>())).ReturnsAsync(artists);
+            _mockLabelRepository.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Label, bool>>>(), It.IsAny<Func<IQueryable<Label>, IOrderedQueryable<Label>>>(), It.IsAny<string>())).ReturnsAsync(labels);
+
+            // Act
+            var result = await _controller.GetSearchSuggestions("Metal");
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var suggestions = Assert.IsType<List<SearchSuggestionDto>>(okResult.Value);
+            Assert.True(suggestions.Count <= 10);
+            Assert.Contains(suggestions, s => s.Type == "release");
+            Assert.Contains(suggestions, s => s.Type == "artist");
+            Assert.Contains(suggestions, s => s.Type == "label");
+        }
+
+        [Fact]
+        public async Task GetSearchSuggestions_Returns500_OnException()
+        {
+            // Arrange
+            _mockMusicReleaseRepository.Setup(r => r.GetAsync(It.IsAny<Expression<Func<MusicRelease, bool>>>(), It.IsAny<Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>>>(), It.IsAny<string>())).ThrowsAsync(new Exception("DB error"));
+
+            // Act
+            var result = await _controller.GetSearchSuggestions("Metal");
+            var statusResult = Assert.IsType<ObjectResult>(result.Result);
+            Assert.Equal(500, statusResult.StatusCode);
+        }
+
+        #endregion
+
+        #region GetCollectionStatistics
+
+        [Fact]
+        public async Task GetCollectionStatistics_ReturnsBasicStats()
+        {
+            // Arrange
+            var releases = new List<MusicRelease> {
+                new MusicRelease {
+                    Id = 1,
+                    Title = "A",
+                    ReleaseYear = new DateTime(2020, 1, 1),
+                    CountryId = 1,
+                    FormatId = 1,
+                    Genres = "[1]",
+                    Artists = "[1]",
+                    LabelId = 1 // Ensure label ID matches mock label
+                }
+            };
+            _mockMusicReleaseRepository.Setup(r => r.GetAllAsync()).ReturnsAsync(releases);
+            _mockCountryRepository.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<Country> { new Country { Id = 1, Name = "USA" } });
+            _mockFormatRepository.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<Format> { new Format { Id = 1, Name = "CD" } });
+            _mockGenreRepository.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<Genre> { new Genre { Id = 1, Name = "Metal" } });
+            _mockLabelRepository.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<Label> { new Label { Id = 1, Name = "Label1" } });
+
+            // Act
+            var result = await _controller.GetCollectionStatistics();
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var stats = Assert.IsType<CollectionStatisticsDto>(okResult.Value);
+            Assert.Equal(1, stats.TotalReleases);
+            Assert.Equal(1, stats.TotalArtists);
+            Assert.Equal(1, stats.TotalGenres);
+            Assert.Equal(1, stats.TotalLabels);
+        }
+
+        [Fact]
+        public async Task GetCollectionStatistics_ReturnsEmptyStats_WhenNoReleases()
+        {
+            // Arrange
+            _mockMusicReleaseRepository.Setup(r => r.GetAllAsync()).ReturnsAsync(new List<MusicRelease>());
+
+            // Act
+            var result = await _controller.GetCollectionStatistics();
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var stats = Assert.IsType<CollectionStatisticsDto>(okResult.Value);
+            Assert.Equal(0, stats.TotalReleases);
+            Assert.Equal(0, stats.TotalArtists);
+            Assert.Equal(0, stats.TotalGenres);
+            Assert.Equal(0, stats.TotalLabels);
+        }
+
+        [Fact]
+        public async Task GetCollectionStatistics_Returns500_OnException()
+        {
+            // Arrange
+            _mockMusicReleaseRepository.Setup(r => r.GetAllAsync()).ThrowsAsync(new Exception("DB error"));
+
+            // Act
+            var result = await _controller.GetCollectionStatistics();
+
+            // Assert
+            var statusResult = Assert.IsType<ObjectResult>(result.Result);
+            Assert.Equal(500, statusResult.StatusCode);
+        }
+
+        #endregion
+
+        #region UpdateMusicRelease
+
+        [Fact]
+        public async Task UpdateMusicRelease_ReturnsNotFound_WhenMissing()
+        {
+            // Arrange
+            var updateDto = new UpdateMusicReleaseDto { Title = "Updated" };
+            _mockMusicReleaseRepository.Setup(r => r.GetByIdAsync(999)).ReturnsAsync((MusicRelease)null);
+
+            // Act
+            var result = await _controller.UpdateMusicRelease(999, updateDto);
+
+            // Assert
+            var notFound = Assert.IsType<NotFoundObjectResult>(result.Result);
+            Assert.Contains("not found", notFound.Value.ToString());
+        }
+
+        [Fact]
+        public async Task UpdateMusicRelease_UpdatesFields_Successfully()
+        {
+            // Arrange
+            var existingRelease = new MusicRelease { Id = 1, Title = "Old Title", ReleaseYear = new DateTime(2020, 1, 1) };
+            var updateDto = new UpdateMusicReleaseDto { Title = "New Title" };
+            _mockMusicReleaseRepository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(existingRelease);
+            _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+            _mockMusicReleaseRepository.Setup(r => r.Update(It.IsAny<MusicRelease>()));
+
+            // Act
+            var result = await _controller.UpdateMusicRelease(1, updateDto);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var dto = Assert.IsType<MusicReleaseDto>(okResult.Value);
+            Assert.Equal("New Title", dto.Title);
+        }
+
+        [Fact]
+        public async Task UpdateMusicRelease_ReturnsBadRequest_WhenValidationFails()
+        {
+            // Arrange
+            var release = new MusicRelease { Id = 1, Title = "Old" };
+            var updateDto = new UpdateMusicReleaseDto { Title = "New", LabelId = 999 };
+            _mockMusicReleaseRepository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(release);
+            _mockLabelRepository.Setup(r => r.ExistsAsync(999)).ReturnsAsync(false);
+
+            // Act
+            var result = await _controller.UpdateMusicRelease(1, updateDto);
+
+            // Assert
+            var badRequest = Assert.IsType<BadRequestObjectResult>(result.Result);
+            Assert.Contains("does not exist", badRequest.Value.ToString());
+        }
+
+        [Fact]
+        public async Task UpdateMusicRelease_Returns500_OnException()
+        {
+            // Arrange
+            var release = new MusicRelease { Id = 1, Title = "Old" };
+            var updateDto = new UpdateMusicReleaseDto { Title = "New" };
+            _mockMusicReleaseRepository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(release);
+            _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ThrowsAsync(new Exception("DB error"));
+            _mockMusicReleaseRepository.Setup(r => r.Update(It.IsAny<MusicRelease>())).Callback<MusicRelease>(r => throw new Exception("DB error"));
+
+            // Act
+            var result = await _controller.UpdateMusicRelease(1, updateDto);
+
+            // Assert
+            var statusResult = Assert.IsType<ObjectResult>(result.Result);
+            Assert.Equal(500, statusResult.StatusCode);
+        }
+
+        #endregion
+
+        #region DeleteMusicRelease
+
+        [Fact]
+        public async Task DeleteMusicRelease_ReturnsNotFound_WhenMissing()
+        {
+            // Arrange
+            _mockMusicReleaseRepository.Setup(r => r.GetByIdAsync(It.IsAny<int>())).ReturnsAsync((MusicRelease)null);
+
+            // Act
+            var result = await _controller.DeleteMusicRelease(999);
+
+            // Assert
+            var notFound = Assert.IsType<NotFoundObjectResult>(result);
+            Assert.Contains("not found", notFound.Value.ToString());
+        }
+
+        [Fact]
+        public async Task DeleteMusicRelease_DeletesRelease_Successfully()
+        {
+            // Arrange
+            var release = new MusicRelease { Id = 1, Title = "To Delete" };
+            _mockMusicReleaseRepository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(release);
+            _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+            _mockMusicReleaseRepository.Setup(r => r.DeleteAsync(It.IsAny<int>())).ReturnsAsync(true);
+
+            // Act
+            var result = await _controller.DeleteMusicRelease(1);
+
+            // Assert
+            Assert.IsType<NoContentResult>(result);
+            _mockMusicReleaseRepository.Verify(r => r.Delete(release), Times.Once);
+            _mockUnitOfWork.Verify(u => u.SaveChangesAsync(), Times.Once);
+        }
+
+        [Fact]
+        public async Task DeleteMusicRelease_Returns500_OnException()
+        {
+            // Arrange
+            var release = new MusicRelease { Id = 1, Title = "To Delete" };
+            _mockMusicReleaseRepository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(release);
+            _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ThrowsAsync(new Exception("DB error"));
+            _mockMusicReleaseRepository.Setup(r => r.DeleteAsync(It.IsAny<int>())).ThrowsAsync(new Exception("DB error"));
+
+            // Act
+            var result = await _controller.DeleteMusicRelease(1);
+
+            // Assert
+            var statusResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(500, statusResult.StatusCode);
+        }
+
+        #endregion
+
         #region Helper Methods
 
         private void SetupSuccessfulTransaction()
