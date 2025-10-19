@@ -140,6 +140,11 @@ namespace KollectorScum.Api.Services
 
                 return results;
             }
+            catch (JsonException ex)
+            {
+                _logger.LogError(ex, "JSON deserialization error when searching Discogs for catalog number: {CatalogNumber}", catalogNumber);
+                return new List<DiscogsSearchResultDto>();
+            }
             catch (HttpRequestException ex)
             {
                 _logger.LogError(ex, "HTTP error when searching Discogs for catalog number: {CatalogNumber}", catalogNumber);
@@ -244,6 +249,11 @@ namespace KollectorScum.Api.Services
                 };
 
                 return dto;
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(ex, "JSON deserialization error when fetching Discogs release: {ReleaseId}", releaseId);
+                return null;
             }
             catch (HttpRequestException ex)
             {
