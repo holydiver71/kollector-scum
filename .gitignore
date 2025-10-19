@@ -54,7 +54,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 backend/KollectorScum.Api/bin/Debug/net8.0/KollectorScum.Api.dll
-backend/KollectorScum.Api/bin/Debug/net8.0/KollectorScum.Api.pdb
+TestResults/
 backend/KollectorScum.Api/obj/Debug/net8.0/KollectorScum.Api.AssemblyInfo.cs
 backend/KollectorScum.Api/obj/Debug/net8.0/KollectorScum.Api.AssemblyInfoInputs.cache
 backend/KollectorScum.Api/obj/Debug/net8.0/KollectorScum.Api.csproj.CoreCompileInputs.cache
