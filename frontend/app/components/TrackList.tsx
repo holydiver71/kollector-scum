@@ -130,11 +130,11 @@ export function TrackList({ media, albumArtists = [] }: TrackListProps) {
                         </div>
 
                         {/* Duration */}
-                        {track.lengthSecs && track.lengthSecs > 0 && (
+                        {(track.lengthSecs && track.lengthSecs > 0) ? (
                           <div className="text-sm text-gray-500 ml-4 flex-shrink-0">
                             {formatDuration(track.lengthSecs)}
                           </div>
-                        )}
+                        ) : null}
                       </div>
                     </div>
                   </div>
@@ -159,18 +159,21 @@ export function TrackList({ media, albumArtists = [] }: TrackListProps) {
 
       {/* Overall Total for Multi-Disc */}
       {media.length > 1 && (
-        <div className="mt-6 pt-4 border-t border-gray-300">
-          <div className="flex justify-between items-center text-sm font-medium text-gray-800">
-            <span>
-              {media.reduce((total, disc) => total + (disc.tracks?.length || 0), 0)} total tracks
-            </span>
-            <span>
-              Total: {formatDuration(
-                media.reduce((total, disc) => total + getTotalDuration(disc.tracks), 0)
-              )}
-            </span>
-          </div>
-        </div>
+        (() => {
+          const totalTracks = media.reduce((total, disc) => total + (disc.tracks?.length || 0), 0);
+          const totalDuration = media.reduce((total, disc) => total + getTotalDuration(disc.tracks), 0);
+          
+          return (
+            <div className="mt-6 pt-4 border-t border-gray-300">
+              <div className="flex justify-between items-center text-sm font-medium text-gray-800">
+                <span>{totalTracks} total tracks</span>
+                {totalDuration > 0 && (
+                  <span>Total: {formatDuration(totalDuration)}</span>
+                )}
+              </div>
+            </div>
+          );
+        })()
       )}
     </div>
   );

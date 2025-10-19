@@ -283,5 +283,26 @@ namespace KollectorScum.Api.Controllers
                 return StatusCode(500, new { Message = "Error occurred while getting count", Error = ex.Message });
             }
         }
+
+        /// <summary>
+        /// Updates UPC values for existing music releases from JSON file
+        /// </summary>
+        /// <returns>Result of update operation</returns>
+        [HttpPost("music-releases/update-upc")]
+        public async Task<ActionResult> UpdateUpcValues()
+        {
+            try
+            {
+                _logger.LogInformation("Starting UPC update via API");
+                var updatedCount = await _musicReleaseImportService.UpdateUpcValuesAsync();
+                return Ok(new { Message = $"UPC update completed successfully. Updated {updatedCount} releases." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred during UPC update");
+                return StatusCode(500, new { Message = "Error occurred during UPC update", Error = ex.Message });
+            }
+        }
     }
 }
+

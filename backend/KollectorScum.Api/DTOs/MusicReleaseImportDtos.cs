@@ -49,6 +49,9 @@ namespace KollectorScum.Api.DTOs
         [JsonPropertyName("PackagingId")]
         public int PackagingId { get; set; }
 
+        [JsonPropertyName("Upc")]
+        public string? Upc { get; set; }
+
         [JsonPropertyName("Images")]
         public ImagesDto? Images { get; set; }
 

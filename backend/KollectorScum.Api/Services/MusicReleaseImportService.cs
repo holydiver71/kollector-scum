@@ -215,6 +215,7 @@ namespace KollectorScum.Api.Services
                     LengthInSeconds = lengthInSeconds,
                     FormatId = dto.FormatId,
                     PackagingId = dto.PackagingId,
+                    Upc = dto.Upc,
                     DateAdded = dto.DateAdded,
                     LastModified = dto.LastModified,
                     Artists = dto.Artists?.Count > 0 ? JsonSerializer.Serialize(dto.Artists) : null,
@@ -383,5 +384,88 @@ namespace KollectorScum.Api.Services
                 };
             }
         }
+
+        /// <summary>
+        /// Updates UPC values for existing music releases from JSON file
+        /// </summary>
+        /// <returns>Number of releases updated</returns>
+        public async Task<int> UpdateUpcValuesAsync()
+        {
+            var filePath = Path.Combine(_dataPath, "musicreleases.json");
+            
+            if (!File.Exists(filePath))
+            {
+                _logger.LogWarning("MusicReleases JSON file not found at: {FilePath}", filePath);
+                return 0;
+            }
+
+            _logger.LogInformation("Starting UPC update from: {FilePath}", filePath);
+
+            try
+            {
+                var jsonContent = await File.ReadAllTextAsync(filePath);
+                var releases = JsonSerializer.Deserialize<List<MusicReleaseImportDto>>(jsonContent);
+
+                if (releases == null || releases.Count == 0)
+                {
+                    _logger.LogWarning("No music releases found in JSON file");
+                    return 0;
+                }
+
+                var updatedCount = 0;
+                var skippedCount = 0;
+                var notFoundCount = 0;
+
+                await _unitOfWork.BeginTransactionAsync();
+
+                try
+                {
+                    foreach (var releaseDto in releases)
+                    {
+                        try
+                        {
+                            // Get existing release
+                            var existingRelease = await _unitOfWork.MusicReleases.GetByIdAsync(releaseDto.Id);
+                            if (existingRelease == null)
+                            {
+                                notFoundCount++;
+                                continue;
+                            }
+
+                            if (!string.IsNullOrEmpty(releaseDto.Upc))
+                            {
+                                existingRelease.Upc = releaseDto.Upc;
+                                _unitOfWork.MusicReleases.Update(existingRelease);
+                                updatedCount++;
+                            }
+                            else
+                            {
+                                skippedCount++;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Error updating UPC for release {ReleaseId}", releaseDto.Id);
+                        }
+                    }
+
+                    await _unitOfWork.CommitTransactionAsync();
+                    _logger.LogInformation("UPC Update complete: Updated={UpdatedCount}, Skipped={SkippedCount}, NotFound={NotFoundCount}, Total={TotalCount}", 
+                        updatedCount, skippedCount, notFoundCount, releases.Count);
+                    return updatedCount;
+                }
+                catch (Exception)
+                {
+                    await _unitOfWork.RollbackTransactionAsync();
+                    throw;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating UPC values from {FilePath}", filePath);
+                throw;
+            }
+        }
     }
 }
+

@@ -609,6 +609,7 @@ namespace KollectorScum.Api.DTOs
         public int? LengthInSeconds { get; set; }
         public FormatDto? Format { get; set; }
         public PackagingDto? Packaging { get; set; }
+        public string? Upc { get; set; }
         public MusicReleasePurchaseInfoDto? PurchaseInfo { get; set; }
         public MusicReleaseImageDto? Images { get; set; }
         public List<MusicReleaseLinkDto>? Links { get; set; }
