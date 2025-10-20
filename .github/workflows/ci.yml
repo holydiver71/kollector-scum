@@ -54,4 +54,4 @@ jobs:
         env:
           ConnectionStrings__DefaultConnection: "Host=localhost;Port=5432;Username=root;Password=rootpwd;Database=kollector_test"
         run: |
-          dotnet test backend/KollectorScum.Tests/KollectorScum.Tests.csproj --no-build -v minimal
+         dotnet test backend/KollectorScum.Tests/KollectorScum.Tests.csproj --no-build -v minimal
