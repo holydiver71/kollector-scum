@@ -42,6 +42,9 @@ builder.Services.AddScoped<IMusicReleaseImportService>(serviceProvider =>
 builder.Services.AddScoped(typeof(IRepository<>), typeof(KollectorScum.Api.Repositories.Repository<>));
 builder.Services.AddScoped<IUnitOfWork, KollectorScum.Api.Repositories.UnitOfWork>();
 
+// Register business logic services
+builder.Services.AddScoped<IMusicReleaseService, MusicReleaseService>();
+
 // Register Discogs service
 builder.Services.Configure<DiscogsSettings>(builder.Configuration.GetSection("Discogs"));
 builder.Services.AddHttpClient<IDiscogsService, DiscogsService>();
