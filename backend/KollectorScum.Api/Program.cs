@@ -43,6 +43,9 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(KollectorScum.Api.Repos
 builder.Services.AddScoped<IUnitOfWork, KollectorScum.Api.Repositories.UnitOfWork>();
 
 // Register business logic services
+builder.Services.AddScoped<IEntityResolverService, EntityResolverService>();
+builder.Services.AddScoped<IMusicReleaseMapperService, MusicReleaseMapperService>();
+builder.Services.AddScoped<ICollectionStatisticsService, CollectionStatisticsService>();
 builder.Services.AddScoped<IMusicReleaseService, MusicReleaseService>();
 
 // Register Discogs service
