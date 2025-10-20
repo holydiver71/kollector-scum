@@ -243,36 +243,82 @@ namespace KollectorScum.Api.Services
         {
             _logger.LogInformation("Updating music release: {Id}", id);
 
-            var existingMusicRelease = await _musicReleaseRepository.GetByIdAsync(id);
-            if (existingMusicRelease == null)
+            try
             {
-                _logger.LogWarning("Music release not found: {Id}", id);
-                return null;
+                await _unitOfWork.BeginTransactionAsync();
+
+                var existingMusicRelease = await _musicReleaseRepository.GetByIdAsync(id);
+                if (existingMusicRelease == null)
+                {
+                    _logger.LogWarning("Music release not found: {Id}", id);
+                    await _unitOfWork.RollbackTransactionAsync();
+                    return null;
+                }
+
+                // Handle purchase info with potential store creation
+                if (updateDto.PurchaseInfo != null)
+                {
+                    // If StoreName is provided but StoreId is not, try to resolve or create the store
+                    if (!string.IsNullOrWhiteSpace(updateDto.PurchaseInfo.StoreName) && !updateDto.PurchaseInfo.StoreId.HasValue)
+                    {
+                        var storeName = updateDto.PurchaseInfo.StoreName.Trim();
+                        _logger.LogInformation("Resolving or creating store: {StoreName}", storeName);
+
+                        // Check if store exists (case-insensitive)
+                        var existingStores = await _unitOfWork.Stores.GetAsync(
+                            filter: s => s.Name.ToLower() == storeName.ToLower());
+                        var existingStore = existingStores.FirstOrDefault();
+
+                        if (existingStore != null)
+                        {
+                            // Use existing store
+                            updateDto.PurchaseInfo.StoreId = existingStore.Id;
+                            _logger.LogInformation("Found existing store: {StoreName} (ID: {StoreId})", existingStore.Name, existingStore.Id);
+                        }
+                        else
+                        {
+                            // Create new store
+                            var newStore = new Store { Name = storeName };
+                            await _unitOfWork.Stores.AddAsync(newStore);
+                            await _unitOfWork.SaveChangesAsync(); // Save to get the ID
+                            updateDto.PurchaseInfo.StoreId = newStore.Id;
+                            _logger.LogInformation("Created new store: {StoreName} (ID: {StoreId})", newStore.Name, newStore.Id);
+                        }
+                    }
+                }
+
+                // Update properties
+                existingMusicRelease.Title = updateDto.Title;
+                existingMusicRelease.ReleaseYear = updateDto.ReleaseYear;
+                existingMusicRelease.OrigReleaseYear = updateDto.OrigReleaseYear;
+                existingMusicRelease.Artists = updateDto.ArtistIds != null ? JsonSerializer.Serialize(updateDto.ArtistIds) : null;
+                existingMusicRelease.Genres = updateDto.GenreIds != null ? JsonSerializer.Serialize(updateDto.GenreIds) : null;
+                existingMusicRelease.Live = updateDto.Live;
+                existingMusicRelease.LabelId = updateDto.LabelId;
+                existingMusicRelease.CountryId = updateDto.CountryId;
+                existingMusicRelease.LabelNumber = updateDto.LabelNumber;
+                existingMusicRelease.LengthInSeconds = updateDto.LengthInSeconds;
+                existingMusicRelease.FormatId = updateDto.FormatId;
+                existingMusicRelease.PackagingId = updateDto.PackagingId;
+                existingMusicRelease.PurchaseInfo = updateDto.PurchaseInfo != null ? JsonSerializer.Serialize(updateDto.PurchaseInfo) : null;
+                existingMusicRelease.Images = updateDto.Images != null ? JsonSerializer.Serialize(updateDto.Images) : null;
+                existingMusicRelease.Links = updateDto.Links != null ? JsonSerializer.Serialize(updateDto.Links) : null;
+                existingMusicRelease.Media = updateDto.Media != null ? JsonSerializer.Serialize(updateDto.Media) : null;
+                existingMusicRelease.LastModified = DateTime.UtcNow;
+
+                _musicReleaseRepository.Update(existingMusicRelease);
+                await _unitOfWork.SaveChangesAsync();
+
+                await _unitOfWork.CommitTransactionAsync();
+
+                return await _mapper.MapToFullDtoAsync(existingMusicRelease);
             }
-
-            // Update properties
-            existingMusicRelease.Title = updateDto.Title;
-            existingMusicRelease.ReleaseYear = updateDto.ReleaseYear;
-            existingMusicRelease.OrigReleaseYear = updateDto.OrigReleaseYear;
-            existingMusicRelease.Artists = updateDto.ArtistIds != null ? JsonSerializer.Serialize(updateDto.ArtistIds) : null;
-            existingMusicRelease.Genres = updateDto.GenreIds != null ? JsonSerializer.Serialize(updateDto.GenreIds) : null;
-            existingMusicRelease.Live = updateDto.Live;
-            existingMusicRelease.LabelId = updateDto.LabelId;
-            existingMusicRelease.CountryId = updateDto.CountryId;
-            existingMusicRelease.LabelNumber = updateDto.LabelNumber;
-            existingMusicRelease.LengthInSeconds = updateDto.LengthInSeconds;
-            existingMusicRelease.FormatId = updateDto.FormatId;
-            existingMusicRelease.PackagingId = updateDto.PackagingId;
-            existingMusicRelease.PurchaseInfo = updateDto.PurchaseInfo != null ? JsonSerializer.Serialize(updateDto.PurchaseInfo) : null;
-            existingMusicRelease.Images = updateDto.Images != null ? JsonSerializer.Serialize(updateDto.Images) : null;
-            existingMusicRelease.Links = updateDto.Links != null ? JsonSerializer.Serialize(updateDto.Links) : null;
-            existingMusicRelease.Media = updateDto.Media != null ? JsonSerializer.Serialize(updateDto.Media) : null;
-            existingMusicRelease.LastModified = DateTime.UtcNow;
-
-            _musicReleaseRepository.Update(existingMusicRelease);
-            await _unitOfWork.SaveChangesAsync();
-
-            return await _mapper.MapToFullDtoAsync(existingMusicRelease);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating music release: {Id}", id);
+                await _unitOfWork.RollbackTransactionAsync();
+                throw;
+            }
         }
 
         public async Task<bool> DeleteMusicReleaseAsync(int id)

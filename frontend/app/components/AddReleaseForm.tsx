@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { fetchJson } from "../lib/api";
+import ComboBox, { ComboBoxItem } from "./ComboBox";
 
 // Lookup data interfaces
 interface LookupItem {
@@ -14,17 +15,24 @@ interface CreateMusicReleaseDto {
   releaseYear?: string;
   origReleaseYear?: string;
   artistIds: number[];
+  artistNames?: string[]; // New: for auto-creation
   genreIds: number[];
+  genreNames?: string[]; // New: for auto-creation
   live: boolean;
   labelId?: number;
+  labelName?: string; // New: for auto-creation
   countryId?: number;
+  countryName?: string; // New: for auto-creation
   labelNumber?: string;
   upc?: string;
   lengthInSeconds?: number;
   formatId?: number;
+  formatName?: string; // New: for auto-creation
   packagingId?: number;
+  packagingName?: string; // New: for auto-creation
   purchaseInfo?: {
     storeId?: number;
+    storeName?: string; // New: for auto-creation
     price?: number;
     currency?: string;
     purchaseDate?: string;
@@ -63,11 +71,22 @@ export default function AddReleaseForm({ onSuccess, onCancel }: AddReleaseFormPr
   const [formData, setFormData] = useState<CreateMusicReleaseDto>({
     title: "",
     artistIds: [],
+    artistNames: [],
     genreIds: [],
+    genreNames: [],
     live: false,
     links: [],
     media: [],
   });
+
+  // New values state (for auto-creation)
+  const [newArtistNames, setNewArtistNames] = useState<string[]>([]);
+  const [newGenreNames, setNewGenreNames] = useState<string[]>([]);
+  const [newLabelName, setNewLabelName] = useState<string[]>([]);
+  const [newCountryName, setNewCountryName] = useState<string[]>([]);
+  const [newFormatName, setNewFormatName] = useState<string[]>([]);
+  const [newPackagingName, setNewPackagingName] = useState<string[]>([]);
+  const [newStoreName, setNewStoreName] = useState<string[]>([]);
 
   // Lookup data
   const [artists, setArtists] = useState<LookupItem[]>([]);
@@ -132,7 +151,8 @@ export default function AddReleaseForm({ onSuccess, onCancel }: AddReleaseFormPr
       errors.title = "Title is required";
     }
 
-    if (formData.artistIds.length === 0) {
+    // Check if at least one artist is selected OR new artist names are provided
+    if (formData.artistIds.length === 0 && (!formData.artistNames || formData.artistNames.length === 0)) {
       errors.artists = "At least one artist is required";
     }
 
@@ -230,32 +250,22 @@ export default function AddReleaseForm({ onSuccess, onCancel }: AddReleaseFormPr
 
         {/* Artists */}
         <div className="mb-4">
-          <label htmlFor="artists" className="block text-sm font-medium text-gray-700 mb-1">
-            Artists <span className="text-red-500">*</span>
-          </label>
-          <select
-            id="artists"
-            multiple
-            value={formData.artistIds.map(String)}
-            onChange={(e) => {
-              const selected = Array.from(e.target.selectedOptions).map((opt) => parseInt(opt.value));
-              updateField("artistIds", selected);
+          <ComboBox
+            label="Artists"
+            items={artists}
+            value={formData.artistIds}
+            newValues={newArtistNames}
+            onChange={(selectedIds, selectedNames) => {
+              updateField("artistIds", selectedIds);
+              updateField("artistNames", selectedNames);
+              setNewArtistNames(selectedNames);
             }}
-            className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-              validationErrors.artists ? "border-red-500" : "border-gray-300"
-            }`}
-            size={5}
-          >
-            {artists.map((artist) => (
-              <option key={artist.id} value={artist.id}>
-                {artist.name}
-              </option>
-            ))}
-          </select>
-          <p className="mt-1 text-xs text-gray-500">Hold Ctrl/Cmd to select multiple artists</p>
-          {validationErrors.artists && (
-            <p className="mt-1 text-sm text-red-600">{validationErrors.artists}</p>
-          )}
+            multiple={true}
+            allowCreate={true}
+            required={true}
+            placeholder="Search or add artists..."
+            error={validationErrors.artists}
+          />
         </div>
 
         {/* Release Year */}
@@ -308,86 +318,73 @@ export default function AddReleaseForm({ onSuccess, onCancel }: AddReleaseFormPr
         
         {/* Genres */}
         <div className="mb-4">
-          <label htmlFor="genres" className="block text-sm font-medium text-gray-700 mb-1">
-            Genres
-          </label>
-          <select
-            id="genres"
-            multiple
-            value={formData.genreIds.map(String)}
-            onChange={(e) => {
-              const selected = Array.from(e.target.selectedOptions).map((opt) => parseInt(opt.value));
-              updateField("genreIds", selected);
+          <ComboBox
+            label="Genres"
+            items={genres}
+            value={formData.genreIds}
+            newValues={newGenreNames}
+            onChange={(selectedIds, selectedNames) => {
+              updateField("genreIds", selectedIds);
+              updateField("genreNames", selectedNames);
+              setNewGenreNames(selectedNames);
             }}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            size={4}
-          >
-            {genres.map((genre) => (
-              <option key={genre.id} value={genre.id}>
-                {genre.name}
-              </option>
-            ))}
-          </select>
-          <p className="mt-1 text-xs text-gray-500">Hold Ctrl/Cmd to select multiple genres</p>
+            multiple={true}
+            allowCreate={true}
+            placeholder="Search or add genres..."
+          />
         </div>
 
         {/* Format, Packaging, Country */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label htmlFor="format" className="block text-sm font-medium text-gray-700 mb-1">
-              Format
-            </label>
-            <select
-              id="format"
-              value={formData.formatId || ""}
-              onChange={(e) => updateField("formatId", e.target.value ? parseInt(e.target.value) : undefined)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">Select format...</option>
-              {formats.map((format) => (
-                <option key={format.id} value={format.id}>
-                  {format.name}
-                </option>
-              ))}
-            </select>
+            <ComboBox
+              label="Format"
+              items={formats}
+              value={formData.formatId || null}
+              newValues={newFormatName}
+              onChange={(selectedIds, selectedNames) => {
+                updateField("formatId", selectedIds[0]);
+                updateField("formatName", selectedNames[0]);
+                setNewFormatName(selectedNames);
+              }}
+              multiple={false}
+              allowCreate={true}
+              placeholder="Select or add format..."
+            />
           </div>
 
           <div>
-            <label htmlFor="packaging" className="block text-sm font-medium text-gray-700 mb-1">
-              Packaging
-            </label>
-            <select
-              id="packaging"
-              value={formData.packagingId || ""}
-              onChange={(e) => updateField("packagingId", e.target.value ? parseInt(e.target.value) : undefined)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">Select packaging...</option>
-              {packagings.map((packaging) => (
-                <option key={packaging.id} value={packaging.id}>
-                  {packaging.name}
-                </option>
-              ))}
-            </select>
+            <ComboBox
+              label="Packaging"
+              items={packagings}
+              value={formData.packagingId || null}
+              newValues={newPackagingName}
+              onChange={(selectedIds, selectedNames) => {
+                updateField("packagingId", selectedIds[0]);
+                updateField("packagingName", selectedNames[0]);
+                setNewPackagingName(selectedNames);
+              }}
+              multiple={false}
+              allowCreate={true}
+              placeholder="Select or add packaging..."
+            />
           </div>
 
           <div>
-            <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1">
-              Country
-            </label>
-            <select
-              id="country"
-              value={formData.countryId || ""}
-              onChange={(e) => updateField("countryId", e.target.value ? parseInt(e.target.value) : undefined)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">Select country...</option>
-              {countries.map((country) => (
-                <option key={country.id} value={country.id}>
-                  {country.name}
-                </option>
-              ))}
-            </select>
+            <ComboBox
+              label="Country"
+              items={countries}
+              value={formData.countryId || null}
+              newValues={newCountryName}
+              onChange={(selectedIds, selectedNames) => {
+                updateField("countryId", selectedIds[0]);
+                updateField("countryName", selectedNames[0]);
+                setNewCountryName(selectedNames);
+              }}
+              multiple={false}
+              allowCreate={true}
+              placeholder="Select or add country..."
+            />
           </div>
         </div>
       </div>
@@ -398,22 +395,20 @@ export default function AddReleaseForm({ onSuccess, onCancel }: AddReleaseFormPr
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="label" className="block text-sm font-medium text-gray-700 mb-1">
-              Label
-            </label>
-            <select
-              id="label"
-              value={formData.labelId || ""}
-              onChange={(e) => updateField("labelId", e.target.value ? parseInt(e.target.value) : undefined)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">Select label...</option>
-              {labels.map((label) => (
-                <option key={label.id} value={label.id}>
-                  {label.name}
-                </option>
-              ))}
-            </select>
+            <ComboBox
+              label="Label"
+              items={labels}
+              value={formData.labelId || null}
+              newValues={newLabelName}
+              onChange={(selectedIds, selectedNames) => {
+                updateField("labelId", selectedIds[0]);
+                updateField("labelName", selectedNames[0]);
+                setNewLabelName(selectedNames);
+              }}
+              multiple={false}
+              allowCreate={true}
+              placeholder="Select or add label..."
+            />
           </div>
 
           <div>
