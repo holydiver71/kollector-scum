@@ -625,6 +625,8 @@ namespace KollectorScum.Tests.Services
                 .ReturnsAsync(new MusicReleaseDto { Id = 1, Title = "Updated Album" });
 
             _mockMusicReleaseRepo.Setup(r => r.Update(It.IsAny<MusicRelease>()));
+            _mockUnitOfWork.Setup(u => u.BeginTransactionAsync()).Returns(Task.CompletedTask);
+            _mockUnitOfWork.Setup(u => u.CommitTransactionAsync()).Returns(Task.CompletedTask);
             _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
             // Act
@@ -635,6 +637,7 @@ namespace KollectorScum.Tests.Services
             Assert.Equal("Updated Album", result.Title);
             _mockMusicReleaseRepo.Verify(r => r.Update(It.IsAny<MusicRelease>()), Times.Once);
             _mockUnitOfWork.Verify(u => u.SaveChangesAsync(), Times.Once);
+            _mockUnitOfWork.Verify(u => u.CommitTransactionAsync(), Times.Once);
         }
 
         [Fact]
@@ -648,12 +651,402 @@ namespace KollectorScum.Tests.Services
 
             _mockMusicReleaseRepo.Setup(r => r.GetByIdAsync(999, It.IsAny<string>()))
                 .ReturnsAsync((MusicRelease?)null);
+            _mockMusicReleaseRepo.Setup(r => r.GetByIdAsync(999))
+                .ReturnsAsync((MusicRelease?)null);
+
+            _mockUnitOfWork.Setup(u => u.BeginTransactionAsync()).Returns(Task.CompletedTask);
+            _mockUnitOfWork.Setup(u => u.RollbackTransactionAsync()).Returns(Task.CompletedTask);
 
             // Act
             var result = await _service.UpdateMusicReleaseAsync(999, updateDto);
 
             // Assert
             Assert.Null(result);
+            _mockUnitOfWork.Verify(u => u.RollbackTransactionAsync(), Times.Once);
+            _mockUnitOfWork.Verify(u => u.CommitTransactionAsync(), Times.Never);
+        }
+
+        [Fact]
+        public async Task UpdateMusicReleaseAsync_WithNewStoreName_CreatesNewStore()
+        {
+            // Arrange
+            var updateDto = new UpdateMusicReleaseDto
+            {
+                Title = "Album with Purchase Info",
+                PurchaseInfo = new MusicReleasePurchaseInfoDto
+                {
+                    StoreName = "New Record Store",
+                    Price = 25.99m,
+                    Currency = "USD",
+                    PurchaseDate = new DateTime(2023, 10, 15)
+                }
+            };
+
+            var existingRelease = new MusicRelease
+            {
+                Id = 1,
+                Title = "Album",
+                DateAdded = DateTime.UtcNow,
+                LastModified = DateTime.UtcNow
+            };
+
+            Store? createdStore = null;
+
+            _mockMusicReleaseRepo.Setup(r => r.GetByIdAsync(1))
+                .ReturnsAsync(existingRelease);
+
+            _mockUnitOfWork.Setup(u => u.Stores)
+                .Returns(_mockStoreRepo.Object);
+
+            _mockStoreRepo.Setup(s => s.GetAsync(
+                It.IsAny<Expression<Func<Store, bool>>>(),
+                It.IsAny<Func<IQueryable<Store>, IOrderedQueryable<Store>>>(),
+                It.IsAny<string>()))
+                .ReturnsAsync(new List<Store>()); // No existing stores
+
+            _mockStoreRepo.Setup(s => s.AddAsync(It.IsAny<Store>()))
+                .Callback<Store>(s => 
+                {
+                    s.Id = 100; // Simulate database assigning ID
+                    createdStore = s;
+                })
+                .ReturnsAsync((Store s) => s);
+
+            _mockUnitOfWork.Setup(u => u.BeginTransactionAsync()).Returns(Task.CompletedTask);
+            _mockUnitOfWork.Setup(u => u.CommitTransactionAsync()).Returns(Task.CompletedTask);
+            _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+
+            _mockMusicReleaseRepo.Setup(r => r.Update(It.IsAny<MusicRelease>()));
+
+            _mockMapper.Setup(m => m.MapToFullDtoAsync(It.IsAny<MusicRelease>()))
+                .ReturnsAsync(new MusicReleaseDto 
+                { 
+                    Id = 1, 
+                    Title = "Album with Purchase Info",
+                    PurchaseInfo = new MusicReleasePurchaseInfoDto 
+                    { 
+                        StoreId = 100,
+                        StoreName = "New Record Store",
+                        Price = 25.99m,
+                        Currency = "USD"
+                    }
+                });
+
+            // Act
+            var result = await _service.UpdateMusicReleaseAsync(1, updateDto);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.NotNull(result.PurchaseInfo);
+            Assert.Equal(100, result.PurchaseInfo.StoreId);
+            Assert.Equal("New Record Store", result.PurchaseInfo.StoreName);
+            Assert.NotNull(createdStore);
+            Assert.Equal("New Record Store", createdStore.Name);
+            _mockStoreRepo.Verify(s => s.AddAsync(It.IsAny<Store>()), Times.Once);
+            _mockUnitOfWork.Verify(u => u.SaveChangesAsync(), Times.AtLeast(2)); // Once for store, once for release
+            _mockUnitOfWork.Verify(u => u.CommitTransactionAsync(), Times.Once);
+        }
+
+        [Fact]
+        public async Task UpdateMusicReleaseAsync_WithExistingStoreName_ReusesExistingStore()
+        {
+            // Arrange
+            var updateDto = new UpdateMusicReleaseDto
+            {
+                Title = "Album with Purchase Info",
+                PurchaseInfo = new MusicReleasePurchaseInfoDto
+                {
+                    StoreName = "Existing Record Store",
+                    Price = 19.99m,
+                    Currency = "USD"
+                }
+            };
+
+            var existingRelease = new MusicRelease
+            {
+                Id = 1,
+                Title = "Album",
+                DateAdded = DateTime.UtcNow,
+                LastModified = DateTime.UtcNow
+            };
+
+            var existingStore = new Store
+            {
+                Id = 50,
+                Name = "Existing Record Store"
+            };
+
+            _mockMusicReleaseRepo.Setup(r => r.GetByIdAsync(1))
+                .ReturnsAsync(existingRelease);
+
+            _mockUnitOfWork.Setup(u => u.Stores)
+                .Returns(_mockStoreRepo.Object);
+
+            _mockStoreRepo.Setup(s => s.GetAsync(
+                It.IsAny<Expression<Func<Store, bool>>>(),
+                It.IsAny<Func<IQueryable<Store>, IOrderedQueryable<Store>>>(),
+                It.IsAny<string>()))
+                .ReturnsAsync(new List<Store> { existingStore });
+
+            _mockUnitOfWork.Setup(u => u.BeginTransactionAsync()).Returns(Task.CompletedTask);
+            _mockUnitOfWork.Setup(u => u.CommitTransactionAsync()).Returns(Task.CompletedTask);
+            _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+
+            _mockMusicReleaseRepo.Setup(r => r.Update(It.IsAny<MusicRelease>()));
+
+            _mockMapper.Setup(m => m.MapToFullDtoAsync(It.IsAny<MusicRelease>()))
+                .ReturnsAsync(new MusicReleaseDto 
+                { 
+                    Id = 1, 
+                    Title = "Album with Purchase Info",
+                    PurchaseInfo = new MusicReleasePurchaseInfoDto 
+                    { 
+                        StoreId = 50,
+                        StoreName = "Existing Record Store",
+                        Price = 19.99m
+                    }
+                });
+
+            // Act
+            var result = await _service.UpdateMusicReleaseAsync(1, updateDto);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.NotNull(result.PurchaseInfo);
+            Assert.Equal(50, result.PurchaseInfo.StoreId);
+            Assert.Equal("Existing Record Store", result.PurchaseInfo.StoreName);
+            _mockStoreRepo.Verify(s => s.AddAsync(It.IsAny<Store>()), Times.Never); // No new store created
+            _mockUnitOfWork.Verify(u => u.CommitTransactionAsync(), Times.Once);
+        }
+
+        [Fact]
+        public async Task UpdateMusicReleaseAsync_WithStoreNameCaseInsensitive_ReusesExistingStore()
+        {
+            // Arrange
+            var updateDto = new UpdateMusicReleaseDto
+            {
+                Title = "Album",
+                PurchaseInfo = new MusicReleasePurchaseInfoDto
+                {
+                    StoreName = "EXISTING RECORD STORE", // Different case
+                    Price = 15.99m
+                }
+            };
+
+            var existingRelease = new MusicRelease { Id = 1, Title = "Album" };
+            var existingStore = new Store { Id = 50, Name = "Existing Record Store" };
+
+            _mockMusicReleaseRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(existingRelease);
+            _mockUnitOfWork.Setup(u => u.Stores).Returns(_mockStoreRepo.Object);
+
+            _mockStoreRepo.Setup(s => s.GetAsync(
+                It.IsAny<Expression<Func<Store, bool>>>(),
+                It.IsAny<Func<IQueryable<Store>, IOrderedQueryable<Store>>>(),
+                It.IsAny<string>()))
+                .ReturnsAsync(new List<Store> { existingStore });
+
+            _mockUnitOfWork.Setup(u => u.BeginTransactionAsync()).Returns(Task.CompletedTask);
+            _mockUnitOfWork.Setup(u => u.CommitTransactionAsync()).Returns(Task.CompletedTask);
+            _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+            _mockMusicReleaseRepo.Setup(r => r.Update(It.IsAny<MusicRelease>()));
+
+            _mockMapper.Setup(m => m.MapToFullDtoAsync(It.IsAny<MusicRelease>()))
+                .ReturnsAsync(new MusicReleaseDto { Id = 1, PurchaseInfo = new MusicReleasePurchaseInfoDto { StoreId = 50 } });
+
+            // Act
+            var result = await _service.UpdateMusicReleaseAsync(1, updateDto);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(50, result.PurchaseInfo!.StoreId);
+            _mockStoreRepo.Verify(s => s.AddAsync(It.IsAny<Store>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task UpdateMusicReleaseAsync_WithStoreId_UsesProvidedStoreId()
+        {
+            // Arrange
+            var updateDto = new UpdateMusicReleaseDto
+            {
+                Title = "Album",
+                PurchaseInfo = new MusicReleasePurchaseInfoDto
+                {
+                    StoreId = 75, // Explicit StoreId provided
+                    StoreName = "Should Be Ignored",
+                    Price = 20.00m
+                }
+            };
+
+            var existingRelease = new MusicRelease { Id = 1, Title = "Album" };
+
+            _mockMusicReleaseRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(existingRelease);
+            _mockUnitOfWork.Setup(u => u.BeginTransactionAsync()).Returns(Task.CompletedTask);
+            _mockUnitOfWork.Setup(u => u.CommitTransactionAsync()).Returns(Task.CompletedTask);
+            _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+            _mockMusicReleaseRepo.Setup(r => r.Update(It.IsAny<MusicRelease>()));
+
+            _mockMapper.Setup(m => m.MapToFullDtoAsync(It.IsAny<MusicRelease>()))
+                .ReturnsAsync(new MusicReleaseDto { Id = 1, PurchaseInfo = new MusicReleasePurchaseInfoDto { StoreId = 75 } });
+
+            // Act
+            var result = await _service.UpdateMusicReleaseAsync(1, updateDto);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(75, result.PurchaseInfo!.StoreId);
+            _mockStoreRepo.Verify(s => s.GetAsync(
+                It.IsAny<Expression<Func<Store, bool>>>(),
+                It.IsAny<Func<IQueryable<Store>, IOrderedQueryable<Store>>>(),
+                It.IsAny<string>()), Times.Never); // No store lookup when ID provided
+            _mockStoreRepo.Verify(s => s.AddAsync(It.IsAny<Store>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task UpdateMusicReleaseAsync_WithWhitespaceStoreName_TrimsWhitespace()
+        {
+            // Arrange
+            var updateDto = new UpdateMusicReleaseDto
+            {
+                Title = "Album",
+                PurchaseInfo = new MusicReleasePurchaseInfoDto
+                {
+                    StoreName = "  Trimmed Store  ",
+                    Price = 12.99m
+                }
+            };
+
+            var existingRelease = new MusicRelease { Id = 1, Title = "Album" };
+            Store? createdStore = null;
+
+            _mockMusicReleaseRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(existingRelease);
+            _mockUnitOfWork.Setup(u => u.Stores).Returns(_mockStoreRepo.Object);
+
+            _mockStoreRepo.Setup(s => s.GetAsync(
+                It.IsAny<Expression<Func<Store, bool>>>(),
+                It.IsAny<Func<IQueryable<Store>, IOrderedQueryable<Store>>>(),
+                It.IsAny<string>()))
+                .ReturnsAsync(new List<Store>());
+
+            _mockStoreRepo.Setup(s => s.AddAsync(It.IsAny<Store>()))
+                .Callback<Store>(s => { s.Id = 101; createdStore = s; })
+                .ReturnsAsync((Store s) => s);
+
+            _mockUnitOfWork.Setup(u => u.BeginTransactionAsync()).Returns(Task.CompletedTask);
+            _mockUnitOfWork.Setup(u => u.CommitTransactionAsync()).Returns(Task.CompletedTask);
+            _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+            _mockMusicReleaseRepo.Setup(r => r.Update(It.IsAny<MusicRelease>()));
+
+            _mockMapper.Setup(m => m.MapToFullDtoAsync(It.IsAny<MusicRelease>()))
+                .ReturnsAsync(new MusicReleaseDto { Id = 1, PurchaseInfo = new MusicReleasePurchaseInfoDto { StoreId = 101 } });
+
+            // Act
+            var result = await _service.UpdateMusicReleaseAsync(1, updateDto);
+
+            // Assert
+            Assert.NotNull(createdStore);
+            Assert.Equal("Trimmed Store", createdStore.Name); // Whitespace trimmed
+        }
+
+        [Fact]
+        public async Task UpdateMusicReleaseAsync_WithoutPurchaseInfo_UpdatesSuccessfully()
+        {
+            // Arrange
+            var updateDto = new UpdateMusicReleaseDto
+            {
+                Title = "Album Without Purchase Info",
+                ReleaseYear = new DateTime(2023, 1, 1)
+            };
+
+            var existingRelease = new MusicRelease { Id = 1, Title = "Old Title" };
+
+            _mockMusicReleaseRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(existingRelease);
+            _mockUnitOfWork.Setup(u => u.BeginTransactionAsync()).Returns(Task.CompletedTask);
+            _mockUnitOfWork.Setup(u => u.CommitTransactionAsync()).Returns(Task.CompletedTask);
+            _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+            _mockMusicReleaseRepo.Setup(r => r.Update(It.IsAny<MusicRelease>()));
+
+            _mockMapper.Setup(m => m.MapToFullDtoAsync(It.IsAny<MusicRelease>()))
+                .ReturnsAsync(new MusicReleaseDto { Id = 1, Title = "Album Without Purchase Info" });
+
+            // Act
+            var result = await _service.UpdateMusicReleaseAsync(1, updateDto);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Null(result.PurchaseInfo);
+            _mockStoreRepo.Verify(s => s.GetAsync(
+                It.IsAny<Expression<Func<Store, bool>>>(),
+                It.IsAny<Func<IQueryable<Store>, IOrderedQueryable<Store>>>(),
+                It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task UpdateMusicReleaseAsync_OnException_RollsBackTransaction()
+        {
+            // Arrange
+            var updateDto = new UpdateMusicReleaseDto
+            {
+                Title = "Album",
+                PurchaseInfo = new MusicReleasePurchaseInfoDto
+                {
+                    StoreName = "Test Store"
+                }
+            };
+
+            var existingRelease = new MusicRelease { Id = 1, Title = "Album" };
+
+            _mockMusicReleaseRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(existingRelease);
+            _mockUnitOfWork.Setup(u => u.BeginTransactionAsync()).Returns(Task.CompletedTask);
+            _mockUnitOfWork.Setup(u => u.RollbackTransactionAsync()).Returns(Task.CompletedTask);
+            _mockUnitOfWork.Setup(u => u.Stores).Returns(_mockStoreRepo.Object);
+
+            _mockStoreRepo.Setup(s => s.GetAsync(
+                It.IsAny<Expression<Func<Store, bool>>>(),
+                It.IsAny<Func<IQueryable<Store>, IOrderedQueryable<Store>>>(),
+                It.IsAny<string>()))
+                .ThrowsAsync(new Exception("Database error"));
+
+            // Act & Assert
+            await Assert.ThrowsAsync<Exception>(() => _service.UpdateMusicReleaseAsync(1, updateDto));
+            _mockUnitOfWork.Verify(u => u.RollbackTransactionAsync(), Times.Once);
+            _mockUnitOfWork.Verify(u => u.CommitTransactionAsync(), Times.Never);
+        }
+
+        [Fact]
+        public async Task UpdateMusicReleaseAsync_WithEmptyStoreName_IgnoresStoreCreation()
+        {
+            // Arrange
+            var updateDto = new UpdateMusicReleaseDto
+            {
+                Title = "Album",
+                PurchaseInfo = new MusicReleasePurchaseInfoDto
+                {
+                    StoreName = "   ", // Whitespace only
+                    Price = 10.00m
+                }
+            };
+
+            var existingRelease = new MusicRelease { Id = 1, Title = "Album" };
+
+            _mockMusicReleaseRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(existingRelease);
+            _mockUnitOfWork.Setup(u => u.BeginTransactionAsync()).Returns(Task.CompletedTask);
+            _mockUnitOfWork.Setup(u => u.CommitTransactionAsync()).Returns(Task.CompletedTask);
+            _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+            _mockMusicReleaseRepo.Setup(r => r.Update(It.IsAny<MusicRelease>()));
+
+            _mockMapper.Setup(m => m.MapToFullDtoAsync(It.IsAny<MusicRelease>()))
+                .ReturnsAsync(new MusicReleaseDto { Id = 1, PurchaseInfo = new MusicReleasePurchaseInfoDto { Price = 10.00m } });
+
+            // Act
+            var result = await _service.UpdateMusicReleaseAsync(1, updateDto);
+
+            // Assert
+            Assert.NotNull(result);
+            _mockStoreRepo.Verify(s => s.GetAsync(
+                It.IsAny<Expression<Func<Store, bool>>>(),
+                It.IsAny<Func<IQueryable<Store>, IOrderedQueryable<Store>>>(),
+                It.IsAny<string>()), Times.Never);
+            _mockStoreRepo.Verify(s => s.AddAsync(It.IsAny<Store>()), Times.Never);
         }
 
         #endregion
