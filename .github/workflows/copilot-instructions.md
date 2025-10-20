@@ -3,6 +3,7 @@
 - All code should be committed to GitHub at the end of each task, each new phase a new branch.
 - Follow SOLID principles throughout development
 - Maintain high code coverage with meaningful tests
+- Code coverage of tests should exceed 80%.
 - Regular code reviews and refactoring sessions
 - Update this plan as new requirements emerge
 - Produce and maintain documentation throughout development of this app

@@ -20,6 +20,11 @@ namespace KollectorScum.Tests.Controllers
     /// </summary>
     public class MusicReleasesControllerTests
     {
+        private readonly Mock<IMusicReleaseService> _mockMusicReleaseService;
+        private readonly Mock<ILogger<MusicReleasesController>> _mockLogger;
+        private readonly MusicReleasesController _controller;
+
+        // Keep these for backward compatibility with existing tests that might need them
         private readonly Mock<IRepository<MusicRelease>> _mockMusicReleaseRepository;
         private readonly Mock<IRepository<Artist>> _mockArtistRepository;
         private readonly Mock<IRepository<Genre>> _mockGenreRepository;
@@ -29,11 +34,13 @@ namespace KollectorScum.Tests.Controllers
         private readonly Mock<IRepository<Packaging>> _mockPackagingRepository;
         private readonly Mock<IRepository<Store>> _mockStoreRepository;
         private readonly Mock<IUnitOfWork> _mockUnitOfWork;
-        private readonly Mock<ILogger<MusicReleasesController>> _mockLogger;
-        private readonly MusicReleasesController _controller;
 
         public MusicReleasesControllerTests()
         {
+            _mockMusicReleaseService = new Mock<IMusicReleaseService>();
+            _mockLogger = new Mock<ILogger<MusicReleasesController>>();
+
+            // Initialize repository mocks for backward compatibility (can be removed later)
             _mockMusicReleaseRepository = new Mock<IRepository<MusicRelease>>();
             _mockArtistRepository = new Mock<IRepository<Artist>>();
             _mockGenreRepository = new Mock<IRepository<Genre>>();
@@ -43,18 +50,9 @@ namespace KollectorScum.Tests.Controllers
             _mockPackagingRepository = new Mock<IRepository<Packaging>>();
             _mockStoreRepository = new Mock<IRepository<Store>>();
             _mockUnitOfWork = new Mock<IUnitOfWork>();
-            _mockLogger = new Mock<ILogger<MusicReleasesController>>();
 
             _controller = new MusicReleasesController(
-                _mockMusicReleaseRepository.Object,
-                _mockArtistRepository.Object,
-                _mockGenreRepository.Object,
-                _mockLabelRepository.Object,
-                _mockCountryRepository.Object,
-                _mockFormatRepository.Object,
-                _mockPackagingRepository.Object,
-                _mockStoreRepository.Object,
-                _mockUnitOfWork.Object,
+                _mockMusicReleaseService.Object,
                 _mockLogger.Object);
         }
 
