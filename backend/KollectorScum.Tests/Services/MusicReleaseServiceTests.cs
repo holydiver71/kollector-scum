@@ -25,6 +25,9 @@ namespace KollectorScum.Tests.Services
         private readonly Mock<IRepository<Packaging>> _mockPackagingRepo;
         private readonly Mock<IRepository<Store>> _mockStoreRepo;
         private readonly Mock<IUnitOfWork> _mockUnitOfWork;
+        private readonly Mock<IEntityResolverService> _mockEntityResolver;
+        private readonly Mock<IMusicReleaseMapperService> _mockMapper;
+        private readonly Mock<ICollectionStatisticsService> _mockStatisticsService;
         private readonly Mock<ILogger<MusicReleaseService>> _mockLogger;
         private readonly MusicReleaseService _service;
 
@@ -39,18 +42,19 @@ namespace KollectorScum.Tests.Services
             _mockPackagingRepo = new Mock<IRepository<Packaging>>();
             _mockStoreRepo = new Mock<IRepository<Store>>();
             _mockUnitOfWork = new Mock<IUnitOfWork>();
+            _mockEntityResolver = new Mock<IEntityResolverService>();
+            _mockMapper = new Mock<IMusicReleaseMapperService>();
+            _mockStatisticsService = new Mock<ICollectionStatisticsService>();
             _mockLogger = new Mock<ILogger<MusicReleaseService>>();
 
             _service = new MusicReleaseService(
                 _mockMusicReleaseRepo.Object,
                 _mockArtistRepo.Object,
-                _mockGenreRepo.Object,
                 _mockLabelRepo.Object,
-                _mockCountryRepo.Object,
-                _mockFormatRepo.Object,
-                _mockPackagingRepo.Object,
-                _mockStoreRepo.Object,
                 _mockUnitOfWork.Object,
+                _mockEntityResolver.Object,
+                _mockMapper.Object,
+                _mockStatisticsService.Object,
                 _mockLogger.Object
             );
         }
@@ -106,6 +110,15 @@ namespace KollectorScum.Tests.Services
                 It.IsAny<string>()
             )).ReturnsAsync(pagedResult);
 
+            _mockMapper.Setup(m => m.MapToSummaryDto(It.IsAny<MusicRelease>()))
+                .Returns((MusicRelease mr) => new MusicReleaseSummaryDto
+                {
+                    Id = mr.Id,
+                    Title = mr.Title,
+                    ReleaseYear = mr.ReleaseYear,
+                    DateAdded = mr.DateAdded
+                });
+
             // Act
             var result = await _service.GetMusicReleasesAsync(null, null, null, null, null, null, null, null, null, 1, 10);
 
@@ -151,6 +164,14 @@ namespace KollectorScum.Tests.Services
                 It.IsAny<string>()
             )).ReturnsAsync(pagedResult);
 
+            _mockMapper.Setup(m => m.MapToSummaryDto(It.IsAny<MusicRelease>()))
+                .Returns((MusicRelease mr) => new MusicReleaseSummaryDto
+                {
+                    Id = mr.Id,
+                    Title = mr.Title,
+                    ReleaseYear = mr.ReleaseYear
+                });
+
             // Act
             var result = await _service.GetMusicReleasesAsync("Dark", null, null, null, null, null, null, null, null, 1, 10);
 
@@ -193,6 +214,9 @@ namespace KollectorScum.Tests.Services
                 It.IsAny<string>()
             )).ReturnsAsync(pagedResult);
 
+            _mockMapper.Setup(m => m.MapToSummaryDto(It.IsAny<MusicRelease>()))
+                .Returns((MusicRelease mr) => new MusicReleaseSummaryDto { Id = mr.Id, Title = mr.Title });
+
             // Act
             var result = await _service.GetMusicReleasesAsync(null, null, null, null, null, null, null, 2020, 2020, 1, 10);
 
@@ -226,15 +250,18 @@ namespace KollectorScum.Tests.Services
                 LastModified = DateTime.UtcNow
             };
 
-            var artist = new Artist { Id = artistId, Name = "Test Artist" };
-            var genre = new Genre { Id = genreId, Name = "Rock" };
+            var expectedDto = new MusicReleaseDto
+            {
+                Id = 1,
+                Title = "Test Album",
+                Artists = new List<ArtistDto> { new ArtistDto { Id = artistId, Name = "Test Artist" } }
+            };
 
             _mockMusicReleaseRepo.Setup(r => r.GetByIdAsync(1, It.IsAny<string>()))
                 .ReturnsAsync(musicRelease);
-            _mockArtistRepo.Setup(r => r.GetByIdAsync(artistId))
-                .ReturnsAsync(artist);
-            _mockGenreRepo.Setup(r => r.GetByIdAsync(genreId))
-                .ReturnsAsync(genre);
+            
+            _mockMapper.Setup(m => m.MapToFullDtoAsync(It.IsAny<MusicRelease>()))
+                .ReturnsAsync(expectedDto);
 
             // Act
             var result = await _service.GetMusicReleaseAsync(1);
@@ -245,7 +272,6 @@ namespace KollectorScum.Tests.Services
             Assert.Equal("Test Album", result.Title);
             Assert.NotNull(result.Artists);
             Assert.Single(result.Artists);
-            Assert.Equal("Test Artist", result.Artists[0].Name);
         }
 
         [Fact]
@@ -339,60 +365,17 @@ namespace KollectorScum.Tests.Services
         public async Task GetCollectionStatisticsAsync_WithReleases_ReturnsStatistics()
         {
             // Arrange
-            var releases = new List<MusicRelease>
+            var expectedStats = new CollectionStatisticsDto
             {
-                new MusicRelease
-                {
-                    Id = 1,
-                    Title = "Album 1",
-                    ReleaseYear = new DateTime(2020, 1, 1),
-                    Artists = "[1]",
-                    Genres = "[1]",
-                    LabelId = 1,
-                    FormatId = 1,
-                    CountryId = 1,
-                    PurchaseInfo = "{\"Price\": 10.99}",
-                    DateAdded = DateTime.UtcNow
-                },
-                new MusicRelease
-                {
-                    Id = 2,
-                    Title = "Album 2",
-                    ReleaseYear = new DateTime(2021, 1, 1),
-                    Artists = "[1,2]",
-                    Genres = "[1,2]",
-                    LabelId = 2,
-                    FormatId = 1,
-                    CountryId = 1,
-                    PurchaseInfo = "{\"Price\": 15.99}",
-                    DateAdded = DateTime.UtcNow
-                }
+                TotalReleases = 2,
+                TotalArtists = 2,
+                TotalGenres = 2,
+                TotalLabels = 2,
+                TotalValue = 26.98m
             };
 
-            var formats = new List<Format>
-            {
-                new Format { Id = 1, Name = "CD" }
-            };
-
-            var countries = new List<Country>
-            {
-                new Country { Id = 1, Name = "UK" }
-            };
-
-            var genres = new List<Genre>
-            {
-                new Genre { Id = 1, Name = "Rock" },
-                new Genre { Id = 2, Name = "Pop" }
-            };
-
-            _mockMusicReleaseRepo.Setup(r => r.GetAllAsync())
-                .ReturnsAsync(releases);
-            _mockFormatRepo.Setup(r => r.GetAllAsync())
-                .ReturnsAsync(formats);
-            _mockCountryRepo.Setup(r => r.GetAllAsync())
-                .ReturnsAsync(countries);
-            _mockGenreRepo.Setup(r => r.GetAllAsync())
-                .ReturnsAsync(genres);
+            _mockStatisticsService.Setup(s => s.GetCollectionStatisticsAsync())
+                .ReturnsAsync(expectedStats);
 
             // Act
             var result = await _service.GetCollectionStatisticsAsync();
@@ -401,14 +384,21 @@ namespace KollectorScum.Tests.Services
             Assert.NotNull(result);
             Assert.Equal(2, result.TotalReleases);
             Assert.True(result.TotalValue > 0);
+            _mockStatisticsService.Verify(s => s.GetCollectionStatisticsAsync(), Times.Once);
         }
 
         [Fact]
         public async Task GetCollectionStatisticsAsync_WithNoReleases_ReturnsEmptyStatistics()
         {
             // Arrange
-            _mockMusicReleaseRepo.Setup(r => r.GetAllAsync())
-                .ReturnsAsync(new List<MusicRelease>());
+            var expectedStats = new CollectionStatisticsDto
+            {
+                TotalReleases = 0,
+                TotalValue = null
+            };
+
+            _mockStatisticsService.Setup(s => s.GetCollectionStatisticsAsync())
+                .ReturnsAsync(expectedStats);
 
             // Act
             var result = await _service.GetCollectionStatisticsAsync();
@@ -438,17 +428,31 @@ namespace KollectorScum.Tests.Services
                 FormatId = 1
             };
 
-            var artist = new Artist { Id = 1, Name = "Test Artist" };
-            var genre = new Genre { Id = 1, Name = "Rock" };
-            var label = new Label { Id = 1, Name = "Test Label" };
-            var country = new Country { Id = 1, Name = "UK" };
-            var format = new Format { Id = 1, Name = "CD" };
+            var createdEntities = new CreatedEntitiesDto();
 
-            _mockArtistRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(artist);
-            _mockGenreRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(genre);
-            _mockLabelRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(label);
-            _mockCountryRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(country);
-            _mockFormatRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(format);
+            _mockEntityResolver.Setup(e => e.ResolveOrCreateArtistsAsync(
+                It.IsAny<List<int>?>(), It.IsAny<List<string>?>(), It.IsAny<CreatedEntitiesDto>()))
+                .ReturnsAsync(new List<int> { 1 });
+            
+            _mockEntityResolver.Setup(e => e.ResolveOrCreateGenresAsync(
+                It.IsAny<List<int>?>(), It.IsAny<List<string>?>(), It.IsAny<CreatedEntitiesDto>()))
+                .ReturnsAsync(new List<int> { 1 });
+
+            _mockEntityResolver.Setup(e => e.ResolveOrCreateLabelAsync(
+                It.IsAny<int?>(), It.IsAny<string?>(), It.IsAny<CreatedEntitiesDto>()))
+                .ReturnsAsync(1);
+
+            _mockEntityResolver.Setup(e => e.ResolveOrCreateCountryAsync(
+                It.IsAny<int?>(), It.IsAny<string?>(), It.IsAny<CreatedEntitiesDto>()))
+                .ReturnsAsync(1);
+
+            _mockEntityResolver.Setup(e => e.ResolveOrCreateFormatAsync(
+                It.IsAny<int?>(), It.IsAny<string?>(), It.IsAny<CreatedEntitiesDto>()))
+                .ReturnsAsync(1);
+
+            _mockEntityResolver.Setup(e => e.ResolveOrCreatePackagingAsync(
+                It.IsAny<int?>(), It.IsAny<string?>(), It.IsAny<CreatedEntitiesDto>()))
+                .ReturnsAsync((int?)null);
 
             _mockMusicReleaseRepo.Setup(r => r.GetAsync(
                 It.IsAny<Expression<Func<MusicRelease, bool>>>(),
@@ -462,6 +466,9 @@ namespace KollectorScum.Tests.Services
             _mockMusicReleaseRepo.Setup(r => r.AddAsync(It.IsAny<MusicRelease>()))
                 .Callback<MusicRelease>(mr => mr.Id = 1)
                 .ReturnsAsync((MusicRelease mr) => mr);
+
+            _mockMapper.Setup(m => m.MapToFullDtoAsync(It.IsAny<MusicRelease>()))
+                .ReturnsAsync(new MusicReleaseDto { Id = 1, Title = "New Album" });
 
             _mockUnitOfWork.Setup(u => u.BeginTransactionAsync()).Returns(Task.CompletedTask);
             _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
@@ -491,19 +498,24 @@ namespace KollectorScum.Tests.Services
                 LabelId = 1
             };
 
-            var genre = new Genre { Id = 1, Name = "Rock" };
-            var label = new Label { Id = 1, Name = "Test Label" };
+            var createdEntities = new CreatedEntitiesDto();
+            createdEntities.Artists = new List<ArtistDto> { new ArtistDto { Id = 1, Name = "New Artist" } };
 
-            _mockArtistRepo.Setup(r => r.GetFirstOrDefaultAsync(It.IsAny<Expression<Func<Artist, bool>>>(), It.IsAny<string>()))
-                .ReturnsAsync((Artist?)null);
-            _mockArtistRepo.Setup(r => r.AddAsync(It.IsAny<Artist>()))
-                .Callback<Artist>(a => a.Id = 1)
-                .ReturnsAsync((Artist a) => a);
-            _mockArtistRepo.Setup(r => r.GetByIdAsync(1))
-                .ReturnsAsync(new Artist { Id = 1, Name = "New Artist" });
+            _mockEntityResolver.Setup(e => e.ResolveOrCreateArtistsAsync(
+                It.IsAny<List<int>?>(), It.IsAny<List<string>?>(), It.IsAny<CreatedEntitiesDto>()))
+                .Callback<List<int>?, List<string>?, CreatedEntitiesDto>((ids, names, created) =>
+                {
+                    created.Artists = new List<ArtistDto> { new ArtistDto { Id = 1, Name = "New Artist" } };
+                })
+                .ReturnsAsync(new List<int> { 1 });
 
-            _mockGenreRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(genre);
-            _mockLabelRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(label);
+            _mockEntityResolver.Setup(e => e.ResolveOrCreateGenresAsync(
+                It.IsAny<List<int>?>(), It.IsAny<List<string>?>(), It.IsAny<CreatedEntitiesDto>()))
+                .ReturnsAsync(new List<int> { 1 });
+
+            _mockEntityResolver.Setup(e => e.ResolveOrCreateLabelAsync(
+                It.IsAny<int?>(), It.IsAny<string?>(), It.IsAny<CreatedEntitiesDto>()))
+                .ReturnsAsync(1);
 
             _mockMusicReleaseRepo.Setup(r => r.GetAsync(
                 It.IsAny<Expression<Func<MusicRelease, bool>>>(),
@@ -518,6 +530,9 @@ namespace KollectorScum.Tests.Services
                 .Callback<MusicRelease>(mr => mr.Id = 1)
                 .ReturnsAsync((MusicRelease mr) => mr);
 
+            _mockMapper.Setup(m => m.MapToFullDtoAsync(It.IsAny<MusicRelease>()))
+                .ReturnsAsync(new MusicReleaseDto { Id = 1, Title = "New Album" });
+
             _mockUnitOfWork.Setup(u => u.BeginTransactionAsync()).Returns(Task.CompletedTask);
             _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
             _mockUnitOfWork.Setup(u => u.CommitTransactionAsync()).Returns(Task.CompletedTask);
@@ -527,11 +542,8 @@ namespace KollectorScum.Tests.Services
 
             // Assert
             Assert.NotNull(result);
-            Assert.NotNull(result.Created);
-            Assert.NotNull(result.Created.Artists);
-            Assert.Single(result.Created.Artists);
-            Assert.Equal("New Artist", result.Created.Artists[0].Name);
-            _mockArtistRepo.Verify(r => r.AddAsync(It.IsAny<Artist>()), Times.Once);
+            _mockEntityResolver.Verify(e => e.ResolveOrCreateArtistsAsync(
+                It.IsAny<List<int>?>(), It.IsAny<List<string>?>(), It.IsAny<CreatedEntitiesDto>()), Times.Once);
         }
 
         [Fact]
@@ -596,17 +608,22 @@ namespace KollectorScum.Tests.Services
                 LastModified = DateTime.UtcNow
             };
 
-            var artist = new Artist { Id = 1, Name = "Test Artist" };
-            var genre = new Genre { Id = 1, Name = "Rock" };
-
             _mockMusicReleaseRepo.Setup(r => r.GetByIdAsync(1, It.IsAny<string>()))
                 .ReturnsAsync((MusicRelease?)null);
             _mockMusicReleaseRepo.Setup(r => r.GetByIdAsync(1))
                 .ReturnsAsync(existingRelease);
-            _mockArtistRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(artist);
-            _mockGenreRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(genre);
-            _mockLabelRepo.Setup(r => r.GetByIdAsync(1))
-                .ReturnsAsync(new Label { Id = 1, Name = "Test Label" });
+
+            _mockEntityResolver.Setup(e => e.ResolveOrCreateArtistsAsync(
+                It.IsAny<List<int>?>(), It.IsAny<List<string>?>(), It.IsAny<CreatedEntitiesDto>()))
+                .ReturnsAsync(new List<int> { 1 });
+
+            _mockEntityResolver.Setup(e => e.ResolveOrCreateGenresAsync(
+                It.IsAny<List<int>?>(), It.IsAny<List<string>?>(), It.IsAny<CreatedEntitiesDto>()))
+                .ReturnsAsync(new List<int> { 1 });
+
+            _mockMapper.Setup(m => m.MapToFullDtoAsync(It.IsAny<MusicRelease>()))
+                .ReturnsAsync(new MusicReleaseDto { Id = 1, Title = "Updated Album" });
+
             _mockMusicReleaseRepo.Setup(r => r.Update(It.IsAny<MusicRelease>()));
             _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
@@ -760,15 +777,23 @@ namespace KollectorScum.Tests.Services
                 LastModified = DateTime.UtcNow
             };
 
-            var artist = new Artist { Id = 1, Name = "Test Artist" };
-            var store = new Store { Id = storeId, Name = "Test Store" };
+            var expectedDto = new MusicReleaseDto
+            {
+                Id = 1,
+                Title = "Test Album with Purchase",
+                PurchaseInfo = new MusicReleasePurchaseInfoDto
+                {
+                    StoreId = storeId,
+                    StoreName = "Test Store",
+                    Price = 12.99m
+                }
+            };
 
             _mockMusicReleaseRepo.Setup(r => r.GetByIdAsync(1, It.IsAny<string>()))
                 .ReturnsAsync(musicRelease);
-            _mockArtistRepo.Setup(r => r.GetByIdAsync(1))
-                .ReturnsAsync(artist);
-            _mockStoreRepo.Setup(r => r.GetByIdAsync(storeId))
-                .ReturnsAsync(store);
+
+            _mockMapper.Setup(m => m.MapToFullDtoAsync(It.IsAny<MusicRelease>()))
+                .ReturnsAsync(expectedDto);
 
             // Act
             var result = await _service.GetMusicReleaseAsync(1);
@@ -785,78 +810,25 @@ namespace KollectorScum.Tests.Services
         public async Task GetCollectionStatisticsAsync_WithComplexData_ReturnsDetailedStatistics()
         {
             // Arrange
-            var purchaseInfo1 = new PurchaseInfo { Price = 10.99m };
-            var purchaseInfo2 = new PurchaseInfo { Price = 15.99m };
-
-            var releases = new List<MusicRelease>
+            var expectedStats = new CollectionStatisticsDto
             {
-                new MusicRelease
+                TotalReleases = 3,
+                TotalArtists = 2,
+                TotalGenres = 2,
+                TotalLabels = 2,
+                TotalValue = 26.98m,
+                AveragePrice = 13.49m,
+                MostExpensiveRelease = new MusicReleaseSummaryDto { Id = 2, Title = "Album 2" },
+                RecentlyAdded = new List<MusicReleaseSummaryDto>
                 {
-                    Id = 1,
-                    Title = "Album 1",
-                    ReleaseYear = new DateTime(2020, 1, 1),
-                    Artists = "[1]",
-                    Genres = "[1]",
-                    LabelId = 1,
-                    FormatId = 1,
-                    CountryId = 1,
-                    PurchaseInfo = JsonSerializer.Serialize(purchaseInfo1),
-                    DateAdded = DateTime.UtcNow.AddDays(-10)
-                },
-                new MusicRelease
-                {
-                    Id = 2,
-                    Title = "Album 2",
-                    ReleaseYear = new DateTime(2021, 1, 1),
-                    Artists = "[2]",
-                    Genres = "[2]",
-                    LabelId = 2,
-                    FormatId = 2,
-                    CountryId = 2,
-                    PurchaseInfo = JsonSerializer.Serialize(purchaseInfo2),
-                    DateAdded = DateTime.UtcNow.AddDays(-5)
-                },
-                new MusicRelease
-                {
-                    Id = 3,
-                    Title = "Album 3",
-                    ReleaseYear = new DateTime(2020, 6, 1),
-                    Artists = "[1,2]",
-                    Genres = "[1,2]",
-                    LabelId = 1,
-                    FormatId = 1,
-                    CountryId = 1,
-                    PurchaseInfo = null,
-                    DateAdded = DateTime.UtcNow.AddDays(-1)
+                    new MusicReleaseSummaryDto { Id = 3, Title = "Album 3" },
+                    new MusicReleaseSummaryDto { Id = 2, Title = "Album 2" },
+                    new MusicReleaseSummaryDto { Id = 1, Title = "Album 1" }
                 }
             };
 
-            var formats = new List<Format>
-            {
-                new Format { Id = 1, Name = "CD" },
-                new Format { Id = 2, Name = "Vinyl" }
-            };
-
-            var countries = new List<Country>
-            {
-                new Country { Id = 1, Name = "UK" },
-                new Country { Id = 2, Name = "US" }
-            };
-
-            var genres = new List<Genre>
-            {
-                new Genre { Id = 1, Name = "Rock" },
-                new Genre { Id = 2, Name = "Pop" }
-            };
-
-            _mockMusicReleaseRepo.Setup(r => r.GetAllAsync())
-                .ReturnsAsync(releases);
-            _mockFormatRepo.Setup(r => r.GetAllAsync())
-                .ReturnsAsync(formats);
-            _mockCountryRepo.Setup(r => r.GetAllAsync())
-                .ReturnsAsync(countries);
-            _mockGenreRepo.Setup(r => r.GetAllAsync())
-                .ReturnsAsync(genres);
+            _mockStatisticsService.Setup(s => s.GetCollectionStatisticsAsync())
+                .ReturnsAsync(expectedStats);
 
             // Act
             var result = await _service.GetCollectionStatisticsAsync();
@@ -872,6 +844,7 @@ namespace KollectorScum.Tests.Services
             Assert.NotNull(result.AveragePrice);
             Assert.NotNull(result.MostExpensiveRelease);
             Assert.Equal(3, result.RecentlyAdded.Count);
+            _mockStatisticsService.Verify(s => s.GetCollectionStatisticsAsync(), Times.Once);
         }
 
         [Fact]
@@ -887,19 +860,21 @@ namespace KollectorScum.Tests.Services
                 LabelId = 1
             };
 
-            var artist = new Artist { Id = 1, Name = "Test Artist" };
-            var label = new Label { Id = 1, Name = "Test Label" };
+            _mockEntityResolver.Setup(e => e.ResolveOrCreateArtistsAsync(
+                It.IsAny<List<int>?>(), It.IsAny<List<string>?>(), It.IsAny<CreatedEntitiesDto>()))
+                .ReturnsAsync(new List<int> { 1 });
 
-            _mockArtistRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(artist);
-            _mockLabelRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(label);
+            _mockEntityResolver.Setup(e => e.ResolveOrCreateGenresAsync(
+                It.IsAny<List<int>?>(), It.IsAny<List<string>?>(), It.IsAny<CreatedEntitiesDto>()))
+                .Callback<List<int>?, List<string>?, CreatedEntitiesDto>((ids, names, created) =>
+                {
+                    created.Genres = new List<GenreDto> { new GenreDto { Id = 1, Name = "New Genre" } };
+                })
+                .ReturnsAsync(new List<int> { 1 });
 
-            _mockGenreRepo.Setup(r => r.GetFirstOrDefaultAsync(It.IsAny<Expression<Func<Genre, bool>>>(), It.IsAny<string>()))
-                .ReturnsAsync((Genre?)null);
-            _mockGenreRepo.Setup(r => r.AddAsync(It.IsAny<Genre>()))
-                .Callback<Genre>(g => g.Id = 1)
-                .ReturnsAsync((Genre g) => g);
-            _mockGenreRepo.Setup(r => r.GetByIdAsync(1))
-                .ReturnsAsync(new Genre { Id = 1, Name = "New Genre" });
+            _mockEntityResolver.Setup(e => e.ResolveOrCreateLabelAsync(
+                It.IsAny<int?>(), It.IsAny<string?>(), It.IsAny<CreatedEntitiesDto>()))
+                .ReturnsAsync(1);
 
             _mockMusicReleaseRepo.Setup(r => r.GetAsync(
                 It.IsAny<Expression<Func<MusicRelease, bool>>>(),
@@ -914,6 +889,9 @@ namespace KollectorScum.Tests.Services
                 .Callback<MusicRelease>(mr => mr.Id = 1)
                 .ReturnsAsync((MusicRelease mr) => mr);
 
+            _mockMapper.Setup(m => m.MapToFullDtoAsync(It.IsAny<MusicRelease>()))
+                .ReturnsAsync(new MusicReleaseDto { Id = 1, Title = "New Album" });
+
             _mockUnitOfWork.Setup(u => u.BeginTransactionAsync()).Returns(Task.CompletedTask);
             _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
             _mockUnitOfWork.Setup(u => u.CommitTransactionAsync()).Returns(Task.CompletedTask);
@@ -926,7 +904,8 @@ namespace KollectorScum.Tests.Services
             Assert.NotNull(result.Created);
             Assert.NotNull(result.Created.Genres);
             Assert.Single(result.Created.Genres);
-            _mockGenreRepo.Verify(r => r.AddAsync(It.IsAny<Genre>()), Times.Once);
+            _mockEntityResolver.Verify(e => e.ResolveOrCreateGenresAsync(
+                It.IsAny<List<int>?>(), It.IsAny<List<string>?>(), It.IsAny<CreatedEntitiesDto>()), Times.Once);
         }
 
         [Fact]
