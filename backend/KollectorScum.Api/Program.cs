@@ -30,6 +30,20 @@ builder.Services.AddScoped<IDataSeedingService>(serviceProvider =>
     return new DataSeedingService(context, logger, configuration);
 });
 
+// Register split import services (Phase 1.3 refactoring)
+builder.Services.AddScoped<IJsonFileReader, JsonFileReader>();
+builder.Services.AddScoped<IMusicReleaseBatchProcessor, MusicReleaseBatchProcessor>();
+builder.Services.AddScoped<IMusicReleaseImportOrchestrator>(serviceProvider =>
+{
+    var fileReader = serviceProvider.GetRequiredService<IJsonFileReader>();
+    var batchProcessor = serviceProvider.GetRequiredService<IMusicReleaseBatchProcessor>();
+    var unitOfWork = serviceProvider.GetRequiredService<IUnitOfWork>();
+    var logger = serviceProvider.GetRequiredService<ILogger<MusicReleaseImportOrchestrator>>();
+    var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+    return new MusicReleaseImportOrchestrator(fileReader, batchProcessor, unitOfWork, logger, configuration);
+});
+
+// Keep old service temporarily for compatibility (will be removed after testing)
 builder.Services.AddScoped<IMusicReleaseImportService>(serviceProvider =>
 {
     var unitOfWork = serviceProvider.GetRequiredService<IUnitOfWork>();

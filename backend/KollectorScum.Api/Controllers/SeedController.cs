@@ -11,16 +11,16 @@ namespace KollectorScum.Api.Controllers
     public class SeedController : ControllerBase
     {
         private readonly IDataSeedingService _dataSeedingService;
-        private readonly IMusicReleaseImportService _musicReleaseImportService;
+        private readonly IMusicReleaseImportOrchestrator _importOrchestrator;
         private readonly ILogger<SeedController> _logger;
 
         public SeedController(
             IDataSeedingService dataSeedingService, 
-            IMusicReleaseImportService musicReleaseImportService,
+            IMusicReleaseImportOrchestrator importOrchestrator,
             ILogger<SeedController> logger)
         {
             _dataSeedingService = dataSeedingService;
-            _musicReleaseImportService = musicReleaseImportService;
+            _importOrchestrator = importOrchestrator;
             _logger = logger;
         }
 
@@ -187,7 +187,7 @@ namespace KollectorScum.Api.Controllers
             try
             {
                 _logger.LogInformation("Starting music releases import via API");
-                var importedCount = await _musicReleaseImportService.ImportMusicReleasesAsync();
+                var importedCount = await _importOrchestrator.ImportMusicReleasesAsync();
                 return Ok(new { Message = $"Music releases import completed successfully. Imported {importedCount} releases." });
             }
             catch (Exception ex)
@@ -209,7 +209,7 @@ namespace KollectorScum.Api.Controllers
             try
             {
                 _logger.LogInformation("Starting music releases batch import via API (size: {BatchSize}, skip: {SkipCount})", batchSize, skipCount);
-                var importedCount = await _musicReleaseImportService.ImportMusicReleasesBatchAsync(batchSize, skipCount);
+                var importedCount = await _importOrchestrator.ImportMusicReleasesBatchAsync(batchSize, skipCount);
                 return Ok(new { Message = $"Music releases batch import completed. Imported {importedCount} releases." });
             }
             catch (Exception ex)
@@ -228,7 +228,7 @@ namespace KollectorScum.Api.Controllers
         {
             try
             {
-                var progress = await _musicReleaseImportService.GetImportProgressAsync();
+                var progress = await _importOrchestrator.GetImportProgressAsync();
                 return Ok(progress);
             }
             catch (Exception ex)
@@ -247,7 +247,7 @@ namespace KollectorScum.Api.Controllers
         {
             try
             {
-                var (isValid, errors) = await _musicReleaseImportService.ValidateLookupDataAsync();
+                var (isValid, errors) = await _importOrchestrator.ValidateLookupDataAsync();
                 
                 if (isValid)
                 {
@@ -274,7 +274,7 @@ namespace KollectorScum.Api.Controllers
         {
             try
             {
-                var count = await _musicReleaseImportService.GetMusicReleaseCountAsync();
+                var count = await _importOrchestrator.GetMusicReleaseCountAsync();
                 return Ok(new { Count = count });
             }
             catch (Exception ex)
@@ -294,7 +294,7 @@ namespace KollectorScum.Api.Controllers
             try
             {
                 _logger.LogInformation("Starting UPC update via API");
-                var updatedCount = await _musicReleaseImportService.UpdateUpcValuesAsync();
+                var updatedCount = await _importOrchestrator.UpdateUpcValuesAsync();
                 return Ok(new { Message = $"UPC update completed successfully. Updated {updatedCount} releases." });
             }
             catch (Exception ex)
