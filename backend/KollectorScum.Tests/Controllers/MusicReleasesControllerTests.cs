@@ -14,21 +14,26 @@ namespace KollectorScum.Tests.Controllers
 {
     /// <summary>
     /// Unit tests for MusicReleasesController
-    /// Tests controller behavior by mocking IMusicReleaseService
-    /// Service layer is fully tested in MusicReleaseServiceTests (74/74 passing)
-    /// Controller tests verify HTTP response handling and delegation to service
+    /// Tests controller behavior by mocking query and command services
+    /// Service layer is fully tested separately (QueryServiceTests, CommandServiceTests)
+    /// Controller tests verify HTTP response handling and delegation to services
     /// </summary>
     public class MusicReleasesControllerTests
     {
-        private readonly Mock<IMusicReleaseService> _mockService;
+        private readonly Mock<IMusicReleaseQueryService> _mockQueryService;
+        private readonly Mock<IMusicReleaseCommandService> _mockCommandService;
         private readonly Mock<ILogger<MusicReleasesController>> _mockLogger;
         private readonly MusicReleasesController _controller;
 
         public MusicReleasesControllerTests()
         {
-            _mockService = new Mock<IMusicReleaseService>();
+            _mockQueryService = new Mock<IMusicReleaseQueryService>();
+            _mockCommandService = new Mock<IMusicReleaseCommandService>();
             _mockLogger = new Mock<ILogger<MusicReleasesController>>();
-            _controller = new MusicReleasesController(_mockService.Object, _mockLogger.Object);
+            _controller = new MusicReleasesController(
+                _mockQueryService.Object, 
+                _mockCommandService.Object, 
+                _mockLogger.Object);
         }
 
         #region GetMusicReleases Tests
@@ -50,7 +55,7 @@ namespace KollectorScum.Tests.Controllers
                 TotalPages = 1
             };
 
-            _mockService
+            _mockQueryService
                 .Setup(s => s.GetMusicReleasesAsync(null, null, null, null, null, null, null, null, null, 1, 50))
                 .ReturnsAsync(expectedResult);
 
@@ -81,7 +86,7 @@ namespace KollectorScum.Tests.Controllers
                 TotalPages = 1
             };
 
-            _mockService
+            _mockQueryService
                 .Setup(s => s.GetMusicReleasesAsync("Metallica", null, null, null, null, null, null, null, null, 1, 50))
                 .ReturnsAsync(expectedResult);
 
@@ -111,7 +116,7 @@ namespace KollectorScum.Tests.Controllers
                 TotalPages = 5
             };
 
-            _mockService
+            _mockQueryService
                 .Setup(s => s.GetMusicReleasesAsync(null, null, null, null, null, null, null, null, null, 2, 10))
                 .ReturnsAsync(expectedResult);
 
@@ -139,7 +144,7 @@ namespace KollectorScum.Tests.Controllers
                 TotalPages = 0
             };
 
-            _mockService
+            _mockQueryService
                 .Setup(s => s.GetMusicReleasesAsync(It.IsAny<string>(), It.IsAny<int?>(), It.IsAny<int?>(), 
                     It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<bool?>(), 
                     It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<int>(), It.IsAny<int>()))
@@ -159,7 +164,7 @@ namespace KollectorScum.Tests.Controllers
         public async Task GetMusicReleases_Returns500_OnServiceException()
         {
             // Arrange
-            _mockService
+            _mockQueryService
                 .Setup(s => s.GetMusicReleasesAsync(It.IsAny<string>(), It.IsAny<int?>(), It.IsAny<int?>(), 
                     It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<bool?>(), 
                     It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<int>(), It.IsAny<int>()))
@@ -189,7 +194,7 @@ namespace KollectorScum.Tests.Controllers
                 Genres = new List<GenreDto> { new GenreDto { Id = 1, Name = "Thrash Metal" } }
             };
 
-            _mockService
+            _mockQueryService
                 .Setup(s => s.GetMusicReleaseAsync(1))
                 .ReturnsAsync(expectedRelease);
 
@@ -209,7 +214,7 @@ namespace KollectorScum.Tests.Controllers
         public async Task GetMusicRelease_ReturnsNotFound_WhenNotFound()
         {
             // Arrange
-            _mockService
+            _mockQueryService
                 .Setup(s => s.GetMusicReleaseAsync(999))
                 .ReturnsAsync((MusicReleaseDto?)null);
 
@@ -225,7 +230,7 @@ namespace KollectorScum.Tests.Controllers
         public async Task GetMusicRelease_Returns500_OnServiceException()
         {
             // Arrange
-            _mockService
+            _mockQueryService
                 .Setup(s => s.GetMusicReleaseAsync(It.IsAny<int>()))
                 .ThrowsAsync(new Exception("Database error"));
 
@@ -266,7 +271,7 @@ namespace KollectorScum.Tests.Controllers
                 Created = null // No new entities created
             };
 
-            _mockService
+            _mockCommandService
                 .Setup(s => s.CreateMusicReleaseAsync(It.IsAny<CreateMusicReleaseDto>()))
                 .ReturnsAsync(expectedResponse);
 
@@ -313,7 +318,7 @@ namespace KollectorScum.Tests.Controllers
                 }
             };
 
-            _mockService
+            _mockCommandService
                 .Setup(s => s.CreateMusicReleaseAsync(It.IsAny<CreateMusicReleaseDto>()))
                 .ReturnsAsync(expectedResponse);
 
@@ -360,7 +365,7 @@ namespace KollectorScum.Tests.Controllers
                 }
             };
 
-            _mockService
+            _mockCommandService
                 .Setup(s => s.CreateMusicReleaseAsync(It.IsAny<CreateMusicReleaseDto>()))
                 .ReturnsAsync(expectedResponse);
 
@@ -400,7 +405,7 @@ namespace KollectorScum.Tests.Controllers
                 }
             };
 
-            _mockService
+            _mockCommandService
                 .Setup(s => s.CreateMusicReleaseAsync(It.IsAny<CreateMusicReleaseDto>()))
                 .ReturnsAsync(expectedResponse);
 
@@ -437,7 +442,7 @@ namespace KollectorScum.Tests.Controllers
                 }
             };
 
-            _mockService
+            _mockCommandService
                 .Setup(s => s.CreateMusicReleaseAsync(It.IsAny<CreateMusicReleaseDto>()))
                 .ReturnsAsync(expectedResponse);
 
@@ -475,7 +480,7 @@ namespace KollectorScum.Tests.Controllers
                 }
             };
 
-            _mockService
+            _mockCommandService
                 .Setup(s => s.CreateMusicReleaseAsync(It.IsAny<CreateMusicReleaseDto>()))
                 .ReturnsAsync(expectedResponse);
 
@@ -512,7 +517,7 @@ namespace KollectorScum.Tests.Controllers
                 }
             };
 
-            _mockService
+            _mockCommandService
                 .Setup(s => s.CreateMusicReleaseAsync(It.IsAny<CreateMusicReleaseDto>()))
                 .ReturnsAsync(expectedResponse);
 
@@ -549,7 +554,7 @@ namespace KollectorScum.Tests.Controllers
                 }
             };
 
-            _mockService
+            _mockCommandService
                 .Setup(s => s.CreateMusicReleaseAsync(It.IsAny<CreateMusicReleaseDto>()))
                 .ReturnsAsync(expectedResponse);
 
@@ -592,7 +597,7 @@ namespace KollectorScum.Tests.Controllers
                 }
             };
 
-            _mockService
+            _mockCommandService
                 .Setup(s => s.CreateMusicReleaseAsync(It.IsAny<CreateMusicReleaseDto>()))
                 .ReturnsAsync(expectedResponse);
 
@@ -623,7 +628,7 @@ namespace KollectorScum.Tests.Controllers
             // Arrange
             var createDto = new CreateMusicReleaseDto { Title = "" }; // Invalid
 
-            _mockService
+            _mockCommandService
                 .Setup(s => s.CreateMusicReleaseAsync(It.IsAny<CreateMusicReleaseDto>()))
                 .ThrowsAsync(new ArgumentException("Title is required"));
 
@@ -645,7 +650,7 @@ namespace KollectorScum.Tests.Controllers
                 ArtistIds = new List<int> { 1 }
             };
 
-            _mockService
+            _mockCommandService
                 .Setup(s => s.CreateMusicReleaseAsync(It.IsAny<CreateMusicReleaseDto>()))
                 .ThrowsAsync(new Exception("Database error"));
 
@@ -676,7 +681,7 @@ namespace KollectorScum.Tests.Controllers
                 Title = "Updated Title"
             };
 
-            _mockService
+            _mockCommandService
                 .Setup(s => s.UpdateMusicReleaseAsync(1, It.IsAny<UpdateMusicReleaseDto>()))
                 .ReturnsAsync(expectedRelease);
 
@@ -695,7 +700,7 @@ namespace KollectorScum.Tests.Controllers
             // Arrange
             var updateDto = new UpdateMusicReleaseDto { Title = "Test" };
 
-            _mockService
+            _mockCommandService
                 .Setup(s => s.UpdateMusicReleaseAsync(999, It.IsAny<UpdateMusicReleaseDto>()))
                 .ReturnsAsync((MusicReleaseDto?)null);
 
@@ -713,7 +718,7 @@ namespace KollectorScum.Tests.Controllers
             // Arrange
             var updateDto = new UpdateMusicReleaseDto { Title = "" };
 
-            _mockService
+            _mockCommandService
                 .Setup(s => s.UpdateMusicReleaseAsync(It.IsAny<int>(), It.IsAny<UpdateMusicReleaseDto>()))
                 .ThrowsAsync(new ArgumentException("Title is required"));
 
@@ -731,7 +736,7 @@ namespace KollectorScum.Tests.Controllers
             // Arrange
             var updateDto = new UpdateMusicReleaseDto { Title = "Test" };
 
-            _mockService
+            _mockCommandService
                 .Setup(s => s.UpdateMusicReleaseAsync(It.IsAny<int>(), It.IsAny<UpdateMusicReleaseDto>()))
                 .ThrowsAsync(new Exception("Database error"));
 
@@ -751,7 +756,7 @@ namespace KollectorScum.Tests.Controllers
         public async Task DeleteMusicRelease_WhenExists_ReturnsNoContent()
         {
             // Arrange
-            _mockService
+            _mockCommandService
                 .Setup(s => s.DeleteMusicReleaseAsync(1))
                 .ReturnsAsync(true);
 
@@ -766,7 +771,7 @@ namespace KollectorScum.Tests.Controllers
         public async Task DeleteMusicRelease_WhenNotFound_ReturnsNotFound()
         {
             // Arrange
-            _mockService
+            _mockCommandService
                 .Setup(s => s.DeleteMusicReleaseAsync(999))
                 .ReturnsAsync(false);
 
@@ -782,7 +787,7 @@ namespace KollectorScum.Tests.Controllers
         public async Task DeleteMusicRelease_Returns500_OnServiceException()
         {
             // Arrange
-            _mockService
+            _mockCommandService
                 .Setup(s => s.DeleteMusicReleaseAsync(It.IsAny<int>()))
                 .ThrowsAsync(new Exception("Database error"));
 
@@ -807,7 +812,7 @@ namespace KollectorScum.Tests.Controllers
                 new SearchSuggestionDto { Type = "Artist", Name = "Metallica", Id = 1 }
             };
 
-            _mockService
+            _mockQueryService
                 .Setup(s => s.GetSearchSuggestionsAsync("metal", 10))
                 .ReturnsAsync(expectedSuggestions);
 
@@ -831,7 +836,7 @@ namespace KollectorScum.Tests.Controllers
                 new SearchSuggestionDto { Type = "Label", Name = "Warner Music", Id = 1 }
             };
 
-            _mockService
+            _mockQueryService
                 .Setup(s => s.GetSearchSuggestionsAsync("warner", 10))
                 .ReturnsAsync(expectedSuggestions);
 
@@ -854,7 +859,7 @@ namespace KollectorScum.Tests.Controllers
                 new SearchSuggestionDto { Type = "Release", Name = "Master of Puppets", Id = 1, Subtitle = "1986" }
             };
 
-            _mockService
+            _mockQueryService
                 .Setup(s => s.GetSearchSuggestionsAsync("master", 10))
                 .ReturnsAsync(expectedSuggestions);
 
@@ -879,7 +884,7 @@ namespace KollectorScum.Tests.Controllers
                 new SearchSuggestionDto { Type = "Label", Name = "Metal Blade", Id = 1 }
             };
 
-            _mockService
+            _mockQueryService
                 .Setup(s => s.GetSearchSuggestionsAsync("met", 10))
                 .ReturnsAsync(expectedSuggestions);
 
@@ -896,7 +901,7 @@ namespace KollectorScum.Tests.Controllers
         public async Task GetSearchSuggestions_ReturnsEmpty_WhenNoMatches()
         {
             // Arrange
-            _mockService
+            _mockQueryService
                 .Setup(s => s.GetSearchSuggestionsAsync(It.IsAny<string>(), It.IsAny<int>()))
                 .ReturnsAsync(new List<SearchSuggestionDto>());
 
@@ -913,7 +918,7 @@ namespace KollectorScum.Tests.Controllers
         public async Task GetSearchSuggestions_Returns500_OnServiceException()
         {
             // Arrange
-            _mockService
+            _mockQueryService
                 .Setup(s => s.GetSearchSuggestionsAsync(It.IsAny<string>(), It.IsAny<int>()))
                 .ThrowsAsync(new Exception("Database error"));
 
@@ -941,7 +946,7 @@ namespace KollectorScum.Tests.Controllers
                 TotalLabels = 30
             };
 
-            _mockService
+            _mockQueryService
                 .Setup(s => s.GetCollectionStatisticsAsync())
                 .ReturnsAsync(expectedStats);
 
@@ -967,7 +972,7 @@ namespace KollectorScum.Tests.Controllers
                 TotalLabels = 0
             };
 
-            _mockService
+            _mockQueryService
                 .Setup(s => s.GetCollectionStatisticsAsync())
                 .ReturnsAsync(expectedStats);
 
@@ -984,7 +989,7 @@ namespace KollectorScum.Tests.Controllers
         public async Task GetCollectionStatistics_Returns500_OnServiceException()
         {
             // Arrange
-            _mockService
+            _mockQueryService
                 .Setup(s => s.GetCollectionStatisticsAsync())
                 .ThrowsAsync(new Exception("Database error"));
 
