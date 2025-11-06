@@ -55,6 +55,14 @@ builder.Services.AddScoped<IGenericCrudService<KollectorScum.Api.Models.Store, K
 builder.Services.AddScoped<IEntityResolverService, EntityResolverService>();
 builder.Services.AddScoped<IMusicReleaseMapperService, MusicReleaseMapperService>();
 builder.Services.AddScoped<ICollectionStatisticsService, CollectionStatisticsService>();
+
+// Register split music release services (Phase 1.2 refactoring)
+builder.Services.AddScoped<IMusicReleaseDuplicateDetector, MusicReleaseDuplicateDetector>();
+builder.Services.AddScoped<IMusicReleaseValidator, MusicReleaseValidator>();
+builder.Services.AddScoped<IMusicReleaseQueryService, MusicReleaseQueryService>();
+builder.Services.AddScoped<IMusicReleaseCommandService, MusicReleaseCommandService>();
+
+// Keep old service temporarily for compatibility (will be removed after test migration)
 builder.Services.AddScoped<IMusicReleaseService, MusicReleaseService>();
 
 // Register Discogs service

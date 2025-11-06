@@ -11,20 +11,24 @@ namespace KollectorScum.Api.Controllers
 {
     /// <summary>
     /// API controller for managing music releases
+    /// Uses separate services for queries and commands following CQRS principles
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class MusicReleasesController : ControllerBase
     {
-        private readonly IMusicReleaseService _musicReleaseService;
+        private readonly IMusicReleaseQueryService _queryService;
+        private readonly IMusicReleaseCommandService _commandService;
         private readonly ILogger<MusicReleasesController> _logger;
 
         public MusicReleasesController(
-            IMusicReleaseService musicReleaseService,
+            IMusicReleaseQueryService queryService,
+            IMusicReleaseCommandService commandService,
             ILogger<MusicReleasesController> logger)
         {
-            _musicReleaseService = musicReleaseService;
-            _logger = logger;
+            _queryService = queryService ?? throw new ArgumentNullException(nameof(queryService));
+            _commandService = commandService ?? throw new ArgumentNullException(nameof(commandService));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         /// <summary>
@@ -59,7 +63,7 @@ namespace KollectorScum.Api.Controllers
         {
             try
             {
-                var result = await _musicReleaseService.GetMusicReleasesAsync(
+                var result = await _queryService.GetMusicReleasesAsync(
                     search, artistId, genreId, labelId, countryId, formatId, 
                     live, yearFrom, yearTo, page, pageSize);
                 return Ok(result);
@@ -83,7 +87,7 @@ namespace KollectorScum.Api.Controllers
         {
             try
             {
-                var dto = await _musicReleaseService.GetMusicReleaseAsync(id);
+                var dto = await _queryService.GetMusicReleaseAsync(id);
                 
                 if (dto == null)
                 {
@@ -114,7 +118,7 @@ namespace KollectorScum.Api.Controllers
         {
             try
             {
-                var suggestions = await _musicReleaseService.GetSearchSuggestionsAsync(query, limit);
+                var suggestions = await _queryService.GetSearchSuggestionsAsync(query, limit);
                 return Ok(suggestions);
             }
             catch (Exception ex)
@@ -134,7 +138,7 @@ namespace KollectorScum.Api.Controllers
         {
             try
             {
-                var statistics = await _musicReleaseService.GetCollectionStatisticsAsync();
+                var statistics = await _queryService.GetCollectionStatisticsAsync();
                 return Ok(statistics);
             }
             catch (Exception ex)
@@ -157,7 +161,7 @@ namespace KollectorScum.Api.Controllers
         {
             try
             {
-                var response = await _musicReleaseService.CreateMusicReleaseAsync(createDto);
+                var response = await _commandService.CreateMusicReleaseAsync(createDto);
                 return CreatedAtAction(nameof(GetMusicRelease), new { id = response.Release.Id }, response);
             }
             catch (ArgumentException ex)
@@ -186,7 +190,7 @@ namespace KollectorScum.Api.Controllers
         {
             try
             {
-                var updatedRelease = await _musicReleaseService.UpdateMusicReleaseAsync(id, updateDto);
+                var updatedRelease = await _commandService.UpdateMusicReleaseAsync(id, updateDto);
                 
                 if (updatedRelease == null)
                 {
@@ -219,7 +223,7 @@ namespace KollectorScum.Api.Controllers
         {
             try
             {
-                var deleted = await _musicReleaseService.DeleteMusicReleaseAsync(id);
+                var deleted = await _commandService.DeleteMusicReleaseAsync(id);
                 
                 if (!deleted)
                 {
