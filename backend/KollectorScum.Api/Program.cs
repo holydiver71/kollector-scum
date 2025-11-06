@@ -42,6 +42,9 @@ builder.Services.AddScoped<IMusicReleaseImportService>(serviceProvider =>
 builder.Services.AddScoped(typeof(IRepository<>), typeof(KollectorScum.Api.Repositories.Repository<>));
 builder.Services.AddScoped<IUnitOfWork, KollectorScum.Api.Repositories.UnitOfWork>();
 
+// Register generic CRUD services
+builder.Services.AddScoped<IGenericCrudService<KollectorScum.Api.Models.Artist, KollectorScum.Api.DTOs.ArtistDto>, ArtistService>();
+
 // Register business logic services
 builder.Services.AddScoped<IEntityResolverService, EntityResolverService>();
 builder.Services.AddScoped<IMusicReleaseMapperService, MusicReleaseMapperService>();
