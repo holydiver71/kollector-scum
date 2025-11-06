@@ -1,31 +1,22 @@
 using Microsoft.AspNetCore.Mvc;
 using KollectorScum.Api.Interfaces;
-using KollectorScum.Api.Models;
 using KollectorScum.Api.DTOs;
-using System.Linq.Expressions;
 
 namespace KollectorScum.Api.Controllers
 {
     /// <summary>
     /// API controller for managing artists
     /// </summary>
-    [ApiController]
-    [Route("api/[controller]")]
-    [Produces("application/json")]
-    public class ArtistsController : ControllerBase
+    public class ArtistsController : BaseApiController
     {
-        private readonly IRepository<Artist> _artistRepository;
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly ILogger<ArtistsController> _logger;
+        private readonly IGenericCrudService<Models.Artist, ArtistDto> _artistService;
 
         public ArtistsController(
-            IRepository<Artist> artistRepository,
-            IUnitOfWork unitOfWork,
+            IGenericCrudService<Models.Artist, ArtistDto> artistService,
             ILogger<ArtistsController> logger)
+            : base(logger)
         {
-            _artistRepository = artistRepository;
-            _unitOfWork = unitOfWork;
-            _logger = logger;
+            _artistService = artistService ?? throw new ArgumentNullException(nameof(artistService));
         }
 
         [HttpGet]
@@ -38,40 +29,17 @@ namespace KollectorScum.Api.Controllers
         {
             try
             {
-                if (page < 1) return BadRequest("Page must be greater than 0");
-                if (pageSize < 1 || pageSize > 5000) return BadRequest("Page size must be between 1 and 5000");
+                var validationError = ValidatePaginationParameters(page, pageSize);
+                if (validationError != null) return validationError;
 
-                var filter = !string.IsNullOrEmpty(search)
-            ? (Expression<Func<Artist, bool>>)(a => a.Name.ToLower().Contains(search.ToLower()))
-            : null;
+                LogOperation("GetArtists", new { search, page, pageSize });
 
-                var pagedResult = await _artistRepository.GetPagedAsync(
-                    pageNumber: page,
-                    pageSize: pageSize,
-                    filter: filter,
-                    orderBy: query => query.OrderBy(a => a.Name));
-
-                var artistDtos = pagedResult.Items.Select(a => new ArtistDto
-                {
-                    Id = a.Id,
-                    Name = a.Name
-                }).ToList();
-
-                var result = new PagedResult<ArtistDto>
-                {
-                    Items = artistDtos,
-                    Page = pagedResult.Page,
-                    PageSize = pagedResult.PageSize,
-                    TotalCount = pagedResult.TotalCount,
-                    TotalPages = pagedResult.TotalPages
-                };
-
+                var result = await _artistService.GetAllAsync(page, pageSize, search);
                 return Ok(result);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting artists");
-                return StatusCode(500, "An error occurred while retrieving artists");
+                return HandleError(ex, nameof(GetArtists));
             }
         }
 
@@ -85,56 +53,43 @@ namespace KollectorScum.Api.Controllers
             {
                 if (id <= 0) return BadRequest("Artist ID must be greater than 0");
 
-                var artist = await _artistRepository.GetByIdAsync(id);
-                if (artist == null)
+                LogOperation("GetArtist", new { id });
+
+                var artistDto = await _artistService.GetByIdAsync(id);
+                if (artistDto == null)
                 {
                     return NotFound($"Artist with ID {id} not found");
                 }
-
-                var artistDto = new ArtistDto
-                {
-                    Id = artist.Id,
-                    Name = artist.Name
-                };
 
                 return Ok(artistDto);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting artist with ID: {ArtistId}", id);
-                return StatusCode(500, "An error occurred while retrieving the artist");
+                return HandleError(ex, nameof(GetArtist));
             }
         }
 
         [HttpPost]
         [ProducesResponseType(typeof(ArtistDto), 201)]
         [ProducesResponseType(400)]
-        [ProducesResponseType(409)]
-        public async Task<ActionResult<ArtistDto>> CreateArtist([FromBody] CreateArtistDto createArtistDto)
+        public async Task<ActionResult<ArtistDto>> CreateArtist([FromBody] ArtistDto createArtistDto)
         {
             try
             {
                 if (!ModelState.IsValid) return BadRequest(ModelState);
 
-                var existingArtist = await _artistRepository.GetFirstOrDefaultAsync(
-                    a => a.Name.ToLower() == createArtistDto.Name.ToLower());
+                LogOperation("CreateArtist", new { name = createArtistDto.Name });
 
-                if (existingArtist != null)
-                {
-                    return Conflict($"Artist with name '{createArtistDto.Name}' already exists");
-                }
-
-                var artist = new Artist { Name = createArtistDto.Name.Trim() };
-                await _artistRepository.AddAsync(artist);
-                await _unitOfWork.SaveChangesAsync();
-
-                var artistDto = new ArtistDto { Id = artist.Id, Name = artist.Name };
-                return CreatedAtAction(nameof(GetArtist), new { id = artist.Id }, artistDto);
+                var artistDto = await _artistService.CreateAsync(createArtistDto);
+                return CreatedAtAction(nameof(GetArtist), new { id = artistDto.Id }, artistDto);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating artist: {ArtistName}", createArtistDto.Name);
-                return StatusCode(500, "An error occurred while creating the artist");
+                return HandleError(ex, nameof(CreateArtist));
             }
         }
 
@@ -142,36 +97,30 @@ namespace KollectorScum.Api.Controllers
         [ProducesResponseType(typeof(ArtistDto), 200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
-        [ProducesResponseType(409)]
-        public async Task<ActionResult<ArtistDto>> UpdateArtist(int id, [FromBody] UpdateArtistDto updateArtistDto)
+        public async Task<ActionResult<ArtistDto>> UpdateArtist(int id, [FromBody] ArtistDto updateArtistDto)
         {
             try
             {
                 if (id <= 0) return BadRequest("Artist ID must be greater than 0");
                 if (!ModelState.IsValid) return BadRequest(ModelState);
 
-                var artist = await _artistRepository.GetByIdAsync(id);
-                if (artist == null) return NotFound($"Artist with ID {id} not found");
+                LogOperation("UpdateArtist", new { id, name = updateArtistDto.Name });
 
-                var existingArtist = await _artistRepository.GetFirstOrDefaultAsync(
-                    a => a.Name.ToLower() == updateArtistDto.Name.ToLower() && a.Id != id);
-
-                if (existingArtist != null)
+                var artistDto = await _artistService.UpdateAsync(id, updateArtistDto);
+                if (artistDto == null)
                 {
-                    return Conflict($"Another artist with name '{updateArtistDto.Name}' already exists");
+                    return NotFound($"Artist with ID {id} not found");
                 }
 
-                artist.Name = updateArtistDto.Name.Trim();
-                _artistRepository.Update(artist);
-                await _unitOfWork.SaveChangesAsync();
-
-                var artistDto = new ArtistDto { Id = artist.Id, Name = artist.Name };
                 return Ok(artistDto);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating artist ID: {ArtistId}", id);
-                return StatusCode(500, "An error occurred while updating the artist");
+                return HandleError(ex, nameof(UpdateArtist));
             }
         }
 
@@ -179,33 +128,25 @@ namespace KollectorScum.Api.Controllers
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
-        [ProducesResponseType(409)]
         public async Task<IActionResult> DeleteArtist(int id)
         {
             try
             {
                 if (id <= 0) return BadRequest("Artist ID must be greater than 0");
 
-                var artist = await _artistRepository.GetByIdAsync(id);
-                if (artist == null) return NotFound($"Artist with ID {id} not found");
+                LogOperation("DeleteArtist", new { id });
 
-                var hasReferences = await _artistRepository.AnyAsync(
-                    a => a.Id == id && a.MusicReleases.Any());
-
-                if (hasReferences)
+                var deleted = await _artistService.DeleteAsync(id);
+                if (!deleted)
                 {
-                    return Conflict("Cannot delete artist that is referenced by music releases");
+                    return NotFound($"Artist with ID {id} not found");
                 }
-
-                await _artistRepository.DeleteAsync(id);
-                await _unitOfWork.SaveChangesAsync();
 
                 return NoContent();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting artist ID: {ArtistId}", id);
-                return StatusCode(500, "An error occurred while deleting the artist");
+                return HandleError(ex, nameof(DeleteArtist));
             }
         }
     }
