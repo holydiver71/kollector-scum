@@ -1,31 +1,22 @@
 using Microsoft.AspNetCore.Mvc;
 using KollectorScum.Api.Interfaces;
-using KollectorScum.Api.Models;
 using KollectorScum.Api.DTOs;
-using System.Linq.Expressions;
 
 namespace KollectorScum.Api.Controllers
 {
     /// <summary>
     /// API controller for managing genres
     /// </summary>
-    [ApiController]
-    [Route("api/[controller]")]
-    [Produces("application/json")]
-    public class GenresController : ControllerBase
+    public class GenresController : BaseApiController
     {
-        private readonly IRepository<Genre> _genreRepository;
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly ILogger<GenresController> _logger;
+        private readonly IGenericCrudService<Models.Genre, GenreDto> _genreService;
 
         public GenresController(
-            IRepository<Genre> genreRepository,
-            IUnitOfWork unitOfWork,
+            IGenericCrudService<Models.Genre, GenreDto> genreService,
             ILogger<GenresController> logger)
+            : base(logger)
         {
-            _genreRepository = genreRepository;
-            _unitOfWork = unitOfWork;
-            _logger = logger;
+            _genreService = genreService ?? throw new ArgumentNullException(nameof(genreService));
         }
 
         [HttpGet]
@@ -38,42 +29,17 @@ namespace KollectorScum.Api.Controllers
         {
             try
             {
-                if (page < 1) return BadRequest("Page must be greater than 0");
-                if (pageSize < 1 || pageSize > 5000) return BadRequest("Page size must be between 1 and 5000");
+                var validationError = ValidatePaginationParameters(page, pageSize);
+                if (validationError != null) return validationError;
 
-                Expression<Func<Genre, bool>>? filter = null;
-                if (!string.IsNullOrWhiteSpace(search))
-                {
-                    filter = g => g.Name.ToLower().Contains(search.ToLower());
-                }
+                LogOperation("GetGenres", new { search, page, pageSize });
 
-                var pagedResult = await _genreRepository.GetPagedAsync(
-                    pageNumber: page,
-                    pageSize: pageSize,
-                    filter: filter,
-                    orderBy: query => query.OrderBy(g => g.Name));
-
-                var genreDtos = pagedResult.Items.Select(g => new GenreDto
-                {
-                    Id = g.Id,
-                    Name = g.Name
-                }).ToList();
-
-                var result = new PagedResult<GenreDto>
-                {
-                    Items = genreDtos,
-                    Page = pagedResult.Page,
-                    PageSize = pagedResult.PageSize,
-                    TotalCount = pagedResult.TotalCount,
-                    TotalPages = pagedResult.TotalPages
-                };
-
+                var result = await _genreService.GetAllAsync(page, pageSize, search);
                 return Ok(result);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting genres");
-                return StatusCode(500, "An error occurred while retrieving genres");
+                return HandleError(ex, nameof(GetGenres));
             }
         }
 
@@ -87,56 +53,43 @@ namespace KollectorScum.Api.Controllers
             {
                 if (id <= 0) return BadRequest("Genre ID must be greater than 0");
 
-                var genre = await _genreRepository.GetByIdAsync(id);
-                if (genre == null)
+                LogOperation("GetGenre", new { id });
+
+                var genreDto = await _genreService.GetByIdAsync(id);
+                if (genreDto == null)
                 {
                     return NotFound($"Genre with ID {id} not found");
                 }
-
-                var genreDto = new GenreDto
-                {
-                    Id = genre.Id,
-                    Name = genre.Name
-                };
 
                 return Ok(genreDto);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting genre with ID: {GenreId}", id);
-                return StatusCode(500, "An error occurred while retrieving the genre");
+                return HandleError(ex, nameof(GetGenre));
             }
         }
 
         [HttpPost]
         [ProducesResponseType(typeof(GenreDto), 201)]
         [ProducesResponseType(400)]
-        [ProducesResponseType(409)]
-        public async Task<ActionResult<GenreDto>> CreateGenre([FromBody] CreateGenreDto createGenreDto)
+        public async Task<ActionResult<GenreDto>> CreateGenre([FromBody] GenreDto createGenreDto)
         {
             try
             {
                 if (!ModelState.IsValid) return BadRequest(ModelState);
 
-                var existingGenre = await _genreRepository.GetFirstOrDefaultAsync(
-                    g => g.Name.ToLower() == createGenreDto.Name.ToLower());
+                LogOperation("CreateGenre", new { name = createGenreDto.Name });
 
-                if (existingGenre != null)
-                {
-                    return Conflict($"Genre with name '{createGenreDto.Name}' already exists");
-                }
-
-                var genre = new Genre { Name = createGenreDto.Name.Trim() };
-                await _genreRepository.AddAsync(genre);
-                await _unitOfWork.SaveChangesAsync();
-
-                var genreDto = new GenreDto { Id = genre.Id, Name = genre.Name };
-                return CreatedAtAction(nameof(GetGenre), new { id = genre.Id }, genreDto);
+                var genreDto = await _genreService.CreateAsync(createGenreDto);
+                return CreatedAtAction(nameof(GetGenre), new { id = genreDto.Id }, genreDto);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating genre: {GenreName}", createGenreDto.Name);
-                return StatusCode(500, "An error occurred while creating the genre");
+                return HandleError(ex, nameof(CreateGenre));
             }
         }
 
@@ -144,36 +97,30 @@ namespace KollectorScum.Api.Controllers
         [ProducesResponseType(typeof(GenreDto), 200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
-        [ProducesResponseType(409)]
-        public async Task<ActionResult<GenreDto>> UpdateGenre(int id, [FromBody] UpdateGenreDto updateGenreDto)
+        public async Task<ActionResult<GenreDto>> UpdateGenre(int id, [FromBody] GenreDto updateGenreDto)
         {
             try
             {
                 if (id <= 0) return BadRequest("Genre ID must be greater than 0");
                 if (!ModelState.IsValid) return BadRequest(ModelState);
 
-                var genre = await _genreRepository.GetByIdAsync(id);
-                if (genre == null) return NotFound($"Genre with ID {id} not found");
+                LogOperation("UpdateGenre", new { id, name = updateGenreDto.Name });
 
-                var existingGenre = await _genreRepository.GetFirstOrDefaultAsync(
-                    g => g.Name.ToLower() == updateGenreDto.Name.ToLower() && g.Id != id);
-
-                if (existingGenre != null)
+                var genreDto = await _genreService.UpdateAsync(id, updateGenreDto);
+                if (genreDto == null)
                 {
-                    return Conflict($"Another genre with name '{updateGenreDto.Name}' already exists");
+                    return NotFound($"Genre with ID {id} not found");
                 }
 
-                genre.Name = updateGenreDto.Name.Trim();
-                _genreRepository.Update(genre);
-                await _unitOfWork.SaveChangesAsync();
-
-                var genreDto = new GenreDto { Id = genre.Id, Name = genre.Name };
                 return Ok(genreDto);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating genre ID: {GenreId}", id);
-                return StatusCode(500, "An error occurred while updating the genre");
+                return HandleError(ex, nameof(UpdateGenre));
             }
         }
 
@@ -181,33 +128,25 @@ namespace KollectorScum.Api.Controllers
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
-        [ProducesResponseType(409)]
         public async Task<IActionResult> DeleteGenre(int id)
         {
             try
             {
                 if (id <= 0) return BadRequest("Genre ID must be greater than 0");
 
-                var genre = await _genreRepository.GetByIdAsync(id);
-                if (genre == null) return NotFound($"Genre with ID {id} not found");
+                LogOperation("DeleteGenre", new { id });
 
-                var hasReferences = await _genreRepository.AnyAsync(
-                    g => g.Id == id && g.MusicReleases.Any());
-
-                if (hasReferences)
+                var deleted = await _genreService.DeleteAsync(id);
+                if (!deleted)
                 {
-                    return Conflict("Cannot delete genre that is referenced by music releases");
+                    return NotFound($"Genre with ID {id} not found");
                 }
-
-                await _genreRepository.DeleteAsync(id);
-                await _unitOfWork.SaveChangesAsync();
 
                 return NoContent();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting genre ID: {GenreId}", id);
-                return StatusCode(500, "An error occurred while deleting the genre");
+                return HandleError(ex, nameof(DeleteGenre));
             }
         }
     }
