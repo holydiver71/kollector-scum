@@ -1,31 +1,22 @@
 using Microsoft.AspNetCore.Mvc;
 using KollectorScum.Api.Interfaces;
-using KollectorScum.Api.Models;
 using KollectorScum.Api.DTOs;
-using System.Linq.Expressions;
 
 namespace KollectorScum.Api.Controllers
 {
     /// <summary>
-    /// API controller for managing packaging types
+    /// API controller for managing packagings
     /// </summary>
-    [ApiController]
-    [Route("api/[controller]")]
-    [Produces("application/json")]
-    public class PackagingsController : ControllerBase
+    public class PackagingsController : BaseApiController
     {
-        private readonly IRepository<Packaging> _packagingRepository;
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly ILogger<PackagingsController> _logger;
+        private readonly IGenericCrudService<Models.Packaging, PackagingDto> _packagingService;
 
         public PackagingsController(
-            IRepository<Packaging> packagingRepository,
-            IUnitOfWork unitOfWork,
+            IGenericCrudService<Models.Packaging, PackagingDto> packagingService,
             ILogger<PackagingsController> logger)
+            : base(logger)
         {
-            _packagingRepository = packagingRepository;
-            _unitOfWork = unitOfWork;
-            _logger = logger;
+            _packagingService = packagingService ?? throw new ArgumentNullException(nameof(packagingService));
         }
 
         [HttpGet]
@@ -38,42 +29,17 @@ namespace KollectorScum.Api.Controllers
         {
             try
             {
-                if (page < 1) return BadRequest("Page must be greater than 0");
-                if (pageSize < 1 || pageSize > 5000) return BadRequest("Page size must be between 1 and 5000");
+                var validationError = ValidatePaginationParameters(page, pageSize);
+                if (validationError != null) return validationError;
 
-                Expression<Func<Packaging, bool>>? filter = null;
-                if (!string.IsNullOrWhiteSpace(search))
-                {
-                    filter = p => p.Name.ToLower().Contains(search.ToLower());
-                }
+                LogOperation("GetPackagings", new { search, page, pageSize });
 
-                var pagedResult = await _packagingRepository.GetPagedAsync(
-                    pageNumber: page,
-                    pageSize: pageSize,
-                    filter: filter,
-                    orderBy: query => query.OrderBy(p => p.Name));
-
-                var packagingDtos = pagedResult.Items.Select(p => new PackagingDto
-                {
-                    Id = p.Id,
-                    Name = p.Name
-                }).ToList();
-
-                var result = new PagedResult<PackagingDto>
-                {
-                    Items = packagingDtos,
-                    Page = pagedResult.Page,
-                    PageSize = pagedResult.PageSize,
-                    TotalCount = pagedResult.TotalCount,
-                    TotalPages = pagedResult.TotalPages
-                };
-
+                var result = await _packagingService.GetAllAsync(page, pageSize, search);
                 return Ok(result);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting packagings");
-                return StatusCode(500, "An error occurred while retrieving packagings");
+                return HandleError(ex, nameof(GetPackagings));
             }
         }
 
@@ -87,56 +53,43 @@ namespace KollectorScum.Api.Controllers
             {
                 if (id <= 0) return BadRequest("Packaging ID must be greater than 0");
 
-                var packaging = await _packagingRepository.GetByIdAsync(id);
-                if (packaging == null)
+                LogOperation("GetPackaging", new { id });
+
+                var packagingDto = await _packagingService.GetByIdAsync(id);
+                if (packagingDto == null)
                 {
                     return NotFound($"Packaging with ID {id} not found");
                 }
-
-                var packagingDto = new PackagingDto
-                {
-                    Id = packaging.Id,
-                    Name = packaging.Name
-                };
 
                 return Ok(packagingDto);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting packaging with ID: {PackagingId}", id);
-                return StatusCode(500, "An error occurred while retrieving the packaging");
+                return HandleError(ex, nameof(GetPackaging));
             }
         }
 
         [HttpPost]
         [ProducesResponseType(typeof(PackagingDto), 201)]
         [ProducesResponseType(400)]
-        [ProducesResponseType(409)]
-        public async Task<ActionResult<PackagingDto>> CreatePackaging([FromBody] CreatePackagingDto createPackagingDto)
+        public async Task<ActionResult<PackagingDto>> CreatePackaging([FromBody] PackagingDto createPackagingDto)
         {
             try
             {
                 if (!ModelState.IsValid) return BadRequest(ModelState);
 
-                var existingPackaging = await _packagingRepository.GetFirstOrDefaultAsync(
-                    p => p.Name.ToLower() == createPackagingDto.Name.ToLower());
+                LogOperation("CreatePackaging", new { name = createPackagingDto.Name });
 
-                if (existingPackaging != null)
-                {
-                    return Conflict($"Packaging with name '{createPackagingDto.Name}' already exists");
-                }
-
-                var packaging = new Packaging { Name = createPackagingDto.Name.Trim() };
-                await _packagingRepository.AddAsync(packaging);
-                await _unitOfWork.SaveChangesAsync();
-
-                var packagingDto = new PackagingDto { Id = packaging.Id, Name = packaging.Name };
-                return CreatedAtAction(nameof(GetPackaging), new { id = packaging.Id }, packagingDto);
+                var packagingDto = await _packagingService.CreateAsync(createPackagingDto);
+                return CreatedAtAction(nameof(GetPackaging), new { id = packagingDto.Id }, packagingDto);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating packaging: {PackagingName}", createPackagingDto.Name);
-                return StatusCode(500, "An error occurred while creating the packaging");
+                return HandleError(ex, nameof(CreatePackaging));
             }
         }
 
@@ -144,36 +97,30 @@ namespace KollectorScum.Api.Controllers
         [ProducesResponseType(typeof(PackagingDto), 200)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
-        [ProducesResponseType(409)]
-        public async Task<ActionResult<PackagingDto>> UpdatePackaging(int id, [FromBody] UpdatePackagingDto updatePackagingDto)
+        public async Task<ActionResult<PackagingDto>> UpdatePackaging(int id, [FromBody] PackagingDto updatePackagingDto)
         {
             try
             {
                 if (id <= 0) return BadRequest("Packaging ID must be greater than 0");
                 if (!ModelState.IsValid) return BadRequest(ModelState);
 
-                var packaging = await _packagingRepository.GetByIdAsync(id);
-                if (packaging == null) return NotFound($"Packaging with ID {id} not found");
+                LogOperation("UpdatePackaging", new { id, name = updatePackagingDto.Name });
 
-                var existingPackaging = await _packagingRepository.GetFirstOrDefaultAsync(
-                    p => p.Name.ToLower() == updatePackagingDto.Name.ToLower() && p.Id != id);
-
-                if (existingPackaging != null)
+                var packagingDto = await _packagingService.UpdateAsync(id, updatePackagingDto);
+                if (packagingDto == null)
                 {
-                    return Conflict($"Another packaging with name '{updatePackagingDto.Name}' already exists");
+                    return NotFound($"Packaging with ID {id} not found");
                 }
 
-                packaging.Name = updatePackagingDto.Name.Trim();
-                _packagingRepository.Update(packaging);
-                await _unitOfWork.SaveChangesAsync();
-
-                var packagingDto = new PackagingDto { Id = packaging.Id, Name = packaging.Name };
                 return Ok(packagingDto);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating packaging ID: {PackagingId}", id);
-                return StatusCode(500, "An error occurred while updating the packaging");
+                return HandleError(ex, nameof(UpdatePackaging));
             }
         }
 
@@ -181,33 +128,25 @@ namespace KollectorScum.Api.Controllers
         [ProducesResponseType(204)]
         [ProducesResponseType(400)]
         [ProducesResponseType(404)]
-        [ProducesResponseType(409)]
         public async Task<IActionResult> DeletePackaging(int id)
         {
             try
             {
                 if (id <= 0) return BadRequest("Packaging ID must be greater than 0");
 
-                var packaging = await _packagingRepository.GetByIdAsync(id);
-                if (packaging == null) return NotFound($"Packaging with ID {id} not found");
+                LogOperation("DeletePackaging", new { id });
 
-                var hasReferences = await _packagingRepository.AnyAsync(
-                    p => p.Id == id && p.MusicReleases.Any());
-
-                if (hasReferences)
+                var deleted = await _packagingService.DeleteAsync(id);
+                if (!deleted)
                 {
-                    return Conflict("Cannot delete packaging that is referenced by music releases");
+                    return NotFound($"Packaging with ID {id} not found");
                 }
-
-                await _packagingRepository.DeleteAsync(id);
-                await _unitOfWork.SaveChangesAsync();
 
                 return NoContent();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting packaging ID: {PackagingId}", id);
-                return StatusCode(500, "An error occurred while deleting the packaging");
+                return HandleError(ex, nameof(DeletePackaging));
             }
         }
     }

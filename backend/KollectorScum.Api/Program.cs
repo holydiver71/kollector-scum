@@ -44,6 +44,12 @@ builder.Services.AddScoped<IUnitOfWork, KollectorScum.Api.Repositories.UnitOfWor
 
 // Register generic CRUD services
 builder.Services.AddScoped<IGenericCrudService<KollectorScum.Api.Models.Artist, KollectorScum.Api.DTOs.ArtistDto>, ArtistService>();
+builder.Services.AddScoped<IGenericCrudService<KollectorScum.Api.Models.Genre, KollectorScum.Api.DTOs.GenreDto>, GenreService>();
+builder.Services.AddScoped<IGenericCrudService<KollectorScum.Api.Models.Label, KollectorScum.Api.DTOs.LabelDto>, LabelService>();
+builder.Services.AddScoped<IGenericCrudService<KollectorScum.Api.Models.Country, KollectorScum.Api.DTOs.CountryDto>, CountryService>();
+builder.Services.AddScoped<IGenericCrudService<KollectorScum.Api.Models.Format, KollectorScum.Api.DTOs.FormatDto>, FormatService>();
+builder.Services.AddScoped<IGenericCrudService<KollectorScum.Api.Models.Packaging, KollectorScum.Api.DTOs.PackagingDto>, PackagingService>();
+builder.Services.AddScoped<IGenericCrudService<KollectorScum.Api.Models.Store, KollectorScum.Api.DTOs.StoreDto>, StoreService>();
 
 // Register business logic services
 builder.Services.AddScoped<IEntityResolverService, EntityResolverService>();
