@@ -238,58 +238,80 @@ This ensures:
   - [x] Genre selection (multi-select - now ComboBox)
   - [x] Catalog number
   - [x] Barcode
-  - [ ] Packaging dropdown
-  - [ ] Purchase info (store, date, price)
-  - [ ] Notes/description
-  - [ ] Images (URLs or upload)
-  - [ ] External links (Discogs, Spotify, etc.)
-- [ ] Implement form validation with real-time feedback
-- [ ] Add field-level error messages
-- [ ] Implement multi-select components for artists and genres
-- [ ] Add image preview functionality
-- [ ] Implement track list editor
-  - [ ] Add/remove tracks
-  - [ ] Track position, title, duration
-  - [ ] Track-specific artists (if different from album)
+  - [x] Packaging dropdown (now ComboBox)
+  - [x] Purchase info (store, date, price, currency, notes)
+  - [x] Notes/description (in purchase info section)
+  - [x] Images (URLs with preview)
+  - [x] External links (Discogs, Spotify, etc.)
+- [x] Implement form validation with real-time feedback
+  - [x] URL validation for images
+  - [x] URL validation for external links
+  - [x] Price validation (non-negative)
+  - [x] Track title validation
+  - [x] Link type required when URL provided
+- [x] Add field-level error messages
+  - [x] Title, Artists (required fields)
+  - [x] Image URLs (format validation)
+  - [x] Price (negative check)
+  - [x] External links (URL format and type required)
+- [x] Implement multi-select components for artists and genres (via ComboBox)
+- [x] Add image preview functionality
+  - [x] Front cover preview
+  - [x] Back cover preview
+  - [x] Thumbnail preview
+  - [x] Error handling for failed image loads
+- [x] Implement track list editor
+  - [x] Add/remove tracks
+  - [x] Add/remove discs/media
+  - [x] Track position, title, duration (M:SS format)
+  - [x] Track-specific artists (comma-separated)
+  - [x] Track-specific genres (comma-separated)
+  - [x] Live checkbox per track
+  - [x] Collapsible disc sections
 
 ### 3.2 Form State Management
-- [ ] Create form state using React hooks (useState)
-- [ ] Implement form submission handler
-- [ ] Add loading states during submission
-- [ ] Add success/error notifications
+- [x] Create form state using React hooks (useState)
+- [x] Implement form submission handler
+- [x] Add loading states during submission
+- [x] Add success/error notifications (error display, success handled via callback)
 - [ ] Implement form reset after successful submission
 - [ ] Add unsaved changes warning
 - [ ] Implement draft saving (localStorage)
 
-### 3.3 Form Integration with Lookup Data
-- [ ] Integrate existing lookup dropdown components
-- [ ] **Implement combo-box functionality: select existing OR type new value**
-  - [ ] Dropdown shows existing artists with search/filter
-  - [ ] User can also type new artist name (not in list)
-  - [ ] Same for labels, genres, countries, formats, packaging
-  - [ ] Show badge/indicator for "Will create new entry"
-- [ ] Implement "Add new" functionality for lookup items
-  - [ ] Quick-add artist modal (optional alternative)
-  - [ ] Quick-add label modal (optional alternative)
-  - [ ] Quick-add genre modal (optional alternative)
-  - [ ] Quick-add country modal (optional alternative)
-  - [ ] Quick-add format modal (optional alternative)
-  - [ ] Quick-add packaging modal (optional alternative)
-- [ ] Add validation for lookup selections
-- [ ] Handle lookup data loading states
-- [ ] **Store new lookup names temporarily until submission**
-- [ ] **Backend handles creation of new entities during release save**
+### 3.3 Form Integration with Lookup Data ✅
+- [x] Integrate existing lookup dropdown components
+- [x] **Implement combo-box functionality: select existing OR type new value**
+  - [x] Dropdown shows existing artists with search/filter
+  - [x] User can also type new artist name (not in list)
+  - [x] Same for labels, genres, countries, formats, packaging
+  - [x] Show badge/indicator for "Will create new entry" (green badges with ✨)
+- [x] Implement "Add new" functionality for lookup items (via ComboBox)
+  - [x] Artists (multi-select with create)
+  - [x] Labels (single-select with create)
+  - [x] Genres (multi-select with create)
+  - [x] Countries (single-select with create)
+  - [x] Formats (single-select with create)
+  - [x] Packaging (single-select with create)
+  - [x] Stores (single-select with create, for purchase info)
+- [x] Add validation for lookup selections
+- [x] Handle lookup data loading states
+- [x] **Store new lookup names temporarily until submission**
+- [x] **Backend handles creation of new entities during release save**
 
-### 3.4 Track List Component
-- [ ] Create `TrackListEditor` component
-- [ ] Implement add track functionality
-- [ ] Implement remove track functionality
-- [ ] Implement reorder tracks (drag & drop optional)
-- [ ] Add track validation (position, title required)
-- [ ] Handle track duration input (format validation)
-- [ ] Add track-specific artist selection
+### 3.4 Track List Component ✅
+- [x] Create `TrackListEditor` component
+- [x] Implement add track functionality
+- [x] Implement remove track functionality
+- [x] Implement reorder tracks (drag & drop optional) - Manual reorder via remove/add
+- [x] Add track validation (position, title required)
+- [x] Handle track duration input (format validation) - M:SS format with parse/format
+- [x] Add track-specific artist selection
+- [x] Add track-specific genre selection
+- [x] Add live checkbox per track
+- [x] Multi-disc/media support with collapsible sections
+- [x] Auto-reindexing when tracks are removed
 
-**Milestone**: Complete manual data entry form with validation and lookup integration
+**Milestone**: ✅ Complete manual data entry form with validation and lookup integration
 
 ---
 
