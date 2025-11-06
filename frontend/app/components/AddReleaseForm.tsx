@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { fetchJson } from "../lib/api";
 import ComboBox, { ComboBoxItem } from "./ComboBox";
+import TrackListEditor, { Media } from "./TrackListEditor";
 
 // Lookup data interfaces
 interface LookupItem {
@@ -144,9 +145,20 @@ export default function AddReleaseForm({ onSuccess, onCancel }: AddReleaseFormPr
     }
   };
 
+  const validateUrl = (url: string): boolean => {
+    if (!url) return true; // Empty is okay for optional fields
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
 
+    // Required fields
     if (!formData.title.trim()) {
       errors.title = "Title is required";
     }
@@ -155,6 +167,43 @@ export default function AddReleaseForm({ onSuccess, onCancel }: AddReleaseFormPr
     if (formData.artistIds.length === 0 && (!formData.artistNames || formData.artistNames.length === 0)) {
       errors.artists = "At least one artist is required";
     }
+
+    // Validate image URLs
+    if (formData.images?.coverFront && !validateUrl(formData.images.coverFront)) {
+      errors.coverFront = "Invalid URL format";
+    }
+    if (formData.images?.coverBack && !validateUrl(formData.images.coverBack)) {
+      errors.coverBack = "Invalid URL format";
+    }
+    if (formData.images?.thumbnail && !validateUrl(formData.images.thumbnail)) {
+      errors.thumbnail = "Invalid URL format";
+    }
+
+    // Validate external links
+    formData.links?.forEach((link, index) => {
+      if (link.url && !validateUrl(link.url)) {
+        errors[`link${index}`] = "Invalid URL format";
+      }
+      if (link.url && !link.type) {
+        errors[`linkType${index}`] = "Link type is required when URL is provided";
+      }
+    });
+
+    // Validate purchase info
+    if (formData.purchaseInfo?.price !== undefined) {
+      if (formData.purchaseInfo.price < 0) {
+        errors.price = "Price cannot be negative";
+      }
+    }
+
+    // Validate tracks
+    formData.media?.forEach((disc, discIndex) => {
+      disc.tracks.forEach((track, trackIndex) => {
+        if (!track.title.trim()) {
+          errors[`track${discIndex}_${trackIndex}`] = "Track title is required";
+        }
+      });
+    });
 
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
@@ -438,6 +487,324 @@ export default function AddReleaseForm({ onSuccess, onCancel }: AddReleaseFormPr
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="Enter UPC/barcode"
           />
+        </div>
+      </div>
+
+      {/* Purchase Information */}
+      <div className="bg-white rounded-lg shadow-sm border p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Purchase Information (Optional)</h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <ComboBox
+              label="Store"
+              items={stores}
+              value={formData.purchaseInfo?.storeId || null}
+              newValues={newStoreName}
+              onChange={(selectedIds, selectedNames) => {
+                updateField("purchaseInfo", {
+                  ...formData.purchaseInfo,
+                  storeId: selectedIds[0],
+                  storeName: selectedNames[0],
+                });
+                setNewStoreName(selectedNames);
+              }}
+              multiple={false}
+              allowCreate={true}
+              placeholder="Select or add store..."
+            />
+          </div>
+
+          <div>
+            <label htmlFor="purchaseDate" className="block text-sm font-medium text-gray-700 mb-1">
+              Purchase Date
+            </label>
+            <input
+              type="date"
+              id="purchaseDate"
+              value={formData.purchaseInfo?.purchaseDate || ""}
+              onChange={(e) => updateField("purchaseInfo", {
+                ...formData.purchaseInfo,
+                purchaseDate: e.target.value,
+              })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">
+              Price
+            </label>
+            <input
+              type="number"
+              id="price"
+              step="0.01"
+              min="0"
+              value={formData.purchaseInfo?.price || ""}
+              onChange={(e) => updateField("purchaseInfo", {
+                ...formData.purchaseInfo,
+                price: parseFloat(e.target.value) || undefined,
+              })}
+              className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                validationErrors.price ? "border-red-500" : "border-gray-300"
+              }`}
+              placeholder="0.00"
+            />
+            {validationErrors.price && (
+              <p className="mt-1 text-sm text-red-600">{validationErrors.price}</p>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="currency" className="block text-sm font-medium text-gray-700 mb-1">
+              Currency
+            </label>
+            <select
+              id="currency"
+              value={formData.purchaseInfo?.currency || "USD"}
+              onChange={(e) => updateField("purchaseInfo", {
+                ...formData.purchaseInfo,
+                currency: e.target.value,
+              })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="USD">USD ($)</option>
+              <option value="EUR">EUR (€)</option>
+              <option value="GBP">GBP (£)</option>
+              <option value="JPY">JPY (¥)</option>
+              <option value="CAD">CAD ($)</option>
+              <option value="AUD">AUD ($)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="purchaseNotes" className="block text-sm font-medium text-gray-700 mb-1">
+            Purchase Notes
+          </label>
+          <textarea
+            id="purchaseNotes"
+            rows={2}
+            value={formData.purchaseInfo?.notes || ""}
+            onChange={(e) => updateField("purchaseInfo", {
+              ...formData.purchaseInfo,
+              notes: e.target.value,
+            })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Additional purchase details..."
+          />
+        </div>
+      </div>
+
+      {/* Images */}
+      <div className="bg-white rounded-lg shadow-sm border p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Images (Optional)</h2>
+        
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="coverFront" className="block text-sm font-medium text-gray-700 mb-1">
+              Front Cover URL
+            </label>
+            <input
+              type="url"
+              id="coverFront"
+              value={formData.images?.coverFront || ""}
+              onChange={(e) => updateField("images", {
+                ...formData.images,
+                coverFront: e.target.value,
+              })}
+              className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                validationErrors.coverFront ? "border-red-500" : "border-gray-300"
+              }`}
+              placeholder="https://example.com/front-cover.jpg"
+            />
+            {validationErrors.coverFront && (
+              <p className="mt-1 text-sm text-red-600">{validationErrors.coverFront}</p>
+            )}
+            {formData.images?.coverFront && (
+              <div className="mt-2">
+                <img 
+                  src={formData.images.coverFront} 
+                  alt="Front cover preview" 
+                  className="h-32 w-32 object-cover rounded border"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="coverBack" className="block text-sm font-medium text-gray-700 mb-1">
+              Back Cover URL
+            </label>
+            <input
+              type="url"
+              id="coverBack"
+              value={formData.images?.coverBack || ""}
+              onChange={(e) => updateField("images", {
+                ...formData.images,
+                coverBack: e.target.value,
+              })}
+              className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                validationErrors.coverBack ? "border-red-500" : "border-gray-300"
+              }`}
+              placeholder="https://example.com/back-cover.jpg"
+            />
+            {validationErrors.coverBack && (
+              <p className="mt-1 text-sm text-red-600">{validationErrors.coverBack}</p>
+            )}
+            {formData.images?.coverBack && (
+              <div className="mt-2">
+                <img 
+                  src={formData.images.coverBack} 
+                  alt="Back cover preview" 
+                  className="h-32 w-32 object-cover rounded border"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              </div>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor="thumbnail" className="block text-sm font-medium text-gray-700 mb-1">
+              Thumbnail URL
+            </label>
+            <input
+              type="url"
+              id="thumbnail"
+              value={formData.images?.thumbnail || ""}
+              onChange={(e) => updateField("images", {
+                ...formData.images,
+                thumbnail: e.target.value,
+              })}
+              className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                validationErrors.thumbnail ? "border-red-500" : "border-gray-300"
+              }`}
+              placeholder="https://example.com/thumbnail.jpg"
+            />
+            {validationErrors.thumbnail && (
+              <p className="mt-1 text-sm text-red-600">{validationErrors.thumbnail}</p>
+            )}
+            {formData.images?.thumbnail && (
+              <div className="mt-2">
+                <img 
+                  src={formData.images.thumbnail} 
+                  alt="Thumbnail preview" 
+                  className="h-20 w-20 object-cover rounded border"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Track Listing */}
+      <div className="bg-white rounded-lg shadow-sm border p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Track Listing (Optional)</h2>
+        <TrackListEditor
+          media={formData.media || []}
+          onChange={(newMedia) => updateField("media", newMedia)}
+        />
+      </div>
+
+      {/* External Links */}
+      <div className="bg-white rounded-lg shadow-sm border p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">External Links (Optional)</h2>
+        
+        <div className="space-y-3">
+          {formData.links?.map((link, index) => (
+            <div key={index} className="flex gap-2 items-start p-3 bg-gray-50 rounded">
+              <div className="flex-1 space-y-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      URL
+                    </label>
+                    <input
+                      type="url"
+                      value={link.url}
+                      onChange={(e) => {
+                        const newLinks = [...(formData.links || [])];
+                        newLinks[index] = { ...newLinks[index], url: e.target.value };
+                        updateField("links", newLinks);
+                      }}
+                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                      placeholder="https://..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Type
+                    </label>
+                    <select
+                      value={link.type}
+                      onChange={(e) => {
+                        const newLinks = [...(formData.links || [])];
+                        newLinks[index] = { ...newLinks[index], type: e.target.value };
+                        updateField("links", newLinks);
+                      }}
+                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                    >
+                      <option value="">Select type...</option>
+                      <option value="Discogs">Discogs</option>
+                      <option value="Spotify">Spotify</option>
+                      <option value="Apple Music">Apple Music</option>
+                      <option value="YouTube">YouTube</option>
+                      <option value="Bandcamp">Bandcamp</option>
+                      <option value="Official">Official Website</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Description (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={link.description || ""}
+                    onChange={(e) => {
+                      const newLinks = [...(formData.links || [])];
+                      newLinks[index] = { ...newLinks[index], description: e.target.value };
+                      updateField("links", newLinks);
+                    }}
+                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                    placeholder="Optional description..."
+                  />
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  const newLinks = formData.links?.filter((_, i) => i !== index);
+                  updateField("links", newLinks);
+                }}
+                className="mt-5 px-2 py-1 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+          
+          <button
+            type="button"
+            onClick={() => {
+              const newLinks = [...(formData.links || []), { url: "", type: "", description: "" }];
+              updateField("links", newLinks);
+            }}
+            className="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-md text-gray-600 hover:border-gray-400 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            + Add Link
+          </button>
         </div>
       </div>
 
