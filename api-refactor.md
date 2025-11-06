@@ -114,10 +114,23 @@ This document outlines a comprehensive refactoring plan for the KollectorScum ba
   - [x] `PackagingsController` → use `BaseApiController` ✅
   - [x] `StoresController` → use `BaseApiController` ✅
 - [x] Register all services in DI container
-- [ ] **Tests**: Update controller tests to cover base functionality
-  - [ ] BaseApiControllerTests (8-10 tests)
-  - [ ] GenericCrudServiceTests (15-20 tests)
-  - [ ] Update controller tests for new structure
+- [x] **Tests**: Complete test coverage for Phase 1.1
+  - [x] BaseApiControllerTests (16 tests) ✅
+    * Error handling for all exception types
+    * Pagination validation with various edge cases
+    * Operation logging verification
+    * Constructor validation
+  - [x] GenericCrudServiceTests (19 tests) ✅
+    * CRUD operations with correct PagedResult<T> mocking
+    * Pagination and search functionality
+    * Validation logic (null/empty/too long)
+    * Delete operations and edge cases
+  - [x] ArtistsControllerTests (22 tests) ✅
+    * All 5 endpoints (GET all, GET by id, POST, PUT, DELETE)
+    * Pagination validation in controller layer
+    * Error handling and ModelState validation
+    * Constructor parameter validation
+  - **Total**: 57 tests, all passing ✅
 
 **Files Created**: 
 - `Controllers/BaseApiController.cs` (65 lines)
@@ -130,6 +143,11 @@ This document outlines a comprehensive refactoring plan for the KollectorScum ba
 - `Services/FormatService.cs` (70 lines)
 - `Services/PackagingService.cs` (70 lines)
 - `Services/StoreService.cs` (70 lines)
+
+**Test Files Created**:
+- `Tests/Controllers/BaseApiControllerTests.cs` (280 lines, 16 tests)
+- `Tests/Services/GenericCrudServiceTests.cs` (420 lines, 19 tests)
+- `Tests/Controllers/ArtistsControllerTests.cs` (460 lines, 22 tests)
 
 **Files Modified**:
 - `Controllers/ArtistsController.cs` (210 → 153 lines, 27% reduction)
@@ -145,6 +163,8 @@ This document outlines a comprehensive refactoring plan for the KollectorScum ba
 **Commits**: 
 - `ce1e968` - "feat(phase-1): Add BaseApiController and GenericCrudService"
 - `90f0a8c` - "Phase 1.1: Refactor lookup controllers to use base classes and generic services"
+- `708c83c` - "Phase 1.1: Add BaseApiController tests (16 tests, all passing)"
+- `63e3d4e` - "Phase 1.1: Add GenericCrudService and ArtistsController tests (57 total tests passing)"
 
 **Lines Reduced**: ~1,791 lines → ~1,071 lines (40% overall reduction)  
 **Impact**: All 7 lookup controllers now follow consistent pattern with standardized error handling, logging, and validation
