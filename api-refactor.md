@@ -48,11 +48,25 @@ This document outlines a comprehensive refactoring plan for the KollectorScum ba
 - All 546 tests passing (528 existing + 18 new)
 
 **Phase 1.5**: Decompose DiscogsService
-- Status: ✅ Complete
+- Status: ✅ Complete (Commit: f53535d)
 - Impact: 360 lines → 560 lines across 3 focused services (HTTP/Mapping/Orchestration)
 - Services: DiscogsHttpClient (140), DiscogsResponseMapper (310), DiscogsService (110)
 - Tests: 11 orchestration tests (simplified from 18 HTTP implementation tests)
 - All 539 tests passing (528 existing + 11 refactored)
+
+---
+
+## Phase 2 Progress Summary
+
+### ✅ Completed Phases
+
+**Phase 2.1**: Introduce Query Objects Pattern
+- Status: ✅ Complete (Commit: 1d38de5)
+- Impact: Eliminated 11-parameter method signature, improved code readability
+- Classes: PaginationParameters, MusicReleaseQueryParameters, IQueryBuilder<T>, MusicReleaseQueryBuilder
+- Services: MusicReleaseQueryService refactored to use QueryParameters
+- Controller: MusicReleasesController updated to accept QueryParameters from query string
+- Tests: 5 controller tests updated, all 539 tests passing
 
 ### 📊 Key Metrics
 
