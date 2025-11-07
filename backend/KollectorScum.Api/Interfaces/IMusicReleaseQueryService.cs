@@ -9,12 +9,9 @@ namespace KollectorScum.Api.Interfaces
     public interface IMusicReleaseQueryService
     {
         /// <summary>
-        /// Gets paginated music releases with optional filters
+        /// Gets paginated music releases with optional filters using query parameters object
         /// </summary>
-        Task<PagedResult<MusicReleaseSummaryDto>> GetMusicReleasesAsync(
-            string? search, int? artistId, int? genreId, int? labelId, 
-            int? countryId, int? formatId, bool? live, int? yearFrom, 
-            int? yearTo, int page, int pageSize);
+        Task<PagedResult<MusicReleaseSummaryDto>> GetMusicReleasesAsync(MusicReleaseQueryParameters parameters);
 
         /// <summary>
         /// Gets a single music release by ID with full details

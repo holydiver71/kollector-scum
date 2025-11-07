@@ -56,11 +56,15 @@ namespace KollectorScum.Tests.Controllers
             };
 
             _mockQueryService
-                .Setup(s => s.GetMusicReleasesAsync(null, null, null, null, null, null, null, null, null, 1, 50))
+                .Setup(s => s.GetMusicReleasesAsync(It.IsAny<MusicReleaseQueryParameters>()))
                 .ReturnsAsync(expectedResult);
 
             // Act
-            var result = await _controller.GetMusicReleases(null, null, null, null, null, null, null, null, null, 1, 50);
+            var parameters = new MusicReleaseQueryParameters 
+            { 
+                Pagination = new PaginationParameters { PageNumber = 1, PageSize = 50 }
+            };
+            var result = await _controller.GetMusicReleases(parameters);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result.Result);
@@ -87,11 +91,16 @@ namespace KollectorScum.Tests.Controllers
             };
 
             _mockQueryService
-                .Setup(s => s.GetMusicReleasesAsync("Metallica", null, null, null, null, null, null, null, null, 1, 50))
+                .Setup(s => s.GetMusicReleasesAsync(It.Is<MusicReleaseQueryParameters>(p => p.Search == "Metallica")))
                 .ReturnsAsync(expectedResult);
 
             // Act
-            var result = await _controller.GetMusicReleases("Metallica", null, null, null, null, null, null, null, null, 1, 50);
+            var parameters = new MusicReleaseQueryParameters 
+            { 
+                Search = "Metallica",
+                Pagination = new PaginationParameters { PageNumber = 1, PageSize = 50 }
+            };
+            var result = await _controller.GetMusicReleases(parameters);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result.Result);
@@ -117,11 +126,16 @@ namespace KollectorScum.Tests.Controllers
             };
 
             _mockQueryService
-                .Setup(s => s.GetMusicReleasesAsync(null, null, null, null, null, null, null, null, null, 2, 10))
+                .Setup(s => s.GetMusicReleasesAsync(It.Is<MusicReleaseQueryParameters>(
+                    p => p.Pagination.PageNumber == 2 && p.Pagination.PageSize == 10)))
                 .ReturnsAsync(expectedResult);
 
             // Act
-            var result = await _controller.GetMusicReleases(null, null, null, null, null, null, null, null, null, 2, 10);
+            var parameters = new MusicReleaseQueryParameters 
+            { 
+                Pagination = new PaginationParameters { PageNumber = 2, PageSize = 10 }
+            };
+            var result = await _controller.GetMusicReleases(parameters);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result.Result);
@@ -145,13 +159,15 @@ namespace KollectorScum.Tests.Controllers
             };
 
             _mockQueryService
-                .Setup(s => s.GetMusicReleasesAsync(It.IsAny<string>(), It.IsAny<int?>(), It.IsAny<int?>(), 
-                    It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<bool?>(), 
-                    It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<int>(), It.IsAny<int>()))
+                .Setup(s => s.GetMusicReleasesAsync(It.IsAny<MusicReleaseQueryParameters>()))
                 .ReturnsAsync(expectedResult);
 
             // Act
-            var result = await _controller.GetMusicReleases(null, null, null, null, null, null, null, null, null, 1, 50);
+            var parameters = new MusicReleaseQueryParameters 
+            { 
+                Pagination = new PaginationParameters { PageNumber = 1, PageSize = 50 }
+            };
+            var result = await _controller.GetMusicReleases(parameters);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result.Result);
@@ -165,13 +181,15 @@ namespace KollectorScum.Tests.Controllers
         {
             // Arrange
             _mockQueryService
-                .Setup(s => s.GetMusicReleasesAsync(It.IsAny<string>(), It.IsAny<int?>(), It.IsAny<int?>(), 
-                    It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<bool?>(), 
-                    It.IsAny<int?>(), It.IsAny<int?>(), It.IsAny<int>(), It.IsAny<int>()))
+                .Setup(s => s.GetMusicReleasesAsync(It.IsAny<MusicReleaseQueryParameters>()))
                 .ThrowsAsync(new Exception("Database error"));
 
             // Act
-            var result = await _controller.GetMusicReleases(null, null, null, null, null, null, null, null, null, 1, 50);
+            var parameters = new MusicReleaseQueryParameters 
+            { 
+                Pagination = new PaginationParameters { PageNumber = 1, PageSize = 50 }
+            };
+            var result = await _controller.GetMusicReleases(parameters);
 
             // Assert
             var statusResult = Assert.IsType<ObjectResult>(result.Result);
