@@ -5,7 +5,9 @@
 
 using KollectorScum.Api.Middleware;
 using KollectorScum.Api.Data;
+using KollectorScum.Api.DTOs;
 using KollectorScum.Api.Interfaces;
+using KollectorScum.Api.Models;
 using KollectorScum.Api.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,7 +23,17 @@ builder.Services.AddHealthChecks();
 builder.Services.AddDbContext<KollectorScumDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Register services with explicit constructor selection
+// Register split seeding services (Phase 1.4 refactoring)
+builder.Services.AddScoped<ILookupSeeder<Country, CountryJsonDto>, CountrySeeder>();
+builder.Services.AddScoped<ILookupSeeder<Store, StoreJsonDto>, StoreSeeder>();
+builder.Services.AddScoped<ILookupSeeder<Format, FormatJsonDto>, FormatSeeder>();
+builder.Services.AddScoped<ILookupSeeder<Genre, GenreJsonDto>, GenreSeeder>();
+builder.Services.AddScoped<ILookupSeeder<Label, LabelJsonDto>, LabelSeeder>();
+builder.Services.AddScoped<ILookupSeeder<Artist, ArtistJsonDto>, ArtistSeeder>();
+builder.Services.AddScoped<ILookupSeeder<Packaging, PackagingJsonDto>, PackagingSeeder>();
+builder.Services.AddScoped<IDataSeedingOrchestrator, DataSeedingOrchestrator>();
+
+// Keep old service temporarily for backward compatibility (will be removed after testing)
 builder.Services.AddScoped<IDataSeedingService>(serviceProvider =>
 {
     var context = serviceProvider.GetRequiredService<KollectorScumDbContext>();
