@@ -1,4 +1,5 @@
 using KollectorScum.Api.DTOs;
+using KollectorScum.Api.Models;
 
 namespace KollectorScum.Api.Interfaces
 {
@@ -9,17 +10,20 @@ namespace KollectorScum.Api.Interfaces
     {
         /// <summary>
         /// Creates a new music release with validation and duplicate checking
+        /// Returns a Result indicating success or failure with appropriate error information
         /// </summary>
-        Task<CreateMusicReleaseResponseDto> CreateMusicReleaseAsync(CreateMusicReleaseDto createDto);
+        Task<Result<CreateMusicReleaseResponseDto>> CreateMusicReleaseAsync(CreateMusicReleaseDto createDto);
 
         /// <summary>
         /// Updates an existing music release with validation
+        /// Returns a Result indicating success or failure with appropriate error information
         /// </summary>
-        Task<MusicReleaseDto?> UpdateMusicReleaseAsync(int id, UpdateMusicReleaseDto updateDto);
+        Task<Result<MusicReleaseDto>> UpdateMusicReleaseAsync(int id, UpdateMusicReleaseDto updateDto);
 
         /// <summary>
         /// Deletes a music release by ID
+        /// Returns a Result indicating success or failure with appropriate error information
         /// </summary>
-        Task<bool> DeleteMusicReleaseAsync(int id);
+        Task<Result<bool>> DeleteMusicReleaseAsync(int id);
     }
 }

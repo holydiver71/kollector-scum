@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using KollectorScum.Api.Controllers;
 using KollectorScum.Api.DTOs;
 using KollectorScum.Api.Interfaces;
+using KollectorScum.Api.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -291,7 +292,7 @@ namespace KollectorScum.Tests.Controllers
 
             _mockCommandService
                 .Setup(s => s.CreateMusicReleaseAsync(It.IsAny<CreateMusicReleaseDto>()))
-                .ReturnsAsync(expectedResponse);
+                .ReturnsAsync(Result<CreateMusicReleaseResponseDto>.Success(expectedResponse));
 
             // Act
             var result = await _controller.CreateMusicRelease(createDto);
@@ -338,7 +339,7 @@ namespace KollectorScum.Tests.Controllers
 
             _mockCommandService
                 .Setup(s => s.CreateMusicReleaseAsync(It.IsAny<CreateMusicReleaseDto>()))
-                .ReturnsAsync(expectedResponse);
+                .ReturnsAsync(Result<CreateMusicReleaseResponseDto>.Success(expectedResponse));
 
             // Act
             var result = await _controller.CreateMusicRelease(createDto);
@@ -385,7 +386,7 @@ namespace KollectorScum.Tests.Controllers
 
             _mockCommandService
                 .Setup(s => s.CreateMusicReleaseAsync(It.IsAny<CreateMusicReleaseDto>()))
-                .ReturnsAsync(expectedResponse);
+                .ReturnsAsync(Result<CreateMusicReleaseResponseDto>.Success(expectedResponse));
 
             // Act
             var result = await _controller.CreateMusicRelease(createDto);
@@ -425,7 +426,7 @@ namespace KollectorScum.Tests.Controllers
 
             _mockCommandService
                 .Setup(s => s.CreateMusicReleaseAsync(It.IsAny<CreateMusicReleaseDto>()))
-                .ReturnsAsync(expectedResponse);
+                .ReturnsAsync(Result<CreateMusicReleaseResponseDto>.Success(expectedResponse));
 
             // Act
             var result = await _controller.CreateMusicRelease(createDto);
@@ -462,7 +463,7 @@ namespace KollectorScum.Tests.Controllers
 
             _mockCommandService
                 .Setup(s => s.CreateMusicReleaseAsync(It.IsAny<CreateMusicReleaseDto>()))
-                .ReturnsAsync(expectedResponse);
+                .ReturnsAsync(Result<CreateMusicReleaseResponseDto>.Success(expectedResponse));
 
             // Act
             var result = await _controller.CreateMusicRelease(createDto);
@@ -500,7 +501,7 @@ namespace KollectorScum.Tests.Controllers
 
             _mockCommandService
                 .Setup(s => s.CreateMusicReleaseAsync(It.IsAny<CreateMusicReleaseDto>()))
-                .ReturnsAsync(expectedResponse);
+                .ReturnsAsync(Result<CreateMusicReleaseResponseDto>.Success(expectedResponse));
 
             // Act
             var result = await _controller.CreateMusicRelease(createDto);
@@ -537,7 +538,7 @@ namespace KollectorScum.Tests.Controllers
 
             _mockCommandService
                 .Setup(s => s.CreateMusicReleaseAsync(It.IsAny<CreateMusicReleaseDto>()))
-                .ReturnsAsync(expectedResponse);
+                .ReturnsAsync(Result<CreateMusicReleaseResponseDto>.Success(expectedResponse));
 
             // Act
             var result = await _controller.CreateMusicRelease(createDto);
@@ -574,7 +575,7 @@ namespace KollectorScum.Tests.Controllers
 
             _mockCommandService
                 .Setup(s => s.CreateMusicReleaseAsync(It.IsAny<CreateMusicReleaseDto>()))
-                .ReturnsAsync(expectedResponse);
+                .ReturnsAsync(Result<CreateMusicReleaseResponseDto>.Success(expectedResponse));
 
             // Act
             var result = await _controller.CreateMusicRelease(createDto);
@@ -617,7 +618,7 @@ namespace KollectorScum.Tests.Controllers
 
             _mockCommandService
                 .Setup(s => s.CreateMusicReleaseAsync(It.IsAny<CreateMusicReleaseDto>()))
-                .ReturnsAsync(expectedResponse);
+                .ReturnsAsync(Result<CreateMusicReleaseResponseDto>.Success(expectedResponse));
 
             // Act
             var result = await _controller.CreateMusicRelease(createDto);
@@ -648,7 +649,7 @@ namespace KollectorScum.Tests.Controllers
 
             _mockCommandService
                 .Setup(s => s.CreateMusicReleaseAsync(It.IsAny<CreateMusicReleaseDto>()))
-                .ThrowsAsync(new ArgumentException("Title is required"));
+                .ReturnsAsync(Result<CreateMusicReleaseResponseDto>.ValidationError("Title is required"));
 
             // Act
             var result = await _controller.CreateMusicRelease(createDto);
@@ -670,7 +671,7 @@ namespace KollectorScum.Tests.Controllers
 
             _mockCommandService
                 .Setup(s => s.CreateMusicReleaseAsync(It.IsAny<CreateMusicReleaseDto>()))
-                .ThrowsAsync(new Exception("Database error"));
+                .ReturnsAsync(Result<CreateMusicReleaseResponseDto>.Failure("Database error", ErrorType.DatabaseError));
 
             // Act
             var result = await _controller.CreateMusicRelease(createDto);
@@ -701,7 +702,7 @@ namespace KollectorScum.Tests.Controllers
 
             _mockCommandService
                 .Setup(s => s.UpdateMusicReleaseAsync(1, It.IsAny<UpdateMusicReleaseDto>()))
-                .ReturnsAsync(expectedRelease);
+                .ReturnsAsync(Result<MusicReleaseDto>.Success(expectedRelease));
 
             // Act
             var result = await _controller.UpdateMusicRelease(1, updateDto);
@@ -720,7 +721,7 @@ namespace KollectorScum.Tests.Controllers
 
             _mockCommandService
                 .Setup(s => s.UpdateMusicReleaseAsync(999, It.IsAny<UpdateMusicReleaseDto>()))
-                .ReturnsAsync((MusicReleaseDto?)null);
+                .ReturnsAsync(Result<MusicReleaseDto>.NotFound("Music release", 999));
 
             // Act
             var result = await _controller.UpdateMusicRelease(999, updateDto);
@@ -738,7 +739,7 @@ namespace KollectorScum.Tests.Controllers
 
             _mockCommandService
                 .Setup(s => s.UpdateMusicReleaseAsync(It.IsAny<int>(), It.IsAny<UpdateMusicReleaseDto>()))
-                .ThrowsAsync(new ArgumentException("Title is required"));
+                .ReturnsAsync(Result<MusicReleaseDto>.ValidationError("Title is required"));
 
             // Act
             var result = await _controller.UpdateMusicRelease(1, updateDto);
@@ -756,7 +757,7 @@ namespace KollectorScum.Tests.Controllers
 
             _mockCommandService
                 .Setup(s => s.UpdateMusicReleaseAsync(It.IsAny<int>(), It.IsAny<UpdateMusicReleaseDto>()))
-                .ThrowsAsync(new Exception("Database error"));
+                .ReturnsAsync(Result<MusicReleaseDto>.Failure("Database error", ErrorType.DatabaseError));
 
             // Act
             var result = await _controller.UpdateMusicRelease(1, updateDto);
@@ -776,7 +777,7 @@ namespace KollectorScum.Tests.Controllers
             // Arrange
             _mockCommandService
                 .Setup(s => s.DeleteMusicReleaseAsync(1))
-                .ReturnsAsync(true);
+                .ReturnsAsync(Result<bool>.Success(true));
 
             // Act
             var result = await _controller.DeleteMusicRelease(1);
@@ -791,7 +792,7 @@ namespace KollectorScum.Tests.Controllers
             // Arrange
             _mockCommandService
                 .Setup(s => s.DeleteMusicReleaseAsync(999))
-                .ReturnsAsync(false);
+                .ReturnsAsync(Result<bool>.NotFound("Music release", 999));
 
             // Act
             var result = await _controller.DeleteMusicRelease(999);
@@ -807,7 +808,7 @@ namespace KollectorScum.Tests.Controllers
             // Arrange
             _mockCommandService
                 .Setup(s => s.DeleteMusicReleaseAsync(It.IsAny<int>()))
-                .ThrowsAsync(new Exception("Database error"));
+                .ReturnsAsync(Result<bool>.Failure("Database error", ErrorType.DatabaseError));
 
             // Act
             var result = await _controller.DeleteMusicRelease(1);
