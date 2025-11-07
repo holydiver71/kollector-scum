@@ -91,9 +91,11 @@ builder.Services.AddScoped<IMusicReleaseCommandService, MusicReleaseCommandServi
 // Keep old service temporarily for compatibility (will be removed after test migration)
 builder.Services.AddScoped<IMusicReleaseService, MusicReleaseService>();
 
-// Register Discogs service
+// Register Discogs services (Phase 1.5 refactoring)
 builder.Services.Configure<DiscogsSettings>(builder.Configuration.GetSection("Discogs"));
-builder.Services.AddHttpClient<IDiscogsService, DiscogsService>();
+builder.Services.AddHttpClient<IDiscogsHttpClient, DiscogsHttpClient>();
+builder.Services.AddScoped<IDiscogsResponseMapper, DiscogsResponseMapper>();
+builder.Services.AddScoped<IDiscogsService, DiscogsService>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
