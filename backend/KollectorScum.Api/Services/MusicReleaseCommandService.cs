@@ -35,7 +35,7 @@ namespace KollectorScum.Api.Services
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task<CreateMusicReleaseResponseDto> CreateMusicReleaseAsync(CreateMusicReleaseDto createDto)
+        public async Task<Result<CreateMusicReleaseResponseDto>> CreateMusicReleaseAsync(CreateMusicReleaseDto createDto)
         {
             _logger.LogInformation("Creating music release: {Title}", createDto.Title);
 
@@ -63,7 +63,13 @@ namespace KollectorScum.Api.Services
                 if (!validationResult.IsValid)
                 {
                     await _unitOfWork.RollbackTransactionAsync();
-                    throw new InvalidOperationException(validationResult.ErrorMessage);
+                    
+                    // Determine error type based on validation result
+                    var errorType = validationResult.Duplicates?.Any() == true 
+                        ? ErrorType.DuplicateError 
+                        : ErrorType.ValidationError;
+                    
+                    return Result<CreateMusicReleaseResponseDto>.Failure(validationResult.ErrorMessage ?? "Validation failed", errorType);
                 }
 
                 // Create the music release
@@ -95,20 +101,23 @@ namespace KollectorScum.Api.Services
                 await _unitOfWork.CommitTransactionAsync();
 
                 var createdDto = await _mapper.MapToFullDtoAsync(musicRelease);
-                return new CreateMusicReleaseResponseDto
+                var response = new CreateMusicReleaseResponseDto
                 {
                     Release = createdDto,
                     Created = HasCreatedEntities(createdEntities) ? createdEntities : null
                 };
+                
+                return Result<CreateMusicReleaseResponseDto>.Success(response);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 await _unitOfWork.RollbackTransactionAsync();
-                throw;
+                _logger.LogError(ex, "Error creating music release: {Title}", createDto.Title);
+                return Result<CreateMusicReleaseResponseDto>.Failure($"An error occurred while creating the music release: {ex.Message}", ErrorType.DatabaseError);
             }
         }
 
-        public async Task<MusicReleaseDto?> UpdateMusicReleaseAsync(int id, UpdateMusicReleaseDto updateDto)
+        public async Task<Result<MusicReleaseDto>> UpdateMusicReleaseAsync(int id, UpdateMusicReleaseDto updateDto)
         {
             _logger.LogInformation("Updating music release: {Id}", id);
 
@@ -116,20 +125,21 @@ namespace KollectorScum.Api.Services
             {
                 await _unitOfWork.BeginTransactionAsync();
 
-                // Validate update
-                var validationResult = await _validator.ValidateUpdateAsync(id, updateDto);
-                if (!validationResult.IsValid)
-                {
-                    await _unitOfWork.RollbackTransactionAsync();
-                    throw new InvalidOperationException(validationResult.ErrorMessage);
-                }
-
+                // Check if exists first
                 var existingMusicRelease = await _musicReleaseRepository.GetByIdAsync(id);
                 if (existingMusicRelease == null)
                 {
                     _logger.LogWarning("Music release not found: {Id}", id);
                     await _unitOfWork.RollbackTransactionAsync();
-                    return null;
+                    return Result<MusicReleaseDto>.NotFound("Music release", id);
+                }
+
+                // Validate update
+                var validationResult = await _validator.ValidateUpdateAsync(id, updateDto);
+                if (!validationResult.IsValid)
+                {
+                    await _unitOfWork.RollbackTransactionAsync();
+                    return Result<MusicReleaseDto>.ValidationError(validationResult.ErrorMessage ?? "Validation failed");
                 }
 
                 // Handle purchase info with potential store creation
@@ -188,32 +198,41 @@ namespace KollectorScum.Api.Services
 
                 await _unitOfWork.CommitTransactionAsync();
 
-                return await _mapper.MapToFullDtoAsync(existingMusicRelease);
+                var updatedDto = await _mapper.MapToFullDtoAsync(existingMusicRelease);
+                return Result<MusicReleaseDto>.Success(updatedDto);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating music release: {Id}", id);
                 await _unitOfWork.RollbackTransactionAsync();
-                throw;
+                return Result<MusicReleaseDto>.Failure($"An error occurred while updating the music release: {ex.Message}", ErrorType.DatabaseError);
             }
         }
 
-        public async Task<bool> DeleteMusicReleaseAsync(int id)
+        public async Task<Result<bool>> DeleteMusicReleaseAsync(int id)
         {
             _logger.LogInformation("Deleting music release: {Id}", id);
 
-            var musicRelease = await _musicReleaseRepository.GetByIdAsync(id);
-            if (musicRelease == null)
+            try
             {
-                _logger.LogWarning("Music release not found: {Id}", id);
-                return false;
+                var musicRelease = await _musicReleaseRepository.GetByIdAsync(id);
+                if (musicRelease == null)
+                {
+                    _logger.LogWarning("Music release not found: {Id}", id);
+                    return Result<bool>.NotFound("Music release", id);
+                }
+
+                _musicReleaseRepository.Delete(musicRelease);
+                await _unitOfWork.SaveChangesAsync();
+
+                _logger.LogInformation("Music release deleted successfully: {Id}", id);
+                return Result<bool>.Success(true);
             }
-
-            _musicReleaseRepository.Delete(musicRelease);
-            await _unitOfWork.SaveChangesAsync();
-
-            _logger.LogInformation("Music release deleted successfully: {Id}", id);
-            return true;
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting music release: {Id}", id);
+                return Result<bool>.Failure($"An error occurred while deleting the music release: {ex.Message}", ErrorType.DatabaseError);
+            }
         }
 
         /// <summary>
