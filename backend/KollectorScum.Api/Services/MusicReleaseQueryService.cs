@@ -36,38 +36,27 @@ namespace KollectorScum.Api.Services
         }
 
         public async Task<PagedResult<MusicReleaseSummaryDto>> GetMusicReleasesAsync(
-            string? search, int? artistId, int? genreId, int? labelId, 
-            int? countryId, int? formatId, bool? live, int? yearFrom, 
-            int? yearTo, int page, int pageSize)
+            MusicReleaseQueryParameters parameters)
         {
-            _logger.LogInformation("Getting music releases - Page: {Page}, PageSize: {PageSize}", page, pageSize);
+            if (parameters == null)
+                throw new ArgumentNullException(nameof(parameters));
 
-            Expression<Func<MusicRelease, bool>>? filter = null;
+            _logger.LogInformation("Getting music releases - Page: {Page}, PageSize: {PageSize}", 
+                parameters.Pagination.PageNumber, parameters.Pagination.PageSize);
 
-            if (!string.IsNullOrEmpty(search) || artistId.HasValue || genreId.HasValue || 
-                labelId.HasValue || countryId.HasValue || formatId.HasValue || live.HasValue ||
-                yearFrom.HasValue || yearTo.HasValue)
-            {
-                filter = mr => 
-                    (string.IsNullOrEmpty(search) || mr.Title.ToLower().Contains(search.ToLower())) &&
-                    (!artistId.HasValue || (mr.Artists != null && mr.Artists.Contains(artistId.Value.ToString()))) &&
-                    (!genreId.HasValue || (mr.Genres != null && mr.Genres.Contains(genreId.Value.ToString()))) &&
-                    (!labelId.HasValue || mr.LabelId == labelId.Value) &&
-                    (!countryId.HasValue || mr.CountryId == countryId.Value) &&
-                    (!formatId.HasValue || mr.FormatId == formatId.Value) &&
-                    (!live.HasValue || mr.Live == live.Value) &&
-                    (!yearFrom.HasValue || (mr.ReleaseYear.HasValue && mr.ReleaseYear.Value.Year >= yearFrom.Value)) &&
-                    (!yearTo.HasValue || (mr.ReleaseYear.HasValue && mr.ReleaseYear.Value.Year <= yearTo.Value));
-            }
+            // Build filter expression from parameters
+            Expression<Func<MusicRelease, bool>>? filter = BuildFilterExpression(parameters);
 
+            // Get paged results
             var pagedResult = await _musicReleaseRepository.GetPagedAsync(
-                page,
-                pageSize,
+                parameters.Pagination.PageNumber,
+                parameters.Pagination.PageSize,
                 filter,
                 mr => mr.OrderBy(x => x.Title),
                 "Label,Country,Format"
             );
 
+            // Map to DTOs
             var summaryDtos = await Task.Run(() => pagedResult.Items.Select(mr => _mapper.MapToSummaryDto(mr)).ToList());
 
             return new PagedResult<MusicReleaseSummaryDto>
@@ -78,6 +67,38 @@ namespace KollectorScum.Api.Services
                 TotalCount = pagedResult.TotalCount,
                 TotalPages = pagedResult.TotalPages
             };
+        }
+
+        /// <summary>
+        /// Builds a filter expression from query parameters
+        /// </summary>
+        private Expression<Func<MusicRelease, bool>>? BuildFilterExpression(MusicReleaseQueryParameters parameters)
+        {
+            // Return null if no filters applied
+            if (string.IsNullOrEmpty(parameters.Search) && 
+                !parameters.ArtistId.HasValue && 
+                !parameters.GenreId.HasValue &&
+                !parameters.LabelId.HasValue && 
+                !parameters.CountryId.HasValue && 
+                !parameters.FormatId.HasValue && 
+                !parameters.Live.HasValue &&
+                !parameters.YearFrom.HasValue && 
+                !parameters.YearTo.HasValue)
+            {
+                return null;
+            }
+
+            // Build composite filter
+            return mr =>
+                (string.IsNullOrEmpty(parameters.Search) || mr.Title.ToLower().Contains(parameters.Search.ToLower())) &&
+                (!parameters.ArtistId.HasValue || (mr.Artists != null && mr.Artists.Contains(parameters.ArtistId.Value.ToString()))) &&
+                (!parameters.GenreId.HasValue || (mr.Genres != null && mr.Genres.Contains(parameters.GenreId.Value.ToString()))) &&
+                (!parameters.LabelId.HasValue || mr.LabelId == parameters.LabelId.Value) &&
+                (!parameters.CountryId.HasValue || mr.CountryId == parameters.CountryId.Value) &&
+                (!parameters.FormatId.HasValue || mr.FormatId == parameters.FormatId.Value) &&
+                (!parameters.Live.HasValue || mr.Live == parameters.Live.Value) &&
+                (!parameters.YearFrom.HasValue || (mr.ReleaseYear.HasValue && mr.ReleaseYear.Value.Year >= parameters.YearFrom.Value)) &&
+                (!parameters.YearTo.HasValue || (mr.ReleaseYear.HasValue && mr.ReleaseYear.Value.Year <= parameters.YearTo.Value));
         }
 
         public async Task<MusicReleaseDto?> GetMusicReleaseAsync(int id)
