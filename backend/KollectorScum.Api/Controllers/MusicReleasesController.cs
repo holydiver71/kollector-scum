@@ -148,21 +148,19 @@ namespace KollectorScum.Api.Controllers
         [ProducesResponseType(400)]
         public async Task<ActionResult<CreateMusicReleaseResponseDto>> CreateMusicRelease([FromBody] CreateMusicReleaseDto createDto)
         {
-            try
+            var result = await _commandService.CreateMusicReleaseAsync(createDto);
+            
+            if (result.IsFailure)
             {
-                var response = await _commandService.CreateMusicReleaseAsync(createDto);
-                return CreatedAtAction(nameof(GetMusicRelease), new { id = response.Release.Id }, response);
+                return result.ErrorType switch
+                {
+                    ErrorType.ValidationError => BadRequest(result.ErrorMessage),
+                    ErrorType.DuplicateError => Conflict(result.ErrorMessage),
+                    _ => StatusCode(500, result.ErrorMessage)
+                };
             }
-            catch (ArgumentException ex)
-            {
-                _logger.LogWarning(ex, "Validation error creating music release: {Title}", createDto.Title);
-                return BadRequest(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error creating music release: {Title}", createDto.Title);
-                return StatusCode(500, "An error occurred while creating the music release");
-            }
+            
+            return CreatedAtAction(nameof(GetMusicRelease), new { id = result.Value!.Release.Id }, result.Value);
         }
 
         /// <summary>
@@ -177,27 +175,19 @@ namespace KollectorScum.Api.Controllers
         [ProducesResponseType(404)]
         public async Task<ActionResult<MusicReleaseDto>> UpdateMusicRelease(int id, [FromBody] UpdateMusicReleaseDto updateDto)
         {
-            try
+            var result = await _commandService.UpdateMusicReleaseAsync(id, updateDto);
+            
+            if (result.IsFailure)
             {
-                var updatedRelease = await _commandService.UpdateMusicReleaseAsync(id, updateDto);
-                
-                if (updatedRelease == null)
+                return result.ErrorType switch
                 {
-                    return NotFound($"Music release with ID {id} not found");
-                }
-                
-                return Ok(updatedRelease);
+                    ErrorType.NotFound => NotFound(result.ErrorMessage),
+                    ErrorType.ValidationError => BadRequest(result.ErrorMessage),
+                    _ => StatusCode(500, result.ErrorMessage)
+                };
             }
-            catch (ArgumentException ex)
-            {
-                _logger.LogWarning(ex, "Validation error updating music release: {Id}", id);
-                return BadRequest(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error updating music release: {Id}", id);
-                return StatusCode(500, "An error occurred while updating the music release");
-            }
+            
+            return Ok(result.Value);
         }
 
         /// <summary>
@@ -210,22 +200,18 @@ namespace KollectorScum.Api.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> DeleteMusicRelease(int id)
         {
-            try
+            var result = await _commandService.DeleteMusicReleaseAsync(id);
+            
+            if (result.IsFailure)
             {
-                var deleted = await _commandService.DeleteMusicReleaseAsync(id);
-                
-                if (!deleted)
+                return result.ErrorType switch
                 {
-                    return NotFound($"Music release with ID {id} not found");
-                }
-                
-                return NoContent();
+                    ErrorType.NotFound => NotFound(result.ErrorMessage),
+                    _ => StatusCode(500, result.ErrorMessage)
+                };
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error deleting music release: {Id}", id);
-                return StatusCode(500, "An error occurred while deleting the music release");
-            }
+            
+            return NoContent();
         }
     }
 }
