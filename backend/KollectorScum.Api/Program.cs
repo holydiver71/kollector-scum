@@ -10,6 +10,8 @@ using KollectorScum.Api.Interfaces;
 using KollectorScum.Api.Models;
 using KollectorScum.Api.Services;
 using Microsoft.EntityFrameworkCore;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,6 +19,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
+
+// Add FluentValidation
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+
 builder.Services.AddHealthChecks();
 
 // Register KollectorScumDbContext with PostgreSQL
