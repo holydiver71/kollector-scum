@@ -42,30 +42,19 @@ namespace KollectorScum.Api.Controllers
         /// <param name="formatId">Filter by format ID</param>
         /// <param name="live">Filter by live recordings</param>
         /// <param name="yearFrom">Filter by minimum release year (inclusive)</param>
-        /// <param name="yearTo">Filter by maximum release year (inclusive)</param>
-        /// <param name="page">Page number (default: 1)</param>
-        /// <param name="pageSize">Page size (default: 50)</param>
+        /// <summary>
+        /// Gets a paginated list of music releases with optional filters
+        /// </summary>
+        /// <param name="parameters">Query parameters including search, filters, and pagination</param>
         /// <returns>Paginated list of music release summaries</returns>
         [HttpGet]
         [ProducesResponseType(typeof(PagedResult<MusicReleaseSummaryDto>), 200)]
         public async Task<ActionResult<PagedResult<MusicReleaseSummaryDto>>> GetMusicReleases(
-            [FromQuery] string? search,
-            [FromQuery] int? artistId,
-            [FromQuery] int? genreId,
-            [FromQuery] int? labelId,
-            [FromQuery] int? countryId,
-            [FromQuery] int? formatId,
-            [FromQuery] bool? live,
-            [FromQuery] int? yearFrom,
-            [FromQuery] int? yearTo,
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 50)
+            [FromQuery] MusicReleaseQueryParameters parameters)
         {
             try
             {
-                var result = await _queryService.GetMusicReleasesAsync(
-                    search, artistId, genreId, labelId, countryId, formatId, 
-                    live, yearFrom, yearTo, page, pageSize);
+                var result = await _queryService.GetMusicReleasesAsync(parameters);
                 return Ok(result);
             }
             catch (Exception ex)
