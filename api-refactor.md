@@ -47,16 +47,24 @@ This document outlines a comprehensive refactoring plan for the KollectorScum ba
 - Tests: 18 new tests (GenericLookupSeeder: 12, Orchestrator: 6)
 - All 546 tests passing (528 existing + 18 new)
 
+**Phase 1.5**: Decompose DiscogsService
+- Status: ✅ Complete
+- Impact: 360 lines → 560 lines across 3 focused services (HTTP/Mapping/Orchestration)
+- Services: DiscogsHttpClient (140), DiscogsResponseMapper (310), DiscogsService (110)
+- Tests: 11 orchestration tests (simplified from 18 HTTP implementation tests)
+- All 539 tests passing (528 existing + 11 refactored)
+
 ### 📊 Key Metrics
 
 | Metric | Before | After | Change |
 |--------|--------|-------|--------|
-| Total Tests | 170 | 546 | +376 (+221%) |
+| Total Tests | 170 | 539 | +369 (+217%) |
 | Test Pass Rate | ~95% | 100% | +5% |
 | Lookup Controllers | 7 × ~300 lines | 7 × 153 lines | -40% |
 | MusicReleaseService | 402 lines | 561 (4 services) | Better SoC |
 | ImportService | 472 lines | 595 (3 services) | Better SoC |
 | DataSeedingService | 453 lines | 535 (8 services) | Better SoC |
+| DiscogsService | 360 lines | 560 (3 services) | Better SoC |
 | Code Coverage | ~60% | Significantly Higher | Improved |
 
 ---
@@ -68,10 +76,10 @@ This document outlines a comprehensive refactoring plan for the KollectorScum ba
 #### 🔴 **Critical Issues** (Must Fix)
 
 1. **God Service Classes** (400+ lines)
-   - `MusicReleaseImportService.cs` (471 lines) - Import + batch processing + validation
-   - `DataSeedingService.cs` (452 lines) - Seeds all lookup tables + file I/O
-   - `MusicReleaseService.cs` (402 lines) - CRUD + validation + duplicate detection + statistics
-   - `DiscogsService.cs` (359 lines) - API calls + mapping + error handling
+   - ~~`MusicReleaseImportService.cs` (471 lines)~~ ✅ Decomposed in Phase 1.3
+   - ~~`DataSeedingService.cs` (452 lines)~~ ✅ Refactored in Phase 1.4
+   - ~~`MusicReleaseService.cs` (402 lines)~~ ✅ Split in Phase 1.2
+   - ~~`DiscogsService.cs` (359 lines)~~ ✅ Decomposed in Phase 1.5
 
 2. **Service Layer Violations**
    - `MusicReleaseService` handles CRUD, statistics, duplicate detection, validation
