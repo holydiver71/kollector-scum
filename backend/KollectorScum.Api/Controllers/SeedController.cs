@@ -10,32 +10,32 @@ namespace KollectorScum.Api.Controllers
     [Route("api/[controller]")]
     public class SeedController : ControllerBase
     {
-        private readonly IDataSeedingService _dataSeedingService;
+        private readonly IDataSeedingOrchestrator _seedingOrchestrator;
         private readonly IMusicReleaseImportOrchestrator _importOrchestrator;
         private readonly ILogger<SeedController> _logger;
 
         public SeedController(
-            IDataSeedingService dataSeedingService, 
+            IDataSeedingOrchestrator seedingOrchestrator, 
             IMusicReleaseImportOrchestrator importOrchestrator,
             ILogger<SeedController> logger)
         {
-            _dataSeedingService = dataSeedingService;
-            _importOrchestrator = importOrchestrator;
-            _logger = logger;
+            _seedingOrchestrator = seedingOrchestrator ?? throw new ArgumentNullException(nameof(seedingOrchestrator));
+            _importOrchestrator = importOrchestrator ?? throw new ArgumentNullException(nameof(importOrchestrator));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         /// <summary>
         /// Seeds all lookup table data from JSON files
         /// </summary>
-        /// <returns>Result of seeding operation</returns>
+        /// <returns>Result of seeding operation with total records seeded</returns>
         [HttpPost("lookup-data")]
         public async Task<ActionResult> SeedLookupData()
         {
             try
             {
                 _logger.LogInformation("Starting lookup data seeding via API");
-                await _dataSeedingService.SeedLookupDataAsync();
-                return Ok(new { Message = "Lookup data seeding completed successfully" });
+                var totalSeeded = await _seedingOrchestrator.SeedAllLookupDataAsync();
+                return Ok(new { Message = "Lookup data seeding completed successfully", TotalRecordsSeeded = totalSeeded });
             }
             catch (Exception ex)
             {
@@ -45,16 +45,17 @@ namespace KollectorScum.Api.Controllers
         }
 
         /// <summary>
-        /// Seeds country data from JSON file
+        /// Seeds country data from JSON file (deprecated - use lookup-data endpoint)
         /// </summary>
         /// <returns>Result of seeding operation</returns>
         [HttpPost("countries")]
+        [Obsolete("Use the lookup-data endpoint instead")]
         public async Task<ActionResult> SeedCountries()
         {
             try
             {
-                await _dataSeedingService.SeedCountriesAsync();
-                return Ok(new { Message = "Countries seeding completed successfully" });
+                var totalSeeded = await _seedingOrchestrator.SeedAllLookupDataAsync();
+                return Ok(new { Message = "Countries seeding completed via lookup-data", TotalRecordsSeeded = totalSeeded });
             }
             catch (Exception ex)
             {
@@ -64,16 +65,17 @@ namespace KollectorScum.Api.Controllers
         }
 
         /// <summary>
-        /// Seeds store data from JSON file
+        /// Seeds store data from JSON file (deprecated - use lookup-data endpoint)
         /// </summary>
         /// <returns>Result of seeding operation</returns>
         [HttpPost("stores")]
+        [Obsolete("Use the lookup-data endpoint instead")]
         public async Task<ActionResult> SeedStores()
         {
             try
             {
-                await _dataSeedingService.SeedStoresAsync();
-                return Ok(new { Message = "Stores seeding completed successfully" });
+                var totalSeeded = await _seedingOrchestrator.SeedAllLookupDataAsync();
+                return Ok(new { Message = "Stores seeding completed via lookup-data", TotalRecordsSeeded = totalSeeded });
             }
             catch (Exception ex)
             {
@@ -83,16 +85,17 @@ namespace KollectorScum.Api.Controllers
         }
 
         /// <summary>
-        /// Seeds format data from JSON file
+        /// Seeds format data from JSON file (deprecated - use lookup-data endpoint)
         /// </summary>
         /// <returns>Result of seeding operation</returns>
         [HttpPost("formats")]
+        [Obsolete("Use the lookup-data endpoint instead")]
         public async Task<ActionResult> SeedFormats()
         {
             try
             {
-                await _dataSeedingService.SeedFormatsAsync();
-                return Ok(new { Message = "Formats seeding completed successfully" });
+                var totalSeeded = await _seedingOrchestrator.SeedAllLookupDataAsync();
+                return Ok(new { Message = "Formats seeding completed via lookup-data", TotalRecordsSeeded = totalSeeded });
             }
             catch (Exception ex)
             {
@@ -102,16 +105,17 @@ namespace KollectorScum.Api.Controllers
         }
 
         /// <summary>
-        /// Seeds genre data from JSON file
+        /// Seeds genre data from JSON file (deprecated - use lookup-data endpoint)
         /// </summary>
         /// <returns>Result of seeding operation</returns>
         [HttpPost("genres")]
+        [Obsolete("Use the lookup-data endpoint instead")]
         public async Task<ActionResult> SeedGenres()
         {
             try
             {
-                await _dataSeedingService.SeedGenresAsync();
-                return Ok(new { Message = "Genres seeding completed successfully" });
+                var totalSeeded = await _seedingOrchestrator.SeedAllLookupDataAsync();
+                return Ok(new { Message = "Genres seeding completed via lookup-data", TotalRecordsSeeded = totalSeeded });
             }
             catch (Exception ex)
             {
@@ -121,16 +125,17 @@ namespace KollectorScum.Api.Controllers
         }
 
         /// <summary>
-        /// Seeds label data from JSON file
+        /// Seeds label data from JSON file (deprecated - use lookup-data endpoint)
         /// </summary>
         /// <returns>Result of seeding operation</returns>
         [HttpPost("labels")]
+        [Obsolete("Use the lookup-data endpoint instead")]
         public async Task<ActionResult> SeedLabels()
         {
             try
             {
-                await _dataSeedingService.SeedLabelsAsync();
-                return Ok(new { Message = "Labels seeding completed successfully" });
+                var totalSeeded = await _seedingOrchestrator.SeedAllLookupDataAsync();
+                return Ok(new { Message = "Labels seeding completed via lookup-data", TotalRecordsSeeded = totalSeeded });
             }
             catch (Exception ex)
             {
@@ -140,16 +145,17 @@ namespace KollectorScum.Api.Controllers
         }
 
         /// <summary>
-        /// Seeds artist data from JSON file
+        /// Seeds artist data from JSON file (deprecated - use lookup-data endpoint)
         /// </summary>
         /// <returns>Result of seeding operation</returns>
         [HttpPost("artists")]
+        [Obsolete("Use the lookup-data endpoint instead")]
         public async Task<ActionResult> SeedArtists()
         {
             try
             {
-                await _dataSeedingService.SeedArtistsAsync();
-                return Ok(new { Message = "Artists seeding completed successfully" });
+                var totalSeeded = await _seedingOrchestrator.SeedAllLookupDataAsync();
+                return Ok(new { Message = "Artists seeding completed via lookup-data", TotalRecordsSeeded = totalSeeded });
             }
             catch (Exception ex)
             {
@@ -159,16 +165,17 @@ namespace KollectorScum.Api.Controllers
         }
 
         /// <summary>
-        /// Seeds packaging data from JSON file
+        /// Seeds packaging data from JSON file (deprecated - use lookup-data endpoint)
         /// </summary>
         /// <returns>Result of seeding operation</returns>
         [HttpPost("packagings")]
+        [Obsolete("Use the lookup-data endpoint instead")]
         public async Task<ActionResult> SeedPackagings()
         {
             try
             {
-                await _dataSeedingService.SeedPackagingsAsync();
-                return Ok(new { Message = "Packagings seeding completed successfully" });
+                var totalSeeded = await _seedingOrchestrator.SeedAllLookupDataAsync();
+                return Ok(new { Message = "Packagings seeding completed via lookup-data", TotalRecordsSeeded = totalSeeded });
             }
             catch (Exception ex)
             {
