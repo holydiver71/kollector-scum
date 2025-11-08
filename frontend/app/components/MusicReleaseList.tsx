@@ -152,17 +152,17 @@ export function MusicReleaseList({ filters = {}, pageSize = 60 }: MusicReleaseLi
       setError(null);
 
       const params = new URLSearchParams({
-        page: page.toString(),
-        pageSize: pageSize.toString(),
-        ...(filters.search && { search: filters.search }),
-        ...(filters.artistId && { artistId: filters.artistId.toString() }),
-        ...(filters.genreId && { genreId: filters.genreId.toString() }),
-        ...(filters.labelId && { labelId: filters.labelId.toString() }),
-        ...(filters.countryId && { countryId: filters.countryId.toString() }),
-        ...(filters.formatId && { formatId: filters.formatId.toString() }),
-        ...(filters.live !== undefined && { live: filters.live.toString() }),
-        ...(filters.yearFrom && { yearFrom: filters.yearFrom.toString() }),
-        ...(filters.yearTo && { yearTo: filters.yearTo.toString() })
+        'Pagination.PageNumber': page.toString(),
+        'Pagination.PageSize': pageSize.toString(),
+        ...(filters.search && { Search: filters.search }),
+        ...(filters.artistId && { ArtistId: filters.artistId.toString() }),
+        ...(filters.genreId && { GenreId: filters.genreId.toString() }),
+        ...(filters.labelId && { LabelId: filters.labelId.toString() }),
+        ...(filters.countryId && { CountryId: filters.countryId.toString() }),
+        ...(filters.formatId && { FormatId: filters.formatId.toString() }),
+        ...(filters.live !== undefined && { Live: filters.live.toString() }),
+        ...(filters.yearFrom && { YearFrom: filters.yearFrom.toString() }),
+        ...(filters.yearTo && { YearTo: filters.yearTo.toString() })
       });
 
       const response: PagedResult<MusicRelease> = await fetchJson(`/api/musicreleases?${params}`);
@@ -172,6 +172,7 @@ export function MusicReleaseList({ filters = {}, pageSize = 60 }: MusicReleaseLi
       setTotalPages(response.totalPages);
       setTotalCount(response.totalCount);
     } catch (err) {
+      console.error('Error fetching releases:', err);
       setError(err instanceof Error ? err.message : "Failed to load releases");
     } finally {
       setLoading(false);
@@ -181,9 +182,13 @@ export function MusicReleaseList({ filters = {}, pageSize = 60 }: MusicReleaseLi
   useEffect(() => {
     setCurrentPage(1);
     fetchReleases(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters, pageSize]);
 
   const handlePageChange = (page: number) => {
+    if (page < 1 || page > totalPages) {
+      return;
+    }
     setCurrentPage(page);
     fetchReleases(page);
     window.scrollTo({ top: 0, behavior: 'smooth' });
