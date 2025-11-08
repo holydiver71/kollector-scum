@@ -5,6 +5,7 @@ import * as api from '../../lib/api';
 
 // Mock Next.js Link
 jest.mock('next/link', () => {
+  // eslint-disable-next-line react/display-name
   return ({ children, href }: { children: React.ReactNode; href: string }) => {
     return <a href={href}>{children}</a>;
   };
@@ -21,19 +22,19 @@ jest.mock('../../components/LoadingComponents', () => ({
 }));
 
 jest.mock('../../components/StatisticsCharts', () => ({
-  StatCard: ({ title, value }: any) => (
+  StatCard: ({ title, value }: { title: string; value: string | number }) => (
     <div data-testid="stat-card">
       <div>{title}</div>
       <div>{value}</div>
     </div>
   ),
-  BarChart: ({ data, title }: any) => (
+  BarChart: ({ title }: { title: string }) => (
     <div data-testid="bar-chart">{title}</div>
   ),
-  LineChart: ({ data, title }: any) => (
+  LineChart: ({ title }: { title: string }) => (
     <div data-testid="line-chart">{title}</div>
   ),
-  DonutChart: ({ data, title }: any) => (
+  DonutChart: ({ title }: { title: string }) => (
     <div data-testid="donut-chart">{title}</div>
   ),
 }));
