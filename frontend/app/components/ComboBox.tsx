@@ -258,7 +258,7 @@ export default function ComboBox({
               <div className="flex items-center">
                 <span className="text-green-600 mr-2">✨</span>
                 <span className="text-green-700 font-medium">
-                  Create "{searchTerm.trim()}"
+                  Create &quot;{searchTerm.trim()}&quot;
                 </span>
               </div>
             </div>

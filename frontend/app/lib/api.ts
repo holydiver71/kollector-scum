@@ -157,3 +157,16 @@ export interface CollectionStatistics {
 export async function getCollectionStatistics(): Promise<CollectionStatistics> {
   return fetchJson<CollectionStatistics>('/api/musicreleases/statistics');
 }
+
+/**
+ * Deletes a music release from the collection
+ * @param id - The ID of the release to delete
+ * @throws {ApiError} If the request fails (404 if not found, 500 on server error)
+ * @returns Promise that resolves when deletion is complete
+ */
+export async function deleteRelease(id: number): Promise<void> {
+  await fetchJson<void>(`/api/musicreleases/${id}`, {
+    method: 'DELETE',
+    parse: false, // DELETE returns 204 No Content (no response body)
+  });
+}

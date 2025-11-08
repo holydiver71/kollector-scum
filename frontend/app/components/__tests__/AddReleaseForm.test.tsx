@@ -14,13 +14,23 @@ jest.mock('../ComboBox', () => {
     label, 
     items = [],
     value, 
-    newValues = [], 
+    newValues = [],
     onChange, 
     multiple, 
-    required, 
-    error,
+    required,
+    error, 
     placeholder,
-  }: any) {
+  }: { 
+    label: string;
+    items?: Array<{ id: number; name: string }>;
+    value?: number | number[] | null;
+    newValues?: string[];
+    onChange: (ids: number[], newValues: string[]) => void;
+    multiple?: boolean;
+    required?: boolean;
+    error?: string;
+    placeholder?: string;
+  }) {
     const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
       if (multiple) {
         const selected = Array.from(e.target.selectedOptions).map((opt) => parseInt(opt.value));
@@ -48,7 +58,7 @@ jest.mock('../ComboBox', () => {
           onChange={handleChange}
         >
           <option value="">Select...</option>
-          {items.map((item: any) => (
+          {items.map((item) => (
             <option key={item.id} value={item.id}>
               {item.name}
             </option>
