@@ -220,20 +220,60 @@ export default function AddReleaseForm({ onSuccess, onCancel }: AddReleaseFormPr
     setError(null);
 
     try {
-      const response = await fetchJson<{ id: number }>("/api/musicreleases", {
+      // Clean up the data before sending - remove empty arrays and convert years to DateTime
+      const cleanedData = {
+        ...formData,
+        // Convert year strings to ISO DateTime format for the backend
+        releaseYear: formData.releaseYear 
+          ? new Date(parseInt(formData.releaseYear), 0, 1).toISOString() 
+          : undefined,
+        origReleaseYear: formData.origReleaseYear 
+          ? new Date(parseInt(formData.origReleaseYear), 0, 1).toISOString() 
+          : undefined,
+        artistIds: formData.artistIds?.length ? formData.artistIds : undefined,
+        artistNames: formData.artistNames?.length ? formData.artistNames : undefined,
+        genreIds: formData.genreIds?.length ? formData.genreIds : undefined,
+        genreNames: formData.genreNames?.length ? formData.genreNames : undefined,
+        links: formData.links?.length ? formData.links : undefined,
+        media: formData.media?.length ? formData.media : undefined,
+      };
+      
+      console.log("Submitting form data:", cleanedData);
+      const response = await fetchJson<{ release: { id: number } }>("/api/musicreleases", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(cleanedData),
       });
 
       if (onSuccess) {
-        onSuccess(response.id);
+        onSuccess(response.release.id);
       }
     } catch (err: any) {
       console.error("Error creating release:", err);
-      setError(err.message || "Failed to create release. Please try again.");
+      // Show validation details if available
+      let errorMessage = err.message || "Failed to create release. Please try again.";
+      if (err.details) {
+        console.error("Validation details:", err.details);
+        console.error("Errors object:", err.details.errors);
+        // Handle FluentValidation/ASP.NET Core ValidationProblemDetails format
+        if (err.details.errors && typeof err.details.errors === 'object') {
+          const validationErrors = Object.entries(err.details.errors)
+            .map(([field, messages]) => {
+              const msgs = Array.isArray(messages) ? messages : [messages];
+              return `${field}: ${msgs.join(', ')}`;
+            })
+            .join('\n');
+          errorMessage = `Validation failed:\n${validationErrors}`;
+        } else if (err.details.title || err.details.detail) {
+          // Handle ProblemDetails format
+          errorMessage = err.details.title || err.details.detail || errorMessage;
+        } else if (typeof err.details === 'string') {
+          errorMessage = err.details;
+        }
+      }
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
