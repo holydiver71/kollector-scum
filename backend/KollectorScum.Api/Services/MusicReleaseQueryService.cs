@@ -1,6 +1,7 @@
 using KollectorScum.Api.DTOs;
 using KollectorScum.Api.Interfaces;
 using KollectorScum.Api.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Linq.Expressions;
 
@@ -89,10 +90,20 @@ namespace KollectorScum.Api.Services
             }
 
             // Build composite filter
+            // Note: Artists and Genres are stored as JSON arrays like "[1,2,3]"
+            // We need to check if the JSON array contains the specific ID
             return mr =>
                 (string.IsNullOrEmpty(parameters.Search) || mr.Title.ToLower().Contains(parameters.Search.ToLower())) &&
-                (!parameters.ArtistId.HasValue || (mr.Artists != null && mr.Artists.Contains(parameters.ArtistId.Value.ToString()))) &&
-                (!parameters.GenreId.HasValue || (mr.Genres != null && mr.Genres.Contains(parameters.GenreId.Value.ToString()))) &&
+                (!parameters.ArtistId.HasValue || (mr.Artists != null && 
+                    (mr.Artists.Contains($"[{parameters.ArtistId.Value}]") || 
+                     mr.Artists.Contains($"[{parameters.ArtistId.Value},") || 
+                     mr.Artists.Contains($",{parameters.ArtistId.Value}]") || 
+                     mr.Artists.Contains($",{parameters.ArtistId.Value},")))) &&
+                (!parameters.GenreId.HasValue || (mr.Genres != null && 
+                    (mr.Genres.Contains($"[{parameters.GenreId.Value}]") || 
+                     mr.Genres.Contains($"[{parameters.GenreId.Value},") || 
+                     mr.Genres.Contains($",{parameters.GenreId.Value}]") || 
+                     mr.Genres.Contains($",{parameters.GenreId.Value},")))) &&
                 (!parameters.LabelId.HasValue || mr.LabelId == parameters.LabelId.Value) &&
                 (!parameters.CountryId.HasValue || mr.CountryId == parameters.CountryId.Value) &&
                 (!parameters.FormatId.HasValue || mr.FormatId == parameters.FormatId.Value) &&

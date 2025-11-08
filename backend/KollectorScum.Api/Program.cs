@@ -18,7 +18,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Use camelCase for JSON serialization to match frontend convention
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+    });
 
 // Add FluentValidation
 builder.Services.AddFluentValidationAutoValidation();
@@ -108,9 +113,9 @@ builder.Services.AddScoped<IDiscogsService, DiscogsService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new() 
-    { 
-        Title = "Kollector Scum API", 
+    c.SwaggerDoc("v1", new()
+    {
+        Title = "Kollector Scum API",
         Version = "v1",
         Description = "API for managing music collection data"
     });
