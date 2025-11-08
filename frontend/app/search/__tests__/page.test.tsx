@@ -4,13 +4,13 @@ import SearchPage from '../page';
 
 // Mock the child components
 jest.mock('../../components/SearchAndFilter', () => ({
-  SearchAndFilter: ({ onFiltersChange }: any) => (
+  SearchAndFilter: ({ onFiltersChange }: { onFiltersChange: (filters: { search: string }) => void }) => (
     <div data-testid="search-and-filter">
       SearchAndFilter Component
       <button onClick={() => onFiltersChange({ search: 'test' })}>Apply Filters</button>
     </div>
   ),
-  QuickSearch: ({ onSearch }: any) => (
+  QuickSearch: ({ onSearch }: { onSearch?: (value: string) => void }) => (
     <div data-testid="quick-search">
       QuickSearch Component
       <input
@@ -23,7 +23,7 @@ jest.mock('../../components/SearchAndFilter', () => ({
 }));
 
 jest.mock('../../components/MusicReleaseList', () => ({
-  MusicReleaseList: ({ filters }: any) => (
+  MusicReleaseList: ({ filters }: { filters: { search?: string } }) => (
     <div data-testid="music-release-list">
       MusicReleaseList Component
       {filters.search && <span>Search: {filters.search}</span>}

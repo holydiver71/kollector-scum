@@ -14,31 +14,31 @@ jest.mock('next/navigation', () => ({
 
 // Mock the lookup components
 jest.mock('../LookupComponents', () => ({
-  ArtistDropdown: ({ onSelect, value }: any) => (
+  ArtistDropdown: ({ onSelect, value }: { onSelect: (item: { id: number }) => void; value?: number }) => (
     <select data-testid="artist-dropdown" value={value || ''} onChange={(e) => onSelect({ id: parseInt(e.target.value) })}>
       <option value="">Select Artist</option>
       <option value="1">Test Artist</option>
     </select>
   ),
-  GenreDropdown: ({ onSelect, value }: any) => (
+  GenreDropdown: ({ onSelect, value }: { onSelect: (item: { id: number }) => void; value?: number }) => (
     <select data-testid="genre-dropdown" value={value || ''} onChange={(e) => onSelect({ id: parseInt(e.target.value) })}>
       <option value="">Select Genre</option>
       <option value="1">Metal</option>
     </select>
   ),
-  LabelDropdown: ({ onSelect, value }: any) => (
+  LabelDropdown: ({ onSelect, value }: { onSelect: (item: { id: number }) => void; value?: number }) => (
     <select data-testid="label-dropdown" value={value || ''} onChange={(e) => onSelect({ id: parseInt(e.target.value) })}>
       <option value="">Select Label</option>
       <option value="1">Test Label</option>
     </select>
   ),
-  CountryDropdown: ({ onSelect, value }: any) => (
+  CountryDropdown: ({ onSelect, value }: { onSelect: (item: { id: number }) => void; value?: number }) => (
     <select data-testid="country-dropdown" value={value || ''} onChange={(e) => onSelect({ id: parseInt(e.target.value) })}>
       <option value="">Select Country</option>
       <option value="1">UK</option>
     </select>
   ),
-  FormatDropdown: ({ onSelect, value }: any) => (
+  FormatDropdown: ({ onSelect, value }: { onSelect: (item: { id: number }) => void; value?: number }) => (
     <select data-testid="format-dropdown" value={value || ''} onChange={(e) => onSelect({ id: parseInt(e.target.value) })}>
       <option value="">Select Format</option>
       <option value="1">Vinyl</option>

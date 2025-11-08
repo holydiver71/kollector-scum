@@ -272,6 +272,7 @@ export default function StatisticsPage() {
                     className="group"
                   >
                     <div className="aspect-square mb-2 overflow-hidden rounded-md border border-gray-200">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={imageUrl}
                         alt={release.title}
