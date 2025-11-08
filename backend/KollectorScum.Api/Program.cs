@@ -109,6 +109,14 @@ builder.Services.AddHttpClient<IDiscogsHttpClient, DiscogsHttpClient>();
 builder.Services.AddScoped<IDiscogsResponseMapper, DiscogsResponseMapper>();
 builder.Services.AddScoped<IDiscogsService, DiscogsService>();
 
+// Register Google Image Search services
+builder.Services.Configure<GoogleSearchSettings>(builder.Configuration.GetSection("GoogleSearch"));
+builder.Services.AddHttpClient<IImageSearchService, GoogleImageSearchService>();
+builder.Services.AddScoped<IImageSearchService, GoogleImageSearchService>();
+
+// Register HttpClient for general use (e.g., ImagesController)
+builder.Services.AddHttpClient();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
