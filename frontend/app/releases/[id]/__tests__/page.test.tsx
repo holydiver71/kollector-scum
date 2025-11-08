@@ -9,11 +9,13 @@ jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
 }));
 
-const mockUseParams = require('next/navigation').useParams;
-const mockUseRouter = require('next/navigation').useRouter;
+import { useParams, useRouter } from 'next/navigation';
+const mockUseParams = useParams as jest.MockedFunction<typeof useParams>;
+const mockUseRouter = useRouter as jest.MockedFunction<typeof useRouter>;
 
 // Mock Next.js Link
 jest.mock('next/link', () => {
+  // eslint-disable-next-line react/display-name
   return ({ children, href }: { children: React.ReactNode; href: string }) => {
     return <a href={href}>{children}</a>;
   };
@@ -30,15 +32,36 @@ jest.mock('../../../components/LoadingComponents', () => ({
 }));
 
 jest.mock('../../../components/ImageGallery', () => ({
-  ImageGallery: ({ images }: any) => <div data-testid="image-gallery">ImageGallery</div>,
+  ImageGallery: () => <div data-testid="image-gallery">ImageGallery</div>,
 }));
 
 jest.mock('../../../components/TrackList', () => ({
-  TrackList: ({ tracks }: any) => <div data-testid="track-list">TrackList</div>,
+  TrackList: () => <div data-testid="track-list">TrackList</div>,
 }));
 
 jest.mock('../../../components/ReleaseLinks', () => ({
-  ReleaseLinks: ({ links }: any) => <div data-testid="release-links">ReleaseLinks</div>,
+  ReleaseLinks: () => <div data-testid="release-links">ReleaseLinks</div>,
+}));
+
+jest.mock('../../../components/DeleteReleaseButton', () => ({
+  DeleteReleaseButton: ({ 
+    onDeleteSuccess 
+  }: { 
+    releaseId: number; 
+    releaseTitle: string; 
+    onDeleteSuccess?: () => void; 
+    onDeleteError?: (error: unknown) => void;
+  }) => (
+    <button 
+      data-testid="delete-release-button"
+      onClick={() => {
+        // Simulate successful deletion
+        if (onDeleteSuccess) onDeleteSuccess();
+      }}
+    >
+      Delete
+    </button>
+  ),
 }));
 
 const mockRelease = {
@@ -66,6 +89,10 @@ describe('ReleaseDetailPage', () => {
     mockUseRouter.mockReturnValue({
       push: jest.fn(),
       back: jest.fn(),
+      forward: jest.fn(),
+      refresh: jest.fn(),
+      replace: jest.fn(),
+      prefetch: jest.fn(),
     });
   });
 
@@ -135,5 +162,66 @@ describe('ReleaseDetailPage', () => {
     await waitFor(() => {
       expect(container.querySelector('.min-h-screen')).toBeInTheDocument();
     });
+  });
+
+  it('renders delete button', async () => {
+    (api.fetchJson as jest.Mock).mockResolvedValue(mockRelease);
+    
+    render(<ReleaseDetailPage />);
+    
+    await waitFor(() => {
+      expect(screen.getByTestId('delete-release-button')).toBeInTheDocument();
+    });
+  });
+
+  it('navigates to collection page after successful deletion', async () => {
+    const mockPush = jest.fn();
+    mockUseRouter.mockReturnValue({
+      push: mockPush,
+      back: jest.fn(),
+      forward: jest.fn(),
+      refresh: jest.fn(),
+      replace: jest.fn(),
+      prefetch: jest.fn(),
+    });
+    
+    (api.fetchJson as jest.Mock).mockResolvedValue(mockRelease);
+    
+    render(<ReleaseDetailPage />);
+    
+    await waitFor(() => {
+      expect(screen.getByTestId('delete-release-button')).toBeInTheDocument();
+    });
+    
+    // Click the delete button (which triggers onDeleteSuccess in mock)
+    const deleteButton = screen.getByTestId('delete-release-button');
+    deleteButton.click();
+    
+    expect(mockPush).toHaveBeenCalledWith('/collection');
+  });
+
+  it('has back button that navigates back', async () => {
+    const mockBack = jest.fn();
+    mockUseRouter.mockReturnValue({
+      push: jest.fn(),
+      back: mockBack,
+      forward: jest.fn(),
+      refresh: jest.fn(),
+      replace: jest.fn(),
+      prefetch: jest.fn(),
+    });
+    
+    (api.fetchJson as jest.Mock).mockResolvedValue(mockRelease);
+    
+    render(<ReleaseDetailPage />);
+    
+    await waitFor(() => {
+      expect(screen.getByText('Back')).toBeInTheDocument();
+    });
+    
+    const backButton = screen.getByText('Back');
+    backButton.click();
+    
+    expect(mockBack).toHaveBeenCalled();
   });
 });

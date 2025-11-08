@@ -7,6 +7,7 @@ import { LoadingSpinner } from "../../components/LoadingComponents";
 import { ImageGallery } from "../../components/ImageGallery";
 import { TrackList } from "../../components/TrackList";
 import { ReleaseLinks } from "../../components/ReleaseLinks";
+import { DeleteReleaseButton } from "../../components/DeleteReleaseButton";
 
 // Type definitions for detailed music release
 interface Artist {
@@ -180,6 +181,16 @@ export default function ReleaseDetailPage() {
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
+  const handleDeleteSuccess = () => {
+    // Navigate to collection page after successful deletion
+    router.push('/collection');
+  };
+
+  const handleDeleteError = (error: { status?: number; message?: string }) => {
+    console.error("Delete error:", error);
+    // Error is already displayed by the DeleteReleaseButton component
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -203,6 +214,13 @@ export default function ReleaseDetailPage() {
                 </p>
               )}
             </div>
+            {/* Delete Button */}
+            <DeleteReleaseButton
+              releaseId={release.id}
+              releaseTitle={release.title}
+              onDeleteSuccess={handleDeleteSuccess}
+              onDeleteError={handleDeleteError}
+            />
           </div>
         </div>
       </div>

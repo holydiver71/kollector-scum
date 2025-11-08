@@ -4,6 +4,7 @@ import Navigation from '../Navigation';
 
 // Mock Next.js modules
 jest.mock('next/link', () => {
+  // eslint-disable-next-line react/display-name
   return ({ children, href }: { children: React.ReactNode; href: string }) => (
     <a href={href}>{children}</a>
   );
@@ -13,11 +14,12 @@ jest.mock('next/navigation', () => ({
   usePathname: jest.fn(),
 }));
 
-const { usePathname } = require('next/navigation');
+import { usePathname } from 'next/navigation';
+const mockUsePathname = usePathname as jest.MockedFunction<typeof usePathname>;
 
 describe('Navigation Component', () => {
   beforeEach(() => {
-    usePathname.mockReturnValue('/');
+    mockUsePathname.mockReturnValue('/');
   });
 
   afterEach(() => {
@@ -49,7 +51,7 @@ describe('Navigation Component', () => {
   });
 
   it('highlights active link on dashboard', () => {
-    usePathname.mockReturnValue('/');
+    mockUsePathname.mockReturnValue('/');
     render(<Navigation />);
     
     // Dashboard should be active
@@ -57,21 +59,21 @@ describe('Navigation Component', () => {
   });
 
   it('highlights active link on collection page', () => {
-    usePathname.mockReturnValue('/collection');
+    mockUsePathname.mockReturnValue('/collection');
     render(<Navigation />);
     
     expect(screen.getByText('Collection')).toBeInTheDocument();
   });
 
   it('highlights active link on search page', () => {
-    usePathname.mockReturnValue('/search');
+    mockUsePathname.mockReturnValue('/search');
     render(<Navigation />);
     
     expect(screen.getByText('Search')).toBeInTheDocument();
   });
 
   it('highlights active link on add page', () => {
-    usePathname.mockReturnValue('/add');
+    mockUsePathname.mockReturnValue('/add');
     render(<Navigation />);
     
     expect(screen.getByText('Add Release')).toBeInTheDocument();
@@ -105,7 +107,7 @@ describe('Navigation Component', () => {
   });
 
   it('handles nested routes correctly', () => {
-    usePathname.mockReturnValue('/collection/123');
+    mockUsePathname.mockReturnValue('/collection/123');
     render(<Navigation />);
     
     // Collection should still be active for nested routes
@@ -123,7 +125,7 @@ describe('Navigation Component', () => {
   });
 
   it('handles root path specifically', () => {
-    usePathname.mockReturnValue('/');
+    mockUsePathname.mockReturnValue('/');
     render(<Navigation />);
     
     // Only root should be active, not other paths
@@ -134,7 +136,7 @@ describe('Navigation Component', () => {
     const paths = ['/', '/collection', '/search', '/add', '/releases/123'];
     
     paths.forEach(path => {
-      usePathname.mockReturnValue(path);
+      mockUsePathname.mockReturnValue(path);
       const { unmount } = render(<Navigation />);
       expect(screen.getByText('Dashboard')).toBeInTheDocument();
       unmount();
