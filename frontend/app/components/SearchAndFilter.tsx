@@ -32,41 +32,31 @@ export function SearchAndFilter({ onFiltersChange, initialFilters = {}, enableUr
   const [suggestionIndex, setSuggestionIndex] = useState(-1);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+  const [isInitializing, setIsInitializing] = useState(true);
 
-  // Load filters from URL on mount
+  // Sync local state when initialFilters prop changes
   useEffect(() => {
-    if (enableUrlSync && searchParams) {
-      const urlFilters: SearchFilters = {};
-      const search = searchParams.get('search');
-      const artistId = searchParams.get('artistId');
-      const genreId = searchParams.get('genreId');
-      const labelId = searchParams.get('labelId');
-      const countryId = searchParams.get('countryId');
-      const formatId = searchParams.get('formatId');
-      const live = searchParams.get('live');
-      const yearFrom = searchParams.get('yearFrom');
-      const yearTo = searchParams.get('yearTo');
-
-      if (search) urlFilters.search = search;
-      if (artistId) urlFilters.artistId = parseInt(artistId);
-      if (genreId) urlFilters.genreId = parseInt(genreId);
-      if (labelId) urlFilters.labelId = parseInt(labelId);
-      if (countryId) urlFilters.countryId = parseInt(countryId);
-      if (formatId) urlFilters.formatId = parseInt(formatId);
-      if (live) urlFilters.live = live === 'true';
-      if (yearFrom) urlFilters.yearFrom = parseInt(yearFrom);
-      if (yearTo) urlFilters.yearTo = parseInt(yearTo);
-
-      if (Object.keys(urlFilters).length > 0) {
-        setFilters(urlFilters);
-        onFiltersChange(urlFilters);
-      }
+    console.log('SearchAndFilter initialFilters changed:', initialFilters);
+    setIsInitializing(true);
+    setFilters(initialFilters);
+    // Show advanced filters if any advanced filter is set in initialFilters
+    if (initialFilters.artistId || initialFilters.genreId || initialFilters.labelId || 
+        initialFilters.countryId || initialFilters.formatId || initialFilters.live || 
+        initialFilters.yearFrom || initialFilters.yearTo) {
+      setShowAdvanced(true);
     }
-  }, []); // Only run on mount
+    // Reset initializing flag after a short delay
+    const timer = setTimeout(() => {
+      console.log('SearchAndFilter initialization complete');
+      setIsInitializing(false);
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [initialFilters]);
 
-  // Update URL when filters change
+  // Update URL when filters change (but not during initialization)
   useEffect(() => {
-    if (enableUrlSync) {
+    if (enableUrlSync && !isInitializing) {
+      console.log('SearchAndFilter updating URL, filters:', filters, 'isInitializing:', isInitializing);
       const params = new URLSearchParams();
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
@@ -76,7 +66,7 @@ export function SearchAndFilter({ onFiltersChange, initialFilters = {}, enableUr
       const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname;
       router.replace(newUrl, { scroll: false });
     }
-  }, [filters, enableUrlSync, router]);
+  }, [filters, enableUrlSync, router, isInitializing]);
 
   // Fetch suggestions when search text changes
   useEffect(() => {
@@ -116,6 +106,7 @@ export function SearchAndFilter({ onFiltersChange, initialFilters = {}, enableUr
   // Update filters when they change
   const updateFilters = (newFilters: Partial<SearchFilters>) => {
     const updatedFilters = { ...filters, ...newFilters };
+    console.log('SearchAndFilter updateFilters called:', { old: filters, new: newFilters, result: updatedFilters });
     setFilters(updatedFilters);
     onFiltersChange(updatedFilters);
   };

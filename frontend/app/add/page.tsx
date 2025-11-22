@@ -129,7 +129,7 @@ export default function AddReleasePage() {
       }))
     }] : [];
     
-    // Map images - generate local filename and full API URL
+    // Map images - generate local filename only (not full URL)
     let images = undefined;
     let sourceImageUrl = null;
     let sourceThumbnailUrl = null;
@@ -141,13 +141,10 @@ export default function AddReleasePage() {
       sourceImageUrl = release.images[0].uri; // Store full-size image for later download
       sourceThumbnailUrl = release.images[0].uri150 || release.images[0].uri; // Use thumbnail if available, fallback to full image
       
-      // Generate full API URLs (backend validators require absolute URLs)
-      const coverUrl = `${API_BASE_URL}/api/images/covers/${filename}`;
-      const thumbnailUrl = `${API_BASE_URL}/api/images/thumbnails/${thumbnailFilename}`;
-      
+      // Store just the filename - backend will serve via /api/images/{filename}
       images = {
-        coverFront: coverUrl,
-        thumbnail: thumbnailUrl,
+        coverFront: filename,
+        thumbnail: thumbnailFilename,
       };
     }
     
