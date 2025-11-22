@@ -93,6 +93,8 @@ builder.Services.AddScoped<IGenericCrudService<KollectorScum.Api.Models.Store, K
 builder.Services.AddScoped<IEntityResolverService, EntityResolverService>();
 builder.Services.AddScoped<IMusicReleaseMapperService, MusicReleaseMapperService>();
 builder.Services.AddScoped<ICollectionStatisticsService, CollectionStatisticsService>();
+builder.Services.AddScoped<IMusicReleaseSearchService, MusicReleaseSearchService>();
+builder.Services.AddScoped<IMusicReleaseDuplicateService, MusicReleaseDuplicateService>();
 
 // Register split music release services (Phase 1.2 refactoring)
 builder.Services.AddScoped<IMusicReleaseDuplicateDetector, MusicReleaseDuplicateDetector>();

@@ -18,16 +18,14 @@ namespace KollectorScum.Tests.Services
     {
         private readonly Mock<IRepository<MusicRelease>> _mockMusicReleaseRepo;
         private readonly Mock<IRepository<Artist>> _mockArtistRepo;
-        private readonly Mock<IRepository<Genre>> _mockGenreRepo;
         private readonly Mock<IRepository<Label>> _mockLabelRepo;
-        private readonly Mock<IRepository<Country>> _mockCountryRepo;
-        private readonly Mock<IRepository<Format>> _mockFormatRepo;
-        private readonly Mock<IRepository<Packaging>> _mockPackagingRepo;
         private readonly Mock<IRepository<Store>> _mockStoreRepo;
         private readonly Mock<IUnitOfWork> _mockUnitOfWork;
         private readonly Mock<IEntityResolverService> _mockEntityResolver;
         private readonly Mock<IMusicReleaseMapperService> _mockMapper;
         private readonly Mock<ICollectionStatisticsService> _mockStatisticsService;
+        private readonly Mock<IMusicReleaseSearchService> _mockSearchService;
+        private readonly Mock<IMusicReleaseDuplicateService> _mockDuplicateService;
         private readonly Mock<ILogger<MusicReleaseService>> _mockLogger;
         private readonly MusicReleaseService _service;
 
@@ -35,26 +33,29 @@ namespace KollectorScum.Tests.Services
         {
             _mockMusicReleaseRepo = new Mock<IRepository<MusicRelease>>();
             _mockArtistRepo = new Mock<IRepository<Artist>>();
-            _mockGenreRepo = new Mock<IRepository<Genre>>();
             _mockLabelRepo = new Mock<IRepository<Label>>();
-            _mockCountryRepo = new Mock<IRepository<Country>>();
-            _mockFormatRepo = new Mock<IRepository<Format>>();
-            _mockPackagingRepo = new Mock<IRepository<Packaging>>();
             _mockStoreRepo = new Mock<IRepository<Store>>();
             _mockUnitOfWork = new Mock<IUnitOfWork>();
             _mockEntityResolver = new Mock<IEntityResolverService>();
             _mockMapper = new Mock<IMusicReleaseMapperService>();
             _mockStatisticsService = new Mock<ICollectionStatisticsService>();
+            _mockSearchService = new Mock<IMusicReleaseSearchService>();
+            _mockDuplicateService = new Mock<IMusicReleaseDuplicateService>();
             _mockLogger = new Mock<ILogger<MusicReleaseService>>();
+
+            // Default mock setup for duplicate service - returns no duplicates
+            _mockDuplicateService.Setup(d => d.CheckForDuplicatesAsync(
+                It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<List<int>?>(), It.IsAny<int?>()))
+                .ReturnsAsync(new List<MusicRelease>());
 
             _service = new MusicReleaseService(
                 _mockMusicReleaseRepo.Object,
-                _mockArtistRepo.Object,
-                _mockLabelRepo.Object,
                 _mockUnitOfWork.Object,
                 _mockEntityResolver.Object,
                 _mockMapper.Object,
                 _mockStatisticsService.Object,
+                _mockSearchService.Object,
+                _mockDuplicateService.Object,
                 _mockLogger.Object
             );
         }
@@ -296,48 +297,31 @@ namespace KollectorScum.Tests.Services
         public async Task GetSearchSuggestionsAsync_WithValidQuery_ReturnsSuggestions()
         {
             // Arrange
-            var releases = new List<MusicRelease>
+            var expectedSuggestions = new List<SearchSuggestionDto>
             {
-                new MusicRelease { Id = 1, Title = "Dark Side of the Moon", ReleaseYear = new DateTime(1973, 1, 1) }
-            };
-            var artists = new List<Artist>
-            {
-                new Artist { Id = 1, Name = "Pink Floyd" }
-            };
-            var labels = new List<Label>
-            {
-                new Label { Id = 1, Name = "Harvest Records" }
+                new SearchSuggestionDto { Type = "release", Id = 1, Name = "Dark Side of the Moon", Subtitle = "1973" },
+                new SearchSuggestionDto { Type = "artist", Id = 1, Name = "Pink Floyd" }
             };
 
-            _mockMusicReleaseRepo.Setup(r => r.GetAsync(
-                It.IsAny<Expression<Func<MusicRelease, bool>>>(),
-                It.IsAny<Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>>?>(),
-                It.IsAny<string>()
-            )).ReturnsAsync(releases);
-
-            _mockArtistRepo.Setup(r => r.GetAsync(
-                It.IsAny<Expression<Func<Artist, bool>>>(),
-                It.IsAny<Func<IQueryable<Artist>, IOrderedQueryable<Artist>>?>(),
-                It.IsAny<string>()
-            )).ReturnsAsync(artists);
-
-            _mockLabelRepo.Setup(r => r.GetAsync(
-                It.IsAny<Expression<Func<Label, bool>>>(),
-                It.IsAny<Func<IQueryable<Label>, IOrderedQueryable<Label>>?>(),
-                It.IsAny<string>()
-            )).ReturnsAsync(labels);
+            _mockSearchService.Setup(s => s.GetSearchSuggestionsAsync("dark", 10))
+                .ReturnsAsync(expectedSuggestions);
 
             // Act
             var result = await _service.GetSearchSuggestionsAsync("dark", 10);
 
             // Assert
             Assert.NotNull(result);
-            Assert.NotEmpty(result);
+            Assert.Equal(2, result.Count);
+            _mockSearchService.Verify(s => s.GetSearchSuggestionsAsync("dark", 10), Times.Once);
         }
 
         [Fact]
         public async Task GetSearchSuggestionsAsync_WithShortQuery_ReturnsEmptyList()
         {
+            // Arrange
+            _mockSearchService.Setup(s => s.GetSearchSuggestionsAsync("a", 10))
+                .ReturnsAsync(new List<SearchSuggestionDto>());
+
             // Act
             var result = await _service.GetSearchSuggestionsAsync("a", 10);
 
@@ -349,6 +333,10 @@ namespace KollectorScum.Tests.Services
         [Fact]
         public async Task GetSearchSuggestionsAsync_WithNullQuery_ReturnsEmptyList()
         {
+            // Arrange
+            _mockSearchService.Setup(s => s.GetSearchSuggestionsAsync(string.Empty, 10))
+                .ReturnsAsync(new List<SearchSuggestionDto>());
+
             // Act
             var result = await _service.GetSearchSuggestionsAsync(string.Empty, 10);
 
@@ -453,6 +441,10 @@ namespace KollectorScum.Tests.Services
             _mockEntityResolver.Setup(e => e.ResolveOrCreatePackagingAsync(
                 It.IsAny<int?>(), It.IsAny<string?>(), It.IsAny<CreatedEntitiesDto>()))
                 .ReturnsAsync((int?)null);
+
+            _mockDuplicateService.Setup(d => d.CheckForDuplicatesAsync(
+                It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<List<int>?>(), null))
+                .ReturnsAsync(new List<MusicRelease>());
 
             _mockMusicReleaseRepo.Setup(r => r.GetAsync(
                 It.IsAny<Expression<Func<MusicRelease, bool>>>(),
@@ -566,14 +558,18 @@ namespace KollectorScum.Tests.Services
                 Artists = "[1]"
             };
 
-            _mockMusicReleaseRepo.Setup(r => r.GetAsync(
-                It.IsAny<Expression<Func<MusicRelease, bool>>>(),
-                It.IsAny<Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>>?>(),
-                It.IsAny<string>()
+            _mockDuplicateService.Setup(d => d.CheckForDuplicatesAsync(
+                "Duplicate Album",
+                "CATALOG001",
+                new List<int> { 1 },
+                null
             )).ReturnsAsync(new List<MusicRelease> { existingRelease });
 
             _mockUnitOfWork.Setup(u => u.BeginTransactionAsync()).Returns(Task.CompletedTask);
             _mockUnitOfWork.Setup(u => u.RollbackTransactionAsync()).Returns(Task.CompletedTask);
+            _mockEntityResolver.Setup(e => e.ResolveOrCreateArtistsAsync(
+                It.IsAny<List<int>?>(), It.IsAny<List<string>?>(), It.IsAny<CreatedEntitiesDto>()))
+                .ReturnsAsync(new List<int> { 1 });
 
             // Act & Assert
             await Assert.ThrowsAsync<InvalidOperationException>(() => _service.CreateMusicReleaseAsync(createDto));
@@ -1314,30 +1310,31 @@ namespace KollectorScum.Tests.Services
                 LabelId = 1
             };
 
-            var existingArtist = new Artist { Id = 1, Name = "Existing Artist" };
-            var existingGenre = new Genre { Id = 1, Name = "Existing Genre" };
-            var label = new Label { Id = 1, Name = "Test Label" };
+            var createdEntities = new CreatedEntitiesDto();
+            
+            // Mock EntityResolver to return existing entity IDs without creating new ones
+            _mockEntityResolver.Setup(e => e.ResolveOrCreateArtistsAsync(
+                null, new List<string> { "Existing Artist" }, It.IsAny<CreatedEntitiesDto>()))
+                .ReturnsAsync(new List<int> { 1 });
+                
+            _mockEntityResolver.Setup(e => e.ResolveOrCreateGenresAsync(
+                null, new List<string> { "Existing Genre" }, It.IsAny<CreatedEntitiesDto>()))
+                .ReturnsAsync(new List<int> { 1 });
+                
+            _mockEntityResolver.Setup(e => e.ResolveOrCreateLabelAsync(
+                1, null, It.IsAny<CreatedEntitiesDto>()))
+                .ReturnsAsync(1);
 
-            _mockArtistRepo.Setup(r => r.GetFirstOrDefaultAsync(It.IsAny<Expression<Func<Artist, bool>>>(), It.IsAny<string>()))
-                .ReturnsAsync(existingArtist);
-            _mockGenreRepo.Setup(r => r.GetFirstOrDefaultAsync(It.IsAny<Expression<Func<Genre, bool>>>(), It.IsAny<string>()))
-                .ReturnsAsync(existingGenre);
-            _mockArtistRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(existingArtist);
-            _mockGenreRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(existingGenre);
-            _mockLabelRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(label);
-
-            _mockMusicReleaseRepo.Setup(r => r.GetAsync(
-                It.IsAny<Expression<Func<MusicRelease, bool>>>(),
-                It.IsAny<Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>>?>(),
-                It.IsAny<string>()
-            )).ReturnsAsync(new List<MusicRelease>());
-
-            _mockMusicReleaseRepo.Setup(r => r.GetAllAsync())
+            _mockDuplicateService.Setup(d => d.CheckForDuplicatesAsync(
+                It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<List<int>?>(), null))
                 .ReturnsAsync(new List<MusicRelease>());
 
             _mockMusicReleaseRepo.Setup(r => r.AddAsync(It.IsAny<MusicRelease>()))
                 .Callback<MusicRelease>(mr => mr.Id = 1)
                 .ReturnsAsync((MusicRelease mr) => mr);
+
+            _mockMapper.Setup(m => m.MapToFullDtoAsync(It.IsAny<MusicRelease>()))
+                .ReturnsAsync(new MusicReleaseDto { Id = 1, Title = "New Album" });
 
             _mockUnitOfWork.Setup(u => u.BeginTransactionAsync()).Returns(Task.CompletedTask);
             _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
@@ -1348,8 +1345,13 @@ namespace KollectorScum.Tests.Services
 
             // Assert
             Assert.NotNull(result);
-            _mockArtistRepo.Verify(r => r.AddAsync(It.IsAny<Artist>()), Times.Never);
-            _mockGenreRepo.Verify(r => r.AddAsync(It.IsAny<Genre>()), Times.Never);
+            Assert.NotNull(result.Release);
+            
+            // Verify EntityResolver was called to resolve entities (not directly adding to repos)
+            _mockEntityResolver.Verify(e => e.ResolveOrCreateArtistsAsync(
+                null, new List<string> { "Existing Artist" }, It.IsAny<CreatedEntitiesDto>()), Times.Once);
+            _mockEntityResolver.Verify(e => e.ResolveOrCreateGenresAsync(
+                null, new List<string> { "Existing Genre" }, It.IsAny<CreatedEntitiesDto>()), Times.Once);
         }
 
         #endregion
