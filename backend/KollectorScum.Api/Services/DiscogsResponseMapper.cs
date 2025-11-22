@@ -175,6 +175,7 @@ namespace KollectorScum.Api.Services
             {
                 Type = i.Type ?? string.Empty,
                 Uri = i.Uri ?? string.Empty,
+                Uri150 = i.Uri150,
                 ResourceUrl = i.ResourceUrl,
                 Width = i.Width,
                 Height = i.Height
@@ -273,6 +274,7 @@ namespace KollectorScum.Api.Services
         {
             public string? Type { get; set; }
             public string? Uri { get; set; }
+            public string? Uri150 { get; set; }
             public string? ResourceUrl { get; set; }
             public int? Width { get; set; }
             public int? Height { get; set; }

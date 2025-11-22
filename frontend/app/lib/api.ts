@@ -37,7 +37,14 @@ export async function fetchJson<T = unknown>(path: string, options: FetchJsonOpt
     clearTimeout(id);
     if (!res.ok) {
       let body: unknown = null;
-      try { body = await res.json(); } catch { /* ignore */ }
+      const contentType = res.headers.get("content-type");
+      try {
+        if (contentType?.includes("application/json")) {
+          body = await res.json();
+        } else {
+          body = await res.text();
+        }
+      } catch { /* ignore */ }
       const err: ApiError = new Error(`Request failed (${res.status}) ${res.statusText}`);
       err.status = res.status;
       err.details = body;
@@ -169,4 +176,36 @@ export async function deleteRelease(id: number): Promise<void> {
     method: 'DELETE',
     parse: false, // DELETE returns 204 No Content (no response body)
   });
+}
+
+// Discogs Integration
+import type {
+  DiscogsSearchRequest,
+  DiscogsSearchResult,
+  DiscogsRelease,
+} from './discogs-types';
+
+/**
+ * Search Discogs by catalog number with optional filters
+ * @param request - Search parameters including catalog number and optional filters
+ * @returns Array of matching releases from Discogs
+ */
+export async function searchDiscogs(request: DiscogsSearchRequest): Promise<DiscogsSearchResult[]> {
+  const params = new URLSearchParams();
+  params.append('catalogNumber', request.catalogNumber);
+  
+  if (request.format) params.append('format', request.format);
+  if (request.country) params.append('country', request.country);
+  if (request.year) params.append('year', request.year.toString());
+  
+  return fetchJson<DiscogsSearchResult[]>(`/api/discogs/search?${params.toString()}`);
+}
+
+/**
+ * Get full release details from Discogs
+ * @param releaseId - The Discogs release ID
+ * @returns Full release details from Discogs
+ */
+export async function getDiscogsRelease(releaseId: number): Promise<DiscogsRelease> {
+  return fetchJson<DiscogsRelease>(`/api/discogs/release/${releaseId}`);
 }
