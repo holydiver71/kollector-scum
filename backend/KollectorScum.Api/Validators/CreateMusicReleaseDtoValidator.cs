@@ -184,4 +184,13 @@ public class CreateMusicReleaseDtoValidator : AbstractValidator<CreateMusicRelea
 
         return !string.IsNullOrWhiteSpace(filename) && filename.Length < 255;
     }
+
+    private bool BeAValidUrl(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+            return true;
+
+        return Uri.TryCreate(url, UriKind.Absolute, out var uriResult) &&
+               (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+    }
 }
