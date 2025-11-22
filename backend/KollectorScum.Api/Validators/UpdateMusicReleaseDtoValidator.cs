@@ -94,24 +94,38 @@ public class UpdateMusicReleaseDtoValidator : AbstractValidator<UpdateMusicRelea
                 });
         });
 
-        // Images URL validation
+        // Images filename validation - should be just filenames, not full URLs
         When(x => x.Images != null, () =>
         {
             RuleFor(x => x.Images!.CoverFront)
-                .Must(BeAValidUrl!)
+                .Must(BeAValidFilename!)
                 .When(x => !string.IsNullOrWhiteSpace(x.Images!.CoverFront))
-                .WithMessage("Cover front URL must be a valid URL");
+                .WithMessage("Cover front must be a valid filename");
 
             RuleFor(x => x.Images!.CoverBack)
-                .Must(BeAValidUrl!)
+                .Must(BeAValidFilename!)
                 .When(x => !string.IsNullOrWhiteSpace(x.Images!.CoverBack))
-                .WithMessage("Cover back URL must be a valid URL");
+                .WithMessage("Cover back must be a valid filename");
 
             RuleFor(x => x.Images!.Thumbnail)
-                .Must(BeAValidUrl!)
+                .Must(BeAValidFilename!)
                 .When(x => !string.IsNullOrWhiteSpace(x.Images!.Thumbnail))
-                .WithMessage("Thumbnail URL must be a valid URL");
+                .WithMessage("Thumbnail must be a valid filename");
         });
+    }
+
+    private bool BeAValidFilename(string? filename)
+    {
+        if (string.IsNullOrWhiteSpace(filename))
+            return true;
+
+        // Allow filenames with alphanumeric, dash, underscore, dot
+        // Reject if it looks like a full URL
+        if (filename.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            filename.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        return !string.IsNullOrWhiteSpace(filename) && filename.Length < 255;
     }
 
     private bool BeAValidUrl(string? url)
