@@ -52,6 +52,16 @@ namespace KollectorScum.Api.DTOs
         public int? YearTo { get; set; }
 
         /// <summary>
+        /// Sort field (Title, Artist, DateAdded)
+        /// </summary>
+        public string? SortBy { get; set; }
+
+        /// <summary>
+        /// Sort direction (asc or desc)
+        /// </summary>
+        public string? SortOrder { get; set; }
+
+        /// <summary>
         /// Pagination parameters (page number and size)
         /// </summary>
         public PaginationParameters Pagination { get; set; } = new();
