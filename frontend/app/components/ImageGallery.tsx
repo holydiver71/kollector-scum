@@ -18,6 +18,13 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
 
   const getImageUrl = (imagePath?: string) => {
     if (!imagePath) return null;
+    
+    // If it's already a full URL, return it as-is
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return imagePath;
+    }
+    
+    // Otherwise, treat it as a relative path and construct the full URL
     const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5072';
     return `${apiBaseUrl}/api/images/${imagePath}`;
   };
@@ -28,8 +35,7 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
 
   const availableImages = [
     { key: 'coverFront', path: images?.coverFront, label: 'Front Cover' },
-    { key: 'coverBack', path: images?.coverBack, label: 'Back Cover' },
-    { key: 'thumbnail', path: images?.thumbnail, label: 'Thumbnail' }
+    { key: 'coverBack', path: images?.coverBack, label: 'Back Cover' }
   ].filter(img => img.path && !imageError.has(img.path));
 
   const primaryImage = availableImages[0];

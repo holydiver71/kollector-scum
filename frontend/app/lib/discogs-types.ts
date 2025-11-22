@@ -44,9 +44,20 @@ export interface DiscogsTrack {
 export interface DiscogsImage {
   type: string; // 'primary', 'secondary'
   uri: string;
-  uri150: string;
+  uri150?: string;
   width: number;
   height: number;
+}
+
+export interface DiscogsFormat {
+  name: string;
+  qty: string;
+  descriptions?: string[];
+}
+
+export interface DiscogsIdentifier {
+  type: string;
+  value: string;
 }
 
 export interface DiscogsRelease {
@@ -54,7 +65,7 @@ export interface DiscogsRelease {
   title: string;
   artists: DiscogsArtist[];
   labels: DiscogsLabel[];
-  formats: string[];
+  formats: DiscogsFormat[];
   genres: string[];
   styles: string[];
   country: string;
@@ -63,6 +74,7 @@ export interface DiscogsRelease {
   notes?: string;
   tracklist: DiscogsTrack[];
   images: DiscogsImage[];
+  identifiers: DiscogsIdentifier[];
   uri: string;
   resourceUrl: string;
   dataQuality?: string;

@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import AddReleaseForm from "../components/AddReleaseForm";
+import AddReleaseForm, { type CreateMusicReleaseDto } from "../components/AddReleaseForm";
 import DiscogsSearch from "../components/DiscogsSearch";
 import DiscogsSearchResults from "../components/DiscogsSearchResults";
 import DiscogsReleasePreview from "../components/DiscogsReleasePreview";
@@ -26,6 +26,8 @@ export default function AddReleasePage() {
   const [searchResults, setSearchResults] = useState<DiscogsSearchResult[]>([]);
   const [selectedResult, setSelectedResult] = useState<DiscogsSearchResult | null>(null);
   const [searchError, setSearchError] = useState("");
+  const [discogsFormData, setDiscogsFormData] = useState<Partial<CreateMusicReleaseDto> | undefined>(undefined);
+  const [discogsImageUrls, setDiscogsImageUrls] = useState<{ cover: string | null; thumbnail: string | null }>({ cover: null, thumbnail: null }); // Store original Discogs image URLs
   
   // Lookup data for detecting new entities
   const [existingArtists, setExistingArtists] = useState<string[]>([]);
@@ -54,18 +56,139 @@ export default function AddReleasePage() {
           formatsRes.json() as Promise<LookupItem[]>,
         ]);
 
-        setExistingArtists(artists.map((a) => a.name));
-        setExistingLabels(labels.map((l) => l.name));
-        setExistingGenres(genres.map((g) => g.name));
-        setExistingCountries(countries.map((c) => c.name));
-        setExistingFormats(formats.map((f) => f.name));
+        // Ensure we have arrays before mapping
+        setExistingArtists(Array.isArray(artists) ? artists.map((a) => a.name) : []);
+        setExistingLabels(Array.isArray(labels) ? labels.map((l) => l.name) : []);
+        setExistingGenres(Array.isArray(genres) ? genres.map((g) => g.name) : []);
+        setExistingCountries(Array.isArray(countries) ? countries.map((c) => c.name) : []);
+        setExistingFormats(Array.isArray(formats) ? formats.map((f) => f.name) : []);
       } catch (error) {
         console.error("Failed to load lookup data:", error);
+        // Set empty arrays on error to prevent crashes
+        setExistingArtists([]);
+        setExistingLabels([]);
+        setExistingGenres([]);
+        setExistingCountries([]);
+        setExistingFormats([]);
       }
     };
 
     fetchLookupData();
   }, []);
+
+  // Helper function to sanitize filename
+  const sanitizeFilename = (str: string): string => {
+    return str
+      .replace(/[^a-z0-9]/gi, '-') // Replace non-alphanumeric with dash
+      .replace(/-+/g, '-') // Replace multiple dashes with single dash
+      .replace(/^-|-$/g, ''); // Remove leading/trailing dashes
+  };
+
+  // Helper function to generate image filename
+  const generateImageFilename = (artist: string, title: string, year?: number): string => {
+    const artistPart = sanitizeFilename(artist);
+    const titlePart = sanitizeFilename(title);
+    const yearPart = year ? `-${year}` : '';
+    return `${artistPart}-${titlePart}${yearPart}.jpg`;
+  };
+
+  // Map Discogs release data to form DTO
+  const mapDiscogsToFormData = (release: DiscogsRelease): Partial<CreateMusicReleaseDto> => {
+    // Map artists
+    const artistNames = release.artists?.map(a => a.name) || [];
+    
+    // Map genres - combine genres and styles
+    const genreNames = [
+      ...(release.genres || []),
+      ...(release.styles || [])
+    ];
+    
+    // Map labels
+    const labelName = release.labels?.[0]?.name;
+    const labelNumber = release.labels?.[0]?.catalogNumber;
+    
+    // Map country
+    const countryName = release.country;
+    
+    // Map formats
+    const formatName = release.formats?.[0]?.name;
+    
+    // Extract barcode from identifiers
+    const barcodeIdentifier = release.identifiers?.find(
+      id => id.type.toLowerCase() === 'barcode'
+    );
+    const upc = barcodeIdentifier?.value;
+    
+    // Map tracklist to media
+    const media = release.tracklist ? [{
+      name: "Disc 1",
+      tracks: release.tracklist.map((track, index) => ({
+        title: track.title,
+        index: index + 1,
+        lengthSecs: track.duration ? parseDuration(track.duration) : undefined,
+      }))
+    }] : [];
+    
+    // Map images - generate local filename and full API URL
+    let images = undefined;
+    let sourceImageUrl = null;
+    let sourceThumbnailUrl = null;
+    if (release.images?.[0]) {
+      const primaryArtist = release.artists?.[0]?.name || 'Unknown';
+      const filename = generateImageFilename(primaryArtist, release.title, release.year);
+      const thumbnailFilename = `thumb-${filename}`;
+      
+      sourceImageUrl = release.images[0].uri; // Store full-size image for later download
+      sourceThumbnailUrl = release.images[0].uri150 || release.images[0].uri; // Use thumbnail if available, fallback to full image
+      
+      // Generate full API URLs (backend validators require absolute URLs)
+      const coverUrl = `${API_BASE_URL}/api/images/covers/${filename}`;
+      const thumbnailUrl = `${API_BASE_URL}/api/images/thumbnails/${thumbnailFilename}`;
+      
+      images = {
+        coverFront: coverUrl,
+        thumbnail: thumbnailUrl,
+      };
+    }
+    
+    return {
+      title: release.title,
+      releaseYear: release.year?.toString(),
+      artistNames,
+      artistIds: [],
+      genreNames,
+      genreIds: [],
+      live: false,
+      labelName,
+      labelNumber,
+      countryName,
+      formatName,
+      upc,
+      images,
+      media,
+      links: [],
+      _meta: { sourceImageUrl, sourceThumbnailUrl }, // Store metadata separately
+    } as any; // Type assertion to allow _meta
+  };
+  
+  // Helper function to parse duration string (e.g., "3:45" -> 225 seconds)
+  const parseDuration = (duration: string): number | undefined => {
+    if (!duration) return undefined;
+    const parts = duration.split(':').map(p => parseInt(p, 10));
+    if (parts.length === 2) {
+      return parts[0] * 60 + parts[1];
+    } else if (parts.length === 3) {
+      return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    }
+    return undefined;
+  };
+
+  // Helper function to extract filename from API URL path
+  const extractFilenameFromUrl = (url: string): string => {
+    // Extract filename from URL like "http://localhost:5072/api/images/covers/Artist-Album-Year.jpg"
+    const parts = url.split('/');
+    return parts[parts.length - 1];
+  };
 
   const handleSuccess = (releaseId: number) => {
     setNewReleaseId(releaseId);
@@ -75,8 +198,78 @@ export default function AddReleasePage() {
       router.push(`/releases/${releaseId}`);
     }, 2000);
   };
+  
+  const handleFormSuccess = async (releaseId: number) => {
+    // Download images if we have Discogs image URLs
+    const downloadPromises: Promise<void>[] = [];
+
+    // Download cover image
+    if (discogsImageUrls.cover && discogsFormData?.images?.coverFront) {
+      const coverPromise = (async () => {
+        try {
+          const filename = extractFilenameFromUrl(discogsFormData.images!.coverFront!);
+          const imgResponse = await fetch(`${API_BASE_URL}/api/images/download`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              url: discogsImageUrls.cover,
+              filename: filename,
+            }),
+          });
+          
+          if (imgResponse.ok) {
+            const imgResult = await imgResponse.json();
+            console.log("Cover image downloaded successfully:", imgResult.filename);
+          }
+        } catch (imgError) {
+          console.error("Failed to download cover image:", imgError);
+        }
+      })();
+      downloadPromises.push(coverPromise);
+    }
+
+    // Download thumbnail image
+    if (discogsImageUrls.thumbnail && discogsFormData?.images?.thumbnail) {
+      const thumbnailPromise = (async () => {
+        try {
+          const filename = extractFilenameFromUrl(discogsFormData.images!.thumbnail!);
+          const imgResponse = await fetch(`${API_BASE_URL}/api/images/download`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              url: discogsImageUrls.thumbnail,
+              filename: filename,
+            }),
+          });
+          
+          if (imgResponse.ok) {
+            const imgResult = await imgResponse.json();
+            console.log("Thumbnail image downloaded successfully:", imgResult.filename);
+          }
+        } catch (imgError) {
+          console.error("Failed to download thumbnail image:", imgError);
+        }
+      })();
+      downloadPromises.push(thumbnailPromise);
+    }
+
+    // Wait for all downloads to complete (don't fail if they error)
+    await Promise.allSettled(downloadPromises);
+    
+    // Clear the image URL state
+    setDiscogsImageUrls({ cover: null, thumbnail: null });
+    
+    // Call the regular success handler
+    handleSuccess(releaseId);
+  };
 
   const handleCancel = () => {
+    // Clear the image URL state when cancelling
+    setDiscogsImageUrls({ cover: null, thumbnail: null });
     router.push("/collection");
   };
 
@@ -93,22 +286,148 @@ export default function AddReleasePage() {
 
   const handleSelectResult = (result: DiscogsSearchResult) => {
     setSelectedResult(result);
-    setSearchResults([]);
+    // Keep search results so we can go back to them
   };
 
   const handleBackToResults = () => {
     setSelectedResult(null);
+    // Search results are preserved
   };
 
-  const handleAddToCollection = (release: DiscogsRelease) => {
-    // TODO: Implement direct add to collection
-    // For now, switch to manual form with pre-filled data
-    console.log("Add to collection:", release);
-    setActiveTab("manual");
+  const handleAddToCollection = async (release: DiscogsRelease) => {
+    // Add directly to collection without showing edit form
+    const formData = mapDiscogsToFormData(release);
+    const sourceImageUrl = (formData as any)._meta?.sourceImageUrl;
+    const sourceThumbnailUrl = (formData as any)._meta?.sourceThumbnailUrl;
+    
+    // Remove metadata before sending
+    delete (formData as any)._meta;
+    
+    // Convert year strings to ISO DateTime format for the backend
+    const cleanedData = {
+      ...formData,
+      releaseYear: formData.releaseYear 
+        ? new Date(parseInt(formData.releaseYear), 0, 1).toISOString() 
+        : undefined,
+      origReleaseYear: formData.origReleaseYear 
+        ? new Date(parseInt(formData.origReleaseYear), 0, 1).toISOString() 
+        : undefined,
+      artistIds: formData.artistIds?.length ? formData.artistIds : undefined,
+      artistNames: formData.artistNames?.length ? formData.artistNames : undefined,
+      genreIds: formData.genreIds?.length ? formData.genreIds : undefined,
+      genreNames: formData.genreNames?.length ? formData.genreNames : undefined,
+      links: formData.links?.length ? formData.links : undefined,
+      media: formData.media?.length ? formData.media : undefined,
+    };
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/musicreleases`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(cleanedData),
+      });
+
+      if (!response.ok) {
+        let errorMessage = `Failed to add release (${response.status})`;
+        try {
+          const errorData = await response.text();
+          if (errorData) {
+            errorMessage = errorData;
+          }
+        } catch {
+          // Ignore parse error
+        }
+        alert(`Error: ${errorMessage}`);
+        return;
+      }
+
+      const result = await response.json();
+      
+      // Download images in parallel if we have source URLs
+      const downloadPromises: Promise<void>[] = [];
+
+      // Download cover image
+      if (sourceImageUrl && cleanedData.images?.coverFront) {
+        const coverPromise = (async () => {
+          try {
+            const filename = extractFilenameFromUrl(cleanedData.images!.coverFront!);
+            const imgResponse = await fetch(`${API_BASE_URL}/api/images/download`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                url: sourceImageUrl,
+                filename: filename,
+              }),
+            });
+            
+            if (imgResponse.ok) {
+              const imgResult = await imgResponse.json();
+              console.log("Cover image downloaded successfully:", imgResult.filename);
+            }
+          } catch (imgError) {
+            console.error("Failed to download cover image:", imgError);
+          }
+        })();
+        downloadPromises.push(coverPromise);
+      }
+
+      // Download thumbnail image
+      if (sourceThumbnailUrl && cleanedData.images?.thumbnail) {
+        const thumbnailPromise = (async () => {
+          try {
+            const filename = extractFilenameFromUrl(cleanedData.images!.thumbnail!);
+            const imgResponse = await fetch(`${API_BASE_URL}/api/images/download`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                url: sourceThumbnailUrl,
+                filename: filename,
+              }),
+            });
+            
+            if (imgResponse.ok) {
+              const imgResult = await imgResponse.json();
+              console.log("Thumbnail image downloaded successfully:", imgResult.filename);
+            }
+          } catch (imgError) {
+            console.error("Failed to download thumbnail image:", imgError);
+          }
+        })();
+        downloadPromises.push(thumbnailPromise);
+      }
+
+      // Wait for all downloads to complete (don't fail if they error)
+      await Promise.allSettled(downloadPromises);
+      
+      // Redirect to the newly created release
+      handleSuccess(result.release.id);
+    } catch (error) {
+      console.error("Error adding release:", error);
+      alert("Failed to add release. Please try again.");
+    }
   };
 
   const handleEditManually = (release: DiscogsRelease) => {
-    console.log("Edit manually:", release);
+    const formData = mapDiscogsToFormData(release);
+    const sourceImageUrl = (formData as any)._meta?.sourceImageUrl;
+    const sourceThumbnailUrl = (formData as any)._meta?.sourceThumbnailUrl;
+    
+    // Store the image URLs for later download
+    setDiscogsImageUrls({ 
+      cover: sourceImageUrl || null, 
+      thumbnail: sourceThumbnailUrl || null 
+    });
+    
+    // Remove metadata before setting form data
+    delete (formData as any)._meta;
+    
+    setDiscogsFormData(formData);
     setActiveTab("manual");
   };
 
@@ -212,7 +531,7 @@ export default function AddReleasePage() {
             </div>
           )}
 
-          {searchResults.length > 0 && (
+          {searchResults.length > 0 && !selectedResult && (
             <DiscogsSearchResults
               results={searchResults}
               onSelectResult={handleSelectResult}
@@ -236,7 +555,11 @@ export default function AddReleasePage() {
       )}
 
       {activeTab === "manual" && (
-        <AddReleaseForm onSuccess={handleSuccess} onCancel={handleCancel} />
+        <AddReleaseForm 
+          onSuccess={handleFormSuccess} 
+          onCancel={handleCancel} 
+          initialData={discogsFormData}
+        />
       )}
     </div>
   );
