@@ -11,7 +11,7 @@ interface LookupItem {
   name: string;
 }
 
-interface CreateMusicReleaseDto {
+export interface CreateMusicReleaseDto {
   title: string;
   releaseYear?: string;
   origReleaseYear?: string;
@@ -65,29 +65,45 @@ interface CreateMusicReleaseDto {
 interface AddReleaseFormProps {
   onSuccess?: (releaseId: number) => void;
   onCancel?: () => void;
+  initialData?: Partial<CreateMusicReleaseDto>;
 }
 
-export default function AddReleaseForm({ onSuccess, onCancel }: AddReleaseFormProps) {
+export default function AddReleaseForm({ onSuccess, onCancel, initialData }: AddReleaseFormProps) {
   // Form state
   const [formData, setFormData] = useState<CreateMusicReleaseDto>({
-    title: "",
-    artistIds: [],
-    artistNames: [],
-    genreIds: [],
-    genreNames: [],
-    live: false,
-    links: [],
-    media: [],
+    title: initialData?.title || "",
+    artistIds: initialData?.artistIds || [],
+    artistNames: initialData?.artistNames || [],
+    genreIds: initialData?.genreIds || [],
+    genreNames: initialData?.genreNames || [],
+    live: initialData?.live || false,
+    links: initialData?.links || [],
+    media: initialData?.media || [],
+    releaseYear: initialData?.releaseYear,
+    origReleaseYear: initialData?.origReleaseYear,
+    labelId: initialData?.labelId,
+    labelName: initialData?.labelName,
+    countryId: initialData?.countryId,
+    countryName: initialData?.countryName,
+    labelNumber: initialData?.labelNumber,
+    upc: initialData?.upc,
+    lengthInSeconds: initialData?.lengthInSeconds,
+    formatId: initialData?.formatId,
+    formatName: initialData?.formatName,
+    packagingId: initialData?.packagingId,
+    packagingName: initialData?.packagingName,
+    purchaseInfo: initialData?.purchaseInfo,
+    images: initialData?.images,
   });
 
   // New values state (for auto-creation)
-  const [newArtistNames, setNewArtistNames] = useState<string[]>([]);
-  const [newGenreNames, setNewGenreNames] = useState<string[]>([]);
-  const [newLabelName, setNewLabelName] = useState<string[]>([]);
-  const [newCountryName, setNewCountryName] = useState<string[]>([]);
-  const [newFormatName, setNewFormatName] = useState<string[]>([]);
-  const [newPackagingName, setNewPackagingName] = useState<string[]>([]);
-  const [newStoreName, setNewStoreName] = useState<string[]>([]);
+  const [newArtistNames, setNewArtistNames] = useState<string[]>(initialData?.artistNames || []);
+  const [newGenreNames, setNewGenreNames] = useState<string[]>(initialData?.genreNames || []);
+  const [newLabelName, setNewLabelName] = useState<string[]>(initialData?.labelName ? [initialData.labelName] : []);
+  const [newCountryName, setNewCountryName] = useState<string[]>(initialData?.countryName ? [initialData.countryName] : []);
+  const [newFormatName, setNewFormatName] = useState<string[]>(initialData?.formatName ? [initialData.formatName] : []);
+  const [newPackagingName, setNewPackagingName] = useState<string[]>(initialData?.packagingName ? [initialData.packagingName] : []);
+  const [newStoreName, setNewStoreName] = useState<string[]>(initialData?.purchaseInfo?.storeName ? [initialData.purchaseInfo.storeName] : []);
 
   // Lookup data
   const [artists, setArtists] = useState<LookupItem[]>([]);
@@ -254,7 +270,15 @@ export default function AddReleaseForm({ onSuccess, onCancel }: AddReleaseFormPr
       console.error("Error creating release:", err);
       // Show validation details if available
       let errorMessage = err.message || "Failed to create release. Please try again.";
-      if (err.details) {
+      
+      // Handle 409 Conflict - duplicate release
+      if (err.status === 409) {
+        if (typeof err.details === 'string') {
+          errorMessage = err.details;
+        } else {
+          errorMessage = "This release already exists in your collection.";
+        }
+      } else if (err.details) {
         console.error("Validation details:", err.details);
         console.error("Errors object:", err.details.errors);
         // Handle FluentValidation/ASP.NET Core ValidationProblemDetails format

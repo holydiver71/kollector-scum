@@ -10,36 +10,37 @@ namespace KollectorScum.Api.Services
 {
     /// <summary>
     /// Service for music release business logic - orchestrates CRUD operations
+    /// Refactored to delegate specific responsibilities to focused services
     /// </summary>
     public class MusicReleaseService : IMusicReleaseService
     {
         private readonly IRepository<MusicRelease> _musicReleaseRepository;
-        private readonly IRepository<Artist> _artistRepository;
-        private readonly IRepository<Label> _labelRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IEntityResolverService _entityResolver;
         private readonly IMusicReleaseMapperService _mapper;
         private readonly ICollectionStatisticsService _statisticsService;
+        private readonly IMusicReleaseSearchService _searchService;
+        private readonly IMusicReleaseDuplicateService _duplicateService;
         private readonly ILogger<MusicReleaseService> _logger;
 
         public MusicReleaseService(
             IRepository<MusicRelease> musicReleaseRepository,
-            IRepository<Artist> artistRepository,
-            IRepository<Label> labelRepository,
             IUnitOfWork unitOfWork,
             IEntityResolverService entityResolver,
             IMusicReleaseMapperService mapper,
             ICollectionStatisticsService statisticsService,
+            IMusicReleaseSearchService searchService,
+            IMusicReleaseDuplicateService duplicateService,
             ILogger<MusicReleaseService> logger)
         {
-            _musicReleaseRepository = musicReleaseRepository;
-            _artistRepository = artistRepository;
-            _labelRepository = labelRepository;
-            _unitOfWork = unitOfWork;
-            _entityResolver = entityResolver;
-            _mapper = mapper;
-            _statisticsService = statisticsService;
-            _logger = logger;
+            _musicReleaseRepository = musicReleaseRepository ?? throw new ArgumentNullException(nameof(musicReleaseRepository));
+            _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+            _entityResolver = entityResolver ?? throw new ArgumentNullException(nameof(entityResolver));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _statisticsService = statisticsService ?? throw new ArgumentNullException(nameof(statisticsService));
+            _searchService = searchService ?? throw new ArgumentNullException(nameof(searchService));
+            _duplicateService = duplicateService ?? throw new ArgumentNullException(nameof(duplicateService));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public async Task<PagedResult<MusicReleaseSummaryDto>> GetMusicReleasesAsync(
@@ -104,61 +105,7 @@ namespace KollectorScum.Api.Services
 
         public async Task<List<SearchSuggestionDto>> GetSearchSuggestionsAsync(string query, int limit)
         {
-            if (string.IsNullOrWhiteSpace(query) || query.Length < 2)
-            {
-                return new List<SearchSuggestionDto>();
-            }
-
-            _logger.LogInformation("Getting search suggestions for query: {Query}", query);
-
-            var queryLower = query.ToLower();
-            var suggestions = new List<SearchSuggestionDto>();
-
-            // Get release title suggestions
-            var releases = await _musicReleaseRepository.GetAsync(
-                mr => mr.Title.ToLower().Contains(queryLower),
-                mr => mr.OrderBy(x => x.Title)
-            );
-
-            suggestions.AddRange(releases.Take(limit).Select(r => new SearchSuggestionDto
-            {
-                Type = "release",
-                Id = r.Id,
-                Name = r.Title,
-                Subtitle = r.ReleaseYear?.Year.ToString()
-            }));
-
-            // Get artist suggestions
-            var artists = await _artistRepository.GetAsync(
-                a => a.Name.ToLower().Contains(queryLower),
-                a => a.OrderBy(x => x.Name)
-            );
-
-            suggestions.AddRange(artists.Take(limit).Select(a => new SearchSuggestionDto
-            {
-                Type = "artist",
-                Id = a.Id,
-                Name = a.Name
-            }));
-
-            // Get label suggestions
-            var labels = await _labelRepository.GetAsync(
-                l => l.Name.ToLower().Contains(queryLower),
-                l => l.OrderBy(x => x.Name)
-            );
-
-            suggestions.AddRange(labels.Take(limit).Select(l => new SearchSuggestionDto
-            {
-                Type = "label",
-                Id = l.Id,
-                Name = l.Name
-            }));
-
-            return suggestions
-                .OrderBy(s => !s.Name.ToLower().StartsWith(queryLower))
-                .ThenBy(s => s.Name)
-                .Take(limit)
-                .ToList();
+            return await _searchService.GetSearchSuggestionsAsync(query, limit);
         }
 
         public async Task<CollectionStatisticsDto> GetCollectionStatisticsAsync()
@@ -190,7 +137,11 @@ namespace KollectorScum.Api.Services
                     createDto.PackagingId, createDto.PackagingName, createdEntities);
 
                 // Check for duplicates
-                var duplicates = await CheckForDuplicates(createDto.Title, createDto.LabelNumber, resolvedArtistIds);
+                var duplicates = await _duplicateService.CheckForDuplicatesAsync(
+                    createDto.Title, 
+                    createDto.LabelNumber, 
+                    resolvedArtistIds);
+                    
                 if (duplicates.Any())
                 {
                     await _unitOfWork.RollbackTransactionAsync();
@@ -337,52 +288,6 @@ namespace KollectorScum.Api.Services
 
             _logger.LogInformation("Music release deleted successfully: {Id}", id);
             return true;
-        }
-
-        // Private helper methods
-
-        /// <summary>
-        /// Check for potential duplicate releases based on title, catalog number, or artist
-        /// </summary>
-        private async Task<List<MusicRelease>> CheckForDuplicates(string title, string? labelNumber, List<int>? artistIds)
-        {
-            var duplicates = new List<MusicRelease>();
-
-            if (!string.IsNullOrWhiteSpace(labelNumber))
-            {
-                var normalizedCatalog = labelNumber.Trim().ToLower();
-                var catalogMatches = await _musicReleaseRepository.GetAsync(
-                    filter: r => r.LabelNumber != null && r.LabelNumber.ToLower() == normalizedCatalog);
-                duplicates.AddRange(catalogMatches);
-            }
-
-            if (!duplicates.Any() && artistIds != null && artistIds.Any())
-            {
-                var normalizedTitle = title.Trim().ToLower();
-                var allReleases = await _musicReleaseRepository.GetAllAsync();
-                var titleArtistMatches = allReleases.Where(r =>
-                {
-                    if (r.Title.Trim().ToLower() != normalizedTitle)
-                        return false;
-
-                    if (string.IsNullOrEmpty(r.Artists))
-                        return false;
-
-                    try
-                    {
-                        var releaseArtistIds = JsonSerializer.Deserialize<List<int>>(r.Artists);
-                        return releaseArtistIds != null && releaseArtistIds.Intersect(artistIds).Any();
-                    }
-                    catch
-                    {
-                        return false;
-                    }
-                });
-
-                duplicates.AddRange(titleArtistMatches);
-            }
-
-            return duplicates.Distinct().ToList();
         }
 
         /// <summary>

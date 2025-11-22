@@ -200,6 +200,8 @@ namespace KollectorScum.Api.Controllers
         [ProducesResponseType(404)]
         public async Task<IActionResult> DeleteMusicRelease(int id)
         {
+            _logger.LogInformation("DeleteMusicRelease called for ID: {Id}", id);
+            
             var result = await _commandService.DeleteMusicReleaseAsync(id);
             
             if (result.IsFailure)
