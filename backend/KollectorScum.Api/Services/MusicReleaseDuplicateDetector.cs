@@ -12,13 +12,16 @@ namespace KollectorScum.Api.Services
     public class MusicReleaseDuplicateDetector : IMusicReleaseDuplicateDetector
     {
         private readonly IRepository<MusicRelease> _musicReleaseRepository;
+        private readonly IRepository<Artist> _artistRepository;
         private readonly ILogger<MusicReleaseDuplicateDetector> _logger;
 
         public MusicReleaseDuplicateDetector(
             IRepository<MusicRelease> musicReleaseRepository,
+            IRepository<Artist> artistRepository,
             ILogger<MusicReleaseDuplicateDetector> logger)
         {
             _musicReleaseRepository = musicReleaseRepository ?? throw new ArgumentNullException(nameof(musicReleaseRepository));
+            _artistRepository = artistRepository ?? throw new ArgumentNullException(nameof(artistRepository));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -52,7 +55,10 @@ namespace KollectorScum.Api.Services
             if (artistNames != null && artistNames.Any())
             {
                 var normalizedTitle = title.Trim().ToLower();
+                var normalizedArtistNames = artistNames.Select(a => a.Trim().ToLower()).ToList();
+                
                 var allReleases = await _musicReleaseRepository.GetAllAsync();
+                var allArtists = await _artistRepository.GetAllAsync();
                 
                 var titleArtistMatches = allReleases.Where(r =>
                 {
@@ -67,10 +73,21 @@ namespace KollectorScum.Api.Services
                     try
                     {
                         var releaseArtistIds = JsonSerializer.Deserialize<List<int>>(r.Artists);
+                        if (releaseArtistIds == null || !releaseArtistIds.Any())
+                            return false;
                         
-                        // For now, just check if there's any overlap in artists
-                        // A more sophisticated approach would check artist names
-                        return releaseArtistIds != null && releaseArtistIds.Any();
+                        // Get the actual artist names for this release
+                        var releaseArtistNames = allArtists
+                            .Where(a => releaseArtistIds.Contains(a.Id))
+                            .Select(a => a.Name.Trim().ToLower())
+                            .ToList();
+                        
+                        // Check if there's significant overlap in artist names
+                        // Consider it a duplicate if at least one artist matches
+                        var hasMatchingArtist = releaseArtistNames.Any(ra => 
+                            normalizedArtistNames.Any(na => na == ra));
+                        
+                        return hasMatchingArtist;
                     }
                     catch
                     {

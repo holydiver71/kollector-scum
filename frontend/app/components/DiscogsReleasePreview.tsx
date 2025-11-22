@@ -72,9 +72,9 @@ export default function DiscogsReleasePreview({
           (ec) => ec.toLowerCase() === data.country.toLowerCase()
         ) ? [data.country] : [];
 
-        const newFormatsList = data.formats.filter(
-          (name) => !existingFormats.some((ef) => ef.toLowerCase() === name.toLowerCase())
-        );
+        const newFormatsList = data.formats
+          .map((f) => f.name)
+          .filter((name) => !existingFormats.some((ef) => ef.toLowerCase() === name.toLowerCase()));
 
         setNewEntities({
           artists: newArtistsList,
@@ -266,8 +266,13 @@ export default function DiscogsReleasePreview({
               <span className="text-gray-500 font-medium">Format:</span>{" "}
               {release.formats.map((format, idx) => (
                 <span key={idx} className="inline-flex items-center mr-2">
-                  <span className="text-gray-900">{format}</span>
-                  {newEntities.formats.includes(format) && (
+                  <span className="text-gray-900">
+                    {format.name}
+                    {format.descriptions && format.descriptions.length > 0 && (
+                      <span className="text-gray-500 text-xs ml-1">({format.descriptions.join(", ")})</span>
+                    )}
+                  </span>
+                  {newEntities.formats.includes(format.name) && (
                     <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
                       ✨ New
                     </span>

@@ -37,7 +37,14 @@ export async function fetchJson<T = unknown>(path: string, options: FetchJsonOpt
     clearTimeout(id);
     if (!res.ok) {
       let body: unknown = null;
-      try { body = await res.json(); } catch { /* ignore */ }
+      const contentType = res.headers.get("content-type");
+      try {
+        if (contentType?.includes("application/json")) {
+          body = await res.json();
+        } else {
+          body = await res.text();
+        }
+      } catch { /* ignore */ }
       const err: ApiError = new Error(`Request failed (${res.status}) ${res.statusText}`);
       err.status = res.status;
       err.details = body;
