@@ -2,6 +2,7 @@ using KollectorScum.Api.DTOs;
 using KollectorScum.Api.Interfaces;
 using KollectorScum.Api.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 using System.Text.Json;
 
 namespace KollectorScum.Api.Services
@@ -18,6 +19,7 @@ namespace KollectorScum.Api.Services
         private readonly IMusicReleaseMapperService _mapper;
         private readonly IMusicReleaseValidator _validator;
         private readonly ILogger<MusicReleaseCommandService> _logger;
+        private readonly IConfiguration _configuration;
 
         public MusicReleaseCommandService(
             IRepository<MusicRelease> musicReleaseRepository,
@@ -25,7 +27,8 @@ namespace KollectorScum.Api.Services
             IEntityResolverService entityResolver,
             IMusicReleaseMapperService mapper,
             IMusicReleaseValidator validator,
-            ILogger<MusicReleaseCommandService> logger)
+            ILogger<MusicReleaseCommandService> logger,
+            IConfiguration configuration)
         {
             _musicReleaseRepository = musicReleaseRepository ?? throw new ArgumentNullException(nameof(musicReleaseRepository));
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
@@ -33,6 +36,7 @@ namespace KollectorScum.Api.Services
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _validator = validator ?? throw new ArgumentNullException(nameof(validator));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         }
 
         public async Task<Result<CreateMusicReleaseResponseDto>> CreateMusicReleaseAsync(CreateMusicReleaseDto createDto)
@@ -222,6 +226,9 @@ namespace KollectorScum.Api.Services
                     return Result<bool>.NotFound("Music release", id);
                 }
 
+                // Delete associated image files before deleting the record
+                await DeleteImageFilesAsync(musicRelease);
+
                 _musicReleaseRepository.Delete(musicRelease);
                 await _unitOfWork.SaveChangesAsync();
 
@@ -232,6 +239,115 @@ namespace KollectorScum.Api.Services
             {
                 _logger.LogError(ex, "Error deleting music release: {Id}", id);
                 return Result<bool>.Failure($"An error occurred while deleting the music release: {ex.Message}", ErrorType.DatabaseError);
+            }
+        }
+
+        /// <summary>
+        /// Deletes image files associated with a music release
+        /// </summary>
+        private async Task DeleteImageFilesAsync(MusicRelease musicRelease)
+        {
+            _logger.LogInformation("DeleteImageFilesAsync called for release ID: {Id}", musicRelease.Id);
+            
+            if (string.IsNullOrWhiteSpace(musicRelease.Images))
+            {
+                _logger.LogInformation("No images to delete for release ID: {Id}", musicRelease.Id);
+                return;
+            }
+
+            try
+            {
+                var imagesPath = _configuration["ImagesPath"] ?? "/home/andy/music-images";
+                var coversPath = Path.Combine(imagesPath, "covers");
+                var thumbnailsPath = Path.Combine(imagesPath, "thumbnails");
+
+                // Parse the Images JSON
+                var imageData = JsonSerializer.Deserialize<MusicReleaseImageDto>(musicRelease.Images);
+                if (imageData == null)
+                {
+                    _logger.LogWarning("Failed to deserialize images JSON for release ID: {Id}", musicRelease.Id);
+                    return;
+                }
+
+                // Delete front cover
+                if (!string.IsNullOrWhiteSpace(imageData.CoverFront))
+                {
+                    var filename = ExtractFilenameFromUrl(imageData.CoverFront);
+                    var fullPath = Path.Combine(coversPath, filename);
+                    DeleteImageFile(fullPath, "front cover");
+                }
+
+                // Delete back cover
+                if (!string.IsNullOrWhiteSpace(imageData.CoverBack))
+                {
+                    var filename = ExtractFilenameFromUrl(imageData.CoverBack);
+                    var fullPath = Path.Combine(coversPath, filename);
+                    DeleteImageFile(fullPath, "back cover");
+                }
+
+                // Delete thumbnail (stored in separate thumbnails folder)
+                if (!string.IsNullOrWhiteSpace(imageData.Thumbnail))
+                {
+                    var filename = ExtractFilenameFromUrl(imageData.Thumbnail);
+                    var fullPath = Path.Combine(thumbnailsPath, filename);
+                    DeleteImageFile(fullPath, "thumbnail");
+                }
+
+                await Task.CompletedTask; // Make method async-compatible
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error parsing or deleting image files for release: {Id}", musicRelease.Id);
+                // Don't fail the entire delete operation if image deletion fails
+            }
+        }
+
+        /// <summary>
+        /// Extracts the filename from a URL (e.g., "http://localhost:5072/api/images/covers/file.jpg" -> "file.jpg")
+        /// </summary>
+        private string ExtractFilenameFromUrl(string urlOrFilename)
+        {
+            // If it's already just a filename (no protocol), return as-is
+            if (!urlOrFilename.StartsWith("http://") && !urlOrFilename.StartsWith("https://"))
+            {
+                return urlOrFilename;
+            }
+
+            // Extract filename from URL
+            try
+            {
+                var uri = new Uri(urlOrFilename);
+                return Path.GetFileName(uri.LocalPath);
+            }
+            catch
+            {
+                // If URL parsing fails, try to get the part after the last slash
+                var lastSlashIndex = urlOrFilename.LastIndexOf('/');
+                return lastSlashIndex >= 0 ? urlOrFilename.Substring(lastSlashIndex + 1) : urlOrFilename;
+            }
+        }
+
+        /// <summary>
+        /// Helper method to delete a single image file
+        /// </summary>
+        private void DeleteImageFile(string fullPath, string imageType)
+        {
+            try
+            {
+                if (File.Exists(fullPath))
+                {
+                    File.Delete(fullPath);
+                    _logger.LogInformation("Deleted {ImageType} file: {FilePath}", imageType, fullPath);
+                }
+                else
+                {
+                    _logger.LogDebug("{ImageType} file not found (skipping): {FilePath}", imageType, fullPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to delete {ImageType} file: {FilePath}", imageType, fullPath);
+                // Continue even if one file fails to delete
             }
         }
 

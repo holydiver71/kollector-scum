@@ -260,6 +260,11 @@ namespace KollectorScum.Api.DTOs
         public string Uri { get; set; } = string.Empty;
 
         /// <summary>
+        /// Thumbnail URI (150px)
+        /// </summary>
+        public string? Uri150 { get; set; }
+
+        /// <summary>
         /// Resource URL
         /// </summary>
         public string? ResourceUrl { get; set; }

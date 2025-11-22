@@ -34,6 +34,14 @@ Add the ability to delete a release from the collection via the album detail pag
   - **Note**: Existing backend tests in MusicReleasesControllerTests.cs
 - [x] Verify logging is adequate for delete operations
   - **Note**: Logging implemented in controller and service layers
+- [x] **Image File Deletion Enhancement** (Added November 16, 2025)
+  - Implemented automatic deletion of associated image files when a release is deleted
+  - Deletes front cover, back cover, and thumbnail images from file system
+  - Added `DeleteImageFilesAsync` helper method in `MusicReleaseCommandService`
+  - Error handling ensures deletion continues even if some files fail to delete
+  - Database record deletion proceeds even if image deletion fails (logged as warnings)
+  - Created comprehensive test suite: `MusicReleaseCommandServiceTests.cs` with 9 passing tests
+  - Tests cover: all image types, partial images, missing files, invalid JSON, locked files, and error scenarios
 
 ---
 
