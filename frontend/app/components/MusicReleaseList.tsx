@@ -9,6 +9,7 @@ interface MusicRelease {
   id: number;
   title: string;
   releaseYear: string; // Backend returns DateTime as string
+  origReleaseYear?: string; // Backend returns DateTime as string
   artistNames?: string[]; // Backend DTO field name
   genreNames?: string[];  // Backend DTO field name
   labelName?: string;
@@ -46,7 +47,11 @@ interface MusicReleaseListProps {
 export function MusicReleaseCard({ release }: { release: MusicRelease }) {
   const getCoverImageUrl = () => {
     if (release.coverImageUrl) {
-      // Serve images through the backend API - use full backend URL
+      // Check if it's already a full URL
+      if (release.coverImageUrl.startsWith('http://') || release.coverImageUrl.startsWith('https://')) {
+        return release.coverImageUrl;
+      }
+      // Otherwise, serve images through the backend API - use full backend URL
       const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5072';
       return `${apiBaseUrl}/api/images/${release.coverImageUrl}`;
     }
@@ -99,7 +104,14 @@ export function MusicReleaseCard({ release }: { release: MusicRelease }) {
             )}
 
             <div className="flex items-center gap-2 mb-2 text-sm text-gray-500">
-              {release.releaseYear && <span>{new Date(release.releaseYear).getFullYear()}</span>}
+              {release.releaseYear && (
+                <span>
+                  {new Date(release.releaseYear).getFullYear()}
+                  {release.origReleaseYear && 
+                   release.origReleaseYear !== release.releaseYear && 
+                   ` (${new Date(release.origReleaseYear).getFullYear()})`}
+                </span>
+              )}
               {release.formatName && <span>• {release.formatName}</span>}
             </div>
 
@@ -151,6 +163,8 @@ export function MusicReleaseList({ filters = {}, pageSize = 60 }: MusicReleaseLi
       setLoading(true);
       setError(null);
 
+      console.log('MusicReleaseList filters:', filters);
+
       const params = new URLSearchParams({
         'Pagination.PageNumber': page.toString(),
         'Pagination.PageSize': pageSize.toString(),
@@ -164,6 +178,8 @@ export function MusicReleaseList({ filters = {}, pageSize = 60 }: MusicReleaseLi
         ...(filters.yearFrom && { YearFrom: filters.yearFrom.toString() }),
         ...(filters.yearTo && { YearTo: filters.yearTo.toString() })
       });
+
+      console.log('API URL:', `/api/musicreleases?${params}`);
 
       const response: PagedResult<MusicRelease> = await fetchJson(`/api/musicreleases?${params}`);
       
@@ -180,6 +196,7 @@ export function MusicReleaseList({ filters = {}, pageSize = 60 }: MusicReleaseLi
   };
 
   useEffect(() => {
+    console.log('MusicReleaseList filters changed, resetting to page 1:', filters);
     setCurrentPage(1);
     fetchReleases(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps

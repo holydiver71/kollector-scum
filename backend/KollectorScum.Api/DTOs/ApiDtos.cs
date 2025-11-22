@@ -707,6 +707,7 @@ namespace KollectorScum.Api.DTOs
         public int Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public DateTime? ReleaseYear { get; set; }
+        public DateTime? OrigReleaseYear { get; set; }
         public List<string>? ArtistNames { get; set; }
         public List<string>? GenreNames { get; set; }
         public string? LabelName { get; set; }

@@ -210,7 +210,17 @@ export default function ReleaseDetailPage() {
               <h1 className="text-2xl font-bold text-gray-900">{release.title}</h1>
               {release.artists && release.artists.length > 0 && (
                 <p className="text-gray-600 mt-1">
-                  by {release.artists.map(artist => artist.name).join(", ")}
+                  by {release.artists.map((artist, index) => (
+                    <span key={artist.id}>
+                      <Link
+                        href={`/collection?artistId=${artist.id}`}
+                        className="hover:text-blue-600 hover:underline transition-colors"
+                      >
+                        {artist.name}
+                      </Link>
+                      {index < release.artists.length - 1 && ", "}
+                    </span>
+                  ))}
                 </p>
               )}
             </div>

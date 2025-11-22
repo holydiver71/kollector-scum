@@ -48,6 +48,7 @@ namespace KollectorScum.Api.Services
                 Id = musicRelease.Id,
                 Title = musicRelease.Title,
                 ReleaseYear = musicRelease.ReleaseYear,
+                OrigReleaseYear = musicRelease.OrigReleaseYear,
                 ArtistNames = artistIds?.Select(id => GetArtistName(id)).ToList(),
                 GenreNames = genreIds?.Select(id => GetGenreName(id)).ToList(),
                 LabelName = musicRelease.Label?.Name,
