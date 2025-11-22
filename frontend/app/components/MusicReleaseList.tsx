@@ -37,6 +37,8 @@ interface MusicReleaseFilters {
   live?: boolean;
   yearFrom?: number;
   yearTo?: number;
+  sortBy?: string;
+  sortOrder?: string;
 }
 
 interface MusicReleaseListProps {
@@ -176,7 +178,9 @@ export function MusicReleaseList({ filters = {}, pageSize = 60 }: MusicReleaseLi
         ...(filters.formatId && { FormatId: filters.formatId.toString() }),
         ...(filters.live !== undefined && { Live: filters.live.toString() }),
         ...(filters.yearFrom && { YearFrom: filters.yearFrom.toString() }),
-        ...(filters.yearTo && { YearTo: filters.yearTo.toString() })
+        ...(filters.yearTo && { YearTo: filters.yearTo.toString() }),
+        ...(filters.sortBy && { SortBy: filters.sortBy }),
+        ...(filters.sortOrder && { SortOrder: filters.sortOrder })
       });
 
       console.log('API URL:', `/api/musicreleases?${params}`);

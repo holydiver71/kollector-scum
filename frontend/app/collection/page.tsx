@@ -14,6 +14,8 @@ interface SearchFilters {
   live?: boolean;
   yearFrom?: number;
   yearTo?: number;
+  sortBy?: string;
+  sortOrder?: string;
 }
 
 export default function CollectionPage() {
@@ -36,6 +38,8 @@ export default function CollectionPage() {
       const live = searchParams.get('live');
       const yearFrom = searchParams.get('yearFrom');
       const yearTo = searchParams.get('yearTo');
+      const sortBy = searchParams.get('sortBy');
+      const sortOrder = searchParams.get('sortOrder');
 
       if (search) urlFilters.search = search;
       if (artistId) urlFilters.artistId = parseInt(artistId);
@@ -46,6 +50,8 @@ export default function CollectionPage() {
       if (live) urlFilters.live = live === 'true';
       if (yearFrom) urlFilters.yearFrom = parseInt(yearFrom);
       if (yearTo) urlFilters.yearTo = parseInt(yearTo);
+      if (sortBy) urlFilters.sortBy = sortBy;
+      if (sortOrder) urlFilters.sortOrder = sortOrder;
 
       console.log('CollectionPage URL params:', { artistId, urlFilters });
       setFilters(urlFilters);
@@ -90,6 +96,31 @@ export default function CollectionPage() {
               initialFilters={filters}
               enableUrlSync={false}
             />
+
+            {/* Sort Controls */}
+            <div className="mb-4 flex justify-end">
+              <div className="flex items-center gap-2">
+                <label htmlFor="sort" className="text-sm font-medium text-gray-700">
+                  Sort by:
+                </label>
+                <select
+                  id="sort"
+                  value={`${filters.sortBy || 'title'}-${filters.sortOrder || 'asc'}`}
+                  onChange={(e) => {
+                    const [sortBy, sortOrder] = e.target.value.split('-');
+                    handleFiltersChange({ ...filters, sortBy, sortOrder });
+                  }}
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                >
+                  <option value="title-asc">Title (A-Z)</option>
+                  <option value="title-desc">Title (Z-A)</option>
+                  <option value="artist-asc">Artist (A-Z)</option>
+                  <option value="artist-desc">Artist (Z-A)</option>
+                  <option value="dateadded-desc">Recently Added</option>
+                  <option value="dateadded-asc">Oldest First</option>
+                </select>
+              </div>
+            </div>
 
             {/* Results */}
             <MusicReleaseList 
