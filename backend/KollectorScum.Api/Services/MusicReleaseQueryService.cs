@@ -48,12 +48,53 @@ namespace KollectorScum.Api.Services
             // Build filter expression from parameters
             Expression<Func<MusicRelease, bool>>? filter = BuildFilterExpression(parameters);
 
+            // For artist sorting, we need to get all filtered results first, then sort after mapping
+            // because artist names are resolved from IDs during mapping
+            var sortBy = parameters.SortBy?.ToLower();
+            if (sortBy == "artist")
+            {
+                // Get all filtered results without pagination
+                var allFilteredReleases = await _musicReleaseRepository.GetAsync(
+                    filter,
+                    null, // No ordering at DB level
+                    "Label,Country,Format"
+                );
+
+                // Map to DTOs
+                var allDtos = await Task.Run(() => allFilteredReleases.Select(mr => _mapper.MapToSummaryDto(mr)).ToList());
+
+                // Sort by artist name
+                var sortOrder = parameters.SortOrder?.ToLower();
+                var sortedDtos = sortOrder == "desc"
+                    ? allDtos.OrderByDescending(dto => dto.ArtistNames?.FirstOrDefault() ?? string.Empty).ToList()
+                    : allDtos.OrderBy(dto => dto.ArtistNames?.FirstOrDefault() ?? string.Empty).ToList();
+
+                // Apply pagination
+                var totalCount = sortedDtos.Count;
+                var pagedItems = sortedDtos
+                    .Skip((parameters.Pagination.PageNumber - 1) * parameters.Pagination.PageSize)
+                    .Take(parameters.Pagination.PageSize)
+                    .ToList();
+
+                return new PagedResult<MusicReleaseSummaryDto>
+                {
+                    Items = pagedItems,
+                    Page = parameters.Pagination.PageNumber,
+                    PageSize = parameters.Pagination.PageSize,
+                    TotalCount = totalCount,
+                    TotalPages = (int)Math.Ceiling(totalCount / (double)parameters.Pagination.PageSize)
+                };
+            }
+
+            // Build sort expression for other sort options
+            Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>> orderBy = BuildSortExpression(parameters);
+
             // Get paged results
             var pagedResult = await _musicReleaseRepository.GetPagedAsync(
                 parameters.Pagination.PageNumber,
                 parameters.Pagination.PageSize,
                 filter,
-                mr => mr.OrderBy(x => x.Title),
+                orderBy,
                 "Label,Country,Format"
             );
 
@@ -67,6 +108,27 @@ namespace KollectorScum.Api.Services
                 PageSize = pagedResult.PageSize,
                 TotalCount = pagedResult.TotalCount,
                 TotalPages = pagedResult.TotalPages
+            };
+        }
+
+        /// <summary>
+        /// Builds a sort expression from query parameters
+        /// </summary>
+        private Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>> BuildSortExpression(MusicReleaseQueryParameters parameters)
+        {
+            var sortBy = parameters.SortBy?.ToLower();
+            var sortOrder = parameters.SortOrder?.ToLower();
+            var isDescending = sortOrder == "desc";
+
+            return sortBy switch
+            {
+                "dateadded" => isDescending
+                    ? mr => mr.OrderByDescending(x => x.DateAdded)
+                    : mr => mr.OrderBy(x => x.DateAdded),
+                "title" => isDescending
+                    ? mr => mr.OrderByDescending(x => x.Title)
+                    : mr => mr.OrderBy(x => x.Title),
+                _ => mr => mr.OrderBy(x => x.Title) // Default to title ascending
             };
         }
 
