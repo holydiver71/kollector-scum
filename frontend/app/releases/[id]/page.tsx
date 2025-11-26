@@ -2,13 +2,14 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { fetchJson } from "../../lib/api";
+import { fetchJson, createNowPlaying } from "../../lib/api";
 import { LoadingSpinner } from "../../components/LoadingComponents";
 import { ImageGallery } from "../../components/ImageGallery";
 import { TrackList } from "../../components/TrackList";
 import { ReleaseLinks } from "../../components/ReleaseLinks";
 import { DeleteReleaseButton } from "../../components/DeleteReleaseButton";
 import { EditReleaseButton } from "../../components/EditReleaseButton";
+import { Play, Check } from "lucide-react";
 
 // Type definitions for detailed music release
 interface Artist {
@@ -98,6 +99,7 @@ interface DetailedMusicRelease {
   media?: Media[];
   dateAdded: string;
   lastModified: string;
+  lastPlayedAt?: string;
 }
 
 export default function ReleaseDetailPage() {
@@ -108,6 +110,24 @@ export default function ReleaseDetailPage() {
   const [release, setRelease] = useState<DetailedMusicRelease | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlayingLoading, setIsPlayingLoading] = useState(false);
+
+  const handleNowPlaying = async () => {
+    if (isPlayingLoading || !release) return;
+    
+    setIsPlayingLoading(true);
+    try {
+      await createNowPlaying(release.id);
+      setIsPlaying(true);
+      // Update the release with the new last played date
+      setRelease(prev => prev ? { ...prev, lastPlayedAt: new Date().toISOString() } : prev);
+    } catch (err) {
+      console.error('Failed to record now playing:', err);
+    } finally {
+      setIsPlayingLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchRelease = async () => {
@@ -255,7 +275,7 @@ export default function ReleaseDetailPage() {
                     >
                       {artist.name}
                     </Link>
-                    {index < release.artists.length - 1 && (
+                    {release.artists && index < release.artists.length - 1 && (
                       <span className="text-5xl md:text-6xl lg:text-7xl font-medium text-gray-300"> & </span>
                     )}
                   </span>
@@ -270,32 +290,58 @@ export default function ReleaseDetailPage() {
         </div>
 
         {/* Discogs Link & Index Number Badge - Top Right */}
-        <div className="flex items-center gap-2">
-          {/* Discogs Link Button */}
-          {getDiscogsLink() && (
-            <a
-              href={getDiscogsLink() || ''}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-black hover:bg-gray-800 text-white transition-colors flex-shrink-0"
-              title="View on Discogs"
-            >
-              {/* Discogs Logo SVG */}
-              <svg
-                className="w-7 h-7"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                xmlns="http://www.w3.org/2000/svg"
+        <div className="flex flex-col items-end gap-2">
+          <div className="flex items-center gap-2">
+            {/* Discogs Link Button */}
+            {getDiscogsLink() && (
+              <a
+                href={getDiscogsLink() || ''}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-black hover:bg-gray-800 text-white transition-colors flex-shrink-0"
+                title="View on Discogs"
               >
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
-              </svg>
-            </a>
-          )}
-          
-          {/* Index Number Badge */}
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-500 text-white font-bold text-sm flex-shrink-0">
-            #{release.id}
+                {/* Discogs Logo SVG */}
+                <svg
+                  className="w-7 h-7"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+                </svg>
+              </a>
+            )}
+            
+            {/* Index Number Badge */}
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-500 text-white font-bold text-sm flex-shrink-0">
+              #{release.id}
+            </div>
           </div>
+
+          {/* Now Playing Button */}
+          <button
+            onClick={handleNowPlaying}
+            disabled={isPlayingLoading}
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm transition-all ${
+              isPlaying 
+                ? 'bg-green-500 text-white' 
+                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+            } ${isPlayingLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            title={isPlaying ? 'Playing now' : 'Mark as now playing'}
+          >
+            {isPlaying ? (
+              <>
+                <Check className="w-4 h-4" />
+                Playing
+              </>
+            ) : (
+              <>
+                <Play className="w-4 h-4" />
+                Now Playing
+              </>
+            )}
+          </button>
         </div>
       </div>        {/* Two Column Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-[max-content_1fr] gap-16 lg:items-start">
@@ -368,6 +414,20 @@ export default function ReleaseDetailPage() {
                   <div className="flex items-baseline gap-2">
                     <dt className="text-xs text-gray-500 min-w-[80px] font-semibold">Type</dt>
                     <dd className="text-sm text-gray-900 font-medium">Live Recording</dd>
+                  </div>
+                )}
+                {release.lastPlayedAt && (
+                  <div className="flex items-baseline gap-2">
+                    <dt className="text-xs text-gray-500 min-w-[80px] font-semibold">Last Played</dt>
+                    <dd className="text-sm text-gray-900 font-medium">
+                      {new Date(release.lastPlayedAt).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </dd>
                   </div>
                 )}
               </dl>
