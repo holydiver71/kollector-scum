@@ -178,6 +178,23 @@ export async function deleteRelease(id: number): Promise<void> {
   });
 }
 
+/**
+ * Updates an existing music release in the collection
+ * @param id - The ID of the release to update
+ * @param data - The updated release data (UpdateMusicReleaseDto)
+ * @throws {ApiError} If the request fails (404 if not found, 400 for validation errors, 500 on server error)
+ * @returns Promise that resolves with the updated release data
+ */
+export async function updateRelease(id: number, data: unknown): Promise<unknown> {
+  return fetchJson(`/api/musicreleases/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+}
+
 // Discogs Integration
 import type {
   DiscogsSearchRequest,

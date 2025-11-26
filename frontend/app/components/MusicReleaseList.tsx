@@ -90,7 +90,7 @@ export function MusicReleaseCard({ release }: { release: MusicRelease }) {
 
           {/* Release Info - Right */}
           <div className="flex-grow min-w-0">
-            <h3 className="text-lg font-medium text-gray-900 truncate mb-1">
+            <h3 className="text-lg font-bold text-gray-900 truncate mb-1">
               <Link 
                 href={`/releases/${release.id}`}
                 className="hover:text-blue-600 transition-colors"
@@ -100,12 +100,12 @@ export function MusicReleaseCard({ release }: { release: MusicRelease }) {
             </h3>
             
             {release.artistNames && release.artistNames.length > 0 && (
-              <p className="text-sm text-gray-600 mb-2 truncate">
+              <p className="text-sm text-gray-600 mb-2 truncate font-medium">
                 {release.artistNames.join(", ")}
               </p>
             )}
 
-            <div className="flex items-center gap-2 mb-2 text-sm text-gray-500">
+            <div className="flex items-center gap-2 mb-2 text-sm text-gray-500 font-medium">
               {release.releaseYear && (
                 <span>
                   {new Date(release.releaseYear).getFullYear()}
@@ -119,12 +119,12 @@ export function MusicReleaseCard({ release }: { release: MusicRelease }) {
 
             <div className="flex flex-wrap gap-1 mb-2">
               {release.labelName && (
-                <span className="bg-gray-100 px-2 py-1 rounded text-xs">
+                <span className="bg-gray-100 px-2 py-1 rounded text-xs font-semibold">
                   {release.labelName}
                 </span>
               )}
               {release.countryName && (
-                <span className="bg-gray-100 px-2 py-1 rounded text-xs">
+                <span className="bg-gray-100 px-2 py-1 rounded text-xs font-semibold">
                   {release.countryName}
                 </span>
               )}
@@ -135,7 +135,7 @@ export function MusicReleaseCard({ release }: { release: MusicRelease }) {
                 {release.genreNames.slice(0, 3).map((genre: string, index: number) => (
                   <span
                     key={index}
-                    className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
+                    className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-blue-100 text-blue-800"
                   >
                     {genre}
                   </span>

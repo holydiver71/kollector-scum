@@ -82,15 +82,15 @@ export default function Dashboard() {
       {/* Hero / Banner */}
       <section className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 py-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">
+          <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-2">
             KOLLECTOR SKÜM
           </h1>
-          <p className="text-lg text-gray-600 mb-6">
+          <p className="text-lg text-gray-600 mb-6 font-medium">
             Organize and discover your music library
           </p>
           <div className="flex items-center gap-4">
             <div className="flex items-center text-sm">
-              <span className="mr-2 text-gray-500">Status:</span>
+              <span className="mr-2 text-gray-500 font-semibold">Status:</span>
               {health?.status === "Healthy" ? (
                 <span className="flex items-center text-green-600 font-medium">
                   <span className="w-2 h-2 rounded-full bg-green-500 mr-2" />
@@ -125,8 +125,8 @@ export default function Dashboard() {
               >
                 <div className="text-center">
                   <div className="text-3xl mb-3">{card.icon}</div>
-                  <div className="text-2xl font-bold text-gray-900 mb-1">{card.value.toLocaleString()}</div>
-                  <div className="text-sm font-medium text-gray-600">
+                  <div className="text-2xl font-black text-gray-900 mb-1">{card.value.toLocaleString()}</div>
+                  <div className="text-sm font-bold text-gray-600">
                     {card.label}
                   </div>
                 </div>
@@ -136,7 +136,7 @@ export default function Dashboard() {
         </div>
 
         {/* Quick Actions */}
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">
+        <h2 className="text-xl font-black text-gray-900 mb-6">
           Quick Actions
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
@@ -148,10 +148,10 @@ export default function Dashboard() {
             >
               <div className="text-center">
                 <div className="text-3xl mb-3">{a.icon}</div>
-                <h3 className="font-medium text-gray-900 mb-2">
+                <h3 className="font-bold text-gray-900 mb-2">
                   {a.title}
                 </h3>
-                <p className="text-sm text-gray-600">{a.desc}</p>
+                <p className="text-sm text-gray-600 font-medium">{a.desc}</p>
               </div>
             </Link>
           ))}
@@ -159,23 +159,23 @@ export default function Dashboard() {
 
         {/* Recent Activity placeholder */}
         <div className="bg-white rounded-lg border border-gray-200 p-8 shadow-sm">
-          <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
             <span className="text-xl">📈</span> Recent Activity
           </h3>
           <div className="text-center py-8 text-gray-500">
             <div className="text-4xl mb-4">⏱️</div>
-            <p className="font-medium mb-2">Activity tracking coming soon</p>
-            <p className="text-sm">View your recent collection updates and changes here.</p>
+            <p className="font-bold mb-2">Activity tracking coming soon</p>
+            <p className="text-sm font-medium">View your recent collection updates and changes here.</p>
           </div>
         </div>
 
         {/* System Info */}
         <div className="mt-8 text-center">
           <div className="inline-block px-4 py-2 rounded border border-gray-200 bg-gray-50">
-            <p className="text-xs text-gray-600">
-              Powered by <span className="font-medium">{health?.service}</span> v{health?.version}
+            <p className="text-xs text-gray-600 font-semibold">
+              Powered by <span className="font-bold">{health?.service}</span> v{health?.version}
             </p>
-            <p className="text-xs mt-1 text-gray-500">
+            <p className="text-xs mt-1 text-gray-500 font-medium">
               Last sync: {health?.timestamp ? new Date(health.timestamp).toLocaleString() : "Unknown"}
             </p>
           </div>

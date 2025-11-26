@@ -15,9 +15,10 @@ interface ImageGalleryProps {
 export function ImageGallery({ images, title }: ImageGalleryProps) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [imageError, setImageError] = useState<Set<string>>(new Set());
+  const placeholderImage = '/placeholder-album.svg';
 
   const getImageUrl = (imagePath?: string) => {
-    if (!imagePath) return null;
+    if (!imagePath) return placeholderImage;
     
     // If it's already a full URL, return it as-is
     if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
@@ -29,8 +30,10 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
     return `${apiBaseUrl}/api/images/${imagePath}`;
   };
 
-  const handleImageError = (imagePath: string) => {
+  const handleImageError = (imagePath: string, event: React.SyntheticEvent<HTMLImageElement>) => {
     setImageError(prev => new Set([...prev, imagePath]));
+    // Set the image src to the placeholder
+    event.currentTarget.src = placeholderImage;
   };
 
   const availableImages = [
@@ -38,16 +41,21 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
     { key: 'coverBack', path: images?.coverBack, label: 'Back Cover' }
   ].filter(img => img.path && !imageError.has(img.path));
 
-  const primaryImage = availableImages[0];
+  const primaryImage = availableImages[0] || { key: 'placeholder', path: undefined, label: 'Album Cover' };
 
-  if (!primaryImage) {
+  // Always show the image gallery, even if no images available
+  if (!primaryImage.path) {
     return (
       <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center">
-          <div className="text-center">
-            <span className="text-gray-400 text-6xl block mb-2">🎵</span>
-            <p className="text-gray-500 text-sm">No images available</p>
-          </div>
+        <div className="aspect-square">
+          <img
+            src={placeholderImage}
+            alt={`${title} - Album Cover`}
+            className="w-full h-full object-contain rounded-lg border border-gray-200 bg-gray-50"
+          />
+        </div>
+        <div className="mt-4 text-center">
+          <p className="text-sm text-gray-500">No cover image available</p>
         </div>
       </div>
     );
@@ -59,14 +67,14 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
         {/* Main Image */}
         <div className="aspect-square mb-4">
           <img
-            src={getImageUrl(selectedImage || primaryImage.path) || ''}
+            src={getImageUrl(selectedImage || primaryImage.path) || placeholderImage}
             alt={`${title} - ${selectedImage ? availableImages.find(img => img.path === selectedImage)?.label : primaryImage.label}`}
             className="w-full h-full object-contain rounded-lg border border-gray-200 bg-white cursor-pointer hover:shadow-lg transition-shadow"
-            onError={() => handleImageError(selectedImage || primaryImage.path!)}
+            onError={(e) => handleImageError(selectedImage || primaryImage.path!, e)}
             onClick={() => {
               // Open full-size image in a modal or new tab
               const imageUrl = getImageUrl(selectedImage || primaryImage.path);
-              if (imageUrl) {
+              if (imageUrl && imageUrl !== placeholderImage) {
                 window.open(imageUrl, '_blank');
               }
             }}
@@ -87,10 +95,10 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
                 }`}
               >
                 <img
-                  src={getImageUrl(image.path) || ''}
+                  src={getImageUrl(image.path) || placeholderImage}
                   alt={`${title} - ${image.label}`}
                   className="w-full h-full object-contain bg-white"
-                  onError={() => handleImageError(image.path!)}
+                  onError={(e) => handleImageError(image.path!, e)}
                 />
               </button>
             ))}
