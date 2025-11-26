@@ -8,6 +8,7 @@ import { ImageGallery } from "../../components/ImageGallery";
 import { TrackList } from "../../components/TrackList";
 import { ReleaseLinks } from "../../components/ReleaseLinks";
 import { DeleteReleaseButton } from "../../components/DeleteReleaseButton";
+import { EditReleaseButton } from "../../components/EditReleaseButton";
 
 // Type definitions for detailed music release
 interface Artist {
@@ -191,196 +192,196 @@ export default function ReleaseDetailPage() {
     // Error is already displayed by the DeleteReleaseButton component
   };
 
+  // Helper function to get Discogs link from release links
+  const getDiscogsLink = (): string | null => {
+    if (!release?.links || release.links.length === 0) {
+      return null;
+    }
+
+    // Check if any link has type 'discogs' or URL contains 'discogs'
+    const discogsLink = release.links.find(
+      (link) =>
+        link.type?.toLowerCase() === 'discogs' ||
+        link.url?.toLowerCase().includes('discogs')
+    );
+
+    return discogsLink?.url || null;
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
+    <div className="min-h-screen bg-white">
+      {/* Minimal Header with Back Button and Actions */}
+      <div className="border-b border-gray-200">
+        <div className="max-w-[1400px] mx-auto px-8 py-4">
+          <div className="flex items-center justify-between">
             <button
               onClick={() => router.back()}
-              className="text-gray-600 hover:text-gray-900 flex items-center gap-2"
+              className="text-gray-400 hover:text-gray-700 flex items-center gap-2 transition-colors"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
               </svg>
-              Back
+              <span className="text-sm uppercase tracking-wider font-bold">Back</span>
             </button>
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold text-gray-900">{release.title}</h1>
-              {release.artists && release.artists.length > 0 && (
-                <p className="text-gray-600 mt-1">
-                  by {release.artists.map((artist, index) => (
-                    <span key={artist.id}>
-                      <Link
-                        href={`/collection?artistId=${artist.id}`}
-                        className="hover:text-blue-600 hover:underline transition-colors"
-                      >
-                        {artist.name}
-                      </Link>
-                      {index < release.artists.length - 1 && ", "}
-                    </span>
-                  ))}
-                </p>
-              )}
+            <div className="flex items-center gap-2">
+              <EditReleaseButton
+                releaseId={release.id}
+                releaseTitle={release.title}
+              />
+              <DeleteReleaseButton
+                releaseId={release.id}
+                releaseTitle={release.title}
+                onDeleteSuccess={handleDeleteSuccess}
+                onDeleteError={handleDeleteError}
+              />
             </div>
-            {/* Delete Button */}
-            <DeleteReleaseButton
-              releaseId={release.id}
-              releaseTitle={release.title}
-              onDeleteSuccess={handleDeleteSuccess}
-              onDeleteError={handleDeleteError}
-            />
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Images */}
-          <div className="lg:col-span-1">
+      {/* Main Content - Two Column Layout */}
+      <div className="max-w-[1400px] mx-auto px-8 py-16">
+        {/* Artist Name, Album Title & Index Badge */}
+        <div className="mb-12 flex items-start justify-between gap-8">
+          <div className="flex-1">
+            {/* Artist Name - Large and Bold */}
+            {release.artists && release.artists.length > 0 && (
+              <div className="mb-3">
+                {release.artists.map((artist, index) => (
+                  <span key={artist.id}>
+                    <Link
+                      href={`/collection?artistId=${artist.id}`}
+                      className="text-5xl md:text-6xl lg:text-7xl font-bold text-red-500 hover:text-red-600 transition-colors tracking-tight leading-none"
+                    >
+                      {artist.name}
+                    </Link>
+                    {index < release.artists.length - 1 && (
+                      <span className="text-5xl md:text-6xl lg:text-7xl font-medium text-gray-300"> & </span>
+                    )}
+                  </span>
+                ))}
+              </div>
+            )}
+
+          {/* Album Title - Subtitle Style */}
+          <h1 className="text-2xl md:text-3xl text-gray-900 font-bold tracking-wide uppercase">
+            {release.title}
+          </h1>
+        </div>
+
+        {/* Discogs Link & Index Number Badge - Top Right */}
+        <div className="flex items-center gap-2">
+          {/* Discogs Link Button */}
+          {getDiscogsLink() && (
+            <a
+              href={getDiscogsLink() || ''}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-black hover:bg-gray-800 text-white transition-colors flex-shrink-0"
+              title="View on Discogs"
+            >
+              {/* Discogs Logo SVG */}
+              <svg
+                className="w-7 h-7"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+              </svg>
+            </a>
+          )}
+          
+          {/* Index Number Badge */}
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-500 text-white font-bold text-sm flex-shrink-0">
+            #{release.id}
+          </div>
+        </div>
+      </div>        {/* Two Column Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-[max-content_1fr] gap-16 lg:items-start">
+          {/* Left Column - Album Cover */}
+          <div className="max-w-md">
             <ImageGallery images={release.images} title={release.title} />
-            
-            {/* Quick Info */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6 mt-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Release Info</h3>
-              <dl className="space-y-3">
+          </div>
+
+          {/* Right Column - Details */}
+          <div className="space-y-8" style={{ paddingTop: release.media && release.media.length === 1 ? '0' : '0' }}>
+            {/* Release Info */}
+            <div>
+              <h3 className="text-xs uppercase tracking-widest text-gray-900 mb-6 font-bold">Release Info</h3>
+              <dl className="space-y-4">
                 {release.releaseYear && (
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500">Release Year</dt>
-                    <dd className="text-sm text-gray-900">{new Date(release.releaseYear).getFullYear()}</dd>
+                  <div className="flex items-baseline gap-2">
+                    <dt className="text-xs text-gray-500 min-w-[80px] font-semibold">Year</dt>
+                    <dd className="text-sm text-gray-900 font-medium">{new Date(release.releaseYear).getFullYear()}</dd>
                   </div>
                 )}
                 {release.origReleaseYear && release.origReleaseYear !== release.releaseYear && (
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500">Original Release Year</dt>
-                    <dd className="text-sm text-gray-900">{new Date(release.origReleaseYear).getFullYear()}</dd>
+                  <div className="flex items-baseline gap-2">
+                    <dt className="text-xs text-gray-500 min-w-[80px] font-semibold">Original</dt>
+                    <dd className="text-sm text-gray-900 font-medium">{new Date(release.origReleaseYear).getFullYear()}</dd>
                   </div>
                 )}
                 {release.format && (
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500">Format</dt>
-                    <dd className="text-sm text-gray-900">{release.format.name}</dd>
+                  <div className="flex items-baseline gap-2">
+                    <dt className="text-xs text-gray-500 min-w-[80px] font-semibold">Format</dt>
+                    <dd className="text-sm text-gray-900 font-medium">{release.format.name}</dd>
                   </div>
                 )}
                 {release.packaging && (
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500">Packaging</dt>
-                    <dd className="text-sm text-gray-900">{release.packaging.name}</dd>
+                  <div className="flex items-baseline gap-2">
+                    <dt className="text-xs text-gray-500 min-w-[80px] font-semibold">Packaging</dt>
+                    <dd className="text-sm text-gray-900 font-medium">{release.packaging.name}</dd>
                   </div>
                 )}
                 {release.label && (
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500">Label</dt>
-                    <dd className="text-sm text-gray-900">{release.label.name}</dd>
+                  <div className="flex items-baseline gap-2">
+                    <dt className="text-xs text-gray-500 min-w-[80px] font-semibold">Label</dt>
+                    <dd className="text-sm text-gray-900 font-medium">{release.label.name}</dd>
                   </div>
                 )}
                 {release.labelNumber && (
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500">Catalog Number</dt>
-                    <dd className="text-sm text-gray-900">{release.labelNumber}</dd>
+                  <div className="flex items-baseline gap-2">
+                    <dt className="text-xs text-gray-500 min-w-[80px] font-semibold">Catalog</dt>
+                    <dd className="text-sm text-gray-900 font-medium">{release.labelNumber}</dd>
                   </div>
                 )}
                 {release.upc && (
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500">UPC/Barcode</dt>
-                    <dd className="text-sm text-gray-900 font-mono">{release.upc}</dd>
+                  <div className="flex items-baseline gap-2">
+                    <dt className="text-xs text-gray-500 min-w-[80px] font-semibold">Barcode</dt>
+                    <dd className="text-sm text-gray-900 font-medium">{release.upc}</dd>
                   </div>
                 )}
                 {release.country && (
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500">Country</dt>
-                    <dd className="text-sm text-gray-900">{release.country.name}</dd>
+                  <div className="flex items-baseline gap-2">
+                    <dt className="text-xs text-gray-500 min-w-[80px] font-semibold">Country</dt>
+                    <dd className="text-sm text-gray-900 font-medium">{release.country.name}</dd>
                   </div>
                 )}
                 {(release.lengthInSeconds && release.lengthInSeconds > 0) ? (
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500">Duration</dt>
-                    <dd className="text-sm text-gray-900">{formatDuration(release.lengthInSeconds)}</dd>
+                  <div className="flex items-baseline gap-2">
+                    <dt className="text-xs text-gray-500 min-w-[80px] font-semibold">Duration</dt>
+                    <dd className="text-sm text-gray-900 font-medium">{formatDuration(release.lengthInSeconds)}</dd>
                   </div>
                 ) : null}
                 {release.live && (
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500">Type</dt>
-                    <dd className="text-sm text-gray-900">Live Recording</dd>
+                  <div className="flex items-baseline gap-2">
+                    <dt className="text-xs text-gray-500 min-w-[80px] font-semibold">Type</dt>
+                    <dd className="text-sm text-gray-900 font-medium">Live Recording</dd>
                   </div>
                 )}
               </dl>
             </div>
 
-            {/* Purchase Info */}
-            {release.purchaseInfo && (
-              <div className="bg-white rounded-lg border border-gray-200 p-6 mt-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Purchase Information</h3>
-                <dl className="space-y-4">
-                  {/* Store Information */}
-                  {(release.purchaseInfo.storeName || release.purchaseInfo.storeId) && (
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">Store</dt>
-                      <dd className="text-sm text-gray-900">
-                        {release.purchaseInfo.storeName || `Store ID: ${release.purchaseInfo.storeId}`}
-                      </dd>
-                    </div>
-                  )}
-                  
-                  {/* Price Information */}
-                  {release.purchaseInfo.price && (
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">Purchase Price</dt>
-                      <dd className="text-sm text-gray-900">
-                        <span className="font-medium">
-                          {release.purchaseInfo.currency === 'GBP' || !release.purchaseInfo.currency 
-                            ? `£${release.purchaseInfo.price.toFixed(2)}`
-                            : `${release.purchaseInfo.currency} ${release.purchaseInfo.price.toFixed(2)}`
-                          }
-                        </span>
-                      </dd>
-                    </div>
-                  )}
-                  
-                  {/* Purchase Date */}
-                  {release.purchaseInfo.purchaseDate && (
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">Purchase Date</dt>
-                      <dd className="text-sm text-gray-900">
-                        {new Date(release.purchaseInfo.purchaseDate).toLocaleDateString('en-US', {
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
-                      </dd>
-                    </div>
-                  )}
-                  
-                  {/* Purchase Notes */}
-                  {release.purchaseInfo.notes && (
-                    <div>
-                      <dt className="text-sm font-medium text-gray-500">Notes</dt>
-                      <dd className="text-sm text-gray-900 bg-gray-50 p-3 rounded-md border">
-                        {release.purchaseInfo.notes}
-                      </dd>
-                    </div>
-                  )}
-
-                </dl>
-
-              </div>
-            )}
-          </div>
-
-          {/* Right Column - Details */}
-          <div className="lg:col-span-2 space-y-6">
             {/* Genres */}
             {release.genres && release.genres.length > 0 && (
-              <div className="bg-white rounded-lg border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Genres</h3>
+              <div>
+                <h3 className="text-xs uppercase tracking-widest text-gray-900 mb-6 font-bold">Genres</h3>
                 <div className="flex flex-wrap gap-2">
                   {release.genres.map((genre) => (
                     <span
                       key={genre.id}
-                      className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
+                      className="text-xs px-3 py-1 bg-gray-100 text-gray-900 rounded-full font-semibold"
                     >
                       {genre.name}
                     </span>
@@ -388,40 +389,199 @@ export default function ReleaseDetailPage() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
 
+        {/* Single-disc - Tracklist & Purchase Info Side by Side */}
+        {release.media && release.media.length === 1 && (
+          <div className="mt-12 grid grid-cols-1 lg:grid-cols-[45%_1fr] gap-1">
             {/* Tracklist */}
-            {release.media && release.media.length > 0 && (
+            <div className="max-w-md">
+              <h3 className="text-xs uppercase tracking-widest text-gray-900 mb-6 font-bold">Tracklist</h3>
               <TrackList 
                 media={release.media} 
                 albumArtists={release.artists?.map(artist => artist.name) || []}
               />
-            )}
+            </div>
 
-            {/* Links */}
-            {release.links && release.links.length > 0 && (
-              <ReleaseLinks links={release.links} />
+            {/* Purchase Info & Collection */}
+            <div className="space-y-8">
+              {/* Purchase Info */}
+              {release.purchaseInfo && (
+                <div>
+                  <h3 className="text-xs uppercase tracking-widest text-gray-900 mb-6 font-bold">Purchase Info</h3>
+                  <dl className="space-y-4">
+                    {(release.purchaseInfo.storeName || release.purchaseInfo.storeId) && (
+                      <div className="flex items-baseline gap-2">
+                        <dt className="text-xs text-gray-500 min-w-[80px] font-semibold">Store</dt>
+                        <dd className="text-sm text-gray-900 font-medium">
+                          {release.purchaseInfo.storeName || `Store ID: ${release.purchaseInfo.storeId}`}
+                        </dd>
+                      </div>
+                    )}
+                    {release.purchaseInfo.price && (
+                      <div className="flex items-baseline gap-2">
+                        <dt className="text-xs text-gray-500 min-w-[80px] font-semibold">Price</dt>
+                        <dd className="text-sm text-gray-900 font-medium">
+                          {release.purchaseInfo.currency === 'GBP' || !release.purchaseInfo.currency 
+                            ? `£${release.purchaseInfo.price.toFixed(2)}`
+                            : `${release.purchaseInfo.currency} ${release.purchaseInfo.price.toFixed(2)}`
+                          }
+                        </dd>
+                      </div>
+                    )}
+                    {release.purchaseInfo.purchaseDate && (
+                      <div className="flex items-baseline gap-2">
+                        <dt className="text-xs text-gray-500 min-w-[80px] font-semibold">Date</dt>
+                        <dd className="text-sm text-gray-900 font-medium">
+                          {new Date(release.purchaseInfo.purchaseDate).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                          })}
+                        </dd>
+                      </div>
+                    )}
+                    {release.purchaseInfo.notes && (
+                      <div>
+                        <dt className="text-xs text-gray-500 mb-2 font-semibold">Notes</dt>
+                        <dd className="text-sm text-gray-700 font-medium italic border-l-2 border-gray-300 pl-3">
+                          {release.purchaseInfo.notes}
+                        </dd>
+                      </div>
+                    )}
+                  </dl>
+                </div>
+              )}
+
+              {/* Collection Info */}
+              <div>
+                <h3 className="text-xs uppercase tracking-widest text-gray-900 mb-4 font-bold">Collection</h3>
+                <dl className="space-y-4">
+                  <div className="flex items-baseline gap-2">
+                    <dt className="text-xs text-gray-500 min-w-[80px] font-semibold">Added</dt>
+                    <dd className="text-sm text-gray-900 font-medium">
+                      {new Date(release.dateAdded).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                    </dd>
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <dt className="text-xs text-gray-500 min-w-[80px] font-semibold">Modified</dt>
+                    <dd className="text-sm text-gray-900 font-medium">
+                      {new Date(release.lastModified).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Multi-disc Tracklist - Full Width Below Cover */}
+        {release.media && release.media.length > 1 && (
+          <div className="mt-12">
+            <h3 className="text-xs uppercase tracking-widest text-gray-900 mb-6 font-bold">Tracklist</h3>
+            <TrackList 
+              media={release.media} 
+              albumArtists={release.artists?.map(artist => artist.name) || []}
+            />
+          </div>
+        )}
+
+        {/* Multi-disc - Purchase Info & Collection - Side by Side */}
+        {release.media && release.media.length > 1 && (
+          <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+            {/* Purchase Info */}
+            {release.purchaseInfo && (
+              <div>
+                <h3 className="text-xs uppercase tracking-widest text-gray-900 mb-4 font-bold">Purchase Info</h3>
+                <dl className="space-y-4">
+                  {(release.purchaseInfo.storeName || release.purchaseInfo.storeId) && (
+                    <div className="flex items-baseline gap-2">
+                      <dt className="text-xs text-gray-400 min-w-[80px]">Store</dt>
+                      <dd className="text-sm text-gray-900 font-light">
+                        {release.purchaseInfo.storeName || `Store ID: ${release.purchaseInfo.storeId}`}
+                      </dd>
+                    </div>
+                  )}
+                  {release.purchaseInfo.price && (
+                    <div className="flex items-baseline gap-2">
+                      <dt className="text-xs text-gray-400 min-w-[80px]">Price</dt>
+                      <dd className="text-sm text-gray-900 font-light">
+                        {release.purchaseInfo.currency === 'GBP' || !release.purchaseInfo.currency 
+                          ? `£${release.purchaseInfo.price.toFixed(2)}`
+                          : `${release.purchaseInfo.currency} ${release.purchaseInfo.price.toFixed(2)}`
+                        }
+                      </dd>
+                    </div>
+                  )}
+                  {release.purchaseInfo.purchaseDate && (
+                    <div className="flex items-baseline gap-2">
+                      <dt className="text-xs text-gray-400 min-w-[80px]">Date</dt>
+                      <dd className="text-sm text-gray-900 font-light">
+                        {new Date(release.purchaseInfo.purchaseDate).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        })}
+                      </dd>
+                    </div>
+                  )}
+                  {release.purchaseInfo.notes && (
+                    <div>
+                      <dt className="text-xs text-gray-400 mb-2">Notes</dt>
+                      <dd className="text-sm text-gray-700 font-light italic border-l-2 border-gray-200 pl-3">
+                        {release.purchaseInfo.notes}
+                      </dd>
+                    </div>
+                  )}
+                </dl>
+              </div>
             )}
 
             {/* Collection Info */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Collection Info</h3>
-              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Date Added</dt>
-                  <dd className="text-sm text-gray-900">
-                    {new Date(release.dateAdded).toLocaleDateString()}
+            <div>
+              <h3 className="text-xs uppercase tracking-widest text-gray-900 mb-4 font-bold">Collection</h3>
+              <dl className="space-y-4">
+                <div className="flex items-baseline gap-2">
+                  <dt className="text-xs text-gray-400 min-w-[80px]">Added</dt>
+                  <dd className="text-sm text-gray-900 font-light">
+                    {new Date(release.dateAdded).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric'
+                    })}
                   </dd>
                 </div>
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Last Modified</dt>
-                  <dd className="text-sm text-gray-900">
-                    {new Date(release.lastModified).toLocaleDateString()}
+                <div className="flex items-baseline gap-2">
+                  <dt className="text-xs text-gray-400 min-w-[80px]">Modified</dt>
+                  <dd className="text-sm text-gray-900 font-light">
+                    {new Date(release.lastModified).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric'
+                    })}
                   </dd>
                 </div>
               </dl>
             </div>
           </div>
-        </div>
+        )}
+
+        {/* Links - Always at the bottom for all releases */}
+        {release.links && release.links.length > 0 && (
+          <div className="mt-12">
+            <h3 className="text-xs uppercase tracking-widest text-gray-900 mb-4 font-bold">Links</h3>
+            <ReleaseLinks links={release.links} />
+          </div>
+        )}
       </div>
     </div>
   );
