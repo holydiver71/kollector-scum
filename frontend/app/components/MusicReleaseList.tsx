@@ -1,8 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { fetchJson } from "../lib/api";
+import { fetchJson, createNowPlaying } from "../lib/api";
 import { LoadingSpinner, Skeleton } from "./LoadingComponents";
+import { Play, Check } from "lucide-react";
 
 // Type definitions for music releases
 interface MusicRelease {
@@ -61,9 +62,46 @@ export function MusicReleaseCard({ release }: { release: MusicRelease }) {
   };
 
   const [imageError, setImageError] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleNowPlaying = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (isLoading) return;
+    
+    setIsLoading(true);
+    try {
+      await createNowPlaying(release.id);
+      setIsPlaying(true);
+    } catch (error) {
+      console.error('Failed to record now playing:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+    <div className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative">
+      {/* Now Playing Button - Top Right Corner */}
+      <button
+        onClick={handleNowPlaying}
+        disabled={isLoading}
+        className={`absolute top-2 right-2 z-10 p-2 rounded-full transition-all ${
+          isPlaying 
+            ? 'bg-green-500 text-white' 
+            : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+        } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+        title={isPlaying ? 'Playing now' : 'Mark as now playing'}
+      >
+        {isPlaying ? (
+          <Check className="w-4 h-4" />
+        ) : (
+          <Play className="w-4 h-4" />
+        )}
+      </button>
+      
       <div className="p-4">
         <div className="flex items-start gap-4">
           {/* Cover Art - Left */}
