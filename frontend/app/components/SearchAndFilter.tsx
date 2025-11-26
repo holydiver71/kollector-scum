@@ -176,7 +176,7 @@ export function SearchAndFilter({ onFiltersChange, initialFilters = {}, enableUr
       <div className="space-y-4">
         {/* Search Input with Autocomplete */}
         <div>
-          <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="search" className="block text-sm font-bold text-gray-700 mb-2">
             Search Releases
           </label>
           <div className="relative">

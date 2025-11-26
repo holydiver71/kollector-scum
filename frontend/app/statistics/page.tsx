@@ -33,8 +33,8 @@ export default function StatisticsPage() {
       <div className="min-h-screen bg-gray-50">
         <div className="bg-white border-b border-gray-200">
           <div className="max-w-7xl mx-auto px-4 py-6">
-            <h1 className="text-2xl font-bold text-gray-900">Collection Statistics</h1>
-            <p className="text-gray-600 mt-1">Analyze your music collection</p>
+            <h1 className="text-2xl font-black text-gray-900">Collection Statistics</h1>
+            <p className="text-gray-600 mt-1 font-medium">Analyze your music collection</p>
           </div>
         </div>
         <div className="max-w-7xl mx-auto px-4 py-12">
@@ -49,11 +49,11 @@ export default function StatisticsPage() {
       <div className="min-h-screen bg-gray-50">
         <div className="bg-white border-b border-gray-200">
           <div className="max-w-7xl mx-auto px-4 py-6">
-            <h1 className="text-2xl font-bold text-gray-900">Collection Statistics</h1>
+            <h1 className="text-2xl font-black text-gray-900">Collection Statistics</h1>
           </div>
         </div>
         <div className="max-w-7xl mx-auto px-4 py-12">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 font-medium">
             {error}
           </div>
         </div>
@@ -125,13 +125,13 @@ export default function StatisticsPage() {
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Collection Statistics</h1>
-              <p className="text-gray-600 mt-1">Comprehensive analysis of your music collection</p>
+              <h1 className="text-2xl font-black text-gray-900">Collection Statistics</h1>
+              <p className="text-gray-600 mt-1 font-medium">Comprehensive analysis of your music collection</p>
             </div>
             <div className="flex gap-2">
               <button
                 onClick={exportCSV}
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center gap-2"
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center gap-2 font-bold"
               >
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -140,7 +140,7 @@ export default function StatisticsPage() {
               </button>
               <button
                 onClick={exportData}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2"
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2 font-bold"
               >
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
