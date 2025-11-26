@@ -53,6 +53,11 @@ namespace KollectorScum.Api.Data
         public DbSet<Models.MusicRelease> MusicReleases { get; set; }
 
         /// <summary>
+        /// Gets or sets the NowPlaying DbSet
+        /// </summary>
+        public DbSet<Models.NowPlaying> NowPlayings { get; set; }
+
+        /// <summary>
         /// Configure the database model and relationships
         /// </summary>
         /// <param name="modelBuilder">The model builder</param>
@@ -109,6 +114,21 @@ namespace KollectorScum.Api.Data
                 .WithMany(p => p.MusicReleases)
                 .HasForeignKey(mr => mr.PackagingId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            // Configure NowPlaying relationships
+            modelBuilder.Entity<Models.NowPlaying>()
+                .HasIndex(np => np.MusicReleaseId)
+                .HasDatabaseName("IX_NowPlayings_MusicReleaseId");
+
+            modelBuilder.Entity<Models.NowPlaying>()
+                .HasIndex(np => np.PlayedAt)
+                .HasDatabaseName("IX_NowPlayings_PlayedAt");
+
+            modelBuilder.Entity<Models.NowPlaying>()
+                .HasOne(np => np.MusicRelease)
+                .WithMany()
+                .HasForeignKey(np => np.MusicReleaseId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
