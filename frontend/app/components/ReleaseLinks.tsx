@@ -15,10 +15,13 @@ export function ReleaseLinks({ links }: ReleaseLinksProps) {
     return null;
   }
 
-  const getIconForLinkType = (type?: string) => {
-    if (!type) return '🔗';
+  const getIconForLinkType = (type?: string, url?: string) => {
+    // Try to use provided type, or infer from URL
+    const effectiveType = type || inferTypeFromUrl(url);
     
-    const lowerType = type.toLowerCase();
+    if (!effectiveType) return '🔗';
+    
+    const lowerType = effectiveType.toLowerCase();
     
     switch (lowerType) {
       case 'spotify':
@@ -51,10 +54,49 @@ export function ReleaseLinks({ links }: ReleaseLinksProps) {
     }
   };
 
-  const formatLinkType = (type?: string) => {
-    if (!type) return 'Link';
+  const inferTypeFromUrl = (url?: string): string | undefined => {
+    if (!url) return undefined;
     
-    const lowerType = type.toLowerCase();
+    const lowerUrl = url.toLowerCase();
+    
+    if (lowerUrl.includes('spotify.com')) return 'spotify';
+    if (lowerUrl.includes('discogs.com')) return 'discogs';
+    if (lowerUrl.includes('musicbrainz.org')) return 'musicbrainz';
+    if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) return 'youtube';
+    if (lowerUrl.includes('bandcamp.com')) return 'bandcamp';
+    if (lowerUrl.includes('soundcloud.com')) return 'soundcloud';
+    if (lowerUrl.includes('apple.com') || lowerUrl.includes('itunes.apple.com')) return 'apple';
+    if (lowerUrl.includes('amazon.com') || lowerUrl.includes('amazon.')) return 'amazon';
+    if (lowerUrl.includes('last.fm') || lowerUrl.includes('lastfm.')) return 'lastfm';
+    if (lowerUrl.includes('allmusic.com')) return 'allmusic';
+    if (lowerUrl.includes('rateyourmusic.com')) return 'rateyourmusic';
+    
+    return undefined;
+  };
+
+  const extractDomain = (url?: string): string | undefined => {
+    if (!url) return undefined;
+    
+    try {
+      const urlObject = new URL(url);
+      // Remove 'www.' prefix if present
+      return urlObject.hostname.replace(/^www\./, '');
+    } catch {
+      return undefined;
+    }
+  };
+
+  const formatLinkType = (type?: string, url?: string) => {
+    // Try to use provided type, or infer from URL
+    const effectiveType = type || inferTypeFromUrl(url);
+    
+    // If no type found, use the domain name
+    if (!effectiveType) {
+      const domain = extractDomain(url);
+      return domain || 'Link';
+    }
+    
+    const lowerType = effectiveType.toLowerCase();
     
     switch (lowerType) {
       case 'musicbrainz':
@@ -68,7 +110,7 @@ export function ReleaseLinks({ links }: ReleaseLinksProps) {
       case 'soundcloud':
         return 'SoundCloud';
       default:
-        return type.charAt(0).toUpperCase() + type.slice(1);
+        return effectiveType.charAt(0).toUpperCase() + effectiveType.slice(1);
     }
   };
 
@@ -89,54 +131,26 @@ export function ReleaseLinks({ links }: ReleaseLinksProps) {
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">External Links</h3>
-      
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {validLinks.map((link, index) => (
-          <a
-            key={index}
-            href={link.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-sm transition-all group"
-          >
-            {/* Icon */}
-            <div className="text-xl flex-shrink-0">
-              {getIconForLinkType(link.type)}
-            </div>
-            
-            {/* Link Info */}
-            <div className="flex-grow min-w-0">
-              <div className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
-                {formatLinkType(link.type)}
-              </div>
-              
-              {link.description && (
-                <div className="text-sm text-gray-600 truncate">
-                  {link.description}
-                </div>
-              )}
-              
-              <div className="text-xs text-gray-500 truncate mt-1">
-                {link.url}
-              </div>
-            </div>
-            
-            {/* External Link Icon */}
-            <div className="text-gray-400 group-hover:text-gray-600 transition-colors flex-shrink-0">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-            </div>
-          </a>
-        ))}
-      </div>
-      
-      {/* Link Count Info */}
-      <div className="mt-4 text-sm text-gray-500 text-center">
-        {validLinks.length} external link{validLinks.length !== 1 ? 's' : ''} available
-      </div>
+    <div className="space-y-2">
+      {validLinks.map((link, index) => (
+        <a
+          key={index}
+          href={link.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 py-2 text-gray-600 hover:text-red-500 transition-colors group"
+        >
+          {/* Link Type */}
+          <span className="text-sm uppercase tracking-widest font-bold min-w-[120px]">
+            {formatLinkType(link.type, link.url)}
+          </span>
+          
+          {/* Arrow */}
+          <svg className="w-3 h-3 text-gray-300 group-hover:text-red-500 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+        </a>
+      ))}
     </div>
   );
 }

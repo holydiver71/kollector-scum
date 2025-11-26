@@ -40,14 +40,18 @@ describe('ImageGallery Component', () => {
     expect(images.length).toBeGreaterThan(1);
   });
 
-  it('displays "no images" message when no images provided', () => {
+  it('displays placeholder when no images provided', () => {
     render(<ImageGallery images={{}} title={mockTitle} />);
-    expect(screen.getByText(/No images available/i)).toBeInTheDocument();
+    expect(screen.getByText(/No cover image available/i)).toBeInTheDocument();
+    const img = screen.getByAltText(/Album Cover/i);
+    expect(img).toHaveAttribute('src', '/placeholder-album.svg');
   });
 
-  it('displays "no images" message when images is undefined', () => {
+  it('displays placeholder when images is undefined', () => {
     render(<ImageGallery title={mockTitle} />);
-    expect(screen.getByText(/No images available/i)).toBeInTheDocument();
+    expect(screen.getByText(/No cover image available/i)).toBeInTheDocument();
+    const img = screen.getByAltText(/Album Cover/i);
+    expect(img).toHaveAttribute('src', '/placeholder-album.svg');
   });
 
   it('changes displayed image when thumbnail clicked', () => {
@@ -88,20 +92,23 @@ describe('ImageGallery Component', () => {
     expect(images[0]).toHaveAttribute('src', expect.stringContaining('/api/images/'));
   });
 
-  it('shows music note icon when no images', () => {
-    const { container } = render(<ImageGallery images={{}} title={mockTitle} />);
-    expect(screen.getByText('🎵')).toBeInTheDocument();
+  it('shows placeholder when no images', () => {
+    render(<ImageGallery images={{}} title={mockTitle} />);
+    expect(screen.getByText(/No cover image available/i)).toBeInTheDocument();
+    const img = screen.getByAltText(/Album Cover/i);
+    expect(img).toHaveAttribute('src', '/placeholder-album.svg');
   });
 
   it('handles image error gracefully', () => {
-    render(<ImageGallery images={mockImages} title={mockTitle} />);
-    const images = screen.getAllByAltText(/Front Cover/i);
+    const singleImageOnly = { coverFront: 'front.jpg' };
+    render(<ImageGallery images={singleImageOnly} title={mockTitle} />);
+    const image = screen.getByAltText(/Front Cover/i);
     
-    // Simulate image error on first image
-    fireEvent.error(images[0]);
+    // Simulate image error
+    fireEvent.error(image);
     
-    // Component should still be rendered
-    expect(images[0]).toBeInTheDocument();
+    // After error, should show placeholder
+    expect(image).toHaveAttribute('src', '/placeholder-album.svg');
   });
 
   it('has proper styling for image container', () => {

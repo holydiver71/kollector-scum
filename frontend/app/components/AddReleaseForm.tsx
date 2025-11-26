@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { fetchJson } from "../lib/api";
+import { fetchJson, updateRelease } from "../lib/api";
 import ComboBox, { ComboBoxItem } from "./ComboBox";
 import TrackListEditor, { Media } from "./TrackListEditor";
 
@@ -66,9 +66,10 @@ interface AddReleaseFormProps {
   onSuccess?: (releaseId: number) => void;
   onCancel?: () => void;
   initialData?: Partial<CreateMusicReleaseDto>;
+  releaseId?: number; // If provided, the form will update instead of create
 }
 
-export default function AddReleaseForm({ onSuccess, onCancel, initialData }: AddReleaseFormProps) {
+export default function AddReleaseForm({ onSuccess, onCancel, initialData, releaseId }: AddReleaseFormProps) {
   // Form state
   const [formData, setFormData] = useState<CreateMusicReleaseDto>({
     title: initialData?.title || "",
@@ -103,7 +104,12 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData }: Add
   const [newCountryName, setNewCountryName] = useState<string[]>(initialData?.countryName ? [initialData.countryName] : []);
   const [newFormatName, setNewFormatName] = useState<string[]>(initialData?.formatName ? [initialData.formatName] : []);
   const [newPackagingName, setNewPackagingName] = useState<string[]>(initialData?.packagingName ? [initialData.packagingName] : []);
-  const [newStoreName, setNewStoreName] = useState<string[]>(initialData?.purchaseInfo?.storeName ? [initialData.purchaseInfo.storeName] : []);
+  // Only mark store as new if it has a name but no ID (not yet in database)
+  const [newStoreName, setNewStoreName] = useState<string[]>(
+    initialData?.purchaseInfo?.storeName && !initialData?.purchaseInfo?.storeId
+      ? [initialData.purchaseInfo.storeName]
+      : []
+  );
 
   // Lookup data
   const [artists, setArtists] = useState<LookupItem[]>([]);
@@ -125,6 +131,51 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData }: Add
     loadLookupData();
   }, []);
 
+  // Update form data when initialData changes (for edit mode)
+  useEffect(() => {
+    if (initialData) {
+      setFormData(prev => ({
+        ...prev,
+        title: initialData.title !== undefined ? initialData.title : prev.title,
+        artistIds: initialData.artistIds !== undefined ? initialData.artistIds : prev.artistIds,
+        artistNames: initialData.artistNames !== undefined ? initialData.artistNames : prev.artistNames,
+        genreIds: initialData.genreIds !== undefined ? initialData.genreIds : prev.genreIds,
+        genreNames: initialData.genreNames !== undefined ? initialData.genreNames : prev.genreNames,
+        live: initialData.live !== undefined ? initialData.live : prev.live,
+        releaseYear: initialData.releaseYear !== undefined ? initialData.releaseYear : prev.releaseYear,
+        origReleaseYear: initialData.origReleaseYear !== undefined ? initialData.origReleaseYear : prev.origReleaseYear,
+        labelId: initialData.labelId !== undefined ? initialData.labelId : prev.labelId,
+        labelName: initialData.labelName !== undefined ? initialData.labelName : prev.labelName,
+        countryId: initialData.countryId !== undefined ? initialData.countryId : prev.countryId,
+        countryName: initialData.countryName !== undefined ? initialData.countryName : prev.countryName,
+        labelNumber: initialData.labelNumber !== undefined ? initialData.labelNumber : prev.labelNumber,
+        upc: initialData.upc !== undefined ? initialData.upc : prev.upc,
+        lengthInSeconds: initialData.lengthInSeconds !== undefined ? initialData.lengthInSeconds : prev.lengthInSeconds,
+        formatId: initialData.formatId !== undefined ? initialData.formatId : prev.formatId,
+        formatName: initialData.formatName !== undefined ? initialData.formatName : prev.formatName,
+        packagingId: initialData.packagingId !== undefined ? initialData.packagingId : prev.packagingId,
+        packagingName: initialData.packagingName !== undefined ? initialData.packagingName : prev.packagingName,
+        purchaseInfo: initialData.purchaseInfo !== undefined ? initialData.purchaseInfo : prev.purchaseInfo,
+        images: initialData.images !== undefined ? initialData.images : prev.images,
+        links: initialData.links !== undefined ? initialData.links : prev.links,
+        media: initialData.media !== undefined ? initialData.media : prev.media,
+      }));
+      
+      if (initialData.artistNames) setNewArtistNames(initialData.artistNames);
+      if (initialData.genreNames) setNewGenreNames(initialData.genreNames);
+      if (initialData.labelName) setNewLabelName([initialData.labelName]);
+      if (initialData.countryName) setNewCountryName([initialData.countryName]);
+      if (initialData.formatName) setNewFormatName([initialData.formatName]);
+      if (initialData.packagingName) setNewPackagingName([initialData.packagingName]);
+      // Only mark store as new if it has a name but no ID
+      if (initialData.purchaseInfo?.storeName && !initialData.purchaseInfo?.storeId) {
+        setNewStoreName([initialData.purchaseInfo.storeName]);
+      } else {
+        setNewStoreName([]);
+      }
+    }
+  }, [initialData]);
+
   const loadLookupData = async () => {
     setLoadingLookups(true);
     try {
@@ -143,7 +194,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData }: Add
         fetchJson<{ items: LookupItem[] }>("/api/countries?pageSize=300"),
         fetchJson<{ items: LookupItem[] }>("/api/formats?pageSize=100"),
         fetchJson<{ items: LookupItem[] }>("/api/packagings?pageSize=100"),
-        fetchJson<{ items: LookupItem[] }>("/api/stores?pageSize=100"),
+        fetchJson<{ items: LookupItem[] }>("/api/stores?pageSize=1000"),
       ]);
 
       setArtists(artistsData.items || []);
@@ -184,18 +235,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData }: Add
       errors.artists = "At least one artist is required";
     }
 
-    // Validate image URLs
-    if (formData.images?.coverFront && !validateUrl(formData.images.coverFront)) {
-      errors.coverFront = "Invalid URL format";
-    }
-    if (formData.images?.coverBack && !validateUrl(formData.images.coverBack)) {
-      errors.coverBack = "Invalid URL format";
-    }
-    if (formData.images?.thumbnail && !validateUrl(formData.images.thumbnail)) {
-      errors.thumbnail = "Invalid URL format";
-    }
-
-    // Validate external links
+    // Validate link URLs
     formData.links?.forEach((link, index) => {
       if (link.url && !validateUrl(link.url)) {
         errors[`link${index}`] = "Invalid URL format";
@@ -246,55 +286,86 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData }: Add
         origReleaseYear: formData.origReleaseYear 
           ? new Date(parseInt(formData.origReleaseYear), 0, 1).toISOString() 
           : undefined,
+        // Only send lengthInSeconds if it's a positive number
+        lengthInSeconds: formData.lengthInSeconds && formData.lengthInSeconds > 0 
+          ? formData.lengthInSeconds 
+          : undefined,
         artistIds: formData.artistIds?.length ? formData.artistIds : undefined,
         artistNames: formData.artistNames?.length ? formData.artistNames : undefined,
         genreIds: formData.genreIds?.length ? formData.genreIds : undefined,
         genreNames: formData.genreNames?.length ? formData.genreNames : undefined,
         links: formData.links?.length ? formData.links : undefined,
         media: formData.media?.length ? formData.media : undefined,
+        // Clean up purchaseInfo: only send storeId OR storeName, not both
+        purchaseInfo: formData.purchaseInfo ? {
+          ...formData.purchaseInfo,
+          // If storeId exists (existing store), remove storeName
+          // If only storeName exists (new store), keep it
+          storeName: formData.purchaseInfo.storeId ? undefined : formData.purchaseInfo.storeName,
+        } : undefined,
       };
       
-      console.log("Submitting form data:", cleanedData);
-      const response = await fetchJson<{ release: { id: number } }>("/api/musicreleases", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(cleanedData),
-      });
+      let response;
+      if (releaseId) {
+        // Update existing release
+        response = await updateRelease(releaseId, cleanedData);
+      } else {
+        // Create new release
+        response = await fetchJson<{ release: { id: number } }>("/api/musicreleases", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(cleanedData),
+        });
+      }
 
       if (onSuccess) {
-        onSuccess(response.release.id);
+        // For update, use the existing releaseId; for create, use the response ID
+        const resultId = releaseId || (response as { release: { id: number } }).release.id;
+        onSuccess(resultId);
       }
-    } catch (err: any) {
-      console.error("Error creating release:", err);
+    } catch (err) {
+      const error = err as { message?: string; status?: number; details?: string | unknown };
+      console.error(`Error ${releaseId ? 'updating' : 'creating'} release:`, error);
       // Show validation details if available
-      let errorMessage = err.message || "Failed to create release. Please try again.";
+      let errorMessage = error.message || `Failed to ${releaseId ? 'update' : 'create'} release. Please try again.`;
       
-      // Handle 409 Conflict - duplicate release
-      if (err.status === 409) {
-        if (typeof err.details === 'string') {
-          errorMessage = err.details;
+      // Handle 409 Conflict - duplicate release (only for create)
+      if (error.status === 409 && !releaseId) {
+        if (typeof error.details === 'string') {
+          errorMessage = error.details;
         } else {
           errorMessage = "This release already exists in your collection.";
         }
-      } else if (err.details) {
-        console.error("Validation details:", err.details);
-        console.error("Errors object:", err.details.errors);
-        // Handle FluentValidation/ASP.NET Core ValidationProblemDetails format
-        if (err.details.errors && typeof err.details.errors === 'object') {
-          const validationErrors = Object.entries(err.details.errors)
+      } else if (error.details) {
+        // Parse error details - could be string or object
+        let details: { errors?: Record<string, unknown>; title?: string; detail?: string; status?: number; type?: string; traceId?: string };
+        
+        if (typeof error.details === 'string') {
+          try {
+            details = JSON.parse(error.details);
+          } catch {
+            errorMessage = error.details;
+            setError(errorMessage);
+            return;
+          }
+        } else {
+          details = error.details as typeof details;
+        }
+        
+        // Handle ASP.NET Core ValidationProblemDetails format
+        if (details.errors && typeof details.errors === 'object') {
+          const validationErrors = Object.entries(details.errors)
             .map(([field, messages]) => {
               const msgs = Array.isArray(messages) ? messages : [messages];
               return `${field}: ${msgs.join(', ')}`;
             })
             .join('\n');
           errorMessage = `Validation failed:\n${validationErrors}`;
-        } else if (err.details.title || err.details.detail) {
+        } else if (details.title || details.detail) {
           // Handle ProblemDetails format
-          errorMessage = err.details.title || err.details.detail || errorMessage;
-        } else if (typeof err.details === 'string') {
-          errorMessage = err.details;
+          errorMessage = details.title || details.detail || errorMessage;
         }
       }
       setError(errorMessage);
@@ -388,12 +459,13 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData }: Add
               Release Year
             </label>
             <input
-              type="text"
+              type="date"
               id="releaseYear"
-              value={formData.releaseYear || ""}
+              value={formData.releaseYear 
+                ? new Date(formData.releaseYear).toISOString().split('T')[0] 
+                : ""}
               onChange={(e) => updateField("releaseYear", e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="YYYY or YYYY-MM-DD"
             />
           </div>
           <div>
@@ -401,12 +473,13 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData }: Add
               Original Release Year
             </label>
             <input
-              type="text"
+              type="date"
               id="origReleaseYear"
-              value={formData.origReleaseYear || ""}
+              value={formData.origReleaseYear 
+                ? new Date(formData.origReleaseYear).toISOString().split('T')[0] 
+                : ""}
               onChange={(e) => updateField("origReleaseYear", e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="YYYY or YYYY-MM-DD"
             />
           </div>
         </div>
@@ -555,7 +628,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData }: Add
       </div>
 
       {/* Purchase Information */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
+      <div className="bg-white shadow-md rounded-lg p-6 mb-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Purchase Information (Optional)</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -586,7 +659,9 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData }: Add
             <input
               type="date"
               id="purchaseDate"
-              value={formData.purchaseInfo?.purchaseDate || ""}
+              value={formData.purchaseInfo?.purchaseDate 
+                ? new Date(formData.purchaseInfo.purchaseDate).toISOString().split('T')[0] 
+                : ""}
               onChange={(e) => updateField("purchaseInfo", {
                 ...formData.purchaseInfo,
                 purchaseDate: e.target.value,
@@ -669,10 +744,10 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData }: Add
         <div className="space-y-4">
           <div>
             <label htmlFor="coverFront" className="block text-sm font-medium text-gray-700 mb-1">
-              Front Cover URL
+              Front Cover Filename
             </label>
             <input
-              type="url"
+              type="text"
               id="coverFront"
               value={formData.images?.coverFront || ""}
               onChange={(e) => updateField("images", {
@@ -682,7 +757,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData }: Add
               className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                 validationErrors.coverFront ? "border-red-500" : "border-gray-300"
               }`}
-              placeholder="https://example.com/front-cover.jpg"
+              placeholder="front-cover.jpg"
             />
             {validationErrors.coverFront && (
               <p className="mt-1 text-sm text-red-600">{validationErrors.coverFront}</p>
@@ -703,10 +778,10 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData }: Add
 
           <div>
             <label htmlFor="coverBack" className="block text-sm font-medium text-gray-700 mb-1">
-              Back Cover URL
+              Back Cover Filename
             </label>
             <input
-              type="url"
+              type="text"
               id="coverBack"
               value={formData.images?.coverBack || ""}
               onChange={(e) => updateField("images", {
@@ -716,7 +791,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData }: Add
               className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                 validationErrors.coverBack ? "border-red-500" : "border-gray-300"
               }`}
-              placeholder="https://example.com/back-cover.jpg"
+              placeholder="back-cover.jpg"
             />
             {validationErrors.coverBack && (
               <p className="mt-1 text-sm text-red-600">{validationErrors.coverBack}</p>
@@ -737,10 +812,10 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData }: Add
 
           <div>
             <label htmlFor="thumbnail" className="block text-sm font-medium text-gray-700 mb-1">
-              Thumbnail URL
+              Thumbnail Filename
             </label>
             <input
-              type="url"
+              type="text"
               id="thumbnail"
               value={formData.images?.thumbnail || ""}
               onChange={(e) => updateField("images", {
@@ -750,7 +825,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData }: Add
               className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                 validationErrors.thumbnail ? "border-red-500" : "border-gray-300"
               }`}
-              placeholder="https://example.com/thumbnail.jpg"
+              placeholder="thumbnail.jpg"
             />
             {validationErrors.thumbnail && (
               <p className="mt-1 text-sm text-red-600">{validationErrors.thumbnail}</p>
@@ -889,7 +964,10 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData }: Add
           disabled={loading}
           className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? "Creating..." : "Create Release"}
+          {loading 
+            ? (releaseId ? "Updating..." : "Creating...") 
+            : (releaseId ? "Update Release" : "Create Release")
+          }
         </button>
       </div>
     </form>

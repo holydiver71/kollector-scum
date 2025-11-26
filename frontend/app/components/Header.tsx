@@ -17,32 +17,32 @@ const Header: React.FC<HeaderProps> = ({ title = "Kollector Sküm" }) => {
                 <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+            <h1 className="text-2xl font-black text-gray-900">{title}</h1>
           </div>
 
           {/* Navigation */}
           <nav className="hidden md:flex space-x-8">
             <Link 
               href="/" 
-              className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-bold transition-colors"
             >
               Dashboard
             </Link>
             <Link 
               href="/collection" 
-              className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-bold transition-colors"
             >
               Collection
             </Link>
             <Link 
               href="/search" 
-              className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-bold transition-colors"
             >
               Search
             </Link>
             <Link 
               href="/statistics" 
-              className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-bold transition-colors"
             >
               Statistics
             </Link>

@@ -82,8 +82,8 @@ export default function CollectionPage() {
       {/* Page Header */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 py-6">
-          <h1 className="text-2xl font-bold text-gray-900">Music Collection</h1>
-          <p className="text-gray-600 mt-1">Browse and search your music releases</p>
+          <h1 className="text-2xl font-black text-gray-900">Music Collection</h1>
+          <p className="text-gray-600 mt-1 font-medium">Browse and search your music releases</p>
         </div>
       </div>
 
@@ -101,12 +101,12 @@ export default function CollectionPage() {
             {/* Sort Controls */}
             <div className="mb-6 flex justify-end">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700 mr-2">Sort by:</span>
+                <span className="text-sm font-bold text-gray-700 mr-2">Sort by:</span>
                 <div className="inline-flex rounded-lg border border-gray-300 bg-white shadow-sm">
                   {/* Title A-Z */}
                   <button
                     onClick={() => handleFiltersChange({ ...filters, sortBy: 'title', sortOrder: 'asc' })}
-                    className={`inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors rounded-l-lg border-r border-gray-300
+                    className={`inline-flex items-center gap-1.5 px-4 py-2 text-sm font-bold transition-colors rounded-l-lg border-r border-gray-300
                       ${filters.sortBy === 'title' && filters.sortOrder === 'asc' 
                         ? 'bg-blue-50 text-blue-700' 
                         : 'text-gray-700 hover:bg-gray-50'}`}
@@ -119,7 +119,7 @@ export default function CollectionPage() {
                   {/* Title Z-A */}
                   <button
                     onClick={() => handleFiltersChange({ ...filters, sortBy: 'title', sortOrder: 'desc' })}
-                    className={`inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors border-r border-gray-300
+                    className={`inline-flex items-center gap-1.5 px-4 py-2 text-sm font-bold transition-colors border-r border-gray-300
                       ${filters.sortBy === 'title' && filters.sortOrder === 'desc' 
                         ? 'bg-blue-50 text-blue-700' 
                         : 'text-gray-700 hover:bg-gray-50'}`}
@@ -132,7 +132,7 @@ export default function CollectionPage() {
                   {/* Artist A-Z */}
                   <button
                     onClick={() => handleFiltersChange({ ...filters, sortBy: 'artist', sortOrder: 'asc' })}
-                    className={`inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors border-r border-gray-300
+                    className={`inline-flex items-center gap-1.5 px-4 py-2 text-sm font-bold transition-colors border-r border-gray-300
                       ${filters.sortBy === 'artist' && filters.sortOrder === 'asc' 
                         ? 'bg-blue-50 text-blue-700' 
                         : 'text-gray-700 hover:bg-gray-50'}`}
@@ -145,7 +145,7 @@ export default function CollectionPage() {
                   {/* Artist Z-A */}
                   <button
                     onClick={() => handleFiltersChange({ ...filters, sortBy: 'artist', sortOrder: 'desc' })}
-                    className={`inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors border-r border-gray-300
+                    className={`inline-flex items-center gap-1.5 px-4 py-2 text-sm font-bold transition-colors border-r border-gray-300
                       ${filters.sortBy === 'artist' && filters.sortOrder === 'desc' 
                         ? 'bg-blue-50 text-blue-700' 
                         : 'text-gray-700 hover:bg-gray-50'}`}
@@ -158,7 +158,7 @@ export default function CollectionPage() {
                   {/* Recently Added */}
                   <button
                     onClick={() => handleFiltersChange({ ...filters, sortBy: 'dateadded', sortOrder: 'desc' })}
-                    className={`inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors border-r border-gray-300
+                    className={`inline-flex items-center gap-1.5 px-4 py-2 text-sm font-bold transition-colors border-r border-gray-300
                       ${filters.sortBy === 'dateadded' && filters.sortOrder === 'desc' 
                         ? 'bg-blue-50 text-blue-700' 
                         : 'text-gray-700 hover:bg-gray-50'}`}
@@ -171,7 +171,7 @@ export default function CollectionPage() {
                   {/* Oldest First */}
                   <button
                     onClick={() => handleFiltersChange({ ...filters, sortBy: 'dateadded', sortOrder: 'asc' })}
-                    className={`inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors rounded-r-lg
+                    className={`inline-flex items-center gap-1.5 px-4 py-2 text-sm font-bold transition-colors rounded-r-lg
                       ${filters.sortBy === 'dateadded' && filters.sortOrder === 'asc' 
                         ? 'bg-blue-50 text-blue-700' 
                         : 'text-gray-700 hover:bg-gray-50'}`}
