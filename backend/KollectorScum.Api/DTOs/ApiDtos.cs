@@ -640,6 +640,10 @@ namespace KollectorScum.Api.DTOs
         public List<MusicReleaseMediaDto>? Media { get; set; }
         public DateTime DateAdded { get; set; }
         public DateTime LastModified { get; set; }
+        /// <summary>
+        /// When this release was last played (null if never played)
+        /// </summary>
+        public DateTime? LastPlayedAt { get; set; }
     }
 
     /// <summary>
@@ -773,6 +777,41 @@ namespace KollectorScum.Api.DTOs
         public bool Live { get; set; }
         public int? LengthSecs { get; set; }
         public int Index { get; set; }
+    }
+
+    // ===== NOW PLAYING DTOs =====
+
+    /// <summary>
+    /// DTO for creating a now playing record
+    /// </summary>
+    public class CreateNowPlayingDto
+    {
+        /// <summary>
+        /// The music release ID that was played
+        /// </summary>
+        [Required]
+        public int MusicReleaseId { get; set; }
+    }
+
+    /// <summary>
+    /// DTO for now playing response
+    /// </summary>
+    public class NowPlayingDto
+    {
+        /// <summary>
+        /// The now playing record ID
+        /// </summary>
+        public int Id { get; set; }
+
+        /// <summary>
+        /// The music release ID that was played
+        /// </summary>
+        public int MusicReleaseId { get; set; }
+
+        /// <summary>
+        /// When the release was played
+        /// </summary>
+        public DateTime PlayedAt { get; set; }
     }
 
 

@@ -1,6 +1,7 @@
 using KollectorScum.Api.DTOs;
 using KollectorScum.Api.Interfaces;
 using KollectorScum.Api.Models;
+using KollectorScum.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Linq.Expressions;
@@ -18,6 +19,7 @@ namespace KollectorScum.Api.Services
         private readonly IRepository<Label> _labelRepository;
         private readonly IMusicReleaseMapperService _mapper;
         private readonly ICollectionStatisticsService _statisticsService;
+        private readonly KollectorScumDbContext _context;
         private readonly ILogger<MusicReleaseQueryService> _logger;
 
         public MusicReleaseQueryService(
@@ -26,6 +28,7 @@ namespace KollectorScum.Api.Services
             IRepository<Label> labelRepository,
             IMusicReleaseMapperService mapper,
             ICollectionStatisticsService statisticsService,
+            KollectorScumDbContext context,
             ILogger<MusicReleaseQueryService> logger)
         {
             _musicReleaseRepository = musicReleaseRepository ?? throw new ArgumentNullException(nameof(musicReleaseRepository));
@@ -33,6 +36,7 @@ namespace KollectorScum.Api.Services
             _labelRepository = labelRepository ?? throw new ArgumentNullException(nameof(labelRepository));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _statisticsService = statisticsService ?? throw new ArgumentNullException(nameof(statisticsService));
+            _context = context ?? throw new ArgumentNullException(nameof(context));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -186,7 +190,16 @@ namespace KollectorScum.Api.Services
                 return null;
             }
 
-            return await _mapper.MapToFullDtoAsync(musicRelease);
+            var dto = await _mapper.MapToFullDtoAsync(musicRelease);
+
+            // Get the last played date
+            dto.LastPlayedAt = await _context.NowPlayings
+                .Where(np => np.MusicReleaseId == id)
+                .OrderByDescending(np => np.PlayedAt)
+                .Select(np => (DateTime?)np.PlayedAt)
+                .FirstOrDefaultAsync();
+
+            return dto;
         }
 
         public async Task<List<SearchSuggestionDto>> GetSearchSuggestionsAsync(string query, int limit)
