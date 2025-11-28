@@ -234,6 +234,12 @@ export interface NowPlayingDto {
   playedAt: string;
 }
 
+export interface PlayHistoryDto {
+  musicReleaseId: number;
+  playCount: number;
+  playedDates: string[];
+}
+
 /**
  * Records a now playing entry for a music release
  * @param musicReleaseId - The ID of the music release being played
@@ -247,4 +253,13 @@ export async function createNowPlaying(musicReleaseId: number): Promise<NowPlayi
       'Content-Type': 'application/json',
     },
   });
+}
+
+/**
+ * Gets the play history for a music release
+ * @param musicReleaseId - The ID of the music release
+ * @returns The play history including count and list of dates
+ */
+export async function getPlayHistory(musicReleaseId: number): Promise<PlayHistoryDto> {
+  return fetchJson<PlayHistoryDto>(`/api/nowplaying/release/${musicReleaseId}/history`);
 }

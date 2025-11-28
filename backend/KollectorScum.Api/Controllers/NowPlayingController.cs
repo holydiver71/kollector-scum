@@ -135,5 +135,38 @@ namespace KollectorScum.Api.Controllers
                 return StatusCode(500, "An error occurred while retrieving the last played date");
             }
         }
+
+        /// <summary>
+        /// Gets the play history for a music release including count and all play dates
+        /// </summary>
+        /// <param name="releaseId">The music release ID</param>
+        /// <returns>Play history with count and list of dates</returns>
+        [HttpGet("release/{releaseId}/history")]
+        [ProducesResponseType(typeof(PlayHistoryDto), 200)]
+        public async Task<ActionResult<PlayHistoryDto>> GetPlayHistoryForRelease(int releaseId)
+        {
+            try
+            {
+                var playedDates = await _context.NowPlayings
+                    .Where(np => np.MusicReleaseId == releaseId)
+                    .OrderByDescending(np => np.PlayedAt)
+                    .Select(np => np.PlayedAt)
+                    .ToListAsync();
+
+                var result = new PlayHistoryDto
+                {
+                    MusicReleaseId = releaseId,
+                    PlayCount = playedDates.Count,
+                    PlayedDates = playedDates
+                };
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting play history for release {ReleaseId}", releaseId);
+                return StatusCode(500, "An error occurred while retrieving the play history");
+            }
+        }
     }
 }

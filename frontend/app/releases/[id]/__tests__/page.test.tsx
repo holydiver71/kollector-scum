@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import ReleaseDetailPage from '../page';
 import * as api from '../../../lib/api';
 
@@ -24,6 +24,8 @@ jest.mock('next/link', () => {
 // Mock API
 jest.mock('../../../lib/api', () => ({
   fetchJson: jest.fn(),
+  getPlayHistory: jest.fn(),
+  createNowPlaying: jest.fn(),
 }));
 
 // Mock components
@@ -223,5 +225,88 @@ describe('ReleaseDetailPage', () => {
     backButton.click();
     
     expect(mockBack).toHaveBeenCalled();
+  });
+
+  describe('Play History', () => {
+    const mockReleaseWithLastPlayed = {
+      ...mockRelease,
+      lastPlayedAt: '2024-01-15T10:30:00Z',
+      dateAdded: '2023-01-01T00:00:00Z',
+      lastModified: '2023-06-15T00:00:00Z',
+    };
+
+    const mockPlayHistory = {
+      musicReleaseId: 1,
+      playCount: 3,
+      playedDates: [
+        '2024-01-15T10:30:00Z',
+        '2024-01-10T14:00:00Z',
+        '2024-01-05T18:45:00Z',
+      ],
+    };
+
+    it('displays Last Played with chevron button when lastPlayedAt is set', async () => {
+      (api.fetchJson as jest.Mock).mockResolvedValue(mockReleaseWithLastPlayed);
+      
+      render(<ReleaseDetailPage />);
+      
+      await waitFor(() => {
+        expect(screen.getByText('Last Played')).toBeInTheDocument();
+      });
+      
+      // Check for the chevron button (it should have the title attribute)
+      const chevronButton = screen.getByTitle('Show play history');
+      expect(chevronButton).toBeInTheDocument();
+    });
+
+    it('shows play history panel when chevron is clicked', async () => {
+      (api.fetchJson as jest.Mock).mockResolvedValue(mockReleaseWithLastPlayed);
+      (api.getPlayHistory as jest.Mock).mockResolvedValue(mockPlayHistory);
+      
+      render(<ReleaseDetailPage />);
+      
+      await waitFor(() => {
+        expect(screen.getByTitle('Show play history')).toBeInTheDocument();
+      });
+      
+      // Click the chevron button
+      const chevronButton = screen.getByTitle('Show play history');
+      fireEvent.click(chevronButton);
+      
+      // Wait for play history to be displayed
+      await waitFor(() => {
+        expect(screen.getByText('Played 3 times')).toBeInTheDocument();
+      });
+      
+      // Verify the API was called with correct release ID
+      expect(api.getPlayHistory).toHaveBeenCalledWith(1);
+    });
+
+    it('hides play history panel when chevron is clicked again', async () => {
+      (api.fetchJson as jest.Mock).mockResolvedValue(mockReleaseWithLastPlayed);
+      (api.getPlayHistory as jest.Mock).mockResolvedValue(mockPlayHistory);
+      
+      render(<ReleaseDetailPage />);
+      
+      await waitFor(() => {
+        expect(screen.getByTitle('Show play history')).toBeInTheDocument();
+      });
+      
+      // Click to show
+      const chevronButton = screen.getByTitle('Show play history');
+      fireEvent.click(chevronButton);
+      
+      await waitFor(() => {
+        expect(screen.getByText('Played 3 times')).toBeInTheDocument();
+      });
+      
+      // Click to hide
+      const hideButton = screen.getByTitle('Hide play history');
+      fireEvent.click(hideButton);
+      
+      await waitFor(() => {
+        expect(screen.queryByText('Played 3 times')).not.toBeInTheDocument();
+      });
+    });
   });
 });

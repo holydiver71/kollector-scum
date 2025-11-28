@@ -2,14 +2,14 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { fetchJson, createNowPlaying } from "../../lib/api";
+import { fetchJson, createNowPlaying, getPlayHistory, PlayHistoryDto } from "../../lib/api";
 import { LoadingSpinner } from "../../components/LoadingComponents";
 import { ImageGallery } from "../../components/ImageGallery";
 import { TrackList } from "../../components/TrackList";
 import { ReleaseLinks } from "../../components/ReleaseLinks";
 import { DeleteReleaseButton } from "../../components/DeleteReleaseButton";
 import { EditReleaseButton } from "../../components/EditReleaseButton";
-import { Play, Check, X } from "lucide-react";
+import { Play, Check, X, ChevronDown, ChevronUp } from "lucide-react";
 
 // Type definitions for detailed music release
 interface Artist {
@@ -114,6 +114,9 @@ export default function ReleaseDetailPage() {
   const [isPlayingLoading, setIsPlayingLoading] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [confirmationTime, setConfirmationTime] = useState<Date | null>(null);
+  const [showPlayHistory, setShowPlayHistory] = useState(false);
+  const [playHistory, setPlayHistory] = useState<PlayHistoryDto | null>(null);
+  const [playHistoryLoading, setPlayHistoryLoading] = useState(false);
 
   const handleNowPlayingClick = () => {
     setConfirmationTime(new Date());
@@ -130,6 +133,11 @@ export default function ReleaseDetailPage() {
       // Update the release with the new last played date
       setRelease(prev => prev ? { ...prev, lastPlayedAt: new Date().toISOString() } : prev);
       setShowConfirmation(false);
+      // Refresh play history if it's currently being shown
+      if (showPlayHistory) {
+        const history = await getPlayHistory(release.id);
+        setPlayHistory(history);
+      }
     } catch (err) {
       console.error('Failed to record now playing:', err);
     } finally {
@@ -140,6 +148,28 @@ export default function ReleaseDetailPage() {
   const handleCancel = () => {
     setShowConfirmation(false);
     setConfirmationTime(null);
+  };
+
+  const handlePlayHistoryClick = async () => {
+    if (!release) return;
+    
+    if (showPlayHistory) {
+      // Toggle off
+      setShowPlayHistory(false);
+      return;
+    }
+    
+    // Toggle on and fetch data
+    setPlayHistoryLoading(true);
+    try {
+      const history = await getPlayHistory(release.id);
+      setPlayHistory(history);
+      setShowPlayHistory(true);
+    } catch (err) {
+      console.error('Failed to fetch play history:', err);
+    } finally {
+      setPlayHistoryLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -476,17 +506,63 @@ export default function ReleaseDetailPage() {
                   </div>
                 )}
                 {release.lastPlayedAt && (
-                  <div className="flex items-baseline gap-2">
-                    <dt className="text-xs text-gray-500 min-w-[80px] font-semibold">Last Played</dt>
-                    <dd className="text-sm text-gray-900 font-medium">
-                      {new Date(release.lastPlayedAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </dd>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <dt className="text-xs text-gray-500 min-w-[80px] font-semibold">Last Played</dt>
+                      <dd className="text-sm text-gray-900 font-medium flex items-center gap-1">
+                        {new Date(release.lastPlayedAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                        <button
+                          onClick={handlePlayHistoryClick}
+                          disabled={playHistoryLoading}
+                          className="ml-1 p-1 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
+                          title={showPlayHistory ? "Hide play history" : "Show play history"}
+                        >
+                          {playHistoryLoading ? (
+                            <span className="w-4 h-4 block animate-spin border-2 border-gray-400 border-t-transparent rounded-full" />
+                          ) : showPlayHistory ? (
+                            <ChevronUp className="w-4 h-4 text-gray-600" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4 text-gray-600" />
+                          )}
+                        </button>
+                      </dd>
+                    </div>
+                    
+                    {/* Play History Panel */}
+                    {showPlayHistory && playHistory && (
+                      <div className="ml-[80px] mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="text-sm font-semibold text-gray-900 mb-2">
+                          Played {playHistory.playCount} time{playHistory.playCount !== 1 ? 's' : ''}
+                        </div>
+                        {playHistory.playedDates.length > 0 && (
+                          <div 
+                            className="text-xs text-gray-600 space-y-1"
+                            style={{ 
+                              maxHeight: playHistory.playedDates.length > 10 ? '200px' : 'auto',
+                              overflowY: playHistory.playedDates.length > 10 ? 'auto' : 'visible'
+                            }}
+                          >
+                            {playHistory.playedDates.map((date, index) => (
+                              <div key={index} className="py-1 border-b border-gray-100 last:border-b-0">
+                                {new Date(date).toLocaleDateString('en-US', {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </dl>
