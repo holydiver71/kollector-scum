@@ -9,7 +9,7 @@ import { TrackList } from "../../components/TrackList";
 import { ReleaseLinks } from "../../components/ReleaseLinks";
 import { DeleteReleaseButton } from "../../components/DeleteReleaseButton";
 import { EditReleaseButton } from "../../components/EditReleaseButton";
-import { Play, Check } from "lucide-react";
+import { Play, Check, X } from "lucide-react";
 
 // Type definitions for detailed music release
 interface Artist {
@@ -112,8 +112,15 @@ export default function ReleaseDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPlayingLoading, setIsPlayingLoading] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [confirmationTime, setConfirmationTime] = useState<Date | null>(null);
 
-  const handleNowPlaying = async () => {
+  const handleNowPlayingClick = () => {
+    setConfirmationTime(new Date());
+    setShowConfirmation(true);
+  };
+
+  const handleConfirm = async () => {
     if (isPlayingLoading || !release) return;
     
     setIsPlayingLoading(true);
@@ -122,11 +129,17 @@ export default function ReleaseDetailPage() {
       setIsPlaying(true);
       // Update the release with the new last played date
       setRelease(prev => prev ? { ...prev, lastPlayedAt: new Date().toISOString() } : prev);
+      setShowConfirmation(false);
     } catch (err) {
       console.error('Failed to record now playing:', err);
     } finally {
       setIsPlayingLoading(false);
     }
+  };
+
+  const handleCancel = () => {
+    setShowConfirmation(false);
+    setConfirmationTime(null);
   };
 
   useEffect(() => {
@@ -262,7 +275,7 @@ export default function ReleaseDetailPage() {
       {/* Main Content - Two Column Layout */}
       <div className="max-w-[1400px] mx-auto px-8 py-16">
         {/* Artist Name, Album Title & Index Badge */}
-        <div className="mb-12 flex items-start justify-between gap-8">
+        <div className="mb-8 flex items-start justify-between gap-8">
           <div className="flex-1">
             {/* Artist Name - Large and Bold */}
             {release.artists && release.artists.length > 0 && (
@@ -287,71 +300,117 @@ export default function ReleaseDetailPage() {
           <h1 className="text-2xl md:text-3xl text-gray-900 font-bold tracking-wide uppercase">
             {release.title}
           </h1>
+
+          {/* Now Playing Button with Confirmation Panel - Below Album Title */}
+          <div className="relative mt-4 h-[42px] overflow-hidden">
+            <div className="absolute left-0 top-0 flex items-center">
+              {/* Now Playing Button - Always on left */}
+              <button
+                onClick={handleNowPlayingClick}
+                disabled={isPlayingLoading}
+                className={`relative z-10 inline-flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm transition-all ${
+                  isPlaying 
+                    ? 'bg-green-500 text-white' 
+                    : 'bg-red-100 hover:bg-gray-200 text-gray-700'
+                } ${isPlayingLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                title={isPlaying ? 'Playing now' : 'Mark as now playing'}
+              >
+                {isPlaying ? (
+                  <>
+                    <Check className="w-4 h-4" />
+                    Playing
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4" />
+                    Now Playing
+                  </>
+                )}
+              </button>
+
+              {/* Confirmation Panel - Positioned behind button, slides out to right */}
+              <div 
+                className={`absolute left-0 flex items-center gap-3 pl-[140px] transition-all duration-300 ease-in-out ${
+                  showConfirmation ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                }`}
+                style={{
+                  transform: showConfirmation ? 'translateX(0)' : 'translateX(-100%)'
+                }}
+              >
+                {confirmationTime && (
+                  <>
+                    <span className="text-sm text-gray-700 font-medium whitespace-nowrap">
+                      {confirmationTime.toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                      })} {confirmationTime.toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                    <button
+                      onClick={handleConfirm}
+                      disabled={isPlayingLoading}
+                      className="w-8 h-8 rounded-full bg-green-500 hover:bg-green-600 flex items-center justify-center transition-colors disabled:opacity-50"
+                      title="Confirm"
+                    >
+                      <Check className="w-5 h-5 text-white" />
+                    </button>
+                    <button
+                      onClick={handleCancel}
+                      disabled={isPlayingLoading}
+                      className="w-8 h-8 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center transition-colors disabled:opacity-50"
+                      title="Cancel"
+                    >
+                      <X className="w-5 h-5 text-white" />
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Discogs Link & Index Number Badge - Top Right */}
-        <div className="flex flex-col items-end gap-2">
-          <div className="flex items-center gap-2">
-            {/* Discogs Link Button */}
-            {getDiscogsLink() && (
-              <a
-                href={getDiscogsLink() || ''}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-black hover:bg-gray-800 text-white transition-colors flex-shrink-0"
-                title="View on Discogs"
+        <div className="flex items-center gap-2">
+          {/* Discogs Link Button */}
+          {getDiscogsLink() && (
+            <a
+              href={getDiscogsLink() || ''}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-black hover:bg-gray-800 text-white transition-colors flex-shrink-0"
+              title="View on Discogs"
+            >
+              {/* Discogs Logo SVG */}
+              <svg
+                className="w-7 h-7"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                {/* Discogs Logo SVG */}
-                <svg
-                  className="w-7 h-7"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
-                </svg>
-              </a>
-            )}
-            
-            {/* Index Number Badge */}
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-500 text-white font-bold text-sm flex-shrink-0">
-              #{release.id}
-            </div>
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+              </svg>
+            </a>
+          )}
+          
+          {/* Index Number Badge */}
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-500 text-white font-bold text-sm flex-shrink-0">
+            #{release.id}
           </div>
-
-          {/* Now Playing Button */}
-          <button
-            onClick={handleNowPlaying}
-            disabled={isPlayingLoading}
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm transition-all ${
-              isPlaying 
-                ? 'bg-green-500 text-white' 
-                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-            } ${isPlayingLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-            title={isPlaying ? 'Playing now' : 'Mark as now playing'}
-          >
-            {isPlaying ? (
-              <>
-                <Check className="w-4 h-4" />
-                Playing
-              </>
-            ) : (
-              <>
-                <Play className="w-4 h-4" />
-                Now Playing
-              </>
-            )}
-          </button>
         </div>
-      </div>        {/* Two Column Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-[max-content_1fr] gap-16 lg:items-start">
+      </div>
+
+      {/* Two Column Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-[max-content_1fr] gap-16">
           {/* Left Column - Album Cover */}
           <div className="max-w-md">
             <ImageGallery images={release.images} title={release.title} />
           </div>
 
           {/* Right Column - Details */}
-          <div className="space-y-8" style={{ paddingTop: release.media && release.media.length === 1 ? '0' : '0' }}>
+          <div className="space-y-8">
             {/* Release Info */}
             <div>
               <h3 className="text-xs uppercase tracking-widest text-gray-900 mb-6 font-bold">Release Info</h3>
