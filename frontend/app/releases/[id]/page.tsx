@@ -2,14 +2,14 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { fetchJson, createNowPlaying } from "../../lib/api";
+import { fetchJson, createNowPlaying, getPlayHistory, PlayHistoryDto } from "../../lib/api";
 import { LoadingSpinner } from "../../components/LoadingComponents";
 import { ImageGallery } from "../../components/ImageGallery";
 import { TrackList } from "../../components/TrackList";
 import { ReleaseLinks } from "../../components/ReleaseLinks";
 import { DeleteReleaseButton } from "../../components/DeleteReleaseButton";
 import { EditReleaseButton } from "../../components/EditReleaseButton";
-import { Play, Check, X } from "lucide-react";
+import { Play, Check, X, ChevronDown } from "lucide-react";
 
 // Type definitions for detailed music release
 interface Artist {
@@ -114,6 +114,9 @@ export default function ReleaseDetailPage() {
   const [isPlayingLoading, setIsPlayingLoading] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [confirmationTime, setConfirmationTime] = useState<Date | null>(null);
+  const [showPlayHistory, setShowPlayHistory] = useState(false);
+  const [playHistory, setPlayHistory] = useState<PlayHistoryDto | null>(null);
+  const [playHistoryLoading, setPlayHistoryLoading] = useState(false);
 
   const handleNowPlayingClick = () => {
     setConfirmationTime(new Date());
@@ -130,6 +133,8 @@ export default function ReleaseDetailPage() {
       // Update the release with the new last played date
       setRelease(prev => prev ? { ...prev, lastPlayedAt: new Date().toISOString() } : prev);
       setShowConfirmation(false);
+      // Reset play history so it will be refetched when panel is opened again
+      setPlayHistory(null);
     } catch (err) {
       console.error('Failed to record now playing:', err);
     } finally {
@@ -140,6 +145,30 @@ export default function ReleaseDetailPage() {
   const handleCancel = () => {
     setShowConfirmation(false);
     setConfirmationTime(null);
+  };
+
+  const handlePlayHistoryToggle = async () => {
+    if (!release) return;
+    
+    if (showPlayHistory) {
+      setShowPlayHistory(false);
+      return;
+    }
+    
+    setShowPlayHistory(true);
+    
+    // Fetch play history if not already loaded
+    if (!playHistory) {
+      setPlayHistoryLoading(true);
+      try {
+        const history = await getPlayHistory(release.id);
+        setPlayHistory(history);
+      } catch (err) {
+        console.error('Failed to fetch play history:', err);
+      } finally {
+        setPlayHistoryLoading(false);
+      }
+    }
   };
 
   useEffect(() => {
@@ -476,17 +505,62 @@ export default function ReleaseDetailPage() {
                   </div>
                 )}
                 {release.lastPlayedAt && (
-                  <div className="flex items-baseline gap-2">
-                    <dt className="text-xs text-gray-500 min-w-[80px] font-semibold">Last Played</dt>
-                    <dd className="text-sm text-gray-900 font-medium">
-                      {new Date(release.lastPlayedAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </dd>
+                  <div className="relative">
+                    <div className="flex items-baseline gap-2">
+                      <dt className="text-xs text-gray-500 min-w-[80px] font-semibold">Last Played</dt>
+                      <dd className="text-sm text-gray-900 font-medium flex items-center gap-1">
+                        {new Date(release.lastPlayedAt).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                        <button
+                          onClick={handlePlayHistoryToggle}
+                          className="p-0.5 text-gray-500 hover:text-gray-700 transition-colors"
+                          title="Show play history"
+                        >
+                          <ChevronDown 
+                            className={`w-4 h-4 transition-transform duration-200 ${showPlayHistory ? 'rotate-180' : ''}`} 
+                          />
+                        </button>
+                      </dd>
+                    </div>
+                    
+                    {/* Play History Panel */}
+                    {showPlayHistory && (
+                      <div className="mt-3 ml-[88px] p-3 bg-gray-50 rounded-lg border border-gray-200 max-w-xs">
+                        {playHistoryLoading ? (
+                          <div className="text-sm text-gray-500">Loading...</div>
+                        ) : playHistory ? (
+                          <div>
+                            <div className="text-sm font-semibold text-gray-900 mb-2">
+                              Played {playHistory.playCount} time{playHistory.playCount !== 1 ? 's' : ''}
+                            </div>
+                            {playHistory.playDates.length > 0 && (
+                              <div 
+                                className={`space-y-1 ${playHistory.playDates.length > 10 ? 'max-h-[240px] overflow-y-auto pr-2' : ''}`}
+                              >
+                                {playHistory.playDates.map((date, index) => (
+                                  <div key={index} className="text-xs text-gray-600">
+                                    {new Date(date).toLocaleDateString('en-US', {
+                                      year: 'numeric',
+                                      month: 'short',
+                                      day: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-sm text-gray-500">No play history available</div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </dl>
