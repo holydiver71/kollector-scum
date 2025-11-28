@@ -814,5 +814,26 @@ namespace KollectorScum.Api.DTOs
         public DateTime PlayedAt { get; set; }
     }
 
+    /// <summary>
+    /// DTO for play history of a music release
+    /// </summary>
+    public class PlayHistoryDto
+    {
+        /// <summary>
+        /// The music release ID
+        /// </summary>
+        public int MusicReleaseId { get; set; }
+
+        /// <summary>
+        /// Total number of times this release has been played
+        /// </summary>
+        public int PlayCount { get; set; }
+
+        /// <summary>
+        /// List of all played dates, most recent first
+        /// </summary>
+        public List<DateTime> PlayDates { get; set; } = new();
+    }
+
 
 }
