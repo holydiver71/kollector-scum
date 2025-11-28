@@ -262,5 +262,5 @@ export interface PlayHistoryDto {
  * @returns The play count and list of all play dates
  */
 export async function getPlayHistory(musicReleaseId: number): Promise<PlayHistoryDto> {
-  return fetchJson<PlayHistoryDto>(`/api/nowplaying/release/${musicReleaseId}/history`);
+  return fetchJson<PlayHistoryDto>(`/api/NowPlaying/release/${musicReleaseId}/history`);
 }
