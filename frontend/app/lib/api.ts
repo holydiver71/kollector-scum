@@ -226,3 +226,25 @@ export async function searchDiscogs(request: DiscogsSearchRequest): Promise<Disc
 export async function getDiscogsRelease(releaseId: number): Promise<DiscogsRelease> {
   return fetchJson<DiscogsRelease>(`/api/discogs/release/${releaseId}`);
 }
+
+// Now Playing
+export interface NowPlayingDto {
+  id: number;
+  musicReleaseId: number;
+  playedAt: string;
+}
+
+/**
+ * Records a now playing entry for a music release
+ * @param musicReleaseId - The ID of the music release being played
+ * @returns The created now playing record
+ */
+export async function createNowPlaying(musicReleaseId: number): Promise<NowPlayingDto> {
+  return fetchJson<NowPlayingDto>('/api/nowplaying', {
+    method: 'POST',
+    body: JSON.stringify({ musicReleaseId }),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+}
