@@ -46,12 +46,12 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
   // Always show the image gallery, even if no images available
   if (!primaryImage.path) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white rounded-lg">
         <div className="aspect-square">
           <img
             src={placeholderImage}
             alt={`${title} - Album Cover`}
-            className="w-full h-full object-contain rounded-lg border border-gray-200 bg-gray-50"
+            className="w-full h-full object-contain rounded-lg bg-gray-50"
           />
         </div>
         <div className="mt-4 text-center">
@@ -63,13 +63,13 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
 
   return (
     <>
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white rounded-lg">
         {/* Main Image */}
         <div className="aspect-square mb-4">
           <img
             src={getImageUrl(selectedImage || primaryImage.path) || placeholderImage}
             alt={`${title} - ${selectedImage ? availableImages.find(img => img.path === selectedImage)?.label : primaryImage.label}`}
-            className="w-full h-full object-contain rounded-lg border border-gray-200 bg-white cursor-pointer hover:shadow-lg transition-shadow"
+            className="w-full h-full object-contain rounded-lg bg-white cursor-pointer hover:shadow-lg transition-shadow"
             onError={(e) => handleImageError(selectedImage || primaryImage.path!, e)}
             onClick={() => {
               // Open full-size image in a modal or new tab
@@ -106,19 +106,13 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
         )}
 
         {/* Image Labels */}
-        <div className="mt-4 text-center">
-          <p className="text-sm text-gray-600">
-            {selectedImage 
-              ? availableImages.find(img => img.path === selectedImage)?.label 
-              : primaryImage.label
-            }
-          </p>
-          {availableImages.length > 1 && (
+        {availableImages.length > 1 && (
+          <div className="mt-4 text-center">
             <p className="text-xs text-gray-500 mt-1">
               Click thumbnails to switch images
             </p>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Full-screen Modal (optional - for future enhancement) */}
