@@ -248,3 +248,19 @@ export async function createNowPlaying(musicReleaseId: number): Promise<NowPlayi
     },
   });
 }
+
+// Play History
+export interface PlayHistoryDto {
+  musicReleaseId: number;
+  playCount: number;
+  playDates: string[];
+}
+
+/**
+ * Gets the play history for a music release
+ * @param musicReleaseId - The ID of the music release
+ * @returns The play count and list of all play dates
+ */
+export async function getPlayHistory(musicReleaseId: number): Promise<PlayHistoryDto> {
+  return fetchJson<PlayHistoryDto>(`/api/nowplaying/release/${musicReleaseId}/history`);
+}
