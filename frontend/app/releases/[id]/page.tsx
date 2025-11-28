@@ -102,6 +102,9 @@ interface DetailedMusicRelease {
   lastPlayedAt?: string;
 }
 
+// Maximum number of play dates to show before scrolling
+const PLAY_HISTORY_SCROLL_THRESHOLD = 10;
+
 export default function ReleaseDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -135,8 +138,12 @@ export default function ReleaseDetailPage() {
       setShowConfirmation(false);
       // Refresh play history if it's currently being shown
       if (showPlayHistory) {
-        const history = await getPlayHistory(release.id);
-        setPlayHistory(history);
+        try {
+          const history = await getPlayHistory(release.id);
+          setPlayHistory(history);
+        } catch (refreshErr) {
+          console.error('Failed to refresh play history:', refreshErr);
+        }
       }
     } catch (err) {
       console.error('Failed to record now playing:', err);
@@ -544,8 +551,8 @@ export default function ReleaseDetailPage() {
                           <div 
                             className="text-xs text-gray-600 space-y-1"
                             style={{ 
-                              maxHeight: playHistory.playedDates.length > 10 ? '200px' : 'auto',
-                              overflowY: playHistory.playedDates.length > 10 ? 'auto' : 'visible'
+                              maxHeight: playHistory.playedDates.length > PLAY_HISTORY_SCROLL_THRESHOLD ? '200px' : 'auto',
+                              overflowY: playHistory.playedDates.length > PLAY_HISTORY_SCROLL_THRESHOLD ? 'auto' : 'visible'
                             }}
                           >
                             {playHistory.playedDates.map((date, index) => (
