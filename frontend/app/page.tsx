@@ -87,7 +87,7 @@ export default function Dashboard() {
             KOLLECTOR SKÜM
           </h1>
           <p className="text-lg text-gray-600 mb-6 font-medium">
-            Organize and discover your music library
+            Organise and discover your music library
           </p>
           <div className="flex items-center gap-4">
             <div className="flex items-center text-sm">
