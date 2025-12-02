@@ -163,7 +163,7 @@ export default function AddReleasePage() {
       upc,
       images,
       media,
-      links: [],
+      links: release.uri ? [{ url: release.uri, type: "Discogs", description: "" }] : [],
       _meta: { sourceImageUrl, sourceThumbnailUrl }, // Store metadata separately
     } as any; // Type assertion to allow _meta
   };
