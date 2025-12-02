@@ -170,10 +170,10 @@ export function RecentlyPlayed({ maxItems = 24 }: RecentlyPlayedProps) {
               )}
             </div>
             
-            {/* Clickable cover image */}
+            {/* Clickable cover image with play count badge */}
             <Link
               href={`/releases/${item.id}`}
-              className="block aspect-square rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-200"
+              className="block aspect-square rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-200 relative"
             >
               <img
                 src={getImageUrl(item.coverFront)}
@@ -183,6 +183,12 @@ export function RecentlyPlayed({ maxItems = 24 }: RecentlyPlayedProps) {
                   e.currentTarget.src = "/placeholder-album.svg";
                 }}
               />
+              {/* Play count badge - only shown if played more than once */}
+              {item.playCount > 1 && (
+                <div className="absolute bottom-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-md">
+                  x{item.playCount}
+                </div>
+              )}
             </Link>
           </div>
         ))}
