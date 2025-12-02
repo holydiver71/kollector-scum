@@ -50,14 +50,9 @@ export default function ComboBox({
   // Get selected items - merge items from both items list and preSelectedItems
   // This ensures that pre-selected items (e.g., from edit mode) are displayed
   // even if they're not in the current paginated items list
-  const selectedItems = selectedIds.map(id => {
-    // First try to find in items list
-    const fromItems = items.find(item => item.id === id);
-    if (fromItems) return fromItems;
-    // Then try to find in preSelectedItems
-    const fromPreSelected = preSelectedItems.find(item => item.id === id);
-    return fromPreSelected;
-  }).filter((item): item is ComboBoxItem => item !== undefined);
+  const selectedItems = selectedIds
+    .map(id => items.find(item => item.id === id) ?? preSelectedItems.find(item => item.id === id))
+    .filter((item): item is ComboBoxItem => item !== undefined);
 
   // Filter items based on search
   const filteredItems = items.filter((item) =>
