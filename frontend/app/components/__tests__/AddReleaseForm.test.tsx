@@ -593,6 +593,58 @@ describe('AddReleaseForm', () => {
     });
   });
 
+  describe('Copy Release Year Button', () => {
+    it('renders copy release year button', async () => {
+      render(<AddReleaseForm />);
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/Title/)).toBeInTheDocument();
+      });
+
+      const copyButton = screen.getByRole('button', { name: /Copy Release Year to Original Release Year/ });
+      expect(copyButton).toBeInTheDocument();
+    });
+
+    it('copies release year to original release year when button is clicked', async () => {
+      const user = userEvent.setup();
+      render(<AddReleaseForm />);
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/Title/)).toBeInTheDocument();
+      });
+
+      // Set release year
+      const releaseYearInput = screen.getByLabelText('Release Year') as HTMLInputElement;
+      await user.clear(releaseYearInput);
+      await user.type(releaseYearInput, '2024-06-15');
+
+      // Click the copy button
+      const copyButton = screen.getByRole('button', { name: /Copy Release Year to Original Release Year/ });
+      await user.click(copyButton);
+
+      // Verify original release year was updated
+      const origReleaseYearInput = screen.getByLabelText('Original Release Year') as HTMLInputElement;
+      expect(origReleaseYearInput.value).toBe('2024-06-15');
+    });
+
+    it('does not change original release year when copy button is clicked with empty release year', async () => {
+      const user = userEvent.setup();
+      render(<AddReleaseForm />);
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/Title/)).toBeInTheDocument();
+      });
+
+      // Click the copy button without setting release year
+      const copyButton = screen.getByRole('button', { name: /Copy Release Year to Original Release Year/ });
+      await user.click(copyButton);
+
+      // Verify original release year remains empty
+      const origReleaseYearInput = screen.getByLabelText('Original Release Year') as HTMLInputElement;
+      expect(origReleaseYearInput.value).toBe('');
+    });
+  });
+
   describe('New Value Auto-Creation', () => {
     it('submits with new label name', async () => {
       const user = userEvent.setup();
