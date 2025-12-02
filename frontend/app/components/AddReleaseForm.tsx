@@ -681,10 +681,10 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
               id="price"
               step="0.01"
               min="0"
-              value={formData.purchaseInfo?.price || ""}
+              value={formData.purchaseInfo?.price !== undefined ? formData.purchaseInfo.price : ""}
               onChange={(e) => updateField("purchaseInfo", {
                 ...formData.purchaseInfo,
-                price: parseFloat(e.target.value) || undefined,
+                price: e.target.value === "" ? undefined : parseFloat(e.target.value),
               })}
               className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                 validationErrors.price ? "border-red-500" : "border-gray-300"

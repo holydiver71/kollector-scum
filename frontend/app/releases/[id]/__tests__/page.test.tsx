@@ -224,4 +224,32 @@ describe('ReleaseDetailPage', () => {
     
     expect(mockBack).toHaveBeenCalled();
   });
+
+  it('displays price of 0.00 correctly', async () => {
+    const releaseWithZeroPrice = {
+      ...mockRelease,
+      purchaseInfo: {
+        storeId: 1,
+        storeName: 'Test Store',
+        price: 0,
+        currency: 'USD',
+      },
+      media: [{ name: 'Disc 1', tracks: [] }], // Single disc so purchase info shows in first layout
+      dateAdded: '2023-01-01T00:00:00',
+      lastModified: '2023-01-01T00:00:00',
+    };
+    
+    (api.fetchJson as jest.Mock).mockResolvedValue(releaseWithZeroPrice);
+    
+    render(<ReleaseDetailPage />);
+    
+    await waitFor(() => {
+      expect(screen.getByText('Test Album')).toBeInTheDocument();
+    });
+
+    // The price should display as USD 0.00 (not be hidden)
+    await waitFor(() => {
+      expect(screen.getByText('USD 0.00')).toBeInTheDocument();
+    });
+  });
 });
