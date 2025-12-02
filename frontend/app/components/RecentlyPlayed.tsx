@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getRecentlyPlayed, RecentlyPlayedItemDto, API_BASE_URL } from "../lib/api";
-import { Skeleton } from "./LoadingComponents";
 
 /**
  * Formats a date as a relative date string (Today, Yesterday, X days ago, etc.)
@@ -31,11 +30,13 @@ function formatRelativeDate(date: Date): string {
   } else if (diffDays < 60) {
     return "1 month ago";
   } else if (diffDays < 365) {
+    // Approximation: using 30 days per month for simplicity in relative date display
     const months = Math.floor(diffDays / 30);
     return `${months} months ago`;
   } else if (diffDays < 730) {
     return "1 year ago";
   } else {
+    // Approximation: using 365 days per year for simplicity in relative date display
     const years = Math.floor(diffDays / 365);
     return `${years} years ago`;
   }
@@ -97,7 +98,7 @@ export function RecentlyPlayed({ maxItems = 24 }: RecentlyPlayedProps) {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {[...Array(6)].map((_, i) => (
             <div key={i}>
-              <Skeleton lines={0} />
+              <div className="h-6 mb-2" />
               <div className="aspect-square bg-gray-200 animate-pulse rounded-lg" />
             </div>
           ))}
