@@ -458,7 +458,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
         </div>
 
         {/* Release Year */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 mb-4 items-end">
           <div>
             <label htmlFor="releaseYear" className="block text-sm font-medium text-gray-700 mb-1">
               Release Year
@@ -472,6 +472,34 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
               onChange={(e) => updateField("releaseYear", e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
+          </div>
+          <div className="flex items-center justify-center pb-1">
+            <button
+              type="button"
+              onClick={() => {
+                if (formData.releaseYear) {
+                  updateField("origReleaseYear", formData.releaseYear);
+                }
+              }}
+              className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+              title="Copy Release Year to Original Release Year"
+              aria-label="Copy Release Year to Original Release Year"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                />
+              </svg>
+            </button>
           </div>
           <div>
             <label htmlFor="origReleaseYear" className="block text-sm font-medium text-gray-700 mb-1">
