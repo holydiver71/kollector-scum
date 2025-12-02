@@ -612,7 +612,7 @@ export default function ReleaseDetailPage() {
                         </dd>
                       </div>
                     )}
-                    {release.purchaseInfo.price && (
+                    {release.purchaseInfo.price !== undefined && release.purchaseInfo.price !== null && (
                       <div className="flex items-baseline gap-2">
                         <dt className="text-xs text-gray-500 min-w-[80px] font-semibold">Price</dt>
                         <dd className="text-sm text-gray-900 font-medium">
@@ -704,7 +704,7 @@ export default function ReleaseDetailPage() {
                       </dd>
                     </div>
                   )}
-                  {release.purchaseInfo.price && (
+                  {release.purchaseInfo.price !== undefined && release.purchaseInfo.price !== null && (
                     <div className="flex items-baseline gap-2">
                       <dt className="text-xs text-gray-400 min-w-[80px]">Price</dt>
                       <dd className="text-sm text-gray-900 font-light">
