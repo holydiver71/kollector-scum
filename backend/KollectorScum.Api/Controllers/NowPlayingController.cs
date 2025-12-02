@@ -180,32 +180,35 @@ namespace KollectorScum.Api.Controllers
         {
             try
             {
-                // Get the most recent play date for each release using a subquery
-                // This approach is more efficient than loading all records into memory
-                var latestPlayDates = _context.NowPlayings
+                // Get the most recent play date and play count for each release using a subquery
+                var releasePlayStats = _context.NowPlayings
                     .GroupBy(np => np.MusicReleaseId)
-                    .Select(g => new { MusicReleaseId = g.Key, LatestPlayedAt = g.Max(np => np.PlayedAt) });
+                    .Select(g => new { 
+                        MusicReleaseId = g.Key, 
+                        LatestPlayedAt = g.Max(np => np.PlayedAt),
+                        PlayCount = g.Count()
+                    });
 
                 // Join back to get the full record and include the MusicRelease
                 var recentlyPlayed = await _context.NowPlayings
                     .Include(np => np.MusicRelease)
-                    .Join(latestPlayDates,
+                    .Join(releasePlayStats,
                         np => new { np.MusicReleaseId, LatestPlayedAt = np.PlayedAt },
-                        latest => new { latest.MusicReleaseId, LatestPlayedAt = latest.LatestPlayedAt },
-                        (np, latest) => np)
-                    .OrderByDescending(np => np.PlayedAt)
+                        stats => new { stats.MusicReleaseId, LatestPlayedAt = stats.LatestPlayedAt },
+                        (np, stats) => new { NowPlaying = np, stats.PlayCount })
+                    .OrderByDescending(x => x.NowPlaying.PlayedAt)
                     .Take(limit)
                     .ToListAsync();
 
-                var result = recentlyPlayed.Select(np =>
+                var result = recentlyPlayed.Select(x =>
                 {
                     string? coverFront = null;
-                    if (np.MusicRelease?.Images != null)
+                    if (x.NowPlaying.MusicRelease?.Images != null)
                     {
                         try
                         {
                             var images = System.Text.Json.JsonSerializer.Deserialize<MusicReleaseImageDto>(
-                                np.MusicRelease.Images,
+                                x.NowPlaying.MusicRelease.Images,
                                 new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                             coverFront = images?.CoverFront;
                         }
@@ -217,9 +220,10 @@ namespace KollectorScum.Api.Controllers
 
                     return new RecentlyPlayedItemDto
                     {
-                        Id = np.MusicReleaseId,
+                        Id = x.NowPlaying.MusicReleaseId,
                         CoverFront = coverFront,
-                        PlayedAt = np.PlayedAt
+                        PlayedAt = x.NowPlaying.PlayedAt,
+                        PlayCount = x.PlayCount
                     };
                 }).ToList();
 

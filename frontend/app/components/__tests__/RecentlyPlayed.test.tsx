@@ -46,8 +46,8 @@ describe('RecentlyPlayed Component', () => {
 
   it('renders recently played items with covers', async () => {
     const mockItems = [
-      { id: 1, coverFront: 'cover1.jpg', playedAt: new Date().toISOString() },
-      { id: 2, coverFront: 'cover2.jpg', playedAt: new Date().toISOString() },
+      { id: 1, coverFront: 'cover1.jpg', playedAt: new Date().toISOString(), playCount: 1 },
+      { id: 2, coverFront: 'cover2.jpg', playedAt: new Date().toISOString(), playCount: 1 },
     ];
 
     (api.getRecentlyPlayed as jest.Mock).mockResolvedValue(mockItems);
@@ -83,9 +83,9 @@ describe('RecentlyPlayed Component', () => {
     yesterday.setDate(yesterday.getDate() - 1);
 
     const mockItems = [
-      { id: 1, coverFront: 'cover1.jpg', playedAt: today.toISOString() },
-      { id: 2, coverFront: 'cover2.jpg', playedAt: today.toISOString() },
-      { id: 3, coverFront: 'cover3.jpg', playedAt: yesterday.toISOString() },
+      { id: 1, coverFront: 'cover1.jpg', playedAt: today.toISOString(), playCount: 1 },
+      { id: 2, coverFront: 'cover2.jpg', playedAt: today.toISOString(), playCount: 1 },
+      { id: 3, coverFront: 'cover3.jpg', playedAt: yesterday.toISOString(), playCount: 1 },
     ];
 
     (api.getRecentlyPlayed as jest.Mock).mockResolvedValue(mockItems);
@@ -103,7 +103,7 @@ describe('RecentlyPlayed Component', () => {
 
   it('uses placeholder for missing cover images', async () => {
     const mockItems = [
-      { id: 1, coverFront: undefined, playedAt: new Date().toISOString() },
+      { id: 1, coverFront: undefined, playedAt: new Date().toISOString(), playCount: 1 },
     ];
 
     (api.getRecentlyPlayed as jest.Mock).mockResolvedValue(mockItems);
@@ -135,6 +135,44 @@ describe('RecentlyPlayed Component', () => {
       expect(api.getRecentlyPlayed).toHaveBeenCalledWith(24);
     });
   });
+
+  it('shows play count badge for albums played multiple times', async () => {
+    const mockItems = [
+      { id: 1, coverFront: 'cover1.jpg', playedAt: new Date().toISOString(), playCount: 3 },
+      { id: 2, coverFront: 'cover2.jpg', playedAt: new Date().toISOString(), playCount: 1 },
+      { id: 3, coverFront: 'cover3.jpg', playedAt: new Date().toISOString(), playCount: 5 },
+    ];
+
+    (api.getRecentlyPlayed as jest.Mock).mockResolvedValue(mockItems);
+
+    render(<RecentlyPlayed />);
+
+    await waitFor(() => {
+      expect(screen.getByText('x3')).toBeInTheDocument();
+    });
+
+    expect(screen.getByText('x5')).toBeInTheDocument();
+    // Album with playCount 1 should not have a badge
+    expect(screen.queryByText('x1')).not.toBeInTheDocument();
+  });
+
+  it('does not show badge for albums played only once', async () => {
+    const mockItems = [
+      { id: 1, coverFront: 'cover1.jpg', playedAt: new Date().toISOString(), playCount: 1 },
+    ];
+
+    (api.getRecentlyPlayed as jest.Mock).mockResolvedValue(mockItems);
+
+    render(<RecentlyPlayed />);
+
+    await waitFor(() => {
+      const links = screen.getAllByRole('link');
+      expect(links.length).toBe(1);
+    });
+
+    // No badge should be shown
+    expect(screen.queryByText(/x\d+/)).not.toBeInTheDocument();
+  });
 });
 
 describe('formatRelativeDate function', () => {
@@ -142,7 +180,7 @@ describe('formatRelativeDate function', () => {
   it('shows "Today" for today\'s date', async () => {
     const today = new Date();
     const mockItems = [
-      { id: 1, coverFront: 'cover.jpg', playedAt: today.toISOString() },
+      { id: 1, coverFront: 'cover.jpg', playedAt: today.toISOString(), playCount: 1 },
     ];
 
     (api.getRecentlyPlayed as jest.Mock).mockResolvedValue(mockItems);
@@ -158,7 +196,7 @@ describe('formatRelativeDate function', () => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     const mockItems = [
-      { id: 1, coverFront: 'cover.jpg', playedAt: yesterday.toISOString() },
+      { id: 1, coverFront: 'cover.jpg', playedAt: yesterday.toISOString(), playCount: 1 },
     ];
 
     (api.getRecentlyPlayed as jest.Mock).mockResolvedValue(mockItems);
@@ -174,7 +212,7 @@ describe('formatRelativeDate function', () => {
     const threeDaysAgo = new Date();
     threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
     const mockItems = [
-      { id: 1, coverFront: 'cover.jpg', playedAt: threeDaysAgo.toISOString() },
+      { id: 1, coverFront: 'cover.jpg', playedAt: threeDaysAgo.toISOString(), playCount: 1 },
     ];
 
     (api.getRecentlyPlayed as jest.Mock).mockResolvedValue(mockItems);
@@ -190,7 +228,7 @@ describe('formatRelativeDate function', () => {
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 10);
     const mockItems = [
-      { id: 1, coverFront: 'cover.jpg', playedAt: oneWeekAgo.toISOString() },
+      { id: 1, coverFront: 'cover.jpg', playedAt: oneWeekAgo.toISOString(), playCount: 1 },
     ];
 
     (api.getRecentlyPlayed as jest.Mock).mockResolvedValue(mockItems);
@@ -206,7 +244,7 @@ describe('formatRelativeDate function', () => {
     const twoWeeksAgo = new Date();
     twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 20);
     const mockItems = [
-      { id: 1, coverFront: 'cover.jpg', playedAt: twoWeeksAgo.toISOString() },
+      { id: 1, coverFront: 'cover.jpg', playedAt: twoWeeksAgo.toISOString(), playCount: 1 },
     ];
 
     (api.getRecentlyPlayed as jest.Mock).mockResolvedValue(mockItems);
