@@ -1,15 +1,9 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import Header from "./components/Header";
 import Navigation from "./components/Navigation";
 import Footer from "./components/Footer";
 import { ErrorBoundary } from "./components/ErrorBoundary";
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-});
 
 export const metadata: Metadata = {
   title: "KOLLECTOR SKÜM - Music Collection Manager",
@@ -24,7 +18,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} font-sans antialiased bg-gray-50`}>
+      <body className="font-sans antialiased bg-gray-50">
         <ErrorBoundary>
           <div className="min-h-screen flex flex-col">
             <Header />
