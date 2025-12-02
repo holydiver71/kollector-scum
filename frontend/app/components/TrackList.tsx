@@ -114,7 +114,7 @@ export function TrackList({ media, albumArtists = [] }: TrackListProps) {
                               <h5 className="text-sm text-gray-900 font-medium leading-relaxed">
                                 {track.title}
                                 {track.live && (
-                                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-red-500 text-white font-bold">
+                                  <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-gray-200 text-gray-600 font-medium">
                                     LIVE
                                   </span>
                                 )}
@@ -174,7 +174,7 @@ export function TrackList({ media, albumArtists = [] }: TrackListProps) {
                             <h5 className="text-sm text-gray-900 font-medium leading-relaxed">
                               {track.title}
                               {track.live && (
-                                <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-red-500 text-white font-bold">
+                                <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-gray-200 text-gray-600 font-medium">
                                   LIVE
                                 </span>
                               )}
