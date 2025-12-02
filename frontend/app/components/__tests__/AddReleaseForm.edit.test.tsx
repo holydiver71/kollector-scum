@@ -449,4 +449,70 @@ describe('AddReleaseForm - Edit Mode', () => {
     const currencyField = screen.getByLabelText(/currency/i);
     expect(currencyField).toHaveValue('EUR');
   });
+
+  it('displays price of 0.00 correctly (not empty)', async () => {
+    const initialData = {
+      title: 'Free Album',
+      artistIds: [1],
+      genreIds: [1],
+      live: false,
+      purchaseInfo: {
+        storeId: 405,
+        price: 0,
+        currency: 'USD',
+      },
+    };
+
+    render(<AddReleaseForm initialData={initialData} releaseId={1} />);
+
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('Free Album')).toBeInTheDocument();
+    });
+
+    // Price of 0 should display as "0" in the input, not empty
+    const priceInput = screen.getByLabelText(/price/i) as HTMLInputElement;
+    expect(priceInput.value).toBe('0');
+  });
+
+  it('allows entering 0 as a price value', async () => {
+    const mockUpdateRelease = api.updateRelease as jest.MockedFunction<typeof api.updateRelease>;
+    mockUpdateRelease.mockResolvedValue({ id: 123 });
+
+    const initialData = {
+      title: 'Test Album',
+      artistIds: [1],
+      genreIds: [1],
+      live: false,
+      purchaseInfo: {
+        storeId: 405,
+        price: 10.00,
+        currency: 'USD',
+      },
+    };
+
+    render(<AddReleaseForm initialData={initialData} releaseId={123} />);
+
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('Test Album')).toBeInTheDocument();
+    });
+
+    // Clear the price and enter 0
+    const priceInput = screen.getByLabelText(/price/i) as HTMLInputElement;
+    await userEvent.clear(priceInput);
+    await userEvent.type(priceInput, '0');
+
+    // Verify the input shows 0
+    expect(priceInput.value).toBe('0');
+
+    const submitButton = screen.getByRole('button', { name: /update release/i });
+    fireEvent.click(submitButton);
+
+    await waitFor(() => {
+      expect(mockUpdateRelease).toHaveBeenCalledWith(123, expect.objectContaining({
+        purchaseInfo: expect.objectContaining({
+          price: 0,
+        }),
+      }));
+    });
+  });
 });
