@@ -132,6 +132,9 @@ namespace KollectorScum.Api.Services
                 "title" => isDescending
                     ? mr => mr.OrderByDescending(x => x.Title)
                     : mr => mr.OrderBy(x => x.Title),
+                "origreleaseyear" => isDescending
+                    ? mr => mr.OrderByDescending(x => x.OrigReleaseYear)
+                    : mr => mr.OrderBy(x => x.OrigReleaseYear),
                 _ => mr => mr.OrderBy(x => x.Title) // Default to title ascending
             };
         }
