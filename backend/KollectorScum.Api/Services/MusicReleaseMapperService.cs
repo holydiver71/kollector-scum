@@ -197,26 +197,66 @@ namespace KollectorScum.Api.Services
 
             try
             {
-                var purchaseInfo = JsonSerializer.Deserialize<PurchaseInfo>(purchaseInfoJson);
-                if (purchaseInfo == null)
-                    return null;
+                var jsonOptions = new JsonSerializerOptions 
+                { 
+                    PropertyNameCaseInsensitive = true 
+                };
 
-                string? storeName = null;
-                if (purchaseInfo.StoreID.HasValue)
+                // Determine which format by checking if "Date" or "PurchaseDate" exists in the JSON
+                bool hasDateField = purchaseInfoJson.Contains("\"Date\"", StringComparison.OrdinalIgnoreCase);
+                bool hasPurchaseDateField = purchaseInfoJson.Contains("\"PurchaseDate\"", StringComparison.OrdinalIgnoreCase);
+
+                if (hasPurchaseDateField)
                 {
-                    var store = await _storeRepository.GetByIdAsync(purchaseInfo.StoreID.Value);
-                    storeName = store?.Name;
+                    // Try DTO format (StoreId, PurchaseDate) - legacy format
+                    var purchaseInfoDto = JsonSerializer.Deserialize<MusicReleasePurchaseInfoDto>(purchaseInfoJson, jsonOptions);
+                    if (purchaseInfoDto != null)
+                    {
+                        string? storeName = null;
+                        if (purchaseInfoDto.StoreId.HasValue)
+                        {
+                            var store = await _storeRepository.GetByIdAsync(purchaseInfoDto.StoreId.Value);
+                            storeName = store?.Name;
+                        }
+
+                        return new MusicReleasePurchaseInfoDto
+                        {
+                            StoreId = purchaseInfoDto.StoreId,
+                            StoreName = storeName,
+                            Price = purchaseInfoDto.Price,
+                            Currency = purchaseInfoDto.Currency ?? "GBP",
+                            PurchaseDate = purchaseInfoDto.PurchaseDate,
+                            Notes = purchaseInfoDto.Notes
+                        };
+                    }
+                }
+                
+                if (hasDateField)
+                {
+                    // Try value object format (StoreID, Date) - correct format
+                    var purchaseInfo = JsonSerializer.Deserialize<PurchaseInfo>(purchaseInfoJson, jsonOptions);
+                    if (purchaseInfo != null)
+                    {
+                        string? storeName = null;
+                        if (purchaseInfo.StoreID.HasValue)
+                        {
+                            var store = await _storeRepository.GetByIdAsync(purchaseInfo.StoreID.Value);
+                            storeName = store?.Name;
+                        }
+
+                        return new MusicReleasePurchaseInfoDto
+                        {
+                            StoreId = purchaseInfo.StoreID,
+                            StoreName = storeName,
+                            Price = purchaseInfo.Price,
+                            Currency = "GBP",
+                            PurchaseDate = purchaseInfo.Date,
+                            Notes = purchaseInfo.Notes
+                        };
+                    }
                 }
 
-                return new MusicReleasePurchaseInfoDto
-                {
-                    StoreId = purchaseInfo.StoreID,
-                    StoreName = storeName,
-                    Price = purchaseInfo.Price,
-                    Currency = "GBP",
-                    PurchaseDate = purchaseInfo.Date,
-                    Notes = purchaseInfo.Notes
-                };
+                return null;
             }
             catch (JsonException ex)
             {
