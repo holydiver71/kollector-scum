@@ -180,19 +180,22 @@ namespace KollectorScum.Api.Controllers
         {
             try
             {
-                // Get all now playing records, then group by release ID to get the most recent play for each
-                var allPlays = await _context.NowPlayings
-                    .Include(np => np.MusicRelease)
-                    .OrderByDescending(np => np.PlayedAt)
-                    .ToListAsync();
-
-                // Group by release ID and get the most recent play for each release
-                var recentlyPlayed = allPlays
+                // Get the most recent play date for each release using a subquery
+                // This approach is more efficient than loading all records into memory
+                var latestPlayDates = _context.NowPlayings
                     .GroupBy(np => np.MusicReleaseId)
-                    .Select(g => g.First()) // Already ordered by PlayedAt desc, so first is most recent
+                    .Select(g => new { MusicReleaseId = g.Key, LatestPlayedAt = g.Max(np => np.PlayedAt) });
+
+                // Join back to get the full record and include the MusicRelease
+                var recentlyPlayed = await _context.NowPlayings
+                    .Include(np => np.MusicRelease)
+                    .Join(latestPlayDates,
+                        np => new { np.MusicReleaseId, LatestPlayedAt = np.PlayedAt },
+                        latest => new { latest.MusicReleaseId, LatestPlayedAt = latest.LatestPlayedAt },
+                        (np, latest) => np)
                     .OrderByDescending(np => np.PlayedAt)
                     .Take(limit)
-                    .ToList();
+                    .ToListAsync();
 
                 var result = recentlyPlayed.Select(np =>
                 {
