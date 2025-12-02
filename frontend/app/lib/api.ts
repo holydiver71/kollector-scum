@@ -270,6 +270,7 @@ export interface RecentlyPlayedItemDto {
   id: number;
   coverFront?: string;
   playedAt: string;
+  playCount: number;
 }
 
 /**

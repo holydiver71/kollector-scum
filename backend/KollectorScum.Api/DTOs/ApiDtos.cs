@@ -854,6 +854,11 @@ namespace KollectorScum.Api.DTOs
         /// When the release was last played
         /// </summary>
         public DateTime PlayedAt { get; set; }
+
+        /// <summary>
+        /// Number of times this release was played (for displaying multiplier badge)
+        /// </summary>
+        public int PlayCount { get; set; } = 1;
     }
 
 }
