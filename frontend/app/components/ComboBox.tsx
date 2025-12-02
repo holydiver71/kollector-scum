@@ -20,6 +20,7 @@ interface ComboBoxProps {
   error?: string;
   disabled?: boolean;
   allowCreate?: boolean; // Enable typing new values
+  preSelectedItems?: ComboBoxItem[]; // Items that should be displayed even if not in paginated items list
 }
 
 export default function ComboBox({
@@ -35,6 +36,7 @@ export default function ComboBox({
   error,
   disabled = false,
   allowCreate = true,
+  preSelectedItems = [],
 }: ComboBoxProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -45,8 +47,12 @@ export default function ComboBox({
   // Normalize value to array
   const selectedIds = Array.isArray(value) ? value : value ? [value] : [];
 
-  // Get selected items
-  const selectedItems = items.filter((item) => selectedIds.includes(item.id));
+  // Get selected items - merge items from both items list and preSelectedItems
+  // This ensures that pre-selected items (e.g., from edit mode) are displayed
+  // even if they're not in the current paginated items list
+  const selectedItems = selectedIds
+    .map(id => items.find(item => item.id === id) ?? preSelectedItems.find(item => item.id === id))
+    .filter((item): item is ComboBoxItem => item !== undefined);
 
   // Filter items based on search
   const filteredItems = items.filter((item) =>
