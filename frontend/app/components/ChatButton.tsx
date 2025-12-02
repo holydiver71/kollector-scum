@@ -13,11 +13,18 @@ interface Message {
   timestamp: Date;
 }
 
+let messageIdCounter = 0;
+
+const generateMessageId = (): string => {
+  messageIdCounter += 1;
+  return `msg-${messageIdCounter}-${Date.now()}`;
+};
+
 const ChatButton: React.FC<ChatButtonProps> = ({ title = "Kollector Sküm Chat" }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
-      id: '1',
+      id: 'welcome-message',
       text: 'Welcome to Kollector Sküm Chat! How can I help you with your music collection today?',
       sender: 'system',
       timestamp: new Date(),
@@ -28,7 +35,7 @@ const ChatButton: React.FC<ChatButtonProps> = ({ title = "Kollector Sküm Chat" 
   const inputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
-    if (messagesEndRef.current?.scrollIntoView) {
+    if (messagesEndRef.current && typeof messagesEndRef.current.scrollIntoView === 'function') {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   };
@@ -56,7 +63,7 @@ const ChatButton: React.FC<ChatButtonProps> = ({ title = "Kollector Sküm Chat" 
     if (!inputValue.trim()) return;
 
     const newMessage: Message = {
-      id: Date.now().toString(),
+      id: generateMessageId(),
       text: inputValue.trim(),
       sender: 'user',
       timestamp: new Date(),
@@ -68,7 +75,7 @@ const ChatButton: React.FC<ChatButtonProps> = ({ title = "Kollector Sküm Chat" 
     // Simulate system response
     setTimeout(() => {
       const systemResponse: Message = {
-        id: (Date.now() + 1).toString(),
+        id: generateMessageId(),
         text: 'Thank you for your message. This is a placeholder response from the Kollector Sküm Chat system.',
         sender: 'system',
         timestamp: new Date(),
@@ -104,7 +111,7 @@ const ChatButton: React.FC<ChatButtonProps> = ({ title = "Kollector Sküm Chat" 
             d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
           />
         </svg>
-        <span className="hidden lg:inline">Chat</span>
+        <span className="hidden md:inline">Chat</span>
       </button>
 
       {/* Chat Window */}
