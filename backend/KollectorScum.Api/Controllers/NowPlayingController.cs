@@ -168,5 +168,60 @@ namespace KollectorScum.Api.Controllers
                 return StatusCode(500, "An error occurred while retrieving the play history");
             }
         }
+
+        /// <summary>
+        /// Gets recently played releases with their cover images, ordered by most recent first
+        /// </summary>
+        /// <param name="limit">Maximum number of releases to return (default 24)</param>
+        /// <returns>List of recently played releases with cover images</returns>
+        [HttpGet("recent")]
+        [ProducesResponseType(typeof(List<RecentlyPlayedItemDto>), 200)]
+        public async Task<ActionResult<List<RecentlyPlayedItemDto>>> GetRecentlyPlayed([FromQuery] int limit = 24)
+        {
+            try
+            {
+                // Get the most recent play record for each release, ordered by most recent first
+                var recentlyPlayed = await _context.NowPlayings
+                    .Include(np => np.MusicRelease)
+                    .GroupBy(np => np.MusicReleaseId)
+                    .Select(g => g.OrderByDescending(np => np.PlayedAt).First())
+                    .OrderByDescending(np => np.PlayedAt)
+                    .Take(limit)
+                    .ToListAsync();
+
+                var result = recentlyPlayed.Select(np =>
+                {
+                    string? coverFront = null;
+                    if (np.MusicRelease?.Images != null)
+                    {
+                        try
+                        {
+                            var images = System.Text.Json.JsonSerializer.Deserialize<MusicReleaseImageDto>(
+                                np.MusicRelease.Images,
+                                new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                            coverFront = images?.CoverFront;
+                        }
+                        catch
+                        {
+                            // If parsing fails, leave coverFront as null
+                        }
+                    }
+
+                    return new RecentlyPlayedItemDto
+                    {
+                        Id = np.MusicReleaseId,
+                        CoverFront = coverFront,
+                        PlayedAt = np.PlayedAt
+                    };
+                }).ToList();
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting recently played releases");
+                return StatusCode(500, "An error occurred while retrieving recently played releases");
+            }
+        }
     }
 }
