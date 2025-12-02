@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { SearchAndFilter } from "../components/SearchAndFilter";
 import { MusicReleaseList } from "../components/MusicReleaseList";
-import { ArrowDownAZ, ArrowUpAZ, User, Clock, Disc3 } from "lucide-react";
+import { ArrowDownAZ, ArrowUpAZ, User, Clock, Disc3, Calendar } from "lucide-react";
 
 interface SearchFilters {
   search?: string;
@@ -171,7 +171,7 @@ export default function CollectionPage() {
                   {/* Oldest First */}
                   <button
                     onClick={() => handleFiltersChange({ ...filters, sortBy: 'dateadded', sortOrder: 'asc' })}
-                    className={`inline-flex items-center gap-1.5 px-4 py-2 text-sm font-bold transition-colors rounded-r-lg
+                    className={`inline-flex items-center gap-1.5 px-4 py-2 text-sm font-bold transition-colors border-r border-gray-300
                       ${filters.sortBy === 'dateadded' && filters.sortOrder === 'asc' 
                         ? 'bg-blue-50 text-blue-700' 
                         : 'text-gray-700 hover:bg-gray-50'}`}
@@ -179,6 +179,32 @@ export default function CollectionPage() {
                   >
                     <Clock className="w-4 h-4" />
                     <span className="hidden sm:inline">Old</span>
+                  </button>
+                  
+                  {/* Original Release Year (Newest First) */}
+                  <button
+                    onClick={() => handleFiltersChange({ ...filters, sortBy: 'origreleaseyear', sortOrder: 'desc' })}
+                    className={`inline-flex items-center gap-1.5 px-4 py-2 text-sm font-bold transition-colors border-r border-gray-300
+                      ${filters.sortBy === 'origreleaseyear' && filters.sortOrder === 'desc' 
+                        ? 'bg-blue-50 text-blue-700' 
+                        : 'text-gray-700 hover:bg-gray-50'}`}
+                    title="Original Release Year (Newest First)"
+                  >
+                    <Calendar className="w-4 h-4" />
+                    <span className="hidden sm:inline">Year ↓</span>
+                  </button>
+                  
+                  {/* Original Release Year (Oldest First) */}
+                  <button
+                    onClick={() => handleFiltersChange({ ...filters, sortBy: 'origreleaseyear', sortOrder: 'asc' })}
+                    className={`inline-flex items-center gap-1.5 px-4 py-2 text-sm font-bold transition-colors rounded-r-lg
+                      ${filters.sortBy === 'origreleaseyear' && filters.sortOrder === 'asc' 
+                        ? 'bg-blue-50 text-blue-700' 
+                        : 'text-gray-700 hover:bg-gray-50'}`}
+                    title="Original Release Year (Oldest First)"
+                  >
+                    <Calendar className="w-4 h-4" />
+                    <span className="hidden sm:inline">Year ↑</span>
                   </button>
                 </div>
               </div>
