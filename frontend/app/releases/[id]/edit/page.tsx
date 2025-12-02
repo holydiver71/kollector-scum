@@ -3,7 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { fetchJson } from "../../../lib/api";
-import AddReleaseForm, { type CreateMusicReleaseDto } from "../../../components/AddReleaseForm";
+import AddReleaseForm, { type CreateMusicReleaseDto, type InitialSelectedItems } from "../../../components/AddReleaseForm";
 import { LoadingSpinner } from "../../../components/LoadingComponents";
 
 // Type definitions matching the release detail page
@@ -194,6 +194,19 @@ export default function EditReleasePage() {
     })),
   };
 
+  // Provide pre-selected items so they display in ComboBoxes even if not in paginated list
+  const initialSelectedItems: InitialSelectedItems = {
+    artists: release.artists,
+    genres: release.genres,
+    label: release.label ?? undefined,
+    country: release.country ?? undefined,
+    format: release.format ?? undefined,
+    packaging: release.packaging ?? undefined,
+    store: release.purchaseInfo?.storeId && release.purchaseInfo?.storeName 
+      ? { id: release.purchaseInfo.storeId, name: release.purchaseInfo.storeName }
+      : undefined,
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
@@ -208,6 +221,7 @@ export default function EditReleasePage() {
         onCancel={handleCancel}
         initialData={initialData}
         releaseId={parseInt(id)}
+        initialSelectedItems={initialSelectedItems}
       />
     </div>
   );
