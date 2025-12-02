@@ -15,11 +15,15 @@ jest.mock('next/link', () => {
 jest.mock('../lib/api', () => ({
   getHealth: jest.fn(),
   getPagedCount: jest.fn(),
+  getRecentlyPlayed: jest.fn(),
+  API_BASE_URL: 'http://localhost:5072',
 }));
 
 describe('Dashboard Page', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Default mock for getRecentlyPlayed returns empty array
+    (api.getRecentlyPlayed as jest.Mock).mockResolvedValue([]);
   });
 
   it('renders loading state initially', () => {
