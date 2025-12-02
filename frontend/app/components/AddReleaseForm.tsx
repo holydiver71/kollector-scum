@@ -62,14 +62,27 @@ export interface CreateMusicReleaseDto {
   }>;
 }
 
+// Interface for pre-selected lookup items (used in edit mode to display selected items
+// that may not be in the paginated dropdown list)
+export interface InitialSelectedItems {
+  artists?: LookupItem[];
+  genres?: LookupItem[];
+  label?: LookupItem;
+  country?: LookupItem;
+  format?: LookupItem;
+  packaging?: LookupItem;
+  store?: LookupItem;
+}
+
 interface AddReleaseFormProps {
   onSuccess?: (releaseId: number) => void;
   onCancel?: () => void;
   initialData?: Partial<CreateMusicReleaseDto>;
   releaseId?: number; // If provided, the form will update instead of create
+  initialSelectedItems?: InitialSelectedItems; // Pre-selected items for edit mode
 }
 
-export default function AddReleaseForm({ onSuccess, onCancel, initialData, releaseId }: AddReleaseFormProps) {
+export default function AddReleaseForm({ onSuccess, onCancel, initialData, releaseId, initialSelectedItems }: AddReleaseFormProps) {
   // Form state
   const [formData, setFormData] = useState<CreateMusicReleaseDto>({
     title: initialData?.title || "",
@@ -449,6 +462,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
             required={true}
             placeholder="Search or add artists..."
             error={validationErrors.artists}
+            preSelectedItems={initialSelectedItems?.artists}
           />
         </div>
 
@@ -517,6 +531,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
             multiple={true}
             allowCreate={true}
             placeholder="Search or add genres..."
+            preSelectedItems={initialSelectedItems?.genres}
           />
         </div>
 
@@ -536,6 +551,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
               multiple={false}
               allowCreate={true}
               placeholder="Select or add format..."
+              preSelectedItems={initialSelectedItems?.format ? [initialSelectedItems.format] : undefined}
             />
           </div>
 
@@ -553,6 +569,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
               multiple={false}
               allowCreate={true}
               placeholder="Select or add packaging..."
+              preSelectedItems={initialSelectedItems?.packaging ? [initialSelectedItems.packaging] : undefined}
             />
           </div>
 
@@ -570,6 +587,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
               multiple={false}
               allowCreate={true}
               placeholder="Select or add country..."
+              preSelectedItems={initialSelectedItems?.country ? [initialSelectedItems.country] : undefined}
             />
           </div>
         </div>
@@ -594,6 +612,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
               multiple={false}
               allowCreate={true}
               placeholder="Select or add label..."
+              preSelectedItems={initialSelectedItems?.label ? [initialSelectedItems.label] : undefined}
             />
           </div>
 
@@ -649,6 +668,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
               multiple={false}
               allowCreate={true}
               placeholder="Select or add store..."
+              preSelectedItems={initialSelectedItems?.store ? [initialSelectedItems.store] : undefined}
             />
           </div>
 

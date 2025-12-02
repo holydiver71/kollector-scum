@@ -706,4 +706,88 @@ describe('ComboBox', () => {
       expect(screen.getByText('AC/DC')).toBeInTheDocument();
     });
   });
+
+  describe('Pre-selected items', () => {
+    it('displays pre-selected items even if not in items list', () => {
+      // Saxon is pre-selected but not in the items list (simulating pagination issue)
+      const preSelectedItems: ComboBoxItem[] = [
+        { id: 998, name: 'Saxon' },
+      ];
+
+      render(
+        <ComboBox
+          label="Artists"
+          items={mockItems} // Does not include Saxon
+          value={[998]}
+          onChange={mockOnChange}
+          preSelectedItems={preSelectedItems}
+        />
+      );
+
+      // Saxon should be displayed as a selected item badge
+      expect(screen.getByText('Saxon')).toBeInTheDocument();
+    });
+
+    it('displays both pre-selected items and items from list', () => {
+      const preSelectedItems: ComboBoxItem[] = [
+        { id: 998, name: 'Saxon' },
+      ];
+
+      render(
+        <ComboBox
+          label="Artists"
+          items={mockItems}
+          value={[1, 998]} // Metallica from items list, Saxon from preSelectedItems
+          onChange={mockOnChange}
+          multiple={true}
+          preSelectedItems={preSelectedItems}
+        />
+      );
+
+      // Both should be displayed
+      expect(screen.getByText('Metallica')).toBeInTheDocument();
+      expect(screen.getByText('Saxon')).toBeInTheDocument();
+    });
+
+    it('prefers items list over preSelectedItems when ID exists in both', () => {
+      // If an item exists in both lists, prefer the items list version
+      const preSelectedItems: ComboBoxItem[] = [
+        { id: 1, name: 'Metallica (Old Name)' }, // Same ID, different name
+      ];
+
+      render(
+        <ComboBox
+          label="Artists"
+          items={mockItems}
+          value={[1]}
+          onChange={mockOnChange}
+          preSelectedItems={preSelectedItems}
+        />
+      );
+
+      // Should use the name from items list, not preSelectedItems
+      expect(screen.getByText('Metallica')).toBeInTheDocument();
+      expect(screen.queryByText('Metallica (Old Name)')).not.toBeInTheDocument();
+    });
+
+    it('handles single-select mode with preSelectedItems', () => {
+      const preSelectedItems: ComboBoxItem[] = [
+        { id: 998, name: 'Saxon' },
+      ];
+
+      render(
+        <ComboBox
+          label="Artist"
+          items={mockItems}
+          value={998}
+          onChange={mockOnChange}
+          multiple={false}
+          preSelectedItems={preSelectedItems}
+        />
+      );
+
+      // Saxon should be displayed
+      expect(screen.getByText('Saxon')).toBeInTheDocument();
+    });
+  });
 });
