@@ -60,4 +60,17 @@ describe('Header Component', () => {
     const nav = container.querySelector('nav');
     expect(nav).toBeInTheDocument();
   });
+
+  it('renders chat button in header', () => {
+    render(<Header />);
+    // Chat button should be present (appears twice - desktop and mobile)
+    const chatButtons = screen.getAllByTestId('chat-button');
+    expect(chatButtons.length).toBeGreaterThan(0);
+  });
+
+  it('chat button has accessible label', () => {
+    render(<Header />);
+    const chatButtons = screen.getAllByLabelText('Open chat');
+    expect(chatButtons.length).toBeGreaterThan(0);
+  });
 });
