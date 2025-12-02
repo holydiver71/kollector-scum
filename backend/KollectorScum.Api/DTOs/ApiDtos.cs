@@ -835,5 +835,25 @@ namespace KollectorScum.Api.DTOs
         public List<DateTime> PlayDates { get; set; } = new();
     }
 
+    /// <summary>
+    /// DTO for recently played release item
+    /// </summary>
+    public class RecentlyPlayedItemDto
+    {
+        /// <summary>
+        /// The music release ID
+        /// </summary>
+        public int Id { get; set; }
+
+        /// <summary>
+        /// The cover front image filename
+        /// </summary>
+        public string? CoverFront { get; set; }
+
+        /// <summary>
+        /// When the release was last played
+        /// </summary>
+        public DateTime PlayedAt { get; set; }
+    }
 
 }
