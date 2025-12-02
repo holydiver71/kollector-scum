@@ -264,3 +264,20 @@ export interface PlayHistoryDto {
 export async function getPlayHistory(musicReleaseId: number): Promise<PlayHistoryDto> {
   return fetchJson<PlayHistoryDto>(`/api/NowPlaying/release/${musicReleaseId}/history`);
 }
+
+// Recently Played
+export interface RecentlyPlayedItemDto {
+  id: number;
+  coverFront?: string;
+  playedAt: string;
+  playCount: number;
+}
+
+/**
+ * Gets recently played releases with their cover images
+ * @param limit - Maximum number of releases to return (default 24)
+ * @returns List of recently played releases
+ */
+export async function getRecentlyPlayed(limit: number = 24): Promise<RecentlyPlayedItemDto[]> {
+  return fetchJson<RecentlyPlayedItemDto[]>(`/api/NowPlaying/recent?limit=${limit}`);
+}

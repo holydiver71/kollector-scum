@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { LoadingSpinner, Skeleton } from "./components/LoadingComponents";
+import { RecentlyPlayed } from "./components/RecentlyPlayed";
 
 import { getHealth, getPagedCount, ApiError } from "./lib/api";
 
@@ -155,6 +156,11 @@ export default function Dashboard() {
               </div>
             </Link>
           ))}
+        </div>
+
+        {/* Recently Played */}
+        <div className="mb-12">
+          <RecentlyPlayed maxItems={24} />
         </div>
 
         {/* Recent Activity placeholder */}
