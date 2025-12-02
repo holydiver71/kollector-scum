@@ -297,11 +297,16 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
         links: formData.links?.length ? formData.links : undefined,
         media: formData.media?.length ? formData.media : undefined,
         // Clean up purchaseInfo: only send storeId OR storeName, not both
+        // Also filter out empty date strings
         purchaseInfo: formData.purchaseInfo ? {
           ...formData.purchaseInfo,
           // If storeId exists (existing store), remove storeName
           // If only storeName exists (new store), keep it
           storeName: formData.purchaseInfo.storeId ? undefined : formData.purchaseInfo.storeName,
+          // Convert empty date string to undefined
+          purchaseDate: formData.purchaseInfo.purchaseDate && formData.purchaseInfo.purchaseDate.trim() !== '' 
+            ? formData.purchaseInfo.purchaseDate 
+            : undefined,
         } : undefined,
       };
       

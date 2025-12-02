@@ -92,13 +92,25 @@ namespace KollectorScum.Api.Services
                     LengthInSeconds = createDto.LengthInSeconds,
                     FormatId = resolvedFormatId,
                     PackagingId = resolvedPackagingId,
-                    PurchaseInfo = createDto.PurchaseInfo != null ? JsonSerializer.Serialize(createDto.PurchaseInfo) : null,
                     Images = createDto.Images != null ? JsonSerializer.Serialize(createDto.Images) : null,
                     Links = createDto.Links != null ? JsonSerializer.Serialize(createDto.Links) : null,
                     Media = createDto.Media != null ? JsonSerializer.Serialize(createDto.Media) : null,
                     DateAdded = DateTime.UtcNow,
                     LastModified = DateTime.UtcNow
                 };
+
+                // Map DTO to value object for PurchaseInfo
+                if (createDto.PurchaseInfo != null)
+                {
+                    var purchaseInfoValueObject = new KollectorScum.Api.Models.ValueObjects.PurchaseInfo
+                    {
+                        StoreID = createDto.PurchaseInfo.StoreId,
+                        Price = createDto.PurchaseInfo.Price,
+                        Date = createDto.PurchaseInfo.PurchaseDate,
+                        Notes = createDto.PurchaseInfo.Notes
+                    };
+                    musicRelease.PurchaseInfo = JsonSerializer.Serialize(purchaseInfoValueObject);
+                }
 
                 await _musicReleaseRepository.AddAsync(musicRelease);
                 await _unitOfWork.SaveChangesAsync();
@@ -191,7 +203,30 @@ namespace KollectorScum.Api.Services
                 existingMusicRelease.LengthInSeconds = updateDto.LengthInSeconds;
                 existingMusicRelease.FormatId = updateDto.FormatId;
                 existingMusicRelease.PackagingId = updateDto.PackagingId;
-                existingMusicRelease.PurchaseInfo = updateDto.PurchaseInfo != null ? JsonSerializer.Serialize(updateDto.PurchaseInfo) : null;
+                
+                // Map DTO to value object before serialization
+                if (updateDto.PurchaseInfo != null)
+                {
+                    _logger.LogInformation("PurchaseInfo before mapping: StoreId={StoreId}, Price={Price}, PurchaseDate={PurchaseDate}", 
+                        updateDto.PurchaseInfo.StoreId, updateDto.PurchaseInfo.Price, updateDto.PurchaseInfo.PurchaseDate);
+                    
+                    var purchaseInfoValueObject = new KollectorScum.Api.Models.ValueObjects.PurchaseInfo
+                    {
+                        StoreID = updateDto.PurchaseInfo.StoreId,
+                        Price = updateDto.PurchaseInfo.Price,
+                        Date = updateDto.PurchaseInfo.PurchaseDate,
+                        Notes = updateDto.PurchaseInfo.Notes
+                    };
+                    var serialized = JsonSerializer.Serialize(purchaseInfoValueObject);
+                    _logger.LogInformation("PurchaseInfo serialized: {Json}", serialized);
+                    existingMusicRelease.PurchaseInfo = serialized;
+                }
+                else
+                {
+                    _logger.LogInformation("PurchaseInfo is null, clearing field");
+                    existingMusicRelease.PurchaseInfo = null;
+                }
+                
                 existingMusicRelease.Images = updateDto.Images != null ? JsonSerializer.Serialize(updateDto.Images) : null;
                 existingMusicRelease.Links = updateDto.Links != null ? JsonSerializer.Serialize(updateDto.Links) : null;
                 existingMusicRelease.Media = updateDto.Media != null ? JsonSerializer.Serialize(updateDto.Media) : null;
