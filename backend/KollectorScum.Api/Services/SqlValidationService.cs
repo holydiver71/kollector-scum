@@ -67,7 +67,8 @@ namespace KollectorScum.Api.Services
             {
                 if (Regex.IsMatch(sql, pattern, RegexOptions.IgnoreCase))
                 {
-                    errors.Add($"Query contains forbidden pattern: {pattern.Replace("\\b", "").Replace("\\s*", " ").Replace("\\w+", "*")}");
+                    errors.Add("Query contains prohibited SQL operations");
+                    break; // Only report once for dangerous patterns
                 }
             }
 
@@ -176,7 +177,8 @@ namespace KollectorScum.Api.Services
                 var tableName = match.Groups[2].Value;
                 if (!AllowedTables.Contains(tableName))
                 {
-                    errors.Add($"Table '{tableName}' is not allowed. Allowed tables: {string.Join(", ", AllowedTables)}");
+                    errors.Add("Query references a table that is not available");
+                    break; // Only report once
                 }
             }
 
