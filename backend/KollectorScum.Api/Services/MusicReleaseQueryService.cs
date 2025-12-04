@@ -284,12 +284,16 @@ namespace KollectorScum.Api.Services
             var random = new Random();
             var skip = random.Next(0, totalCount);
 
-            var releases = await _musicReleaseRepository.GetAsync(
+            // Use GetPagedAsync with skip+1 as page number and page size of 1
+            // to efficiently get just one random release without loading all into memory
+            var pagedResult = await _musicReleaseRepository.GetPagedAsync(
+                pageNumber: skip + 1,
+                pageSize: 1,
                 filter: null,
                 orderBy: q => q.OrderBy(r => r.Id)
             );
 
-            var randomRelease = releases.Skip(skip).FirstOrDefault();
+            var randomRelease = pagedResult.Items.FirstOrDefault();
             
             return randomRelease?.Id;
         }
