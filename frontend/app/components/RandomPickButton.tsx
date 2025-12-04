@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Shuffle } from "lucide-react";
 import { getRandomReleaseId, ApiError } from "../lib/api";
@@ -21,12 +21,28 @@ export function RandomPickButton({ className = "" }: RandomPickButtonProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const errorTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (errorTimeoutRef.current) {
+        clearTimeout(errorTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleClick = async () => {
     if (isLoading) return;
 
     setIsLoading(true);
     setError(null);
+
+    // Clear any existing timeout
+    if (errorTimeoutRef.current) {
+      clearTimeout(errorTimeoutRef.current);
+      errorTimeoutRef.current = null;
+    }
 
     try {
       const randomId = await getRandomReleaseId();
@@ -47,7 +63,7 @@ export function RandomPickButton({ className = "" }: RandomPickButtonProps) {
       setError(errorMessage);
 
       // Auto-dismiss error after 3 seconds
-      setTimeout(() => setError(null), 3000);
+      errorTimeoutRef.current = setTimeout(() => setError(null), 3000);
     } finally {
       setIsLoading(false);
     }
