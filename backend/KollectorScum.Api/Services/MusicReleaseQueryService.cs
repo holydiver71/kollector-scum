@@ -268,5 +268,30 @@ namespace KollectorScum.Api.Services
         {
             return await _statisticsService.GetCollectionStatisticsAsync();
         }
+
+        public async Task<int?> GetRandomReleaseIdAsync()
+        {
+            _logger.LogInformation("Getting random music release ID");
+
+            var totalCount = await _musicReleaseRepository.CountAsync();
+            
+            if (totalCount == 0)
+            {
+                _logger.LogWarning("No music releases in collection for random selection");
+                return null;
+            }
+
+            var random = new Random();
+            var skip = random.Next(0, totalCount);
+
+            var releases = await _musicReleaseRepository.GetAsync(
+                filter: null,
+                orderBy: q => q.OrderBy(r => r.Id)
+            );
+
+            var randomRelease = releases.Skip(skip).FirstOrDefault();
+            
+            return randomRelease?.Id;
+        }
     }
 }
