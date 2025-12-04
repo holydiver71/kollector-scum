@@ -56,9 +56,8 @@ namespace KollectorScum.Api.Controllers
                     return BadRequest(new QueryResponseDto
                     {
                         Question = request.Question,
-                        Query = sql,
                         Success = false,
-                        Error = $"Generated query failed security validation: {validationResult.ErrorMessage}"
+                        Error = "I couldn't generate a safe query for that question. Please try rephrasing your request."
                     });
                 }
 
@@ -92,7 +91,13 @@ namespace KollectorScum.Api.Controllers
             }
             catch (Exception ex)
             {
-                return HandleError(ex, "NaturalLanguageQuery");
+                _logger.LogError(ex, "Error processing natural language query");
+                return StatusCode(500, new QueryResponseDto
+                {
+                    Question = request.Question,
+                    Success = false,
+                    Error = "An error occurred while processing your request. Please try again."
+                });
             }
         }
 
