@@ -110,7 +110,7 @@ namespace KollectorScum.Tests.Services
 
             // Assert
             Assert.False(result.IsValid);
-            Assert.Contains("Users", result.ErrorMessage ?? "");
+            Assert.Contains("not available", result.ErrorMessage ?? "");
         }
 
         [Theory]
