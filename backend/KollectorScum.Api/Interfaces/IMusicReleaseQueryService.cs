@@ -27,5 +27,11 @@ namespace KollectorScum.Api.Interfaces
         /// Gets collection statistics (delegated to statistics service)
         /// </summary>
         Task<CollectionStatisticsDto> GetCollectionStatisticsAsync();
+
+        /// <summary>
+        /// Gets the ID of a random music release from the collection
+        /// </summary>
+        /// <returns>Random release ID or null if collection is empty</returns>
+        Task<int?> GetRandomReleaseIdAsync();
     }
 }
