@@ -111,6 +111,11 @@ builder.Services.AddHttpClient<IDiscogsHttpClient, DiscogsHttpClient>();
 builder.Services.AddScoped<IDiscogsResponseMapper, DiscogsResponseMapper>();
 builder.Services.AddScoped<IDiscogsService, DiscogsService>();
 
+// Register Natural Language Query services
+builder.Services.AddSingleton<IDatabaseSchemaService, DatabaseSchemaService>();
+builder.Services.AddScoped<ISqlValidationService, SqlValidationService>();
+builder.Services.AddScoped<IQueryLLMService, NaturalLanguageQueryService>();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
