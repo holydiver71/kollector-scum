@@ -138,6 +138,34 @@ namespace KollectorScum.Api.Controllers
         }
 
         /// <summary>
+        /// Gets the ID of a random release from the collection
+        /// </summary>
+        /// <returns>Random release ID</returns>
+        [HttpGet("random")]
+        [ProducesResponseType(typeof(object), 200)]
+        [ProducesResponseType(404)]
+        public async Task<ActionResult> GetRandomRelease()
+        {
+            try
+            {
+                var randomId = await _queryService.GetRandomReleaseIdAsync();
+                
+                if (randomId == null)
+                {
+                    _logger.LogWarning("No releases found for random selection");
+                    return NotFound("No releases in collection");
+                }
+
+                return Ok(new { id = randomId.Value });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting random release");
+                return StatusCode(500, "An error occurred while getting a random release");
+            }
+        }
+
+        /// <summary>
         /// Creates a new music release
         /// Supports auto-creation of new lookup entities (artists, labels, genres, etc.)
         /// </summary>
