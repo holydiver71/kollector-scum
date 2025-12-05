@@ -72,6 +72,7 @@ export default function Dashboard() {
   const actions = [
     { title: "Browse Collection", href: "/collection", desc: "Explore your music library", icon: "📻", color: "gray" },
     { title: "Search Music", href: "/search", desc: "Find specific releases", icon: "🔍", color: "blue" },
+    { title: "Ask a Question", href: "/query", desc: "Natural language queries", icon: "🔮", color: "purple" },
     { title: "View Statistics", href: "/statistics", desc: "Analyze your collection", icon: "📊", color: "green" },
     { title: "Add Release", href: "/add", desc: "Add new music to collection", icon: "➕", color: "green" },
     { title: "Genres", href: "/genres", desc: "Browse by genre", icon: "⚡", color: "purple" },
