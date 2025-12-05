@@ -10,6 +10,18 @@ jest.mock('next/link', () => {
   );
 });
 
+// Mock next/navigation
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+  }),
+}));
+
+// Mock the RandomPickButton component to simplify Header tests
+jest.mock('../RandomPickButton', () => ({
+  RandomPickButton: () => <button aria-label="View random release">Random</button>,
+}));
+
 describe('Header Component', () => {
   it('renders the site title', () => {
     render(<Header />);
@@ -59,5 +71,12 @@ describe('Header Component', () => {
     const { container } = render(<Header />);
     const nav = container.querySelector('nav');
     expect(nav).toBeInTheDocument();
+  });
+
+  it('renders the random pick button', () => {
+    render(<Header />);
+    // There should be at least one random pick button (one in desktop nav, one in mobile)
+    const randomButtons = screen.getAllByRole('button', { name: /view random release/i });
+    expect(randomButtons.length).toBeGreaterThan(0);
   });
 });
