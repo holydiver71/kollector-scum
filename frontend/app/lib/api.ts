@@ -281,3 +281,17 @@ export interface RecentlyPlayedItemDto {
 export async function getRecentlyPlayed(limit: number = 24): Promise<RecentlyPlayedItemDto[]> {
   return fetchJson<RecentlyPlayedItemDto[]>(`/api/NowPlaying/recent?limit=${limit}`);
 }
+
+// Random Release
+export interface RandomReleaseResponse {
+  id: number;
+}
+
+/**
+ * Gets the ID of a random release from the collection
+ * @returns The ID of a random release
+ */
+export async function getRandomReleaseId(): Promise<number> {
+  const response = await fetchJson<RandomReleaseResponse>('/api/musicreleases/random');
+  return response.id;
+}
