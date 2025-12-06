@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Header from "./components/Header";
-import Navigation from "./components/Navigation";
+import Sidebar from "./components/Sidebar";
 import Footer from "./components/Footer";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 
@@ -26,13 +26,15 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.variable} font-sans antialiased bg-gray-50`}>
         <ErrorBoundary>
-          <div className="min-h-screen flex flex-col">
-            <Header />
-            <Navigation />
-            <main className="flex-1">
-              {children}
-            </main>
-            <Footer />
+          <div className="min-h-screen flex">
+            <Sidebar />
+            <div className="flex-1 flex flex-col ml-[70px] transition-all duration-300">
+              <Header />
+              <main className="flex-1 overflow-y-auto">
+                {children}
+              </main>
+              <Footer />
+            </div>
           </div>
         </ErrorBoundary>
       </body>
