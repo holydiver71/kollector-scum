@@ -58,6 +58,16 @@ namespace KollectorScum.Api.Data
         public DbSet<Models.NowPlaying> NowPlayings { get; set; }
 
         /// <summary>
+        /// Gets or sets the Kollections DbSet
+        /// </summary>
+        public DbSet<Models.Kollection> Kollections { get; set; }
+
+        /// <summary>
+        /// Gets or sets the KollectionItems DbSet
+        /// </summary>
+        public DbSet<Models.KollectionItem> KollectionItems { get; set; }
+
+        /// <summary>
         /// Configure the database model and relationships
         /// </summary>
         /// <param name="modelBuilder">The model builder</param>
@@ -128,6 +138,37 @@ namespace KollectorScum.Api.Data
                 .HasOne(np => np.MusicRelease)
                 .WithMany()
                 .HasForeignKey(np => np.MusicReleaseId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure Kollection relationships and indexes
+            modelBuilder.Entity<Models.Kollection>()
+                .HasIndex(k => k.Name)
+                .HasDatabaseName("IX_Kollections_Name");
+
+            modelBuilder.Entity<Models.KollectionItem>()
+                .HasIndex(ki => ki.KollectionId)
+                .HasDatabaseName("IX_KollectionItems_KollectionId");
+
+            modelBuilder.Entity<Models.KollectionItem>()
+                .HasIndex(ki => ki.MusicReleaseId)
+                .HasDatabaseName("IX_KollectionItems_MusicReleaseId");
+
+            // Unique constraint: one release can only appear once in a kollection
+            modelBuilder.Entity<Models.KollectionItem>()
+                .HasIndex(ki => new { ki.KollectionId, ki.MusicReleaseId })
+                .IsUnique()
+                .HasDatabaseName("IX_KollectionItems_KollectionId_MusicReleaseId");
+
+            modelBuilder.Entity<Models.KollectionItem>()
+                .HasOne(ki => ki.Kollection)
+                .WithMany(k => k.Items)
+                .HasForeignKey(ki => ki.KollectionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Models.KollectionItem>()
+                .HasOne(ki => ki.MusicRelease)
+                .WithMany()
+                .HasForeignKey(ki => ki.MusicReleaseId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }
