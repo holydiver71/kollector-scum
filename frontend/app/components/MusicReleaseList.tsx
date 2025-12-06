@@ -3,7 +3,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { fetchJson, createNowPlaying } from "../lib/api";
 import { LoadingSpinner, Skeleton } from "./LoadingComponents";
-import { Play, Check } from "lucide-react";
+import { Play, Check, Layers } from "lucide-react";
+import { AddToKollectionDialog } from "./AddToKollectionDialog";
 
 // Type definitions for music releases
 interface MusicRelease {
@@ -64,6 +65,7 @@ export function MusicReleaseCard({ release }: { release: MusicRelease }) {
   const [imageError, setImageError] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showKollectionDialog, setShowKollectionDialog] = useState(false);
 
   const handleNowPlaying = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -185,7 +187,31 @@ export function MusicReleaseCard({ release }: { release: MusicRelease }) {
             )}
           </div>
         </div>
+
+        {/* Add to Kollection Button - Bottom */}
+        <div className="px-4 pb-4">
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowKollectionDialog(true);
+            }}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm font-semibold"
+            title="Add to Kollection"
+          >
+            <Layers className="w-4 h-4" />
+            Add to Kollection
+          </button>
+        </div>
       </div>
+
+      {/* Add to Kollection Dialog */}
+      <AddToKollectionDialog
+        releaseId={release.id}
+        releaseTitle={release.title}
+        isOpen={showKollectionDialog}
+        onClose={() => setShowKollectionDialog(false)}
+      />
     </div>
   );
 }

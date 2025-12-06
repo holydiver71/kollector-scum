@@ -295,3 +295,132 @@ export async function getRandomReleaseId(): Promise<number> {
   const response = await fetchJson<RandomReleaseResponse>('/api/musicreleases/random');
   return response.id;
 }
+
+// Kollections
+export interface KollectionSummaryDto {
+  id: number;
+  name: string;
+  createdAt: string;
+  lastModified: string;
+  itemCount: number;
+}
+
+export interface KollectionDto {
+  id: number;
+  name: string;
+  createdAt: string;
+  lastModified: string;
+  releases: Array<{
+    id: number;
+    title: string;
+    releaseYear?: string;
+    origReleaseYear?: string;
+    artistNames?: string[];
+    genreNames?: string[];
+    labelName?: string;
+    countryName?: string;
+    formatName?: string;
+    coverImageUrl?: string;
+    dateAdded: string;
+  }>;
+}
+
+export interface CreateKollectionDto {
+  name: string;
+}
+
+export interface UpdateKollectionDto {
+  name: string;
+}
+
+export interface AddToKollectionDto {
+  musicReleaseId: number;
+  kollectionId?: number;
+  newKollectionName?: string;
+}
+
+/**
+ * Gets all kollections with their item counts
+ * @returns List of all kollections
+ */
+export async function getKollections(): Promise<KollectionSummaryDto[]> {
+  return fetchJson<KollectionSummaryDto[]>('/api/kollections');
+}
+
+/**
+ * Gets a specific kollection with all its releases
+ * @param id - Kollection ID
+ * @returns Kollection details with releases
+ */
+export async function getKollection(id: number): Promise<KollectionDto> {
+  return fetchJson<KollectionDto>(`/api/kollections/${id}`);
+}
+
+/**
+ * Creates a new kollection
+ * @param dto - Create kollection data
+ * @returns Created kollection summary
+ */
+export async function createKollection(dto: CreateKollectionDto): Promise<KollectionSummaryDto> {
+  return fetchJson<KollectionSummaryDto>('/api/kollections', {
+    method: 'POST',
+    body: JSON.stringify(dto),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+}
+
+/**
+ * Updates a kollection's name
+ * @param id - Kollection ID
+ * @param dto - Update kollection data
+ * @returns Updated kollection summary
+ */
+export async function updateKollection(id: number, dto: UpdateKollectionDto): Promise<KollectionSummaryDto> {
+  return fetchJson<KollectionSummaryDto>(`/api/kollections/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(dto),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+}
+
+/**
+ * Deletes a kollection
+ * @param id - Kollection ID
+ */
+export async function deleteKollection(id: number): Promise<void> {
+  return fetchJson<void>(`/api/kollections/${id}`, {
+    method: 'DELETE',
+    parse: false,
+  });
+}
+
+/**
+ * Adds a music release to a kollection (existing or new)
+ * @param dto - Add to kollection data
+ * @returns Updated kollection summary
+ */
+export async function addReleaseToKollection(dto: AddToKollectionDto): Promise<KollectionSummaryDto> {
+  return fetchJson<KollectionSummaryDto>('/api/kollections/add-release', {
+    method: 'POST',
+    body: JSON.stringify(dto),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+}
+
+/**
+ * Removes a music release from a kollection
+ * @param kollectionId - Kollection ID
+ * @param releaseId - Music release ID
+ */
+export async function removeReleaseFromKollection(kollectionId: number, releaseId: number): Promise<void> {
+  return fetchJson<void>(`/api/kollections/${kollectionId}/releases/${releaseId}`, {
+    method: 'DELETE',
+    parse: false,
+  });
+}
