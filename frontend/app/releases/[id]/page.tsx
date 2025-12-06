@@ -9,7 +9,8 @@ import { TrackList } from "../../components/TrackList";
 import { ReleaseLinks } from "../../components/ReleaseLinks";
 import { DeleteReleaseButton } from "../../components/DeleteReleaseButton";
 import { EditReleaseButton } from "../../components/EditReleaseButton";
-import { Play, Check, X, ChevronDown } from "lucide-react";
+import { AddToKollectionDialog } from "../../components/AddToKollectionDialog";
+import { Play, Check, X, ChevronDown, Layers } from "lucide-react";
 
 // Type definitions for detailed music release
 interface Artist {
@@ -117,6 +118,7 @@ export default function ReleaseDetailPage() {
   const [showPlayHistory, setShowPlayHistory] = useState(false);
   const [playHistory, setPlayHistory] = useState<PlayHistoryDto | null>(null);
   const [playHistoryLoading, setPlayHistoryLoading] = useState(false);
+  const [showKollectionDialog, setShowKollectionDialog] = useState(false);
 
   const handleNowPlayingClick = () => {
     setConfirmationTime(new Date());
@@ -286,6 +288,14 @@ export default function ReleaseDetailPage() {
               <span className="text-sm uppercase tracking-wider font-bold">Back</span>
             </button>
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowKollectionDialog(true)}
+                className="inline-flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm font-semibold"
+                title="Add to Kollection"
+              >
+                <Layers className="w-4 h-4" />
+                <span className="hidden sm:inline">Add to Kollection</span>
+              </button>
               <EditReleaseButton
                 releaseId={release.id}
                 releaseTitle={release.title}
@@ -300,6 +310,14 @@ export default function ReleaseDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Add to Kollection Dialog */}
+      <AddToKollectionDialog
+        releaseId={release.id}
+        releaseTitle={release.title}
+        isOpen={showKollectionDialog}
+        onClose={() => setShowKollectionDialog(false)}
+      />
 
       {/* Main Content - Two Column Layout */}
       <div className="max-w-[1400px] mx-auto px-8 py-16">
