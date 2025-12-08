@@ -31,9 +31,8 @@ export default function RootLayout({
             <Sidebar />
             <div
                 className="flex-1 flex flex-col transition-all duration-300 overflow-y-auto app-scroll-container"
-                // padding top equals header height so content starts underneath
                 // margin-left driven by --sidebar-offset which is set by Sidebar
-                style={{ paddingTop: 'var(--app-header-height)', marginLeft: 'var(--sidebar-offset, 64px)' }}
+                style={{ marginLeft: 'var(--sidebar-offset, 64px)' }}
             >
               <Suspense fallback={<div />}>
                 <Header />
