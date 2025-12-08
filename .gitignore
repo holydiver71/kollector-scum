@@ -10,12 +10,6 @@ data/musicreleases.json
 data/packagings.json
 data/stores.json
 
-# Cover images
-frontend/public/images/
-*.jpg
-*.jpeg
-*.png
-
 # Node modules
 node_modules/
 
