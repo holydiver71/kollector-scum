@@ -13,6 +13,8 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans, Arial, sans-serif);
   --font-mono: var(--font-geist-mono, monospace);
+  /* approximate default header height (safe fallback) */
+  --app-header-height: 220px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -38,7 +40,7 @@ body {
 }
 
 .sidebar-collapsed {
-  width: 70px;
+  width: 64px;
 }
 
 .sidebar-expanded {
@@ -51,4 +53,95 @@ body {
 
 .sidebar-icon:hover {
   transform: scale(1.1);
+}
+
+/* Header styles */
+.header-with-bg {
+  background-image: url('/images/Kollector-Skum-bg.png');
+  background-size: cover;
+  background-position: center;
+  /* fixed overlay so content can scroll underneath */
+  position: fixed;
+  top: 0;
+  /* offset/header left is driven by a CSS variable set from Sidebar component */
+  left: var(--sidebar-offset, 64px); /* aligns with collapsed sidebar width by default */
+  right: 0;
+  width: calc(100% - var(--sidebar-offset, 64px));
+  z-index: 40;
+  /* Fallback gradient if image doesn't load */
+  background-color: #8C240D;
+  /* Animate appearance changes like shrink / expand */
+  transition: transform 220ms ease, box-shadow 220ms ease, background-color 220ms ease;
+}
+
+/* Sidebar polish */
+/* nav elements handle horizontal overflow; avoid forcing overflow on the sidebar root so tooltips and popovers can escape */
+
+/* Center icons when collapsed and hide labels to keep the layout tidy */
+.sidebar-collapsed .flex.items-center {
+  justify-content: center;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+.sidebar-collapsed .sidebar-icon {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+.sidebar-collapsed .sidebar-text {
+  display: none;
+}
+
+
+
+/* Mobile / small screens: header should be full width */
+@media (max-width: 1024px) {
+  .header-with-bg {
+    left: 0;
+    width: 100%;
+  }
+  /* On small screens, the sidebar should not push the header/content aside */
+  :root {
+    --sidebar-offset: 0px;
+  }
+}
+
+.header-overlay {
+  /* subtle dark overlay over the header image for baseline contrast */
+  background: rgba(0,0,0,0.18);
+  transition: background 220ms linear;
+}
+
+/* Compact header variants - used while scrolling */
+.header-with-bg.is-compact .header-overlay > div {
+  /* reduce vertical padding on compact header for a tighter header */
+  padding-top: 0.5rem /* 8px */;
+  padding-bottom: 0.5rem /* 8px */;
+  transition: padding 200ms ease;
+}
+
+/* Slightly tighten the title/subtitle spacing when compact */
+.header-with-bg.is-compact h1,
+.header-with-bg.is-compact p {
+  transform-origin: left center;
+  transition: transform 200ms ease, font-size 180ms ease, opacity 180ms ease;
+}
+
+/* When a control inside header (search) gets focus, increase overlay opacity to improve readability */
+.header-overlay:focus-within {
+  background: rgba(0,0,0,0.48);
+}
+
+.search-bar {
+  transition: all 0.3s ease;
+}
+
+.search-bar:focus-within {
+  transform: scale(1.02);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Ensure sticky items inside the main scroll container stick beneath the top hero/header */
+.app-scroll-container :where(.sticky) {
+  top: var(--app-header-height);
 }

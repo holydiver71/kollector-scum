@@ -145,6 +145,15 @@ export function ReleaseLinks({ links }: ReleaseLinksProps) {
             {formatLinkType(link.type, link.url)}
           </span>
           
+          {/* Description / label */}
+          <div className="flex-1 min-w-0">
+            {link.description ? (
+              <div className="text-sm text-gray-700 truncate">{link.description}</div>
+            ) : (
+              <div className="text-sm text-gray-500 truncate">{extractDomain(link.url)}</div>
+            )}
+          </div>
+
           {/* Arrow */}
           <svg className="w-3 h-3 text-gray-300 group-hover:text-red-500 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />

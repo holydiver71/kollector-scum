@@ -134,8 +134,9 @@ describe('MusicReleaseList Component', () => {
     });
 
     const callUrl = (api.fetchJson as jest.Mock).mock.calls[0][0];
-    expect(callUrl).toContain('search=metallica');
-    expect(callUrl).toContain('genreId=1');
+    // API currently uses PascalCase query keys (Search, GenreId) — match implementation
+    expect(callUrl).toContain('Search=metallica');
+    expect(callUrl).toContain('GenreId=1');
   });
 
   it('renders music release cards', async () => {

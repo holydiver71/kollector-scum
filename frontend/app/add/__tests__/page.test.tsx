@@ -1,8 +1,27 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import AddReleasePage from '../page';
 
+// Mock next/navigation hooks used by this page
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+  useSearchParams: () => new URLSearchParams(),
+  usePathname: () => '/add',
+}));
+
 describe('AddReleasePage', () => {
+  beforeEach(() => {
+    // Mock global.fetch so the page's lookup effect doesn't throw in Node (jsdom env)
+    // Return empty arrays by default for any lookup endpoints.
+    // Tests that require different fetch behavior can override this.
+    // Keep fetch unresolved for these tests to prevent async state updates from running
+    // (we only assert the static page UI here). Individual tests can override the mock.
+    (global as any).fetch = jest.fn().mockImplementation(() => new Promise(() => {}));
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
   it('renders the page header', () => {
     render(<AddReleasePage />);
     
@@ -10,23 +29,19 @@ describe('AddReleasePage', () => {
     expect(screen.getByText('Add a new music release to your collection')).toBeInTheDocument();
   });
 
-  it('renders the main heading', () => {
+  it('renders the tab navigation', () => {
     render(<AddReleasePage />);
-    
-    expect(screen.getByRole('heading', { name: 'Add New Release', level: 2 })).toBeInTheDocument();
+
+    // Page should include the two primary tab options in the nav
+    const nav = screen.getByRole('navigation');
+    expect(within(nav).getByRole('button', { name: /Search Discogs/i })).toBeInTheDocument();
+    expect(within(nav).getByRole('button', { name: /Manual Entry/i })).toBeInTheDocument();
   });
 
-  it('displays the description text', () => {
+  it('displays the page description', () => {
     render(<AddReleasePage />);
-    
-    expect(screen.getByText(/Form to add new music releases with all metadata/)).toBeInTheDocument();
-  });
 
-  it('shows future enhancement note', () => {
-    render(<AddReleasePage />);
-    
-    expect(screen.getByText(/Future Enhancement:/)).toBeInTheDocument();
-    expect(screen.getByText(/CRUD operations for music releases/)).toBeInTheDocument();
+    expect(screen.getByText(/Add a new music release to your collection/)).toBeInTheDocument();
   });
 
   it('renders the plus icon SVG', () => {
@@ -34,7 +49,8 @@ describe('AddReleasePage', () => {
     
     const svg = container.querySelector('svg');
     expect(svg).toBeInTheDocument();
-    expect(svg).toHaveClass('mx-auto');
+    // Ensure there's an SVG icon and it has expected sizing classes (nav icon is present)
+    expect(svg).toHaveClass('w-5');
   });
 
   it('has proper page structure', () => {

@@ -19,6 +19,8 @@ const config: Config = {
     '**/__tests__/**/*.[jt]s?(x)',
     '**/?(*.)+(spec|test).[jt]s?(x)'
   ],
+  // Don't pick up Playwright e2e/ specs in jest runs
+  testPathIgnorePatterns: ['<rootDir>/e2e/'],
   collectCoverageFrom: [
     'app/**/*.{js,jsx,ts,tsx}',
     '!app/**/*.d.ts',

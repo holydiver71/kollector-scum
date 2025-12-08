@@ -29,6 +29,8 @@ describe('Dashboard Page', () => {
   it('renders loading state initially', () => {
     (api.getHealth as jest.Mock).mockImplementation(() => new Promise(() => {}));
     (api.getPagedCount as jest.Mock).mockImplementation(() => new Promise(() => {}));
+    // Prevent recently played from resolving during this test so we don't trigger async state updates
+    (api.getRecentlyPlayed as jest.Mock).mockImplementation(() => new Promise(() => {}));
 
     const { container } = render(<Dashboard />);
     
