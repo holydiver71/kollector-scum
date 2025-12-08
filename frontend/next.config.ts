@@ -17,6 +17,16 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async rewrites() {
+    // Keep rewrites dev-only — forward /api/* to the backend running locally.
+    if (process.env.NODE_ENV === 'production') return [];
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://127.0.0.1:5072/api/:path*',
+      },
+    ];
+  },
 };
 
 export default nextConfig;
