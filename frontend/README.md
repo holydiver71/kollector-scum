@@ -34,3 +34,24 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Local dev: proxy /api to backend
+
+During development the frontend automatically proxies all `/api` requests to the backend at http://127.0.0.1:5072.
+
+Make sure the backend is running locally on port 5072 (example):
+
+```bash
+cd backend/KollectorScum.Api
+dotnet run
+curl http://127.0.0.1:5072/api/health
+```
+
+Start the frontend dev server:
+
+```bash
+cd frontend
+npm run dev
+```
+
+Open the site and check DevTools → Network: requests targeting `/api/*` will be forwarded to `http://127.0.0.1:5072` by the Next dev proxy.
