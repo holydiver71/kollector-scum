@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import React, { Suspense } from 'react';
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Header from "./components/Header";
@@ -34,9 +35,13 @@ export default function RootLayout({
                 // margin-left driven by --sidebar-offset which is set by Sidebar
                 style={{ paddingTop: 'var(--app-header-height)', marginLeft: 'var(--sidebar-offset, 64px)' }}
             >
-              <Header />
+              <Suspense fallback={<div />}>
+                <Header />
+              </Suspense>
               <main className="flex-1">
-                {children}
+                <Suspense fallback={<div />}>
+                  {children}
+                </Suspense>
               </main>
               <Footer />
             </div>
