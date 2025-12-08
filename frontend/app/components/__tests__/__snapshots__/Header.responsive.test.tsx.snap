@@ -1,0 +1,413 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`Header — responsive behavior & filters navigation renders QuickSearch container and wrapper classes: header-mobile 1`] = `
+<DocumentFragment>
+  <header
+    class="header-with-bg shadow-2xl "
+    style="width: 375px;"
+  >
+    <div
+      class="header-overlay"
+    >
+      <div
+        class="max-w-7xl mx-auto px-6 py-6"
+      >
+        <div
+          class="flex items-center justify-between mb-6"
+        >
+          <div
+            class="flex items-center gap-4"
+          >
+            <img
+              alt="Kollector Sküm logo"
+              class="object-contain transition-all duration-200 w-16 h-16"
+              src="/images/Kollector-Skum-logo2.png"
+            />
+            <div>
+              <h1
+                class="font-black text-white drop-shadow-lg transition-all duration-200 text-4xl"
+              >
+                Music Collection
+              </h1>
+              <p
+                class="text-white/90 mt-2 font-bold drop-shadow-md transition-opacity duration-200 "
+              >
+                42 releases in your collection
+              </p>
+            </div>
+          </div>
+          <a
+            class="text-white px-6 py-3 rounded-lg font-bold transition-all hover:shadow-2xl flex items-center gap-2 shadow-lg bg-[#D93611] hover:bg-[#B82E0E]"
+            href="/add"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-plus"
+              fill="none"
+              height="20"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="20"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M5 12h14"
+              />
+              <path
+                d="M12 5v14"
+              />
+            </svg>
+            <span>
+              Add Release
+            </span>
+          </a>
+        </div>
+        <div
+          class="flex flex-wrap gap-3"
+        >
+          <div
+            class="search-bar flex-1 min-w-0 sm:min-w-[300px] relative"
+          >
+            <form
+              class="relative"
+            >
+              <div
+                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+              >
+                <svg
+                  class="h-5 w-5 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                  />
+                </svg>
+              </div>
+              <input
+                autocomplete="off"
+                class="block w-full pl-10 pr-12 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/75 focus:bg-white"
+                placeholder="Search releases, artists, albums..."
+                type="text"
+                value=""
+              />
+              <button
+                class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                type="submit"
+              >
+                <svg
+                  class="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                  />
+                </svg>
+              </button>
+            </form>
+          </div>
+          <div
+            class="flex gap-2 flex-wrap"
+          >
+            <button
+              aria-pressed="false"
+              class="px-4 py-2 rounded-lg border-2 transition-all font-bold flex items-center gap-2 shadow-md text-white bg-[#8C240D] border-[#8C240D] hover:opacity-90"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+              </svg>
+              <span
+                class=""
+              >
+                Filters
+              </span>
+            </button>
+            <button
+              class="px-4 py-2 rounded-lg border-2 border-[#8C240D] transition-all font-bold text-white flex items-center gap-2 shadow-md bg-[#8C240D] hover:opacity-90"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+              </svg>
+              <span>
+                Sort
+              </span>
+            </button>
+            <button
+              class="px-4 py-2 rounded-lg border-2 border-[#8C240D] transition-all font-bold text-white shadow-md bg-[#8C240D] hover:opacity-90"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+              </svg>
+            </button>
+            <button
+              class="px-4 py-2 rounded-lg border-2 border-[#8C240D] transition-all font-bold text-white shadow-md bg-[#8C240D] hover:opacity-90"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M4 6h16M4 10h16M4 14h16M4 18h16"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+</DocumentFragment>
+`;
+
+exports[`Header — responsive behavior & filters navigation renders QuickSearch container and wrapper classes: header-tablet 1`] = `
+<DocumentFragment>
+  <header
+    class="header-with-bg shadow-2xl "
+    style="width: 1024px;"
+  >
+    <div
+      class="header-overlay"
+    >
+      <div
+        class="max-w-7xl mx-auto px-6 py-6"
+      >
+        <div
+          class="flex items-center justify-between mb-6"
+        >
+          <div
+            class="flex items-center gap-4"
+          >
+            <img
+              alt="Kollector Sküm logo"
+              class="object-contain transition-all duration-200 w-16 h-16"
+              src="/images/Kollector-Skum-logo2.png"
+            />
+            <div>
+              <h1
+                class="font-black text-white drop-shadow-lg transition-all duration-200 text-4xl"
+              >
+                Music Collection
+              </h1>
+              <p
+                class="text-white/90 mt-2 font-bold drop-shadow-md transition-opacity duration-200 "
+              >
+                42 releases in your collection
+              </p>
+            </div>
+          </div>
+          <a
+            class="text-white px-6 py-3 rounded-lg font-bold transition-all hover:shadow-2xl flex items-center gap-2 shadow-lg bg-[#D93611] hover:bg-[#B82E0E]"
+            href="/add"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-plus"
+              fill="none"
+              height="20"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="20"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M5 12h14"
+              />
+              <path
+                d="M12 5v14"
+              />
+            </svg>
+            <span>
+              Add Release
+            </span>
+          </a>
+        </div>
+        <div
+          class="flex flex-wrap gap-3"
+        >
+          <div
+            class="search-bar flex-1 min-w-0 sm:min-w-[300px] relative"
+          >
+            <form
+              class="relative"
+            >
+              <div
+                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+              >
+                <svg
+                  class="h-5 w-5 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                  />
+                </svg>
+              </div>
+              <input
+                autocomplete="off"
+                class="block w-full pl-10 pr-12 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/75 focus:bg-white"
+                placeholder="Search releases, artists, albums..."
+                type="text"
+                value=""
+              />
+              <button
+                class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                type="submit"
+              >
+                <svg
+                  class="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                  />
+                </svg>
+              </button>
+            </form>
+          </div>
+          <div
+            class="flex gap-2 flex-wrap"
+          >
+            <button
+              aria-pressed="false"
+              class="px-4 py-2 rounded-lg border-2 transition-all font-bold flex items-center gap-2 shadow-md text-white bg-[#8C240D] border-[#8C240D] hover:opacity-90"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+              </svg>
+              <span
+                class=""
+              >
+                Filters
+              </span>
+            </button>
+            <button
+              class="px-4 py-2 rounded-lg border-2 border-[#8C240D] transition-all font-bold text-white flex items-center gap-2 shadow-md bg-[#8C240D] hover:opacity-90"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+              </svg>
+              <span>
+                Sort
+              </span>
+            </button>
+            <button
+              class="px-4 py-2 rounded-lg border-2 border-[#8C240D] transition-all font-bold text-white shadow-md bg-[#8C240D] hover:opacity-90"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+              </svg>
+            </button>
+            <button
+              class="px-4 py-2 rounded-lg border-2 border-[#8C240D] transition-all font-bold text-white shadow-md bg-[#8C240D] hover:opacity-90"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M4 6h16M4 10h16M4 14h16M4 18h16"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+</DocumentFragment>
+`;

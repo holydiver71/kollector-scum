@@ -34,6 +34,7 @@ describe('API Utilities', () => {
         ok: false,
         status: 404,
         statusText: 'Not Found',
+        headers: { get: () => 'application/json' },
         json: async () => ({ error: 'Not found' }),
       });
 
@@ -43,6 +44,7 @@ describe('API Utilities', () => {
     it('handles JSON parse errors', async () => {
       (global.fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
+        headers: { get: () => 'application/json' },
         json: async () => {
           throw new Error('Invalid JSON');
         },

@@ -34,7 +34,8 @@ describe('DeleteReleaseButton', () => {
       
       const button = screen.getByRole('button', { name: /delete test album from collection/i });
       expect(button).toBeInTheDocument();
-      expect(button).toHaveTextContent('Delete');
+      // Button is an icon-only control with an accessible name — assert on accessible name instead of visible text
+      expect(button).toHaveAccessibleName(/delete test album from collection/i);
     });
 
     it('renders trash icon', () => {

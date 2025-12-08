@@ -159,7 +159,8 @@ describe('AddReleaseForm - Edit Mode', () => {
     render(<AddReleaseForm initialData={initialData} releaseId={1} />);
 
     await waitFor(() => {
-      const origYearInput = screen.getByLabelText(/original release year/i);
+      const matches = screen.getAllByLabelText(/original release year/i);
+      const origYearInput = matches.find((el: any) => el.tagName === 'INPUT') as HTMLInputElement;
       expect(origYearInput).toHaveValue('2022-03-01');
     });
   });

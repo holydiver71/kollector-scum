@@ -1,82 +1,70 @@
-import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, act, waitFor } from '@testing-library/react';
 import Header from '../Header';
 
-// Mock Next.js Link
-jest.mock('next/link', () => {
-  // eslint-disable-next-line react/display-name
-  return ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  );
-});
+jest.mock('../../lib/api', () => ({
+  getPagedCount: jest.fn().mockResolvedValue(1234),
+}));
 
-// Mock next/navigation
+// Provide simple next/navigation mocks used by Header
 jest.mock('next/navigation', () => ({
-  useRouter: () => ({
-    push: jest.fn(),
-  }),
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+  useSearchParams: () => new URLSearchParams(),
+  usePathname: () => '/collection',
 }));
 
-// Mock the RandomPickButton component to simplify Header tests
-jest.mock('../RandomPickButton', () => ({
-  RandomPickButton: () => <button aria-label="View random release">Random</button>,
-}));
+describe('Header shrink-on-scroll', () => {
+  let originalOffset: any;
 
-describe('Header Component', () => {
-  it('renders the site title', () => {
+  beforeEach(() => {
+    // Make sure document default header height returns something predictable
+    originalOffset = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetHeight');
+    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, get: () => 220 });
+  });
+
+  afterEach(() => {
+    // restore original getter
+    if (originalOffset) Object.defineProperty(HTMLElement.prototype, 'offsetHeight', originalOffset);
+    jest.clearAllMocks();
+  });
+
+  it('renders title and subtitle and sets CSS header height', async () => {
+    await act(async () => render(<Header />));
+
+    // The main title should be present as the primary heading
+    const heading = screen.getByRole('heading', { level: 1 });
+    expect(heading).toBeInTheDocument();
+
+    // logo should be present to the left of the title
+    const logo = screen.getByAltText(/Kollector Sküm logo/i);
+    expect(logo).toBeInTheDocument();
+
+    // measured value should be applied to root css var
+    await waitFor(() => {
+      expect(document.documentElement.style.getPropertyValue('--app-header-height')).toBe('220px');
+    });
+  });
+
+  it('sets compact class when scrolled past threshold and updates height', async () => {
     render(<Header />);
-    expect(screen.getByText('Kollector Sküm')).toBeInTheDocument();
-  });
 
-  it('renders navigation links', () => {
-    render(<Header />);
-    
-    expect(screen.getByText('Dashboard')).toBeInTheDocument();
-    expect(screen.getByText('Collection')).toBeInTheDocument();
-    expect(screen.getByText('Search')).toBeInTheDocument();
-    expect(screen.getByText('Statistics')).toBeInTheDocument();
-  });
+    const header = document.querySelector('header');
+    expect(header).toBeTruthy();
+    expect(header?.classList.contains('is-compact')).toBe(false);
 
-  it('contains link to home page', () => {
-    render(<Header />);
-    const homeLink = screen.getByRole('link', { name: /dashboard/i });
-    expect(homeLink).toHaveAttribute('href', '/');
-  });
+    // Simulate the header becoming smaller after compacting
+    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, get: () => 80 });
 
-  it('contains link to collection page', () => {
-    render(<Header />);
-    const collectionLink = screen.getByRole('link', { name: /collection/i });
-    expect(collectionLink).toHaveAttribute('href', '/collection');
-  });
+    // Simulate user scroll past threshold
+    act(() => {
+      (window as any).scrollY = 200;
+      window.dispatchEvent(new Event('scroll'));
+    });
 
-  it('contains link to search page', () => {
-    render(<Header />);
-    const searchLink = screen.getByRole('link', { name: /search/i });
-    expect(searchLink).toHaveAttribute('href', '/search');
-  });
-
-  it('contains link to statistics page', () => {
-    render(<Header />);
-    const statsLink = screen.getByRole('link', { name: /statistics/i });
-    expect(statsLink).toHaveAttribute('href', '/statistics');
-  });
-
-  it('has proper header styling', () => {
-    const { container } = render(<Header />);
-    const header = container.querySelector('header');
-    expect(header).toBeInTheDocument();
-  });
-
-  it('renders navigation in a nav element', () => {
-    const { container } = render(<Header />);
-    const nav = container.querySelector('nav');
-    expect(nav).toBeInTheDocument();
-  });
-
-  it('renders the random pick button', () => {
-    render(<Header />);
-    // There should be at least one random pick button (one in desktop nav, one in mobile)
-    const randomButtons = screen.getAllByRole('button', { name: /view random release/i });
-    expect(randomButtons.length).toBeGreaterThan(0);
+    // rAF-based effect -> wait for DOM updates
+    await waitFor(() => {
+      expect(header?.classList.contains('is-compact')).toBe(true);
+      expect(document.documentElement.style.getPropertyValue('--app-header-height')).toBe('80px');
+    });
   });
 });
+// (Other header integration/unit tests live elsewhere in the repo.)

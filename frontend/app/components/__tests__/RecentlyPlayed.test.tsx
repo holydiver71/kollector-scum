@@ -68,6 +68,9 @@ describe('RecentlyPlayed Component', () => {
   it('renders error state when API fails', async () => {
     (api.getRecentlyPlayed as jest.Mock).mockRejectedValue(new Error('API Error'));
 
+    // silence expected console.error during this negative flow
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
     render(<RecentlyPlayed />);
 
     await waitFor(() => {
@@ -75,6 +78,8 @@ describe('RecentlyPlayed Component', () => {
     });
 
     expect(screen.getByText('API Error')).toBeInTheDocument();
+
+    spy.mockRestore();
   });
 
   it('shows date heading for first item of each day', async () => {

@@ -20,12 +20,21 @@ jest.mock('../../components/MusicReleaseList', () => ({
   ),
 }));
 
+// Provide a basic next/navigation mock so page components can call router hooks in tests
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+  // Tests expect the advanced filters panel to be visible; provide showAdvanced=true
+  useSearchParams: () => new URLSearchParams('showAdvanced=true'),
+  usePathname: () => '/collection',
+}));
+
 describe('CollectionPage', () => {
-  it('renders the page header', () => {
+  it('renders the page shell and sort controls', () => {
     render(<CollectionPage />);
     
-    expect(screen.getByText('Music Collection')).toBeInTheDocument();
-    expect(screen.getByText('Browse and search your music releases')).toBeInTheDocument();
+    // header/hero lives in the shared header component now; assert the page shell
+    expect(screen.getByText('Sort by:')).toBeInTheDocument();
+    expect(screen.getByTestId('music-release-list')).toBeInTheDocument();
   });
 
   it('renders SearchAndFilter component', () => {

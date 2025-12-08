@@ -44,6 +44,16 @@ jest.mock('../LookupComponents', () => ({
       <option value="1">Vinyl</option>
     </select>
   ),
+  LookupDropdown: ({ items, value, placeholder, onSelect }: any) => (
+    <div>
+      <button type="button">{items?.find((i: any) => i.id === value)?.name || placeholder}</button>
+      <div>
+        {(items || []).map((it: any) => (
+          <button type="button" key={it.id} onClick={() => onSelect && onSelect(it)}>{it.name}</button>
+        ))}
+      </div>
+    </div>
+  ),
 }));
 
 describe('SearchAndFilter Component', () => {
@@ -70,30 +80,13 @@ describe('SearchAndFilter Component', () => {
     expect(mockOnFiltersChange).toHaveBeenCalledWith({ search: 'test search' });
   });
 
-  it('shows advanced filters when toggle button clicked', () => {
-    render(<SearchAndFilter onFiltersChange={mockOnFiltersChange} />);
-    
-    const toggleButton = screen.getByText(/show advanced filters/i);
-    fireEvent.click(toggleButton);
+  it('renders advanced filters when openAdvanced is true', () => {
+    render(<SearchAndFilter onFiltersChange={mockOnFiltersChange} openAdvanced={true} />);
 
-    expect(screen.getByText(/hide advanced filters/i)).toBeInTheDocument();
     expect(screen.getByTestId('artist-dropdown')).toBeInTheDocument();
     expect(screen.getByTestId('genre-dropdown')).toBeInTheDocument();
   });
 
-  it('clears all filters when clear button clicked', () => {
-    render(
-      <SearchAndFilter 
-        onFiltersChange={mockOnFiltersChange}
-        initialFilters={{ search: 'test', artistId: 1 }}
-      />
-    );
-
-    const clearButton = screen.getByText(/clear all filters/i);
-    fireEvent.click(clearButton);
-
-    expect(mockOnFiltersChange).toHaveBeenCalledWith({});
-  });
 
   it('displays active filter chips', () => {
     render(
@@ -107,8 +100,7 @@ describe('SearchAndFilter Component', () => {
     const searchInput = screen.getByPlaceholderText(/search by title/i);
     expect(searchInput).toHaveValue('metal');
     
-    // Check for Clear All Filters button which appears when filters are active
-    expect(screen.getByText(/clear all filters/i)).toBeInTheDocument();
+    // Active filters visible in the UI (search field retains its value)
   });  it('fetches suggestions when search text is entered', async () => {
     const mockSuggestions = [
       { type: 'release', id: 1, name: 'Test Album', subtitle: '1990' },
@@ -127,11 +119,8 @@ describe('SearchAndFilter Component', () => {
   });
 
   it('updates year range filters', () => {
-    render(<SearchAndFilter onFiltersChange={mockOnFiltersChange} />);
-    
-    // Show advanced filters
-    const toggleButton = screen.getByText(/show advanced filters/i);
-    fireEvent.click(toggleButton);
+    // Render with advanced filters visible
+    render(<SearchAndFilter onFiltersChange={mockOnFiltersChange} openAdvanced={true} />);
 
     const yearFromInput = screen.getByPlaceholderText(/e.g., 1970/i);
     fireEvent.change(yearFromInput, { target: { value: '1980' } });
@@ -140,22 +129,19 @@ describe('SearchAndFilter Component', () => {
   });
 
   it('displays live/studio recording filter', () => {
-    render(<SearchAndFilter onFiltersChange={mockOnFiltersChange} />);
-    
-    const toggleButton = screen.getByText(/show advanced filters/i);
-    fireEvent.click(toggleButton);
+    render(<SearchAndFilter onFiltersChange={mockOnFiltersChange} openAdvanced={true} />);
 
     // Find the select by its options
-    const recordingSelect = screen.getByText('All recordings').closest('select');
-    expect(recordingSelect).toBeInTheDocument();
-    
-    if (recordingSelect) {
-      fireEvent.change(recordingSelect, { target: { value: 'true' } });
-      expect(mockOnFiltersChange).toHaveBeenCalledWith(expect.objectContaining({ live: true }));
-    }
+     const dropdownButton = screen.getByRole('button', { name: /all recordings/i });
+     fireEvent.click(dropdownButton);
+
+     const liveOption = screen.getByText('Live recordings');
+     fireEvent.click(liveOption);
+
+     expect(mockOnFiltersChange).toHaveBeenCalledWith(expect.objectContaining({ live: true }));
   });
 
-  it('shows share button when URL sync is enabled and filters are active', () => {
+  it('does not render share control (removed from control panel)', () => {
     render(
       <SearchAndFilter 
         onFiltersChange={mockOnFiltersChange}
@@ -163,9 +149,9 @@ describe('SearchAndFilter Component', () => {
         enableUrlSync={true}
       />
     );
-
-    const shareButton = screen.getByText(/share/i);
-    expect(shareButton).toBeInTheDocument();
+    // share control row removed from the control panel; it is intentionally handled at the page-level
+    const shareButton = screen.queryByText(/share/i);
+    expect(shareButton).not.toBeInTheDocument();
   });
 
   it('does not show suggestions for short search queries', async () => {

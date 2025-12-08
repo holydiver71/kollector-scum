@@ -25,6 +25,14 @@ interface NavigationItem {
 
 const Sidebar: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
+    // Keep a global CSS variable so Header (a sibling) can read the sidebar offset
+    React.useEffect(() => {
+      const offset = isExpanded ? '240px' : '64px';
+      document.documentElement.style.setProperty('--sidebar-offset', offset);
+      return () => {
+        // preserve last known value (do not remove) - tests may expect a value
+      };
+    }, [isExpanded]);
   const pathname = usePathname();
 
   const navigationItems: NavigationItem[] = [
@@ -55,9 +63,13 @@ const Sidebar: React.FC = () => {
 
   return (
     <aside
+      // reflect the current sidebar offset as a CSS variable used by Header
+      style={{
+        // keep a stable CSS variable for header offset - used by Header
+        // when collapsed -> 64px, when expanded -> 240px
+        ['--sidebar-offset' as any]: isExpanded ? '240px' : '64px',
+      }}
       className={`sidebar ${isExpanded ? 'sidebar-expanded' : 'sidebar-collapsed'} bg-gray-900 text-white flex flex-col shadow-2xl z-50 transition-all duration-300 ease-in-out`}
-      onMouseEnter={() => setIsExpanded(true)}
-      onMouseLeave={() => setIsExpanded(false)}
     >
       {/* Toggle Button */}
       <div className="p-4 flex justify-center border-b border-gray-800">
@@ -70,7 +82,7 @@ const Sidebar: React.FC = () => {
       </div>
 
       {/* Main Navigation */}
-      <nav className="flex-1 py-6 overflow-y-auto">
+      <nav className="flex-1 py-6 overflow-y-auto overflow-x-hidden">
         <ul className="space-y-2">
           {navigationItems.map((item) => {
             const Icon = item.icon;

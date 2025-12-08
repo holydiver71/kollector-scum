@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { CountryDropdown, GenreDropdown, ArtistDropdown, LabelDropdown, FormatDropdown } from "./LookupComponents";
+import { CountryDropdown, GenreDropdown, ArtistDropdown, LabelDropdown, FormatDropdown, LookupDropdown } from "./LookupComponents";
 import { getSearchSuggestions, SearchSuggestion } from '../lib/api';
 
 interface SearchFilters {
@@ -20,12 +20,15 @@ interface SearchAndFilterProps {
   onFiltersChange: (filters: SearchFilters) => void;
   initialFilters?: SearchFilters;
   enableUrlSync?: boolean; // Enable URL parameter synchronization
+  showSearchInput?: boolean; // control rendering of the search input (header moved search)
+  openAdvanced?: boolean; // allow external control of advanced filters visibility
+  onAdvancedToggle?: (open: boolean) => void; // notify parent when advanced panel toggles
 }
 
-export function SearchAndFilter({ onFiltersChange, initialFilters = {}, enableUrlSync = false }: SearchAndFilterProps) {
+export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync = false, showSearchInput = true, openAdvanced, onAdvancedToggle }: SearchAndFilterProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [filters, setFilters] = useState<SearchFilters>(initialFilters);
+  const [filters, setFilters] = useState<SearchFilters>(initialFilters || {});
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -34,16 +37,24 @@ export function SearchAndFilter({ onFiltersChange, initialFilters = {}, enableUr
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const [isInitializing, setIsInitializing] = useState(true);
 
+  const normalizedInitialFilters = initialFilters || {};
+
   // Sync local state when initialFilters prop changes
+  // NOTE: if parent explicitly controls `openAdvanced`, don't auto-open/close based on initialFilters —
+  // respect the parent's explicit intent so the header toggle can hide the panel reliably.
   useEffect(() => {
-    console.log('SearchAndFilter initialFilters changed:', initialFilters);
+    console.log('SearchAndFilter initialFilters changed:', normalizedInitialFilters);
     setIsInitializing(true);
-    setFilters(initialFilters);
-    // Show advanced filters if any advanced filter is set in initialFilters
-    if (initialFilters.artistId || initialFilters.genreId || initialFilters.labelId || 
-        initialFilters.countryId || initialFilters.formatId || initialFilters.live || 
-        initialFilters.yearFrom || initialFilters.yearTo) {
-      setShowAdvanced(true);
+    setFilters(normalizedInitialFilters);
+    // Only auto-open advanced panel when the parent hasn't explicitly controlled it
+    if (openAdvanced === undefined) {
+      if (normalizedInitialFilters.artistId || normalizedInitialFilters.genreId || normalizedInitialFilters.labelId || 
+          normalizedInitialFilters.countryId || normalizedInitialFilters.formatId || normalizedInitialFilters.live || 
+          normalizedInitialFilters.yearFrom || normalizedInitialFilters.yearTo) {
+        setShowAdvanced(true);
+      } else {
+        setShowAdvanced(false);
+      }
     }
     // Reset initializing flag after a short delay
     const timer = setTimeout(() => {
@@ -51,7 +62,14 @@ export function SearchAndFilter({ onFiltersChange, initialFilters = {}, enableUr
       setIsInitializing(false);
     }, 200);
     return () => clearTimeout(timer);
-  }, [initialFilters]);
+  }, [initialFilters, openAdvanced]);
+
+  // If parent gives an explicit openAdvanced prop, keep showAdvanced in sync
+  useEffect(() => {
+    if (openAdvanced !== undefined) {
+      setShowAdvanced(!!openAdvanced);
+    }
+  }, [openAdvanced]);
 
   // Update URL when filters change (but not during initialization)
   useEffect(() => {
@@ -153,28 +171,14 @@ export function SearchAndFilter({ onFiltersChange, initialFilters = {}, enableUr
   };
 
   // Copy filter URL to clipboard
-  const copyFilterUrl = () => {
-    const params = new URLSearchParams();
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        params.set(key, value.toString());
-      }
-    });
-    const url = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
-    navigator.clipboard.writeText(url);
-    alert('Filter URL copied to clipboard!');
-  };
 
-  // Check if any filters are active
-  const hasActiveFilters = Object.keys(filters).some(key => {
-    const value = filters[key as keyof SearchFilters];
-    return value !== undefined && value !== null && value !== '';
-  });
+  // no-op: active filters are displayed and managed at the page level (collection page)
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+    <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4 sm:p-6">
       <div className="space-y-4">
         {/* Search Input with Autocomplete */}
+        {showSearchInput && (
         <div>
           <label htmlFor="search" className="block text-sm font-bold text-gray-700 mb-2">
             Search Releases
@@ -225,53 +229,22 @@ export function SearchAndFilter({ onFiltersChange, initialFilters = {}, enableUr
             )}
           </div>
         </div>
+        )}
 
-        {/* Toggle Advanced Filters & Share Button */}
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => setShowAdvanced(!showAdvanced)}
-            className="flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700"
-          >
-            <span>{showAdvanced ? 'Hide' : 'Show'} Advanced Filters</span>
-            <svg 
-              className={`h-4 w-4 transition-transform ${showAdvanced ? 'rotate-180' : ''}`}
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
+        {/* Share / Clear area removed - handled at page level */}
 
-          <div className="flex items-center gap-2">
-            {hasActiveFilters && enableUrlSync && (
-              <button
-                onClick={copyFilterUrl}
-                className="text-sm font-medium text-green-600 hover:text-green-700 flex items-center gap-1"
-                title="Copy shareable link"
-              >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                Share
-              </button>
-            )}
-            {hasActiveFilters && (
-              <button
-                onClick={clearFilters}
-                className="text-sm font-medium text-red-600 hover:text-red-700"
-              >
-                Clear All Filters
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Advanced Filters */}
-        {showAdvanced && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4 border-t border-gray-200">
+        {/* Advanced Filters: animate open/close using max-height + opacity + translate */}
+        <div
+          aria-hidden={!showAdvanced}
+          className={`transition-all duration-200 ease-in-out overflow-hidden ${
+            showAdvanced
+              ? 'max-h-[1200px] opacity-100 translate-y-0 py-1'
+              : 'max-h-0 opacity-0 -translate-y-2 py-0'
+          }`}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Artist Filter */}
-            <div>
+            <div className="bg-white rounded-md border border-gray-100 p-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Artist
               </label>
@@ -282,7 +255,7 @@ export function SearchAndFilter({ onFiltersChange, initialFilters = {}, enableUr
             </div>
 
             {/* Genre Filter */}
-            <div>
+            <div className="bg-white rounded-md border border-gray-100 p-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Genre
               </label>
@@ -293,7 +266,7 @@ export function SearchAndFilter({ onFiltersChange, initialFilters = {}, enableUr
             </div>
 
             {/* Label Filter */}
-            <div>
+            <div className="bg-white rounded-md border border-gray-100 p-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Label
               </label>
@@ -304,7 +277,7 @@ export function SearchAndFilter({ onFiltersChange, initialFilters = {}, enableUr
             </div>
 
             {/* Country Filter */}
-            <div>
+            <div className="bg-white rounded-md border border-gray-100 p-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Country
               </label>
@@ -315,7 +288,7 @@ export function SearchAndFilter({ onFiltersChange, initialFilters = {}, enableUr
             </div>
 
             {/* Format Filter */}
-            <div>
+            <div className="bg-white rounded-md border border-gray-100 p-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Format
               </label>
@@ -325,29 +298,26 @@ export function SearchAndFilter({ onFiltersChange, initialFilters = {}, enableUr
               />
             </div>
 
-            {/* Live Recording Filter */}
-            <div>
+            {/* Live Recording Filter - use the LookupDropdown styling for visual consistency */}
+            <div className="bg-white rounded-md border border-gray-100 p-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Recording Type
               </label>
-              <select
-                value={filters.live === undefined ? '' : filters.live.toString()}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  updateFilters({ 
-                    live: value === '' ? undefined : value === 'true' 
-                  });
+              <LookupDropdown
+                items={[{ id: 1, name: 'Studio recordings' }, { id: 2, name: 'Live recordings' }]}
+                value={filters.live === undefined ? undefined : (filters.live ? 2 : 1)}
+                placeholder="All recordings"
+                onSelect={(item) => {
+                  if (!item) updateFilters({ live: undefined });
+                  else updateFilters({ live: item.id === 2 });
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">All recordings</option>
-                <option value="false">Studio recordings</option>
-                <option value="true">Live recordings</option>
-              </select>
+                loading={false}
+                searchable={false}
+              />
             </div>
 
             {/* Year Range Filters */}
-            <div>
+            <div className="bg-white rounded-md border border-gray-100 p-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 From Year
               </label>
@@ -362,7 +332,7 @@ export function SearchAndFilter({ onFiltersChange, initialFilters = {}, enableUr
               />
             </div>
 
-            <div>
+            <div className="bg-white rounded-md border border-gray-100 p-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 To Year
               </label>
@@ -377,80 +347,88 @@ export function SearchAndFilter({ onFiltersChange, initialFilters = {}, enableUr
               />
             </div>
           </div>
-        )}
+        </div>
 
-        {/* Active Filters Display */}
-        {hasActiveFilters && (
-          <div className="pt-4 border-t border-gray-200">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-sm font-medium text-gray-700">Active filters:</span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {filters.search && (
-                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                  Search: &ldquo;{filters.search}&rdquo;
-                  <button
-                    onClick={() => updateFilters({ search: undefined })}
-                    className="ml-1 text-blue-600 hover:text-blue-800"
-                  >
-                    ×
-                  </button>
-                </span>
-              )}
-              {filters.live !== undefined && (
-                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                  {filters.live ? 'Live recordings' : 'Studio recordings'}
-                  <button
-                    onClick={() => updateFilters({ live: undefined })}
-                    className="ml-1 text-purple-600 hover:text-purple-800"
-                  >
-                    ×
-                  </button>
-                </span>
-              )}
-              {filters.yearFrom && (
-                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                  From: {filters.yearFrom}
-                  <button
-                    onClick={() => updateFilters({ yearFrom: undefined })}
-                    className="ml-1 text-green-600 hover:text-green-800"
-                  >
-                    ×
-                  </button>
-                </span>
-              )}
-              {filters.yearTo && (
-                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                  To: {filters.yearTo}
-                  <button
-                    onClick={() => updateFilters({ yearTo: undefined })}
-                    className="ml-1 text-green-600 hover:text-green-800"
-                  >
-                    ×
-                  </button>
-                </span>
-              )}
-            </div>
-          </div>
-        )}
+        {/* Removed: Active filters display handled at the page level (collection page) */}
       </div>
     </div>
   );
 }
 
 // Quick search component for smaller spaces
-export function QuickSearch({ 
-  onSearch, 
-  placeholder = "Search releases..." 
-}: { 
+export function QuickSearch({
+  onSearch,
+  placeholder = "Search releases...",
+  onSelectSuggestion,
+}: {
   onSearch: (query: string) => void;
   placeholder?: string;
+  onSelectSuggestion?: (s: SearchSuggestion) => void;
 }) {
   const [query, setQuery] = useState('');
+  const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [suggestionIndex, setSuggestionIndex] = useState(-1);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const id = setTimeout(async () => {
+      if (!query || query.length < 2) {
+        setSuggestions([]);
+        setShowSuggestions(false);
+        return;
+      }
+
+      try {
+        const results = await getSearchSuggestions(query);
+        setSuggestions(results);
+        setShowSuggestions(results.length > 0);
+      } catch (err) {
+        console.error('QuickSearch suggestions failed', err);
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    }, 250);
+
+    return () => clearTimeout(id);
+  }, [query]);
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (!showSuggestions) return;
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setSuggestionIndex((i) => Math.min(i + 1, suggestions.length - 1));
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setSuggestionIndex((i) => Math.max(i - 1, -1));
+      } else if (e.key === 'Enter') {
+        if (suggestionIndex >= 0 && suggestions[suggestionIndex]) {
+          e.preventDefault();
+          const s = suggestions[suggestionIndex];
+          if (onSelectSuggestion) onSelectSuggestion(s);
+          else onSearch(s.name);
+          setShowSuggestions(false);
+        }
+      } else if (e.key === 'Escape') {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [showSuggestions, suggestionIndex, suggestions, onSearch, onSelectSuggestion]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setShowSuggestions(false);
     onSearch(query);
+  };
+
+  const handleSuggestionClick = (s: SearchSuggestion) => {
+    if (onSelectSuggestion) onSelectSuggestion(s);
+    else onSearch(s.name);
+    setShowSuggestions(false);
   };
 
   return (
@@ -461,11 +439,14 @@ export function QuickSearch({
         </svg>
       </div>
       <input
+        ref={inputRef}
         type="text"
         placeholder={placeholder}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        className="block w-full pl-10 pr-12 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+        className="block w-full pl-10 pr-12 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/75 focus:bg-white"
+        autoComplete="off"
       />
       {query && (
         <button
@@ -473,6 +454,7 @@ export function QuickSearch({
           onClick={() => {
             setQuery('');
             onSearch('');
+            setShowSuggestions(false);
           }}
           className="absolute inset-y-0 right-8 flex items-center text-gray-400 hover:text-gray-600"
         >
@@ -487,6 +469,25 @@ export function QuickSearch({
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
         </svg>
       </button>
+
+      {showSuggestions && suggestions.length > 0 && (
+        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+          {suggestions.map((s, idx) => (
+            <button
+              key={`${s.type}-${s.id}`}
+              type="button"
+              onClick={() => handleSuggestionClick(s)}
+              className={`w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center justify-between ${idx === suggestionIndex ? 'bg-blue-50' : ''}`}
+            >
+              <div>
+                <div className="font-medium text-gray-900">{s.name}</div>
+                {s.subtitle && <div className="text-sm text-gray-500">{s.subtitle}</div>}
+              </div>
+              <span className="text-xs text-gray-400 capitalize">{s.type}</span>
+            </button>
+          ))}
+        </div>
+      )}
     </form>
   );
 }
