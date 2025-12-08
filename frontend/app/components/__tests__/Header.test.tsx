@@ -34,9 +34,22 @@ describe('Header shrink-on-scroll', () => {
     const heading = screen.getByRole('heading', { level: 1 });
     expect(heading).toBeInTheDocument();
 
-    // logo should be present to the left of the title
+    // logo should be present at the top-left and be offset by the sidebar
     const logo = screen.getByAltText(/Kollector Sküm logo/i);
     expect(logo).toBeInTheDocument();
+    // border should be present and visible so the occupied area is obvious
+    expect(logo).toHaveClass('border-2', 'border-white');
+    // logo should be shown at its natural/intrinsic height (we don't force a height inline)
+    expect((logo as HTMLElement).style.height).toBe('');
+    // the top-bar wrapper should be fixed and offset using the --sidebar-offset CSS var
+    const topBar = document.querySelector('.fixed.top-0.right-0');
+    expect(topBar).toBeTruthy();
+    // style.left should contain the CSS variable reference so it stays next to the sidebar
+    expect((topBar as HTMLElement).style.left).toBe('var(--sidebar-offset)');
+    // the top bar should have no top padding and align items to the top so the logo's top is at page top
+    const topInner = topBar?.firstElementChild as HTMLElement | null;
+    expect(topInner).toBeTruthy();
+    expect(topInner).toHaveClass('py-0', 'items-start');
 
     // measured value should be applied to root css var
     await waitFor(() => {
