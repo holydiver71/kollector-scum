@@ -20,6 +20,11 @@ export interface ApiError extends Error {
 interface FetchJsonOptions extends RequestInit {
   timeoutMs?: number;
   parse?: boolean; // allow head / no body
+  /**
+   * When true, do not throw on non-OK responses; instead return `null` so callers
+   * can handle transient server errors gracefully. Default: `false`.
+   */
+  swallowErrors?: boolean;
 }
 
 export async function fetchJson<T = unknown>(path: string, options: FetchJsonOptions = {}): Promise<T> {
@@ -45,6 +50,12 @@ export async function fetchJson<T = unknown>(path: string, options: FetchJsonOpt
           body = await res.text();
         }
       } catch { /* ignore */ }
+      // If caller asked to swallow errors (useful for non-critical widgets),
+      // return null instead of throwing so the UI can render fallback content.
+      if (options.swallowErrors) {
+        return null as unknown as T;
+      }
+
       const err: ApiError = new Error(`Request failed (${res.status}) ${res.statusText}`);
       err.status = res.status;
       err.details = body;
@@ -279,7 +290,11 @@ export interface RecentlyPlayedItemDto {
  * @returns List of recently played releases
  */
 export async function getRecentlyPlayed(limit: number = 24): Promise<RecentlyPlayedItemDto[]> {
-  return fetchJson<RecentlyPlayedItemDto[]>(`/api/NowPlaying/recent?limit=${limit}`);
+  // If the recently-played endpoint is temporarily failing (500), treat it as
+  // non-fatal for the UI and return an empty list so the widget can show a
+  // friendly message rather than crash the app overlay.
+  const result = await fetchJson<RecentlyPlayedItemDto[]>(`/api/NowPlaying/recent?limit=${limit}`, { swallowErrors: true });
+  return result || [];
 }
 
 // Random Release
