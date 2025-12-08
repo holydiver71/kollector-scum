@@ -65,6 +65,11 @@ const Header: React.FC = () => {
 
   const { title, subtitle, showSearch } = getPageInfo();
   const headerRef = React.useRef<HTMLElement | null>(null);
+  const logoRef = React.useRef<HTMLImageElement | null>(null);
+  const searchRef = React.useRef<HTMLDivElement | null>(null);
+  const filtersRef = React.useRef<HTMLDivElement | null>(null);
+  const [stackSearch, setStackSearch] = useState(false);
+  const [searchStyle, setSearchStyle] = useState<React.CSSProperties | undefined>(undefined);
   const [compact, setCompact] = useState(false);
 
   // Keep a CSS variable with the header's height so layout can add top padding
@@ -72,6 +77,43 @@ const Header: React.FC = () => {
     const measure = () => {
       const height = headerRef.current?.offsetHeight ?? 0;
       document.documentElement.style.setProperty('--app-header-height', `${height}px`);
+
+      // Also decide if we can safely stack the search bar under the logo inside the banner
+      // and compute a safe max-width/margin for the search bar when it sits inline.
+      const headerRect = headerRef.current?.getBoundingClientRect();
+      const logoRect = logoRef.current?.getBoundingClientRect();
+      const searchRect = searchRef.current?.getBoundingClientRect();
+      const filtersRect = filtersRef.current?.getBoundingClientRect();
+
+      if (!headerRect || !logoRect || !searchRect) {
+        setStackSearch(false);
+        setSearchStyle(undefined);
+        return;
+      }
+
+      const gap = 12; // spacing between logo and search
+
+      // Determine if stacking under the logo will fit within the banner (header) height
+      const logoBottomRel = logoRect.bottom - headerRect.top; // pixels from header top to logo bottom
+      const availableBelowLogo = headerRect.height - logoBottomRel;
+
+      // If the search control would fit below the logo inside the banner, allow stacking
+      const canStack = searchRect.height + gap <= availableBelowLogo;
+
+      if (canStack) {
+        // Make search occupy full width when stacked under the logo
+        setStackSearch(true);
+        setSearchStyle({ marginLeft: 0, width: '100%', maxWidth: '100%' });
+      } else {
+        // Keep search inline (never allow it to drop under the logo) — compute available horizontal space
+        setStackSearch(false);
+
+        const leftOffset = Math.max(logoRect.right - headerRect.left + gap, 12); // ensure at least a small left offset
+        const rightReserved = filtersRect ? filtersRect.width + gap * 2 : 320; // reserve space for the buttons area
+        const availableWidth = Math.max(headerRect.width - leftOffset - rightReserved, 160);
+
+        setSearchStyle({ marginLeft: leftOffset, maxWidth: `${availableWidth}px` });
+      }
     };
 
     // Measure immediately and whenever the header size changes (visible state/content/compact)
@@ -152,41 +194,49 @@ const Header: React.FC = () => {
 
   return (
     <header ref={headerRef} className={`header-with-bg shadow-2xl ${compact ? 'is-compact' : ''}`}>
-      <div className="header-overlay">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-4">
-              {/* App logo to the left of the title */}
-              <img
-                src="/images/Kollector-Skum-logo2.png"
-                alt="Kollector Sküm logo"
-                // add a visible white border so the logo's bounding area is easy to see
-                className={`object-contain transition-all duration-200 ${compact ? 'w-[7.5rem] h-[7.5rem]' : 'w-[20rem] h-[10rem]'} border-2 border-white`}
-              />
-              <div>
-                <h1 className={`font-black text-white drop-shadow-lg transition-all duration-200 ${compact ? 'text-2xl' : 'text-4xl'}`}>{title}</h1>
-                <p className={`text-white/90 mt-2 font-bold drop-shadow-md transition-opacity duration-200 ${compact ? 'opacity-60 text-sm' : ''}`}>{subtitle}</p>
+        <div className="header-overlay">
+            {/* top bar sits flush with the top of the hero/banner and contains logo, title, and action */}
+            {/* fixed top bar: sticks to the viewport top and is offset to the right of the sidebar */}
+            <div className="fixed top-0 right-0 z-10" style={{ left: 'var(--sidebar-offset)' }}>
+              <div className="w-full px-6 py-0 flex items-start justify-between">
+                <div className="flex items-center gap-4">
+                            <img
+                              ref={logoRef}
+                              src="/images/Kollector-Skum-logo2.png"
+                              alt="Kollector Sküm logo"
+                              // make logo always match the header/banner height
+                              // height uses the measured --app-header-height variable so it will resize with the header
+                              // show at natural (intrinsic) image size — do not force height
+                              style={{ maxWidth: '40%' }}
+                              className={`object-contain transition-all duration-200 border-2 border-white`}
+                            />
+                  <div>
+                    <h1 className={`font-black text-white drop-shadow-lg transition-all duration-200 ${compact ? 'text-2xl' : 'text-4xl'}`}>{title}</h1>
+                    <p className={`text-white/90 mt-2 font-bold drop-shadow-md transition-opacity duration-200 ${compact ? 'opacity-60 text-sm' : ''}`}>{subtitle}</p>
+                  </div>
+                </div>
+                <Link 
+                  href="/add"
+                  className="text-white px-6 py-3 rounded-lg font-bold transition-all hover:shadow-2xl flex items-center gap-2 shadow-lg bg-[#D93611] hover:bg-[#B82E0E]"
+                >
+                  <Plus size={20} />
+                  <span>Add Release</span>
+                </Link>
               </div>
             </div>
-            <Link 
-              href="/add"
-              className="text-white px-6 py-3 rounded-lg font-bold transition-all hover:shadow-2xl flex items-center gap-2 shadow-lg bg-[#D93611] hover:bg-[#B82E0E]"
-            >
-              <Plus size={20} />
-              <span>Add Release</span>
-            </Link>
-          </div>
+
+            <div className="max-w-7xl mx-auto px-6 py-6 pt-[7.5rem] lg:pt-[12rem]">
 
           {/* Search and Filter Bar - Only show on collection page */}
           {showSearch && (
-            <div className="flex flex-wrap gap-3">
+            <div className={`flex ${stackSearch ? 'flex-col' : 'flex-wrap'} gap-3`}>
               {/* QuickSearch in header */}
-              <div className="search-bar flex-1 min-w-0 sm:min-w-[300px] relative">
+              <div ref={searchRef} style={searchStyle} className="search-bar flex-1 min-w-0 sm:min-w-[300px] relative">
                 <QuickSearch onSearch={handleHeaderSearch} onSelectSuggestion={handleSuggestionSelect} placeholder="Search releases, artists, albums..." />
               </div>
 
               {/* Quick Filters */}
-              <div className="flex gap-2 flex-wrap">
+              <div ref={filtersRef} className="flex gap-2 flex-wrap">
                 {(() => {
                   const isAdvancedOpen = pathname.startsWith('/collection') && searchParams.get('showAdvanced') === 'true';
                   const base = 'px-4 py-2 rounded-lg border-2 transition-all font-bold flex items-center gap-2 shadow-md';
