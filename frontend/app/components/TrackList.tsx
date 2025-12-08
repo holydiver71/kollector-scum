@@ -72,6 +72,8 @@ export function TrackList({ media, albumArtists = [] }: TrackListProps) {
 
   return (
     <div className="space-y-8">
+      {/* Top-level heading visible for all layouts */}
+      <h3 className="text-lg font-bold">Tracklist</h3>
       {/* Multi-disc: 2 column grid layout with custom proportions */}
       {isMultiDisc ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -104,7 +106,7 @@ export function TrackList({ media, albumArtists = [] }: TrackListProps) {
                       >
                         {/* Track Number */}
                         <div className="w-6 text-xs text-gray-500 text-right flex-shrink-0 pt-0.5 font-semibold">
-                          {String(track.index).padStart(2, '0')}
+                          {String(track.index)}
                         </div>
 
                         {/* Track Info */}
@@ -164,7 +166,7 @@ export function TrackList({ media, albumArtists = [] }: TrackListProps) {
                     >
                       {/* Track Number */}
                       <div className="w-6 text-xs text-gray-500 text-right flex-shrink-0 pt-0.5 font-semibold">
-                        {String(track.index).padStart(2, '0')}
+                        {String(track.index)}
                       </div>
 
                       {/* Track Info */}
@@ -208,6 +210,20 @@ export function TrackList({ media, albumArtists = [] }: TrackListProps) {
           </div>
         ))
       )}
+
+        {/* Overall Total for Single-Disc (show total for single disc albums) */}
+        {!isMultiDisc && (
+          (() => {
+            const totalTracks = media.reduce((total, disc) => total + (disc.tracks?.length || 0), 0);
+            const totalDuration = media.reduce((total, disc) => total + getTotalDuration(disc.tracks), 0);
+            return totalDuration > 0 ? (
+              <div className="mt-4 pt-2 border-t border-gray-200 text-xs text-gray-600 font-bold uppercase tracking-widest flex justify-between">
+                <span>{totalTracks} total tracks</span>
+                <span className="tabular-nums">{formatDuration(totalDuration)}</span>
+              </div>
+            ) : null;
+          })()
+        )}
 
       {/* Overall Total for Multi-Disc */}
       {isMultiDisc && (

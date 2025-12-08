@@ -112,6 +112,9 @@ describe('AddReleaseForm', () => {
 
   describe('Rendering', () => {
     it('shows loading state while fetching lookup data', () => {
+      // Make lookup requests never resolve to keep the component in the loading state
+      mockFetchJson.mockImplementation(() => new Promise(() => {}));
+
       render(<AddReleaseForm />);
       expect(screen.getByText('Loading form...')).toBeInTheDocument();
     });
@@ -474,7 +477,7 @@ describe('AddReleaseForm', () => {
       mockFetchJson.mockImplementation((url: string, options?: any) => {
         if (options?.method === 'POST') {
           const body = JSON.parse(options.body);
-          expect(body.releaseYear).toBe('2024');
+          expect(body.releaseYear).toBe('2024-06-15');
           return Promise.resolve({ id: 123 });
         }
         if (url.includes('/api/artists')) return Promise.resolve(mockLookupData.artists);
@@ -497,7 +500,8 @@ describe('AddReleaseForm', () => {
       await user.type(titleInput, 'Album 2024');
 
       const releaseYearInput = screen.getByLabelText('Release Year');
-      await user.type(releaseYearInput, '2024');
+      // Use a full date string so the date input accepts it in jsdom
+      await user.type(releaseYearInput, '2024-06-15');
 
       const artistSelect = screen.getByTestId('select-artists');
       await user.selectOptions(artistSelect, '1');

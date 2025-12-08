@@ -28,9 +28,14 @@ export default function RootLayout({
         <ErrorBoundary>
           <div className="min-h-screen flex">
             <Sidebar />
-            <div className="flex-1 flex flex-col ml-[70px] transition-all duration-300">
+            <div
+                className="flex-1 flex flex-col transition-all duration-300 overflow-y-auto app-scroll-container"
+                // padding top equals header height so content starts underneath
+                // margin-left driven by --sidebar-offset which is set by Sidebar
+                style={{ paddingTop: 'var(--app-header-height)', marginLeft: 'var(--sidebar-offset, 64px)' }}
+            >
               <Header />
-              <main className="flex-1 overflow-y-auto">
+              <main className="flex-1">
                 {children}
               </main>
               <Footer />
