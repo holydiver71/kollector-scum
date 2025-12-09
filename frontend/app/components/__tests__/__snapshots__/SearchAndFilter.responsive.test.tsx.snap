@@ -3,7 +3,7 @@
 exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobile, tablet, desktop) for visual regression: searchandfilter-desktop 1`] = `
 <DocumentFragment>
   <div
-    class="bg-white rounded-lg border border-gray-200 p-4 mb-4 sm:p-6"
+    class="modern-filter-panel bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-xl border border-slate-700/50 p-4 mb-4 sm:p-6 text-white shadow-2xl backdrop-blur-xl bg-opacity-90"
     style="width: 1280px;"
   >
     <div
@@ -11,9 +11,22 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
     >
       <div>
         <label
-          class="block text-sm font-bold text-gray-700 mb-2"
+          class="block text-sm font-bold text-slate-200 mb-2 flex items-center gap-2"
           for="search"
         >
+          <svg
+            class="h-4 w-4 text-blue-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+            />
+          </svg>
           Search Releases
         </label>
         <div
@@ -23,7 +36,7 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
           >
             <svg
-              class="h-5 w-5 text-gray-400"
+              class="h-5 w-5 text-slate-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -38,7 +51,7 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
           </div>
           <input
             autocomplete="off"
-            class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            class="block w-full pl-10 pr-3 py-3 bg-slate-800/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white placeholder-slate-400 transition-all duration-200 hover:bg-slate-800/70"
             id="search"
             placeholder="Search by title, artist, or label..."
             type="text"
@@ -51,14 +64,76 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
         class="transition-all duration-200 ease-in-out overflow-hidden max-h-[1200px] opacity-100 translate-y-0 py-1"
       >
         <div
+          class="flex items-center justify-between mb-3"
+        >
+          <h3
+            class="text-sm font-semibold text-slate-200 flex items-center gap-2"
+          >
+            <svg
+              class="w-4 h-4 text-blue-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+              />
+            </svg>
+            Filters
+          </h3>
+          <button
+            aria-label="Close filters"
+            class="inline-flex items-center justify-center p-1.5 rounded-lg hover:bg-slate-700/50 transition-colors"
+            title="Close filters"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-x w-4 h-4 text-slate-300"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M18 6 6 18"
+              />
+              <path
+                d="m6 6 12 12"
+              />
+            </svg>
+          </button>
+        </div>
+        <div
           class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
         >
           <div
-            class="bg-white rounded-md border border-gray-100 p-4"
+            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-blue-500/30 hover:shadow-lg hover:shadow-blue-500/10"
           >
             <label
-              class="block text-sm font-medium text-gray-700 mb-2"
+              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
             >
+              <svg
+                class="w-4 h-4 text-blue-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+              </svg>
               Artist
             </label>
             <select
@@ -77,11 +152,24 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             </select>
           </div>
           <div
-            class="bg-white rounded-md border border-gray-100 p-4"
+            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/10"
           >
             <label
-              class="block text-sm font-medium text-gray-700 mb-2"
+              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
             >
+              <svg
+                class="w-4 h-4 text-purple-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+              </svg>
               Genre
             </label>
             <select
@@ -100,11 +188,24 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             </select>
           </div>
           <div
-            class="bg-white rounded-md border border-gray-100 p-4"
+            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-green-500/30 hover:shadow-lg hover:shadow-green-500/10"
           >
             <label
-              class="block text-sm font-medium text-gray-700 mb-2"
+              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
             >
+              <svg
+                class="w-4 h-4 text-green-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+              </svg>
               Label
             </label>
             <select
@@ -123,11 +224,24 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             </select>
           </div>
           <div
-            class="bg-white rounded-md border border-gray-100 p-4"
+            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-yellow-500/30 hover:shadow-lg hover:shadow-yellow-500/10"
           >
             <label
-              class="block text-sm font-medium text-gray-700 mb-2"
+              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
             >
+              <svg
+                class="w-4 h-4 text-yellow-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+              </svg>
               Country
             </label>
             <select
@@ -146,11 +260,34 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             </select>
           </div>
           <div
-            class="bg-white rounded-md border border-gray-100 p-4"
+            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-pink-500/30 hover:shadow-lg hover:shadow-pink-500/10"
           >
             <label
-              class="block text-sm font-medium text-gray-700 mb-2"
+              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
             >
+              <svg
+                class="w-4 h-4 text-pink-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="10"
+                />
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="3"
+                />
+              </svg>
               Format
             </label>
             <select
@@ -169,11 +306,24 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             </select>
           </div>
           <div
-            class="bg-white rounded-md border border-gray-100 p-4"
+            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-red-500/30 hover:shadow-lg hover:shadow-red-500/10"
           >
             <label
-              class="block text-sm font-medium text-gray-700 mb-2"
+              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
             >
+              <svg
+                class="w-4 h-4 text-red-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+              </svg>
               Recording Type
             </label>
             <div>
@@ -185,15 +335,28 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             </div>
           </div>
           <div
-            class="bg-white rounded-md border border-gray-100 p-4"
+            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-cyan-500/30 hover:shadow-lg hover:shadow-cyan-500/10"
           >
             <label
-              class="block text-sm font-medium text-gray-700 mb-2"
+              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
             >
+              <svg
+                class="w-4 h-4 text-cyan-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+              </svg>
               From Year
             </label>
             <input
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              class="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-white placeholder-slate-400 transition-all"
               max="2025"
               min="1900"
               placeholder="e.g., 1970"
@@ -202,15 +365,28 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             />
           </div>
           <div
-            class="bg-white rounded-md border border-gray-100 p-4"
+            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-cyan-500/30 hover:shadow-lg hover:shadow-cyan-500/10"
           >
             <label
-              class="block text-sm font-medium text-gray-700 mb-2"
+              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
             >
+              <svg
+                class="w-4 h-4 text-cyan-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+              </svg>
               To Year
             </label>
             <input
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              class="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-white placeholder-slate-400 transition-all"
               max="2025"
               min="1900"
               placeholder="e.g., 2024"
@@ -228,7 +404,7 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
 exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobile, tablet, desktop) for visual regression: searchandfilter-mobile 1`] = `
 <DocumentFragment>
   <div
-    class="bg-white rounded-lg border border-gray-200 p-4 mb-4 sm:p-6"
+    class="modern-filter-panel bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-xl border border-slate-700/50 p-4 mb-4 sm:p-6 text-white shadow-2xl backdrop-blur-xl bg-opacity-90"
     style="width: 375px;"
   >
     <div
@@ -236,9 +412,22 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
     >
       <div>
         <label
-          class="block text-sm font-bold text-gray-700 mb-2"
+          class="block text-sm font-bold text-slate-200 mb-2 flex items-center gap-2"
           for="search"
         >
+          <svg
+            class="h-4 w-4 text-blue-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+            />
+          </svg>
           Search Releases
         </label>
         <div
@@ -248,7 +437,7 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
           >
             <svg
-              class="h-5 w-5 text-gray-400"
+              class="h-5 w-5 text-slate-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -263,7 +452,7 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
           </div>
           <input
             autocomplete="off"
-            class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            class="block w-full pl-10 pr-3 py-3 bg-slate-800/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white placeholder-slate-400 transition-all duration-200 hover:bg-slate-800/70"
             id="search"
             placeholder="Search by title, artist, or label..."
             type="text"
@@ -276,14 +465,76 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
         class="transition-all duration-200 ease-in-out overflow-hidden max-h-[1200px] opacity-100 translate-y-0 py-1"
       >
         <div
+          class="flex items-center justify-between mb-3"
+        >
+          <h3
+            class="text-sm font-semibold text-slate-200 flex items-center gap-2"
+          >
+            <svg
+              class="w-4 h-4 text-blue-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+              />
+            </svg>
+            Filters
+          </h3>
+          <button
+            aria-label="Close filters"
+            class="inline-flex items-center justify-center p-1.5 rounded-lg hover:bg-slate-700/50 transition-colors"
+            title="Close filters"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-x w-4 h-4 text-slate-300"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M18 6 6 18"
+              />
+              <path
+                d="m6 6 12 12"
+              />
+            </svg>
+          </button>
+        </div>
+        <div
           class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
         >
           <div
-            class="bg-white rounded-md border border-gray-100 p-4"
+            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-blue-500/30 hover:shadow-lg hover:shadow-blue-500/10"
           >
             <label
-              class="block text-sm font-medium text-gray-700 mb-2"
+              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
             >
+              <svg
+                class="w-4 h-4 text-blue-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+              </svg>
               Artist
             </label>
             <select
@@ -302,11 +553,24 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             </select>
           </div>
           <div
-            class="bg-white rounded-md border border-gray-100 p-4"
+            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/10"
           >
             <label
-              class="block text-sm font-medium text-gray-700 mb-2"
+              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
             >
+              <svg
+                class="w-4 h-4 text-purple-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+              </svg>
               Genre
             </label>
             <select
@@ -325,11 +589,24 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             </select>
           </div>
           <div
-            class="bg-white rounded-md border border-gray-100 p-4"
+            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-green-500/30 hover:shadow-lg hover:shadow-green-500/10"
           >
             <label
-              class="block text-sm font-medium text-gray-700 mb-2"
+              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
             >
+              <svg
+                class="w-4 h-4 text-green-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+              </svg>
               Label
             </label>
             <select
@@ -348,11 +625,24 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             </select>
           </div>
           <div
-            class="bg-white rounded-md border border-gray-100 p-4"
+            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-yellow-500/30 hover:shadow-lg hover:shadow-yellow-500/10"
           >
             <label
-              class="block text-sm font-medium text-gray-700 mb-2"
+              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
             >
+              <svg
+                class="w-4 h-4 text-yellow-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+              </svg>
               Country
             </label>
             <select
@@ -371,11 +661,34 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             </select>
           </div>
           <div
-            class="bg-white rounded-md border border-gray-100 p-4"
+            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-pink-500/30 hover:shadow-lg hover:shadow-pink-500/10"
           >
             <label
-              class="block text-sm font-medium text-gray-700 mb-2"
+              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
             >
+              <svg
+                class="w-4 h-4 text-pink-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="10"
+                />
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="3"
+                />
+              </svg>
               Format
             </label>
             <select
@@ -394,11 +707,24 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             </select>
           </div>
           <div
-            class="bg-white rounded-md border border-gray-100 p-4"
+            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-red-500/30 hover:shadow-lg hover:shadow-red-500/10"
           >
             <label
-              class="block text-sm font-medium text-gray-700 mb-2"
+              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
             >
+              <svg
+                class="w-4 h-4 text-red-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+              </svg>
               Recording Type
             </label>
             <div>
@@ -410,15 +736,28 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             </div>
           </div>
           <div
-            class="bg-white rounded-md border border-gray-100 p-4"
+            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-cyan-500/30 hover:shadow-lg hover:shadow-cyan-500/10"
           >
             <label
-              class="block text-sm font-medium text-gray-700 mb-2"
+              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
             >
+              <svg
+                class="w-4 h-4 text-cyan-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+              </svg>
               From Year
             </label>
             <input
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              class="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-white placeholder-slate-400 transition-all"
               max="2025"
               min="1900"
               placeholder="e.g., 1970"
@@ -427,15 +766,28 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             />
           </div>
           <div
-            class="bg-white rounded-md border border-gray-100 p-4"
+            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-cyan-500/30 hover:shadow-lg hover:shadow-cyan-500/10"
           >
             <label
-              class="block text-sm font-medium text-gray-700 mb-2"
+              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
             >
+              <svg
+                class="w-4 h-4 text-cyan-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+              </svg>
               To Year
             </label>
             <input
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              class="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-white placeholder-slate-400 transition-all"
               max="2025"
               min="1900"
               placeholder="e.g., 2024"
@@ -453,7 +805,7 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
 exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobile, tablet, desktop) for visual regression: searchandfilter-tablet 1`] = `
 <DocumentFragment>
   <div
-    class="bg-white rounded-lg border border-gray-200 p-4 mb-4 sm:p-6"
+    class="modern-filter-panel bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-xl border border-slate-700/50 p-4 mb-4 sm:p-6 text-white shadow-2xl backdrop-blur-xl bg-opacity-90"
     style="width: 768px;"
   >
     <div
@@ -461,9 +813,22 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
     >
       <div>
         <label
-          class="block text-sm font-bold text-gray-700 mb-2"
+          class="block text-sm font-bold text-slate-200 mb-2 flex items-center gap-2"
           for="search"
         >
+          <svg
+            class="h-4 w-4 text-blue-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+            />
+          </svg>
           Search Releases
         </label>
         <div
@@ -473,7 +838,7 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
           >
             <svg
-              class="h-5 w-5 text-gray-400"
+              class="h-5 w-5 text-slate-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -488,7 +853,7 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
           </div>
           <input
             autocomplete="off"
-            class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            class="block w-full pl-10 pr-3 py-3 bg-slate-800/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white placeholder-slate-400 transition-all duration-200 hover:bg-slate-800/70"
             id="search"
             placeholder="Search by title, artist, or label..."
             type="text"
@@ -501,14 +866,76 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
         class="transition-all duration-200 ease-in-out overflow-hidden max-h-[1200px] opacity-100 translate-y-0 py-1"
       >
         <div
+          class="flex items-center justify-between mb-3"
+        >
+          <h3
+            class="text-sm font-semibold text-slate-200 flex items-center gap-2"
+          >
+            <svg
+              class="w-4 h-4 text-blue-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+              />
+            </svg>
+            Filters
+          </h3>
+          <button
+            aria-label="Close filters"
+            class="inline-flex items-center justify-center p-1.5 rounded-lg hover:bg-slate-700/50 transition-colors"
+            title="Close filters"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-x w-4 h-4 text-slate-300"
+              fill="none"
+              height="24"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M18 6 6 18"
+              />
+              <path
+                d="m6 6 12 12"
+              />
+            </svg>
+          </button>
+        </div>
+        <div
           class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
         >
           <div
-            class="bg-white rounded-md border border-gray-100 p-4"
+            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-blue-500/30 hover:shadow-lg hover:shadow-blue-500/10"
           >
             <label
-              class="block text-sm font-medium text-gray-700 mb-2"
+              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
             >
+              <svg
+                class="w-4 h-4 text-blue-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+              </svg>
               Artist
             </label>
             <select
@@ -527,11 +954,24 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             </select>
           </div>
           <div
-            class="bg-white rounded-md border border-gray-100 p-4"
+            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/10"
           >
             <label
-              class="block text-sm font-medium text-gray-700 mb-2"
+              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
             >
+              <svg
+                class="w-4 h-4 text-purple-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+              </svg>
               Genre
             </label>
             <select
@@ -550,11 +990,24 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             </select>
           </div>
           <div
-            class="bg-white rounded-md border border-gray-100 p-4"
+            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-green-500/30 hover:shadow-lg hover:shadow-green-500/10"
           >
             <label
-              class="block text-sm font-medium text-gray-700 mb-2"
+              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
             >
+              <svg
+                class="w-4 h-4 text-green-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+              </svg>
               Label
             </label>
             <select
@@ -573,11 +1026,24 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             </select>
           </div>
           <div
-            class="bg-white rounded-md border border-gray-100 p-4"
+            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-yellow-500/30 hover:shadow-lg hover:shadow-yellow-500/10"
           >
             <label
-              class="block text-sm font-medium text-gray-700 mb-2"
+              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
             >
+              <svg
+                class="w-4 h-4 text-yellow-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+              </svg>
               Country
             </label>
             <select
@@ -596,11 +1062,34 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             </select>
           </div>
           <div
-            class="bg-white rounded-md border border-gray-100 p-4"
+            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-pink-500/30 hover:shadow-lg hover:shadow-pink-500/10"
           >
             <label
-              class="block text-sm font-medium text-gray-700 mb-2"
+              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
             >
+              <svg
+                class="w-4 h-4 text-pink-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="10"
+                />
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="3"
+                />
+              </svg>
               Format
             </label>
             <select
@@ -619,11 +1108,24 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             </select>
           </div>
           <div
-            class="bg-white rounded-md border border-gray-100 p-4"
+            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-red-500/30 hover:shadow-lg hover:shadow-red-500/10"
           >
             <label
-              class="block text-sm font-medium text-gray-700 mb-2"
+              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
             >
+              <svg
+                class="w-4 h-4 text-red-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+              </svg>
               Recording Type
             </label>
             <div>
@@ -635,15 +1137,28 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             </div>
           </div>
           <div
-            class="bg-white rounded-md border border-gray-100 p-4"
+            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-cyan-500/30 hover:shadow-lg hover:shadow-cyan-500/10"
           >
             <label
-              class="block text-sm font-medium text-gray-700 mb-2"
+              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
             >
+              <svg
+                class="w-4 h-4 text-cyan-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+              </svg>
               From Year
             </label>
             <input
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              class="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-white placeholder-slate-400 transition-all"
               max="2025"
               min="1900"
               placeholder="e.g., 1970"
@@ -652,15 +1167,28 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             />
           </div>
           <div
-            class="bg-white rounded-md border border-gray-100 p-4"
+            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-cyan-500/30 hover:shadow-lg hover:shadow-cyan-500/10"
           >
             <label
-              class="block text-sm font-medium text-gray-700 mb-2"
+              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
             >
+              <svg
+                class="w-4 h-4 text-cyan-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+              </svg>
               To Year
             </label>
             <input
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              class="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-white placeholder-slate-400 transition-all"
               max="2025"
               min="1900"
               placeholder="e.g., 2024"
