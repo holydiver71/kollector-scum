@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { QuickSearch } from './SearchAndFilter';
+import { ArrowUpDown } from 'lucide-react';
 import type { SearchSuggestion } from '../lib/api';
 
 /**
@@ -16,6 +17,7 @@ export default function Header() {
   const pathname = usePathname();
   const [headerQuery, setHeaderQuery] = React.useState('');
   const filtersOpen = pathname === '/collection' && (searchParams?.get('showAdvanced') === 'true');
+  const sortsOpen = pathname === '/collection' && (searchParams?.get('showSort') === 'true');
   return (
     <header
       className="relative bg-cover bg-center shadow-sm"
@@ -25,7 +27,7 @@ export default function Header() {
       <div className="absolute inset-0 bg-black/40" />
 
       <div className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-4">
-        <div className="flex items-start gap-4">
+        <div className="flex flex-col md:flex-row items-start gap-2 md:gap-4">
           <Link href="/" aria-label="Home" className="block">
             <img
               src="/images/Kollector-Skum-v2.png"
@@ -34,13 +36,13 @@ export default function Header() {
               style={{ display: 'block', backgroundColor: 'rgba(255,255,255,0.02)' }}
             />
           </Link>
-          <div className="flex flex-col">
-            <p className="text-[1.3125rem] text-white/90 font-semibold" style={{ marginTop: '2rem' }}>
+          <div className="flex flex-col flex-1 min-w-0">
+            <p className="text-[1.3125rem] text-white/90 font-semibold mt-2 md:mt-8">
               Organise and discover your music library
             </p>
             {/* QuickSearch, left-justified under the subtitle with a Filters button to the right */}
-            <div className="mt-1 w-full max-w-md flex items-center gap-2">
-              <div className="flex-1">
+            <div className="mt-1 w-full flex items-center gap-2">
+              <div className="flex-1 min-w-0">
                 <QuickSearch
                   onQueryChange={(q: string) => setHeaderQuery(q)}
                   placeholder="Search releases, artists, albums..."
@@ -109,6 +111,48 @@ export default function Header() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h18M6 12h12M10 19h4" />
                 </svg>
                 <span className="hidden sm:inline">Filters</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  // Preserve relevant filter/sort query params and merge header search
+                  const preserveKeys = [
+                    'search','artistId','genreId','labelId','countryId','formatId',
+                    'live','yearFrom','yearTo','sortBy','sortOrder'
+                  ];
+
+                  const incoming = searchParams ?? new URLSearchParams();
+                  const params = new URLSearchParams();
+                  preserveKeys.forEach((k) => {
+                    const v = incoming.get(k);
+                    if (v !== null && v !== undefined) params.set(k, v);
+                  });
+
+                  // header input should override any existing search param
+                  if (headerQuery) params.set('search', headerQuery);
+
+                  if (pathname === '/collection') {
+                    // toggle `showSort`
+                    const currentlyOpen = incoming.get('showSort') === 'true';
+                    if (currentlyOpen) params.delete('showSort');
+                    else params.set('showSort', 'true');
+
+                    const newUrl = params.toString() ? `/collection?${params.toString()}` : '/collection';
+                    router.replace(newUrl, { scroll: false });
+                    return;
+                  }
+
+                  // not on collection — open collection with sorts and preserved search
+                  params.set('showSort', 'true');
+                  const newUrl = params.toString() ? `/collection?${params.toString()}` : '/collection';
+                  router.push(newUrl);
+                }}
+                className={`inline-flex items-center gap-2 px-3 py-2 rounded-md text-white cursor-pointer ${sortsOpen ? 'bg-[#F28A2E]/50 hover:bg-[#F28A2E]/40' : 'bg-white/10 hover:bg-white/20'}`}
+                aria-label="Sort"
+                title="Sort"
+              >
+                <ArrowUpDown className="h-5 w-5" />
+                <span className="hidden sm:inline">Sort</span>
               </button>
             </div>
           </div>
