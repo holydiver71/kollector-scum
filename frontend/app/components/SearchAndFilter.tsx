@@ -360,10 +360,12 @@ export function QuickSearch({
   onSearch,
   placeholder = "Search releases...",
   onSelectSuggestion,
+  onQueryChange,
 }: {
   onSearch: (query: string) => void;
   placeholder?: string;
   onSelectSuggestion?: (s: SearchSuggestion) => void;
+  onQueryChange?: (q: string) => void;
 }) {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
@@ -443,9 +445,13 @@ export function QuickSearch({
         type="text"
         placeholder={placeholder}
         value={query}
-        onChange={(e) => setQuery(e.target.value)}
+        onChange={(e) => {
+          const v = e.target.value;
+          setQuery(v);
+          if (onQueryChange) onQueryChange(v);
+        }}
         onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-        className="block w-full pl-10 pr-12 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/75 focus:bg-white"
+        className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/75 focus:bg-white"
         autoComplete="off"
       />
       {query && (
@@ -456,19 +462,12 @@ export function QuickSearch({
             onSearch('');
             setShowSuggestions(false);
           }}
-          className="absolute inset-y-0 right-8 flex items-center text-gray-400 hover:text-gray-600"
+          className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 cursor-pointer"
         >
           ×
         </button>
       )}
-      <button
-        type="submit"
-        className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
-      >
-        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-        </svg>
-      </button>
+      {/* Removed submit arrow button — submission still works via Enter key */}
 
       {showSuggestions && suggestions.length > 0 && (
         <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
