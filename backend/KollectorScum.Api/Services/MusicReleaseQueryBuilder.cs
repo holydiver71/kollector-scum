@@ -68,14 +68,14 @@ namespace KollectorScum.Api.Services
 
             if (_parameters.YearFrom.HasValue)
             {
-                _query = _query.Where(mr => mr.ReleaseYear.HasValue && 
-                    mr.ReleaseYear.Value.Year >= _parameters.YearFrom.Value);
+                var start = new DateTime(_parameters.YearFrom.Value, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                _query = _query.Where(mr => mr.ReleaseYear.HasValue && mr.ReleaseYear.Value >= start);
             }
 
             if (_parameters.YearTo.HasValue)
             {
-                _query = _query.Where(mr => mr.ReleaseYear.HasValue && 
-                    mr.ReleaseYear.Value.Year <= _parameters.YearTo.Value);
+                var end = new DateTime(_parameters.YearTo.Value, 12, 31, 23, 59, 59, 999, DateTimeKind.Utc);
+                _query = _query.Where(mr => mr.ReleaseYear.HasValue && mr.ReleaseYear.Value <= end);
             }
 
             // Apply custom filter action if provided

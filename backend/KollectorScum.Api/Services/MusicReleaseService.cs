@@ -64,8 +64,8 @@ namespace KollectorScum.Api.Services
                     (!countryId.HasValue || mr.CountryId == countryId.Value) &&
                     (!formatId.HasValue || mr.FormatId == formatId.Value) &&
                     (!live.HasValue || mr.Live == live.Value) &&
-                    (!yearFrom.HasValue || (mr.ReleaseYear.HasValue && mr.ReleaseYear.Value.Year >= yearFrom.Value)) &&
-                    (!yearTo.HasValue || (mr.ReleaseYear.HasValue && mr.ReleaseYear.Value.Year <= yearTo.Value));
+                    (!yearFrom.HasValue || (mr.ReleaseYear.HasValue && mr.ReleaseYear.Value >= new DateTime(yearFrom.Value, 1, 1, 0, 0, 0, DateTimeKind.Utc))) &&
+                    (!yearTo.HasValue || (mr.ReleaseYear.HasValue && mr.ReleaseYear.Value <= new DateTime(yearTo.Value, 12, 31, 23, 59, 59, 999, DateTimeKind.Utc)));
             }
 
             var pagedResult = await _musicReleaseRepository.GetPagedAsync(

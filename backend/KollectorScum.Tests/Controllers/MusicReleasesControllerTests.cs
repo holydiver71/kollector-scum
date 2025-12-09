@@ -24,6 +24,7 @@ namespace KollectorScum.Tests.Controllers
         private readonly Mock<IMusicReleaseQueryService> _mockQueryService;
         private readonly Mock<IMusicReleaseCommandService> _mockCommandService;
         private readonly Mock<ILogger<MusicReleasesController>> _mockLogger;
+        private readonly Mock<Microsoft.AspNetCore.Hosting.IWebHostEnvironment> _mockEnv;
         private readonly MusicReleasesController _controller;
 
         public MusicReleasesControllerTests()
@@ -31,10 +32,13 @@ namespace KollectorScum.Tests.Controllers
             _mockQueryService = new Mock<IMusicReleaseQueryService>();
             _mockCommandService = new Mock<IMusicReleaseCommandService>();
             _mockLogger = new Mock<ILogger<MusicReleasesController>>();
+            _mockEnv = new Mock<Microsoft.AspNetCore.Hosting.IWebHostEnvironment>();
+            _mockEnv.Setup(e => e.EnvironmentName).Returns("Development");
             _controller = new MusicReleasesController(
                 _mockQueryService.Object, 
                 _mockCommandService.Object, 
-                _mockLogger.Object);
+                _mockLogger.Object,
+                _mockEnv.Object);
         }
 
         #region GetMusicReleases Tests
