@@ -176,17 +176,20 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
   // no-op: active filters are displayed and managed at the page level (collection page)
 
   return (
-    <div className="bg-gradient-to-br from-red-900 via-red-950 to-black rounded-lg border border-white/10 p-4 mb-4 sm:p-6 text-white">
+    <div className="modern-filter-panel bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-xl border border-slate-700/50 p-4 mb-4 sm:p-6 text-white shadow-2xl backdrop-blur-xl bg-opacity-90">
       <div className="space-y-4">
         {/* Search Input with Autocomplete */}
         {showSearchInput && (
         <div>
-          <label htmlFor="search" className="block text-sm font-bold text-white mb-2">
+          <label htmlFor="search" className="block text-sm font-bold text-slate-200 mb-2 flex items-center gap-2">
+            <svg className="h-4 w-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
             Search Releases
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
@@ -199,7 +202,7 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
               onChange={(e) => updateFilters({ search: e.target.value || undefined })}
               onKeyDown={handleKeyDown}
               onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="block w-full pl-10 pr-3 py-3 bg-slate-800/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white placeholder-slate-400 transition-all duration-200 hover:bg-slate-800/70"
               autoComplete="off"
             />
             
@@ -207,23 +210,23 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
             {showSuggestions && suggestions.length > 0 && (
               <div 
                 ref={suggestionsRef}
-                className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"
+                className="absolute z-10 w-full mt-1 bg-slate-800 border border-slate-600 rounded-lg shadow-2xl max-h-60 overflow-auto backdrop-blur-xl"
               >
                 {suggestions.map((suggestion, index) => (
                   <button
                     key={`${suggestion.type}-${suggestion.id}`}
                     onClick={() => handleSuggestionClick(suggestion)}
-                    className={`w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center justify-between ${
-                      index === suggestionIndex ? 'bg-blue-50' : ''
+                    className={`w-full text-left px-4 py-3 hover:bg-blue-600/20 flex items-center justify-between transition-colors border-b border-slate-700/50 last:border-0 ${
+                      index === suggestionIndex ? 'bg-blue-600/30' : ''
                     }`}
                   >
                     <div>
-                      <div className="font-medium text-gray-900">{suggestion.name}</div>
+                      <div className="font-medium text-white">{suggestion.name}</div>
                       {suggestion.subtitle && (
-                        <div className="text-sm text-gray-500">{suggestion.subtitle}</div>
+                        <div className="text-sm text-slate-400">{suggestion.subtitle}</div>
                       )}
                     </div>
-                    <span className="text-xs text-gray-400 capitalize">{suggestion.type}</span>
+                    <span className="text-xs text-blue-400 capitalize px-2 py-1 bg-blue-500/10 rounded-full">{suggestion.type}</span>
                   </button>
                 ))}
               </div>
@@ -244,7 +247,12 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
           }`}
         >
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-white">Filters</h3>
+            <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
+              <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+              Filters
+            </h3>
             <button
               type="button"
               onClick={() => {
@@ -253,16 +261,19 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
               }}
               aria-label="Close filters"
               title="Close filters"
-              className="inline-flex items-center justify-center p-1 rounded hover:bg-white/10"
+              className="inline-flex items-center justify-center p-1.5 rounded-lg hover:bg-slate-700/50 transition-colors"
             >
-              <X className="w-4 h-4 text-white" />
+              <X className="w-4 h-4 text-slate-300" />
             </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Artist Filter */}
-            <div className="bg-white/5 rounded-md border border-white/10 p-4">
-              <label className="block text-sm font-medium text-gray-200 mb-2">
+            <div className="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-blue-500/30 hover:shadow-lg hover:shadow-blue-500/10">
+              <label className="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2">
+                <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
                 Artist
               </label>
               <ArtistDropdown
@@ -272,8 +283,11 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
             </div>
 
             {/* Genre Filter */}
-            <div className="bg-white/5 rounded-md border border-white/10 p-4">
-              <label className="block text-sm font-medium text-gray-200 mb-2">
+            <div className="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/10">
+              <label className="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2">
+                <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                </svg>
                 Genre
               </label>
               <GenreDropdown
@@ -283,8 +297,11 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
             </div>
 
             {/* Label Filter */}
-            <div className="bg-white/5 rounded-md border border-white/10 p-4">
-              <label className="block text-sm font-medium text-gray-200 mb-2">
+            <div className="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-green-500/30 hover:shadow-lg hover:shadow-green-500/10">
+              <label className="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2">
+                <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                </svg>
                 Label
               </label>
               <LabelDropdown
@@ -294,8 +311,11 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
             </div>
 
             {/* Country Filter */}
-            <div className="bg-white/5 rounded-md border border-white/10 p-4">
-              <label className="block text-sm font-medium text-gray-200 mb-2">
+            <div className="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-yellow-500/30 hover:shadow-lg hover:shadow-yellow-500/10">
+              <label className="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2">
+                <svg className="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
                 Country
               </label>
               <CountryDropdown
@@ -305,8 +325,11 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
             </div>
 
             {/* Format Filter */}
-            <div className="bg-white/5 rounded-md border border-white/10 p-4">
-              <label className="block text-sm font-medium text-gray-200 mb-2">
+            <div className="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-pink-500/30 hover:shadow-lg hover:shadow-pink-500/10">
+              <label className="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2">
+                <svg className="w-4 h-4 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                </svg>
                 Format
               </label>
               <FormatDropdown
@@ -316,8 +339,11 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
             </div>
 
             {/* Live Recording Filter - use the LookupDropdown styling for visual consistency */}
-            <div className="bg-white/5 rounded-md border border-white/10 p-4">
-              <label className="block text-sm font-medium text-gray-200 mb-2">
+            <div className="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-red-500/30 hover:shadow-lg hover:shadow-red-500/10">
+              <label className="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2">
+                <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                </svg>
                 Recording Type
               </label>
               <LookupDropdown
@@ -334,8 +360,11 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
             </div>
 
             {/* Year Range Filters */}
-            <div className="bg-white/5 rounded-md border border-white/10 p-4">
-              <label className="block text-sm font-medium text-gray-200 mb-2">
+            <div className="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-cyan-500/30 hover:shadow-lg hover:shadow-cyan-500/10">
+              <label className="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2">
+                <svg className="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
                 From Year
               </label>
               <input
@@ -345,12 +374,15 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
                 onChange={(e) => updateFilters({ yearFrom: e.target.value ? parseInt(e.target.value) : undefined })}
                 min="1900"
                 max={new Date().getFullYear()}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-white placeholder-slate-400 transition-all"
               />
             </div>
 
-            <div className="bg-white/5 rounded-md border border-white/10 p-4">
-              <label className="block text-sm font-medium text-gray-200 mb-2">
+            <div className="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-cyan-500/30 hover:shadow-lg hover:shadow-cyan-500/10">
+              <label className="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2">
+                <svg className="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
                 To Year
               </label>
               <input
@@ -360,7 +392,7 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
                 onChange={(e) => updateFilters({ yearTo: e.target.value ? parseInt(e.target.value) : undefined })}
                 min="1900"
                 max={new Date().getFullYear()}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-white placeholder-slate-400 transition-all"
               />
             </div>
           </div>
@@ -468,7 +500,7 @@ export function QuickSearch({
           if (onQueryChange) onQueryChange(v);
         }}
         onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-        className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/75 focus:bg-white"
+        className="block w-full pl-10 pr-10 py-2 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-800/75 focus:bg-slate-800 text-white placeholder-slate-400 transition-all"
         autoComplete="off"
       />
       {query && (
@@ -487,19 +519,19 @@ export function QuickSearch({
       {/* Removed submit arrow button — submission still works via Enter key */}
 
       {showSuggestions && suggestions.length > 0 && (
-        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+        <div className="absolute z-10 w-full mt-1 bg-slate-800 border border-slate-600 rounded-lg shadow-2xl max-h-60 overflow-auto backdrop-blur-xl">
           {suggestions.map((s, idx) => (
             <button
               key={`${s.type}-${s.id}`}
               type="button"
               onClick={() => handleSuggestionClick(s)}
-              className={`w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center justify-between ${idx === suggestionIndex ? 'bg-blue-50' : ''}`}
+              className={`w-full text-left px-4 py-3 hover:bg-blue-600/20 flex items-center justify-between transition-colors border-b border-slate-700/50 last:border-0 ${idx === suggestionIndex ? 'bg-blue-600/30' : ''}`}
             >
               <div>
-                <div className="font-medium text-gray-900">{s.name}</div>
-                {s.subtitle && <div className="text-sm text-gray-500">{s.subtitle}</div>}
+                <div className="font-medium text-white">{s.name}</div>
+                {s.subtitle && <div className="text-sm text-slate-400">{s.subtitle}</div>}
               </div>
-              <span className="text-xs text-gray-400 capitalize">{s.type}</span>
+              <span className="text-xs text-blue-400 capitalize px-2 py-1 bg-blue-500/10 rounded-full">{s.type}</span>
             </button>
           ))}
         </div>
