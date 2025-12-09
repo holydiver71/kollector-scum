@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef } from 'react';
+import { X } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { CountryDropdown, GenreDropdown, ArtistDropdown, LabelDropdown, FormatDropdown, LookupDropdown } from "./LookupComponents";
 import { getSearchSuggestions, SearchSuggestion } from '../lib/api';
@@ -242,6 +243,22 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
               : 'max-h-0 opacity-0 -translate-y-2 py-0'
           }`}
         >
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-gray-700">Filters</h3>
+            <button
+              type="button"
+              onClick={() => {
+                if (onAdvancedToggle) onAdvancedToggle(false);
+                else setShowAdvanced(false);
+              }}
+              aria-label="Close filters"
+              title="Close filters"
+              className="inline-flex items-center justify-center p-1 rounded hover:bg-gray-100"
+            >
+              <X className="w-4 h-4 text-gray-600" />
+            </button>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Artist Filter */}
             <div className="bg-white rounded-md border border-gray-100 p-4">
