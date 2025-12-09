@@ -137,6 +137,38 @@ namespace KollectorScum.Api.Controllers
         }
 
         /// <summary>
+        /// Deletes a now playing record
+        /// </summary>
+        /// <param name="id">The now playing record ID</param>
+        /// <returns>No content</returns>
+        [HttpDelete("{id}")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(404)]
+        public async Task<IActionResult> DeleteNowPlaying(int id)
+        {
+            try
+            {
+                var nowPlaying = await _context.NowPlayings.FindAsync(id);
+                if (nowPlaying == null)
+                {
+                    return NotFound($"Now playing record with ID {id} not found");
+                }
+
+                _context.NowPlayings.Remove(nowPlaying);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Deleted now playing record {Id}", id);
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting now playing record {Id}", id);
+                return StatusCode(500, "An error occurred while deleting the now playing record");
+            }
+        }
+
+        /// <summary>
         /// Gets the play history for a music release
         /// </summary>
         /// <param name="releaseId">The music release ID</param>
@@ -150,7 +182,11 @@ namespace KollectorScum.Api.Controllers
                 var playDates = await _context.NowPlayings
                     .Where(np => np.MusicReleaseId == releaseId)
                     .OrderByDescending(np => np.PlayedAt)
-                    .Select(np => np.PlayedAt)
+                    .Select(np => new PlayHistoryItemDto 
+                    { 
+                        Id = np.Id, 
+                        PlayedAt = np.PlayedAt 
+                    })
                     .ToListAsync();
 
                 var playHistory = new PlayHistoryDto
