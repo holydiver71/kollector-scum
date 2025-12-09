@@ -176,12 +176,12 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
   // no-op: active filters are displayed and managed at the page level (collection page)
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4 sm:p-6">
+    <div className="bg-gradient-to-br from-red-900 via-red-950 to-black rounded-lg border border-white/10 p-4 mb-4 sm:p-6 text-white">
       <div className="space-y-4">
         {/* Search Input with Autocomplete */}
         {showSearchInput && (
         <div>
-          <label htmlFor="search" className="block text-sm font-bold text-gray-700 mb-2">
+          <label htmlFor="search" className="block text-sm font-bold text-white mb-2">
             Search Releases
           </label>
           <div className="relative">
@@ -244,7 +244,7 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
           }`}
         >
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-gray-700">Filters</h3>
+            <h3 className="text-sm font-semibold text-white">Filters</h3>
             <button
               type="button"
               onClick={() => {
@@ -253,16 +253,16 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
               }}
               aria-label="Close filters"
               title="Close filters"
-              className="inline-flex items-center justify-center p-1 rounded hover:bg-gray-100"
+              className="inline-flex items-center justify-center p-1 rounded hover:bg-white/10"
             >
-              <X className="w-4 h-4 text-gray-600" />
+              <X className="w-4 h-4 text-white" />
             </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Artist Filter */}
-            <div className="bg-white rounded-md border border-gray-100 p-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="bg-white/5 rounded-md border border-white/10 p-4">
+              <label className="block text-sm font-medium text-gray-200 mb-2">
                 Artist
               </label>
               <ArtistDropdown
@@ -272,8 +272,8 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
             </div>
 
             {/* Genre Filter */}
-            <div className="bg-white rounded-md border border-gray-100 p-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="bg-white/5 rounded-md border border-white/10 p-4">
+              <label className="block text-sm font-medium text-gray-200 mb-2">
                 Genre
               </label>
               <GenreDropdown
@@ -283,8 +283,8 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
             </div>
 
             {/* Label Filter */}
-            <div className="bg-white rounded-md border border-gray-100 p-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="bg-white/5 rounded-md border border-white/10 p-4">
+              <label className="block text-sm font-medium text-gray-200 mb-2">
                 Label
               </label>
               <LabelDropdown
@@ -294,8 +294,8 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
             </div>
 
             {/* Country Filter */}
-            <div className="bg-white rounded-md border border-gray-100 p-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="bg-white/5 rounded-md border border-white/10 p-4">
+              <label className="block text-sm font-medium text-gray-200 mb-2">
                 Country
               </label>
               <CountryDropdown
@@ -305,8 +305,8 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
             </div>
 
             {/* Format Filter */}
-            <div className="bg-white rounded-md border border-gray-100 p-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="bg-white/5 rounded-md border border-white/10 p-4">
+              <label className="block text-sm font-medium text-gray-200 mb-2">
                 Format
               </label>
               <FormatDropdown
@@ -316,8 +316,8 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
             </div>
 
             {/* Live Recording Filter - use the LookupDropdown styling for visual consistency */}
-            <div className="bg-white rounded-md border border-gray-100 p-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="bg-white/5 rounded-md border border-white/10 p-4">
+              <label className="block text-sm font-medium text-gray-200 mb-2">
                 Recording Type
               </label>
               <LookupDropdown
@@ -334,8 +334,8 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
             </div>
 
             {/* Year Range Filters */}
-            <div className="bg-white rounded-md border border-gray-100 p-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="bg-white/5 rounded-md border border-white/10 p-4">
+              <label className="block text-sm font-medium text-gray-200 mb-2">
                 From Year
               </label>
               <input
@@ -349,8 +349,8 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
               />
             </div>
 
-            <div className="bg-white rounded-md border border-gray-100 p-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="bg-white/5 rounded-md border border-white/10 p-4">
+              <label className="block text-sm font-medium text-gray-200 mb-2">
                 To Year
               </label>
               <input
