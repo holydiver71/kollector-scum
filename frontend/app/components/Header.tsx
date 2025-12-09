@@ -15,6 +15,8 @@ export default function Header() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
+  const normalizedPath = pathname && pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
+  const isMusicCollection = normalizedPath === '/collection';
   const [headerQuery, setHeaderQuery] = React.useState('');
   const filtersOpen = pathname === '/collection' && (searchParams?.get('showAdvanced') === 'true');
   const sortsOpen = pathname === '/collection' && (searchParams?.get('showSort') === 'true');
@@ -67,9 +69,10 @@ export default function Header() {
                   }}
                 />
               </div>
-              <button
-                type="button"
-                onClick={() => {
+              {isMusicCollection && (
+                <button
+                  type="button"
+                  onClick={() => {
                   // Preserve relevant filter/sort query params and merge header search
                   const preserveKeys = [
                     'search','artistId','genreId','labelId','countryId','formatId',
@@ -102,58 +105,61 @@ export default function Header() {
                   params.set('showAdvanced', 'true');
                   const newUrl = params.toString() ? `/collection?${params.toString()}` : '/collection';
                   router.push(newUrl);
-                }}
-                className={`inline-flex items-center gap-2 px-3 py-2 rounded-md text-white cursor-pointer ${filtersOpen ? 'bg-[#F28A2E]/50 hover:bg-[#F28A2E]/40' : 'bg-white/10 hover:bg-white/20'}`}
-                aria-label="Open filters"
-                title="Open filters"
-              >
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h18M6 12h12M10 19h4" />
-                </svg>
-                <span className="hidden sm:inline">Filters</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  // Preserve relevant filter/sort query params and merge header search
-                  const preserveKeys = [
-                    'search','artistId','genreId','labelId','countryId','formatId',
-                    'live','yearFrom','yearTo','sortBy','sortOrder'
-                  ];
+                  }}
+                  className={`inline-flex items-center gap-2 px-3 py-2 rounded-md text-white cursor-pointer ${filtersOpen ? 'bg-[#F28A2E]/50 hover:bg-[#F28A2E]/40' : 'bg-white/10 hover:bg-white/20'}`}
+                  aria-label="Open filters"
+                  title="Open filters"
+                >
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h18M6 12h12M10 19h4" />
+                  </svg>
+                  <span className="hidden sm:inline">Filters</span>
+                </button>
+              )}
+              {isMusicCollection && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    // Preserve relevant filter/sort query params and merge header search
+                    const preserveKeys = [
+                      'search','artistId','genreId','labelId','countryId','formatId',
+                      'live','yearFrom','yearTo','sortBy','sortOrder'
+                    ];
 
-                  const incoming = searchParams ?? new URLSearchParams();
-                  const params = new URLSearchParams();
-                  preserveKeys.forEach((k) => {
-                    const v = incoming.get(k);
-                    if (v !== null && v !== undefined) params.set(k, v);
-                  });
+                    const incoming = searchParams ?? new URLSearchParams();
+                    const params = new URLSearchParams();
+                    preserveKeys.forEach((k) => {
+                      const v = incoming.get(k);
+                      if (v !== null && v !== undefined) params.set(k, v);
+                    });
 
-                  // header input should override any existing search param
-                  if (headerQuery) params.set('search', headerQuery);
+                    // header input should override any existing search param
+                    if (headerQuery) params.set('search', headerQuery);
 
-                  if (pathname === '/collection') {
-                    // toggle `showSort`
-                    const currentlyOpen = incoming.get('showSort') === 'true';
-                    if (currentlyOpen) params.delete('showSort');
-                    else params.set('showSort', 'true');
+                    if (pathname === '/collection') {
+                      // toggle `showSort`
+                      const currentlyOpen = incoming.get('showSort') === 'true';
+                      if (currentlyOpen) params.delete('showSort');
+                      else params.set('showSort', 'true');
 
+                      const newUrl = params.toString() ? `/collection?${params.toString()}` : '/collection';
+                      router.replace(newUrl, { scroll: false });
+                      return;
+                    }
+
+                    // not on collection — open collection with sorts and preserved search
+                    params.set('showSort', 'true');
                     const newUrl = params.toString() ? `/collection?${params.toString()}` : '/collection';
-                    router.replace(newUrl, { scroll: false });
-                    return;
-                  }
-
-                  // not on collection — open collection with sorts and preserved search
-                  params.set('showSort', 'true');
-                  const newUrl = params.toString() ? `/collection?${params.toString()}` : '/collection';
-                  router.push(newUrl);
-                }}
-                className={`inline-flex items-center gap-2 px-3 py-2 rounded-md text-white cursor-pointer ${sortsOpen ? 'bg-[#F28A2E]/50 hover:bg-[#F28A2E]/40' : 'bg-white/10 hover:bg-white/20'}`}
-                aria-label="Sort"
-                title="Sort"
-              >
-                <ArrowUpDown className="h-5 w-5" />
-                <span className="hidden sm:inline">Sort</span>
-              </button>
+                    router.push(newUrl);
+                  }}
+                  className={`inline-flex items-center gap-2 px-3 py-2 rounded-md text-white cursor-pointer ${sortsOpen ? 'bg-[#F28A2E]/50 hover:bg-[#F28A2E]/40' : 'bg-white/10 hover:bg-white/20'}`}
+                  aria-label="Sort"
+                  title="Sort"
+                >
+                  <ArrowUpDown className="h-5 w-5" />
+                  <span className="hidden sm:inline">Sort</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
