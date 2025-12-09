@@ -15,6 +15,12 @@ const nextConfig: NextConfig = {
         hostname: 'i.discogs.com',
         pathname: '/**',
       },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '5072',
+        pathname: '/api/images/**',
+      },
     ],
   },
 };
