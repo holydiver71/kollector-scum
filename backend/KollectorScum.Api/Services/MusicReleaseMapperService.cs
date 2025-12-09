@@ -31,17 +31,48 @@ namespace KollectorScum.Api.Services
 
         public MusicReleaseSummaryDto MapToSummaryDto(MusicRelease musicRelease)
         {
-            var artistIds = string.IsNullOrEmpty(musicRelease.Artists) 
-                ? null 
-                : JsonSerializer.Deserialize<List<int>>(musicRelease.Artists);
-            
-            var genreIds = string.IsNullOrEmpty(musicRelease.Genres) 
-                ? null 
-                : JsonSerializer.Deserialize<List<int>>(musicRelease.Genres);
+            List<int>? artistIds = null;
+            List<int>? genreIds = null;
+            MusicReleaseImageDto? images = null;
 
-            var images = string.IsNullOrEmpty(musicRelease.Images) 
-                ? null 
-                : JsonSerializer.Deserialize<MusicReleaseImageDto>(musicRelease.Images);
+            try
+            {
+                if (!string.IsNullOrEmpty(musicRelease.Artists))
+                {
+                    artistIds = JsonSerializer.Deserialize<List<int>>(musicRelease.Artists);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to deserialize Artists JSON for release {Id}", musicRelease.Id);
+                artistIds = null;
+            }
+
+            try
+            {
+                if (!string.IsNullOrEmpty(musicRelease.Genres))
+                {
+                    genreIds = JsonSerializer.Deserialize<List<int>>(musicRelease.Genres);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to deserialize Genres JSON for release {Id}", musicRelease.Id);
+                genreIds = null;
+            }
+
+            try
+            {
+                if (!string.IsNullOrEmpty(musicRelease.Images))
+                {
+                    images = JsonSerializer.Deserialize<MusicReleaseImageDto>(musicRelease.Images);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to deserialize Images JSON for release {Id}", musicRelease.Id);
+                images = null;
+            }
 
             return new MusicReleaseSummaryDto
             {
@@ -61,13 +92,28 @@ namespace KollectorScum.Api.Services
 
         public async Task<MusicReleaseDto> MapToFullDtoAsync(MusicRelease musicRelease)
         {
-            var artistIds = string.IsNullOrEmpty(musicRelease.Artists) 
-                ? null 
-                : JsonSerializer.Deserialize<List<int>>(musicRelease.Artists);
-            
-            var genreIds = string.IsNullOrEmpty(musicRelease.Genres) 
-                ? null 
-                : JsonSerializer.Deserialize<List<int>>(musicRelease.Genres);
+            List<int>? artistIds = null;
+            List<int>? genreIds = null;
+            try
+            {
+                if (!string.IsNullOrEmpty(musicRelease.Artists))
+                    artistIds = JsonSerializer.Deserialize<List<int>>(musicRelease.Artists);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to deserialize Artists JSON for release {Id}", musicRelease.Id);
+                artistIds = null;
+            }
+            try
+            {
+                if (!string.IsNullOrEmpty(musicRelease.Genres))
+                    genreIds = JsonSerializer.Deserialize<List<int>>(musicRelease.Genres);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to deserialize Genres JSON for release {Id}", musicRelease.Id);
+                genreIds = null;
+            }
 
             List<ArtistDto>? artists = null;
             if (artistIds != null)
@@ -110,12 +156,8 @@ namespace KollectorScum.Api.Services
                 Packaging = musicRelease.Packaging != null ? new PackagingDto { Id = musicRelease.Packaging.Id, Name = musicRelease.Packaging.Name } : null,
                 Upc = musicRelease.Upc,
                 PurchaseInfo = await ResolvePurchaseInfoAsync(musicRelease.PurchaseInfo),
-                Images = string.IsNullOrEmpty(musicRelease.Images) 
-                    ? null 
-                    : JsonSerializer.Deserialize<MusicReleaseImageDto>(musicRelease.Images),
-                Links = string.IsNullOrEmpty(musicRelease.Links) 
-                    ? null 
-                    : JsonSerializer.Deserialize<List<MusicReleaseLinkDto>>(musicRelease.Links),
+                Images = await SafeDeserializeImageAsync(musicRelease.Images),
+                Links = await SafeDeserializeLinksAsync(musicRelease.Links),
                 Media = await ResolveMediaArtistsAsync(musicRelease.Media),
                 DateAdded = musicRelease.DateAdded,
                 LastModified = musicRelease.LastModified
@@ -139,7 +181,16 @@ namespace KollectorScum.Api.Services
             if (string.IsNullOrEmpty(mediaJson))
                 return null;
 
-            var mediaList = JsonSerializer.Deserialize<List<MusicReleaseMediaDto>>(mediaJson);
+            List<MusicReleaseMediaDto>? mediaList = null;
+            try
+            {
+                mediaList = JsonSerializer.Deserialize<List<MusicReleaseMediaDto>>(mediaJson);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to deserialize Media JSON for release media: {MediaJson}", mediaJson);
+                return null;
+            }
             if (mediaList == null) return null;
 
             foreach (var media in mediaList)
@@ -188,6 +239,34 @@ namespace KollectorScum.Api.Services
             }
 
             return mediaList;
+        }
+
+        private async Task<MusicReleaseImageDto?> SafeDeserializeImageAsync(string? imagesJson)
+        {
+            if (string.IsNullOrEmpty(imagesJson)) return null;
+            try
+            {
+                return JsonSerializer.Deserialize<MusicReleaseImageDto>(imagesJson);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to deserialize Images JSON for release: {Json}", imagesJson);
+                return null;
+            }
+        }
+
+        private async Task<List<MusicReleaseLinkDto>?> SafeDeserializeLinksAsync(string? linksJson)
+        {
+            if (string.IsNullOrEmpty(linksJson)) return null;
+            try
+            {
+                return JsonSerializer.Deserialize<List<MusicReleaseLinkDto>>(linksJson);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to deserialize Links JSON for release: {Json}", linksJson);
+                return null;
+            }
         }
 
         private async Task<MusicReleasePurchaseInfoDto?> ResolvePurchaseInfoAsync(string? purchaseInfoJson)

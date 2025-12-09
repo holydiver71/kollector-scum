@@ -91,9 +91,9 @@ export function LookupDropdown<T extends LookupItem>({
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         disabled={loading}
-        className="w-full px-3 py-2 text-left bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
+        className="w-full px-3 py-2 text-left bg-white/5 border border-white/10 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-white focus:border-white disabled:bg-white/5 disabled:opacity-50 transition-all"
       >
-        <span className={selectedItem ? "text-gray-900" : "text-gray-500"}>
+        <span className={selectedItem ? "text-white" : "text-gray-400"}>
           {loading ? "Loading..." : selectedItem?.name || placeholder}
         </span>
         <span className="absolute inset-y-0 right-0 flex items-center pr-2">
@@ -104,7 +104,7 @@ export function LookupDropdown<T extends LookupItem>({
       </button>
 
       {isOpen && (
-        <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg">
+        <div className="absolute z-50 mt-1 w-full bg-neutral-900 border border-white/10 rounded-md shadow-lg backdrop-blur-xl">
           {searchable && (
             <div className="p-2">
               <input
@@ -112,7 +112,7 @@ export function LookupDropdown<T extends LookupItem>({
                 placeholder="Search..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-1 bg-white/5 border border-white/10 rounded-md focus:outline-none focus:ring-1 focus:ring-white text-white placeholder-gray-500"
               />
             </div>
           )}
@@ -125,7 +125,7 @@ export function LookupDropdown<T extends LookupItem>({
                   setIsOpen(false);
                   setSearchTerm("");
                 }}
-                className="w-full px-3 py-2 text-left text-gray-500 hover:bg-gray-50 border-b border-gray-200"
+                className="w-full px-3 py-2 text-left text-gray-400 hover:bg-white/10 border-b border-white/10"
               >
                 Clear selection
               </button>
@@ -139,8 +139,8 @@ export function LookupDropdown<T extends LookupItem>({
                   setIsOpen(false);
                   setSearchTerm("");
                 }}
-                className={`w-full px-3 py-2 text-left hover:bg-blue-50 ${
-                  item.id === value ? "bg-blue-100 text-blue-900" : "text-gray-900"
+                className={`w-full px-3 py-2 text-left hover:bg-red-600/20 transition-colors ${
+                  item.id === value ? "bg-red-600/30 text-white" : "text-gray-300"
                 }`}
               >
                 {item.name}
