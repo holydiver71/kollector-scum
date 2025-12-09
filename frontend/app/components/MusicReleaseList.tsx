@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { fetchJson, createNowPlaying } from "../lib/api";
 import { LoadingSpinner, Skeleton } from "./LoadingComponents";
-import { Play, Check, User, Clock, Calendar, Disc3, ChevronLeft, ChevronRight } from "lucide-react";
+import { Play, Check, User, Clock, Calendar, Disc3, ChevronLeft, ChevronRight, Eye } from "lucide-react";
 
 // Type definitions for music releases
 interface MusicRelease {
@@ -112,7 +112,7 @@ export const MusicReleaseCard = React.memo(function MusicReleaseCard({ release }
               href={`/releases/${release.id}`}
               className="bg-white text-[#D93611] rounded-full w-10 h-10 flex items-center justify-center hover:scale-110 transition-transform shadow-lg"
             >
-              <ChevronRight className="w-5 h-5" />
+              <Eye className="w-5 h-5" />
             </Link>
             
             <button
