@@ -299,7 +299,29 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
       setTotalCount(response.totalCount);
     } catch (err) {
       console.error('Error fetching releases:', err);
-      setError(err instanceof Error ? err.message : "Failed to load releases");
+      // Try to surface server status/details if available (ApiError shape from fetchJson)
+      let message = 'Failed to load releases';
+      try {
+        const anyErr = err as any;
+        if (anyErr && typeof anyErr === 'object') {
+          if (anyErr.message) message = anyErr.message;
+          if (anyErr.status) message += ` (status: ${anyErr.status})`;
+          if (anyErr.details) {
+            try {
+              const d = typeof anyErr.details === 'string' ? anyErr.details : JSON.stringify(anyErr.details);
+              message += ` - ${d}`;
+            } catch { /* ignore stringify errors */ }
+          }
+          if (anyErr.url) message += ` [url: ${anyErr.url}]`;
+        } else if (err instanceof Error) {
+          message = err.message;
+        }
+      } catch (e) {
+        // fallback
+        message = (err instanceof Error) ? err.message : 'Failed to load releases';
+      }
+
+      setError(message);
     } finally {
       setLoading(false);
     }

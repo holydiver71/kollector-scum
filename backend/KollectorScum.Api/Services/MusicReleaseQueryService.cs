@@ -177,8 +177,8 @@ namespace KollectorScum.Api.Services
                 (!parameters.CountryId.HasValue || mr.CountryId == parameters.CountryId.Value) &&
                 (!parameters.FormatId.HasValue || mr.FormatId == parameters.FormatId.Value) &&
                 (!parameters.Live.HasValue || mr.Live == parameters.Live.Value) &&
-                (!parameters.YearFrom.HasValue || (mr.ReleaseYear.HasValue && mr.ReleaseYear.Value.Year >= parameters.YearFrom.Value)) &&
-                (!parameters.YearTo.HasValue || (mr.ReleaseYear.HasValue && mr.ReleaseYear.Value.Year <= parameters.YearTo.Value));
+                (!parameters.YearFrom.HasValue || (mr.ReleaseYear.HasValue && mr.ReleaseYear.Value >= new DateTime(parameters.YearFrom.Value, 1, 1, 0, 0, 0, DateTimeKind.Utc))) &&
+                (!parameters.YearTo.HasValue || (mr.ReleaseYear.HasValue && mr.ReleaseYear.Value <= new DateTime(parameters.YearTo.Value, 12, 31, 23, 59, 59, 999, DateTimeKind.Utc)));
         }
 
         public async Task<MusicReleaseDto?> GetMusicReleaseAsync(int id)
