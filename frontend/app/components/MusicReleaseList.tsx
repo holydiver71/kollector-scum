@@ -1,9 +1,10 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { fetchJson, createNowPlaying } from "../lib/api";
 import { LoadingSpinner, Skeleton } from "./LoadingComponents";
-import { Play, Check } from "lucide-react";
+import { Play, Check, User, Clock, Calendar, Disc3, ChevronLeft, ChevronRight } from "lucide-react";
 
 // Type definitions for music releases
 interface MusicRelease {
@@ -190,13 +191,98 @@ export function MusicReleaseCard({ release }: { release: MusicRelease }) {
   );
 }
 
-export function MusicReleaseList({ filters = {}, pageSize = 60 }: MusicReleaseListProps) {
+export function MusicReleaseList({ filters = {}, pageSize = 60, onSortChange }: MusicReleaseListProps & { onSortChange?: (f: MusicReleaseFilters) => void }) {
   const [releases, setReleases] = useState<MusicRelease[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
+  const [iconAnimating, setIconAnimating] = useState(false);
+
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+
+  // Apply default sort when none provided: Title A→Z
+  const effectiveFilters: MusicReleaseFilters = {
+    ...filters,
+    sortBy: filters.sortBy ?? 'title',
+    sortOrder: filters.sortOrder ?? 'asc',
+  };
+
+  // Ensure the URL contains the default sort when the page first loads so
+  // the header control and SortPanel reflect the correct selected state.
+  // This only writes defaults if neither sortBy nor sortOrder are present.
+  useEffect(() => {
+    try {
+      const sp = searchParams;
+      if (!sp) return;
+      const hasSortBy = sp.get('sortBy');
+      const hasSortOrder = sp.get('sortOrder');
+      if (hasSortBy || hasSortOrder) return;
+
+      const params = new URLSearchParams(sp.toString());
+      params.set('sortBy', effectiveFilters.sortBy!);
+      params.set('sortOrder', effectiveFilters.sortOrder!);
+
+      const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+      router.replace(newUrl, { scroll: false });
+    } catch (e) {
+      // ignore
+    }
+    // run when search params / path / router or default values change
+  }, [searchParams, pathname, router, effectiveFilters.sortBy, effectiveFilters.sortOrder]);
+
+  // order matches the SortPanel button order (left-to-right)
+  const sortOptions: { sortBy: string; sortOrder: string }[] = [
+    { sortBy: 'title', sortOrder: 'asc' },
+    { sortBy: 'title', sortOrder: 'desc' },
+    { sortBy: 'artist', sortOrder: 'asc' },
+    { sortBy: 'artist', sortOrder: 'desc' },
+    { sortBy: 'dateadded', sortOrder: 'desc' },
+    { sortBy: 'dateadded', sortOrder: 'asc' },
+    { sortBy: 'origreleaseyear', sortOrder: 'desc' },
+    { sortBy: 'origreleaseyear', sortOrder: 'asc' },
+  ];
+
+  const getSortLabel = (sortBy?: string, sortOrder?: string) => {
+    const order = sortOrder === 'asc' ? 'asc' : 'desc';
+    switch (sortBy) {
+      case 'title':
+        return order === 'asc' ? 'Title (A-Z)' : 'Title (Z-A)';
+      case 'artist':
+        return order === 'asc' ? 'Artist (A-Z)' : 'Artist (Z-A)';
+      case 'dateadded':
+        return order === 'desc' ? 'Recently Added (Newest first)' : 'Oldest First';
+      case 'origreleaseyear':
+        return order === 'desc' ? 'Original Release Year (Newest First)' : 'Original Release Year (Oldest First)';
+      default:
+        return 'Sort';
+    }
+  };
+
+  const cycleSort = (direction: 1 | -1) => {
+    // use effective filters (defaults applied) for cycling
+    const currentIndex = sortOptions.findIndex((o) => o.sortBy === (effectiveFilters.sortBy ?? '') && o.sortOrder === (effectiveFilters.sortOrder ?? ''));
+    const idx = currentIndex === -1 ? 0 : currentIndex;
+    const nextIndex = (idx + direction + sortOptions.length) % sortOptions.length;
+    const next = sortOptions[nextIndex];
+
+    // If parent provided a handler, call it so parent can decide how to apply the change
+    if (typeof onSortChange === 'function') {
+      onSortChange({ ...(filters || {}), sortBy: next.sortBy, sortOrder: next.sortOrder });
+      return;
+    }
+
+    const incoming = searchParams ?? new URLSearchParams();
+    const params = new URLSearchParams(incoming ? incoming.toString() : '');
+    params.set('sortBy', next.sortBy);
+    params.set('sortOrder', next.sortOrder);
+
+    const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+    router.replace(newUrl, { scroll: false });
+  };
 
   const fetchReleases = async (page: number = 1) => {
     try {
@@ -217,8 +303,8 @@ export function MusicReleaseList({ filters = {}, pageSize = 60 }: MusicReleaseLi
         ...(filters.live !== undefined && { Live: filters.live.toString() }),
         ...(filters.yearFrom && { YearFrom: filters.yearFrom.toString() }),
         ...(filters.yearTo && { YearTo: filters.yearTo.toString() }),
-        ...(filters.sortBy && { SortBy: filters.sortBy }),
-        ...(filters.sortOrder && { SortOrder: filters.sortOrder })
+          ...(effectiveFilters.sortBy && { SortBy: effectiveFilters.sortBy }),
+          ...(effectiveFilters.sortOrder && { SortOrder: effectiveFilters.sortOrder })
       });
 
       console.log('API URL:', `/api/musicreleases?${params}`);
@@ -243,6 +329,13 @@ export function MusicReleaseList({ filters = {}, pageSize = 60 }: MusicReleaseLi
     fetchReleases(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters, pageSize]);
+
+  // trigger a tiny animation when the selected sort changes
+  useEffect(() => {
+    setIconAnimating(true);
+    const t = setTimeout(() => setIconAnimating(false), 220);
+    return () => clearTimeout(t);
+  }, [filters.sortBy, filters.sortOrder]);
 
   const handlePageChange = (page: number) => {
     if (page < 1 || page > totalPages) {
@@ -311,7 +404,117 @@ export function MusicReleaseList({ filters = {}, pageSize = 60 }: MusicReleaseLi
         <div className="text-sm text-gray-600">
           Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalCount)} of {totalCount} releases
         </div>
-        {loading && <LoadingSpinner />}
+        <div className="flex items-center gap-3">
+          <div className="inline-flex items-center divide-x divide-white/10 rounded-md border border-white/10 bg-gradient-to-br from-red-900 via-red-950 to-black shadow-sm overflow-hidden">
+            <button
+              type="button"
+              onClick={() => cycleSort(-1)}
+              title="Previous sort"
+              className="w-8 h-7 flex items-center justify-center text-white hover:bg-[#F28A2E]/10 transition-colors focus:outline-none"
+            >
+              <ChevronLeft className="w-4 h-4 text-white" />
+            </button>
+
+            <div
+              className={`px-1 py-1 flex items-center gap-2 text-sm transition-transform duration-200 w-16 justify-center`}
+              title={getSortLabel(effectiveFilters.sortBy, effectiveFilters.sortOrder)}
+              aria-label={`Current sort: ${getSortLabel(effectiveFilters.sortBy, effectiveFilters.sortOrder)}`}
+            >
+              <div className={`${iconAnimating ? 'scale-105 opacity-90' : 'scale-100 opacity-100'} inline-flex items-center justify-center rounded-md px-2 py-0.5 bg-[#F28A2E]/50`}> 
+                {loading ? (
+                  <div className="flex items-center gap-1">
+                    <div className="w-8 h-5 flex items-center justify-center">
+                      <LoadingSpinner size="small" color="white" />
+                    </div>
+                  </div>
+                ) : (
+                  (filters?.sortBy) ? (
+                    (() => {
+                      const order = effectiveFilters.sortOrder === 'asc' ? 'asc' : 'desc';
+                      switch (effectiveFilters.sortBy) {
+                        case 'title':
+                          return (
+                            <div className="flex items-center gap-1">
+                              <Disc3 className="w-5 h-5 text-white" />
+                              {order === 'asc' ? (
+                                <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                                  <polygon points="6,10 2.5,5 4.2,5 4.2,2 7.8,2 7.8,5 9.5,5" />
+                                </svg>
+                              ) : (
+                                <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                                  <polygon points="6,2 9.5,7 7.8,7 7.8,10 4.2,10 4.2,7 2.5,7" />
+                                </svg>
+                              )}
+                            </div>
+                          );
+                        case 'artist':
+                          return (
+                            <div className="flex items-center gap-1">
+                              <User className="w-5 h-5 text-white" />
+                              {order === 'asc' ? (
+                                <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                                  <polygon points="6,10 2.5,5 4.2,5 4.2,2 7.8,2 7.8,5 9.5,5" />
+                                </svg>
+                              ) : (
+                                <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                                  <polygon points="6,2 9.5,7 7.8,7 7.8,10 4.2,10 4.2,7 2.5,7" />
+                                </svg>
+                              )}
+                            </div>
+                          );
+                        case 'dateadded':
+                          return (
+                            <div className="flex items-center gap-1">
+                              <Clock className="w-5 h-5 text-white" />
+                              {order === 'asc' ? (
+                                <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                                  <polygon points="6,2 9.5,7 7.8,7 7.8,10 4.2,10 4.2,7 2.5,7" />
+                                </svg>
+                              ) : (
+                                <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                                  <polygon points="6,10 2.5,5 4.2,5 4.2,2 7.8,2 7.8,5 9.5,5" />
+                                </svg>
+                              )}
+                            </div>
+                          );
+                        case 'origreleaseyear':
+                          return (
+                            <div className="flex items-center gap-1">
+                              <Calendar className="w-5 h-5 text-white" />
+                              {order === 'asc' ? (
+                                <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                                  <polygon points="6,2 9.5,7 7.8,7 7.8,10 4.2,10 4.2,7 2.5,7" />
+                                </svg>
+                              ) : (
+                                <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                                  <polygon points="6,10 2.5,5 4.2,5 4.2,2 7.8,2 7.8,5 9.5,5" />
+                                </svg>
+                              )}
+                            </div>
+                          );
+                        default:
+                          return null;
+                      }
+                    })()
+                  ) : (
+                    <div className="text-sm">Sort</div>
+                  )
+                )}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => cycleSort(1)}
+              title="Next sort"
+              className="w-8 h-7 flex items-center justify-center text-white hover:bg-[#F28A2E]/10 transition-colors focus:outline-none"
+            >
+              <ChevronRight className="w-4 h-4 text-white" />
+            </button>
+          </div>
+
+          {/* loading spinner is shown in the middle segment to avoid layout shift */}
+        </div>
       </div>
 
       {/* Release Cards - 3 per row grid */}
