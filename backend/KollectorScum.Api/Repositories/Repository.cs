@@ -262,34 +262,45 @@ namespace KollectorScum.Api.Repositories
                 query = query.Where(filter);
             }
 
-            var totalCount = await query.CountAsync();
-
-            foreach (var includeProperty in includeProperties.Split
-                (new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+            string? sql = null;
+            try
             {
-                query = query.Include(includeProperty.Trim());
+                // Capture SQL for debugging (EF Core exposes the query string)
+                try { sql = query.ToQueryString(); } catch { /* ignore if not available */ }
+                var totalCount = await query.CountAsync();
+
+                foreach (var includeProperty in includeProperties.Split
+                    (new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+                {
+                    query = query.Include(includeProperty.Trim());
+                }
+
+                if (orderBy != null)
+                {
+                    query = orderBy(query);
+                }
+
+                var items = await query
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+
+                return new PagedResult<T>
+                {
+                    Items = items,
+                    Page = pageNumber,
+                    PageSize = pageSize,
+                    TotalCount = totalCount,
+                    TotalPages = totalPages
+                };
             }
-
-            if (orderBy != null)
+            catch (Exception ex)
             {
-                query = orderBy(query);
+                var message = "Error executing paged query" + (sql != null ? $". SQL: {sql}" : string.Empty);
+                throw new Exception(message, ex);
             }
-
-            var items = await query
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-
-            var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
-
-            return new PagedResult<T>
-            {
-                Items = items,
-                Page = pageNumber,
-                PageSize = pageSize,
-                TotalCount = totalCount,
-                TotalPages = totalPages
-            };
         }
 
         /// <summary>
