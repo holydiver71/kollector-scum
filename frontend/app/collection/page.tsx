@@ -154,7 +154,7 @@ export default function CollectionPage() {
                         Search: “{filters.search}”
                         <button
                           onClick={() => handleFiltersChange({ ...filters, search: undefined })}
-                          className="ml-1 p-0.5 rounded hover:bg-white/10"
+                          className="ml-1 p-0.5 rounded hover:bg-white/10 cursor-pointer"
                           aria-label="Remove search filter"
                           title="Remove search filter"
                         >
@@ -169,7 +169,7 @@ export default function CollectionPage() {
                       Artist: {artists.find(a => a.id === filters.artistId)?.name || filters.artistId}
                       <button
                         onClick={() => handleFiltersChange({ ...filters, artistId: undefined })}
-                        className="ml-1 p-0.5 rounded hover:bg-white/10"
+                        className="ml-1 p-0.5 rounded hover:bg-white/10 cursor-pointer"
                         aria-label="Remove artist filter"
                         title="Remove artist filter"
                       >
@@ -184,7 +184,7 @@ export default function CollectionPage() {
                       Genre: {genres.find(g => g.id === filters.genreId)?.name || filters.genreId}
                       <button
                         onClick={() => handleFiltersChange({ ...filters, genreId: undefined })}
-                        className="ml-1 p-0.5 rounded hover:bg-white/10"
+                        className="ml-1 p-0.5 rounded hover:bg-white/10 cursor-pointer"
                         aria-label="Remove genre filter"
                         title="Remove genre filter"
                       >
@@ -199,7 +199,7 @@ export default function CollectionPage() {
                       Label: {labels.find(l => l.id === filters.labelId)?.name || filters.labelId}
                       <button
                         onClick={() => handleFiltersChange({ ...filters, labelId: undefined })}
-                        className="ml-1 p-0.5 rounded hover:bg-white/10"
+                        className="ml-1 p-0.5 rounded hover:bg-white/10 cursor-pointer"
                         aria-label="Remove label filter"
                         title="Remove label filter"
                       >
@@ -214,7 +214,7 @@ export default function CollectionPage() {
                       Country: {countries.find(c => c.id === filters.countryId)?.name || filters.countryId}
                       <button
                         onClick={() => handleFiltersChange({ ...filters, countryId: undefined })}
-                        className="ml-1 p-0.5 rounded hover:bg-white/10"
+                        className="ml-1 p-0.5 rounded hover:bg-white/10 cursor-pointer"
                         aria-label="Remove country filter"
                         title="Remove country filter"
                       >
@@ -229,7 +229,7 @@ export default function CollectionPage() {
                       Format: {formats.find(f => f.id === filters.formatId)?.name || filters.formatId}
                       <button
                         onClick={() => handleFiltersChange({ ...filters, formatId: undefined })}
-                        className="ml-1 p-0.5 rounded hover:bg-white/10"
+                        className="ml-1 p-0.5 rounded hover:bg-white/10 cursor-pointer"
                         aria-label="Remove format filter"
                         title="Remove format filter"
                       >
@@ -244,7 +244,7 @@ export default function CollectionPage() {
                       {filters.live ? 'Live recordings' : 'Studio recordings'}
                       <button
                         onClick={() => handleFiltersChange({ ...filters, live: undefined })}
-                        className="ml-1 p-0.5 rounded hover:bg-white/10"
+                        className="ml-1 p-0.5 rounded hover:bg-white/10 cursor-pointer"
                         aria-label="Remove recording type filter"
                         title="Remove recording type filter"
                       >
@@ -259,7 +259,7 @@ export default function CollectionPage() {
                       Year: {filters.yearFrom || '—'}{filters.yearFrom || filters.yearTo ? '–' : ''}{filters.yearTo || '—'}
                       <button
                         onClick={() => handleFiltersChange({ ...filters, yearFrom: undefined, yearTo: undefined })}
-                        className="ml-1 p-0.5 rounded hover:bg-white/10"
+                        className="ml-1 p-0.5 rounded hover:bg-white/10 cursor-pointer"
                         aria-label="Remove year filter"
                         title="Remove year filter"
                       >
@@ -270,7 +270,7 @@ export default function CollectionPage() {
 
                   <button
                     onClick={() => handleFiltersChange({})}
-                    className="text-sm font-bold text-[#D93611] ml-2 px-2 py-1"
+                    className="text-sm font-bold text-[#D93611] ml-2 px-2 py-1 cursor-pointer"
                     aria-label="Clear all filters"
                   >
                     Clear all
