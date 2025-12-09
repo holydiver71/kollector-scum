@@ -1,6 +1,7 @@
 "use client";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { fetchJson, createNowPlaying } from "../lib/api";
 import { LoadingSpinner, Skeleton } from "./LoadingComponents";
@@ -48,7 +49,7 @@ interface MusicReleaseListProps {
   pageSize?: number;
 }
 
-export function MusicReleaseCard({ release }: { release: MusicRelease }) {
+export const MusicReleaseCard = React.memo(function MusicReleaseCard({ release }: { release: MusicRelease }) {
   const getCoverImageUrl = () => {
     if (release.coverImageUrl) {
       // Check if it's already a full URL
@@ -112,9 +113,11 @@ export function MusicReleaseCard({ release }: { release: MusicRelease }) {
               className="block hover:opacity-80 transition-opacity"
             >
               {!imageError ? (
-                <img
+                <Image
                   src={getCoverImageUrl()}
                   alt={`${release.title} cover`}
+                  width={144}
+                  height={144}
                   className="w-36 h-36 rounded-md object-contain border border-gray-200 bg-white cursor-pointer"
                   onError={() => setImageError(true)}
                   onLoad={() => setImageError(false)}
@@ -189,9 +192,9 @@ export function MusicReleaseCard({ release }: { release: MusicRelease }) {
       </div>
     </div>
   );
-}
+});
 
-export function MusicReleaseList({ filters = {}, pageSize = 60, onSortChange }: MusicReleaseListProps & { onSortChange?: (f: MusicReleaseFilters) => void }) {
+export const MusicReleaseList = React.memo(function MusicReleaseList({ filters = {}, pageSize = 60, onSortChange }: MusicReleaseListProps & { onSortChange?: (f: MusicReleaseFilters) => void }) {
   const [releases, setReleases] = useState<MusicRelease[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -583,4 +586,4 @@ export function MusicReleaseList({ filters = {}, pageSize = 60, onSortChange }: 
       )}
     </div>
   );
-}
+});

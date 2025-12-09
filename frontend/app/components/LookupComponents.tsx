@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { fetchJson } from "../lib/api";
 
 // Type definitions for lookup data
@@ -158,13 +158,25 @@ export function LookupDropdown<T extends LookupItem>({
   );
 }
 
+const lookupCache: Record<string, { data: any[], timestamp: number }> = {};
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 // Hook for fetching lookup data
 export function useLookupData<T extends LookupItem>(endpoint: string) {
   const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async (force = false) => {
+    if (!force) {
+      const cached = lookupCache[endpoint];
+      if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
+        setData(cached.data);
+        setLoading(false);
+        return;
+      }
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -192,6 +204,7 @@ export function useLookupData<T extends LookupItem>(endpoint: string) {
         currentPage++;
       }
       
+      lookupCache[endpoint] = { data: allItems, timestamp: Date.now() };
       setData(allItems);
       console.log(`Loaded ${allItems.length} total ${endpoint}, first: ${allItems[0]?.name}, last: ${allItems[allItems.length - 1]?.name}`);
       
@@ -201,13 +214,13 @@ export function useLookupData<T extends LookupItem>(endpoint: string) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [endpoint]);
 
   useEffect(() => {
     fetchData();
-  }, [endpoint]);
+  }, [fetchData]);
 
-  return { data, loading, error, refetch: fetchData };
+  return { data, loading, error, refetch: () => fetchData(true) };
 }
 
 // Specific lookup components
