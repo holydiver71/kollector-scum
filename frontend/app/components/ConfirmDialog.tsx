@@ -59,7 +59,7 @@ export function ConfirmDialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
       onClick={(e) => {
         // Close on backdrop click
         if (e.target === e.currentTarget) {
@@ -73,14 +73,14 @@ export function ConfirmDialog({
     >
       <div
         ref={dialogRef}
-        className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 transform transition-all"
+        className="bg-gradient-to-br from-red-900 via-red-950 to-black rounded-lg border border-white/10 shadow-xl max-w-md w-full p-6 transform transition-all"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Dialog Header */}
         <div className="mb-4">
           <h2
             id="dialog-title"
-            className="text-xl font-semibold text-gray-900"
+            className="text-xl font-semibold text-white"
           >
             {title}
           </h2>
@@ -88,7 +88,7 @@ export function ConfirmDialog({
 
         {/* Dialog Content */}
         <div className="mb-6">
-          <p id="dialog-description" className="text-gray-600">
+          <p id="dialog-description" className="text-gray-300">
             {message}
           </p>
         </div>
@@ -99,7 +99,7 @@ export function ConfirmDialog({
             ref={cancelButtonRef}
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="px-4 py-2 text-sm font-medium text-white bg-white/10 border border-white/20 rounded-md hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
           >
             {cancelLabel}
           </button>
@@ -108,7 +108,7 @@ export function ConfirmDialog({
             onClick={onConfirm}
             className={`px-4 py-2 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 ${
               isDangerous
-                ? "bg-red-600 hover:bg-red-700 focus:ring-red-500"
+                ? "bg-red-600 hover:bg-red-700 focus:ring-red-500 shadow-lg shadow-red-900/50"
                 : "bg-blue-600 hover:bg-blue-700 focus:ring-blue-500"
             }`}
           >

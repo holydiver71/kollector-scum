@@ -84,110 +84,89 @@ export const MusicReleaseCard = React.memo(function MusicReleaseCard({ release }
     }
   };
 
+  const releaseYear = new Date(release.releaseYear).getFullYear();
+  const origReleaseYear = release.origReleaseYear ? new Date(release.origReleaseYear).getFullYear() : null;
+
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative">
-      {/* Now Playing Button - Top Right Corner */}
-      <button
-        onClick={handleNowPlaying}
-        disabled={isLoading}
-        className={`absolute top-2 right-2 z-10 p-2 rounded-full transition-all ${
-          isPlaying 
-            ? 'bg-green-500 text-white' 
-            : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
-        } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-        title={isPlaying ? 'Playing now' : 'Mark as now playing'}
-      >
-        {isPlaying ? (
-          <Check className="w-4 h-4" />
+    <div className="group bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
+      <div className="relative aspect-square bg-gray-100">
+        {!imageError ? (
+          <Image
+            src={getCoverImageUrl()}
+            alt={`${release.title} cover`}
+            fill
+            className="object-cover"
+            onError={() => setImageError(true)}
+            onLoad={() => setImageError(false)}
+            sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
+          />
         ) : (
-          <Play className="w-4 h-4" />
+          <div className="w-full h-full flex items-center justify-center text-gray-400">
+            <Disc3 className="w-12 h-12" />
+          </div>
         )}
-      </button>
-      
-      <div className="p-4">
-        <div className="flex items-start gap-4">
-          {/* Cover Art - Left */}
-          <div className="flex-shrink-0">
+
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+          <div className="flex gap-2">
             <Link 
               href={`/releases/${release.id}`}
-              className="block hover:opacity-80 transition-opacity"
+              className="bg-white text-[#D93611] rounded-full w-10 h-10 flex items-center justify-center hover:scale-110 transition-transform shadow-lg"
             >
-              {!imageError ? (
-                <Image
-                  src={getCoverImageUrl()}
-                  alt={`${release.title} cover`}
-                  width={144}
-                  height={144}
-                  className="w-36 h-36 rounded-md object-contain border border-gray-200 bg-white cursor-pointer"
-                  onError={() => setImageError(true)}
-                  onLoad={() => setImageError(false)}
-                />
-              ) : (
-                <div className="w-36 h-36 bg-gray-100 rounded-md flex items-center justify-center border border-gray-200 cursor-pointer">
-                  <span className="text-gray-400 text-4xl">🎵</span>
-                </div>
-              )}
+              <ChevronRight className="w-5 h-5" />
             </Link>
-          </div>
-
-          {/* Release Info - Right */}
-          <div className="flex-grow min-w-0">
-            <h3 className="text-lg font-bold text-gray-900 truncate mb-1">
-              <Link 
-                href={`/releases/${release.id}`}
-                className="hover:text-blue-600 transition-colors"
-              >
-                {release.title}
-              </Link>
-            </h3>
             
-            {release.artistNames && release.artistNames.length > 0 && (
-              <p className="text-sm text-gray-600 mb-2 truncate font-medium">
-                {release.artistNames.join(", ")}
-              </p>
-            )}
-
-            <div className="flex items-center gap-2 mb-2 text-sm text-gray-500 font-medium">
-              {release.releaseYear && (
-                <span>
-                  {new Date(release.releaseYear).getFullYear()}
-                  {release.origReleaseYear && 
-                   release.origReleaseYear !== release.releaseYear && 
-                   ` (${new Date(release.origReleaseYear).getFullYear()})`}
-                </span>
+            <button
+              onClick={handleNowPlaying}
+              disabled={isLoading}
+              className={`rounded-full w-10 h-10 flex items-center justify-center hover:scale-110 transition-transform shadow-lg ${
+                isPlaying 
+                  ? 'bg-green-500 text-white' 
+                  : 'bg-white text-[#D93611]'
+              }`}
+              title={isPlaying ? 'Playing now' : 'Mark as now playing'}
+            >
+              {isPlaying ? (
+                <Check className="w-5 h-5" />
+              ) : (
+                <Play className="w-5 h-5" />
               )}
-              {release.formatName && <span>• {release.formatName}</span>}
-            </div>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div className="p-3">
+        <h3 className="font-bold text-sm text-gray-900 truncate mb-0.5" title={release.title}>
+          <Link 
+            href={`/releases/${release.id}`}
+            className="hover:text-[#D93611] transition-colors"
+          >
+            {release.title}
+          </Link>
+        </h3>
+        
+        <p className="text-xs text-gray-600 truncate mb-1" title={release.artistNames?.join(", ")}>
+          {release.artistNames?.join(", ")}
+        </p>
 
-            <div className="flex flex-wrap gap-1 mb-2">
-              {release.labelName && (
-                <span className="bg-gray-100 px-2 py-1 rounded text-xs font-semibold">
-                  {release.labelName}
-                </span>
-              )}
-              {release.countryName && (
-                <span className="bg-gray-100 px-2 py-1 rounded text-xs font-semibold">
-                  {release.countryName}
-                </span>
-              )}
-            </div>
+        <div className="flex items-center gap-1 text-[10px] text-gray-500 truncate mb-2">
+          {release.labelName && <span title={release.labelName}>{release.labelName}</span>}
+          {release.labelName && release.countryName && <span>•</span>}
+          {release.countryName && <span title={release.countryName}>{release.countryName}</span>}
+        </div>
 
-            {release.genreNames && release.genreNames.length > 0 && (
-              <div className="flex flex-wrap gap-1">
-                {release.genreNames.slice(0, 3).map((genre: string, index: number) => (
-                  <span
-                    key={index}
-                    className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-blue-100 text-blue-800"
-                  >
-                    {genre}
-                  </span>
-                ))}
-                {release.genreNames.length > 3 && (
-                  <span className="text-xs text-gray-500">+{release.genreNames.length - 3}</span>
-                )}
-              </div>
+        <div className="flex items-center justify-between text-xs text-gray-500">
+          <div className="flex flex-col leading-tight">
+            <span>{releaseYear}</span>
+            {origReleaseYear && origReleaseYear !== releaseYear && (
+              <span className="text-[10px] text-gray-400">Orig: {origReleaseYear}</span>
             )}
           </div>
+          {release.formatName && (
+            <span className="px-2 py-0.5 rounded-full font-bold text-white text-[10px] bg-[#D9601A]">
+              {release.formatName}
+            </span>
+          )}
         </div>
       </div>
     </div>
@@ -520,8 +499,8 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
         </div>
       </div>
 
-      {/* Release Cards - 3 per row grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      {/* Release Cards - Grid matching mock-up */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 mb-8">
         {releases.map((release) => (
           <MusicReleaseCard key={release.id} release={release} />
         ))}

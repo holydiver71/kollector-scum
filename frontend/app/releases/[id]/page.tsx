@@ -2,13 +2,14 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { fetchJson, createNowPlaying, getPlayHistory, PlayHistoryDto } from "../../lib/api";
+import { fetchJson, createNowPlaying, getPlayHistory, deleteNowPlaying, PlayHistoryDto } from "../../lib/api";
 import { LoadingSpinner } from "../../components/LoadingComponents";
 import { ImageGallery } from "../../components/ImageGallery";
 import { TrackList } from "../../components/TrackList";
 import { ReleaseLinks } from "../../components/ReleaseLinks";
 import { DeleteReleaseButton } from "../../components/DeleteReleaseButton";
 import { EditReleaseButton } from "../../components/EditReleaseButton";
+import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { Play, Check, X, ChevronDown } from "lucide-react";
 
 // Type definitions for detailed music release
@@ -117,6 +118,7 @@ export default function ReleaseDetailPage() {
   const [showPlayHistory, setShowPlayHistory] = useState(false);
   const [playHistory, setPlayHistory] = useState<PlayHistoryDto | null>(null);
   const [playHistoryLoading, setPlayHistoryLoading] = useState(false);
+  const [playToDelete, setPlayToDelete] = useState<number | null>(null);
 
   const handleNowPlayingClick = () => {
     setConfirmationTime(new Date());
@@ -169,6 +171,59 @@ export default function ReleaseDetailPage() {
         setPlayHistoryLoading(false);
       }
     }
+  };
+
+  const handleDeletePlayHistory = (playId: number) => {
+    setPlayToDelete(playId);
+  };
+
+  const confirmDeletePlayHistory = async () => {
+    if (!playToDelete) return;
+
+    try {
+      await deleteNowPlaying(playToDelete);
+      
+      // Update local state
+      if (playHistory) {
+        const updatedDates = playHistory.playDates.filter(p => p.id !== playToDelete);
+        setPlayHistory({
+          ...playHistory,
+          playCount: playHistory.playCount - 1,
+          playDates: updatedDates
+        });
+        
+        // If we deleted the most recent play, update the release's lastPlayedAt
+        // Since playDates are sorted descending, the first one is the most recent
+        if (updatedDates.length > 0) {
+           const mostRecent = updatedDates[0].playedAt;
+           setRelease(prev => prev ? { ...prev, lastPlayedAt: mostRecent } : prev);
+        } else {
+           setRelease(prev => prev ? { ...prev, lastPlayedAt: undefined } : prev);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to delete play history:', err);
+      alert('Failed to delete play history record');
+    } finally {
+      setPlayToDelete(null);
+    }
+  };
+
+  const getDeleteMessage = () => {
+    if (!playToDelete || !playHistory) return "Are you sure you want to delete this play record? This action cannot be undone.";
+    
+    const playItem = playHistory.playDates.find(p => p.id === playToDelete);
+    if (!playItem) return "Are you sure you want to delete this play record? This action cannot be undone.";
+
+    const dateStr = new Date(playItem.playedAt).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    return `Are you sure you want to delete the play record from ${dateStr}? This action cannot be undone.`;
   };
 
   useEffect(() => {
@@ -542,15 +597,24 @@ export default function ReleaseDetailPage() {
                               <div 
                                 className={`space-y-1 ${playHistory.playDates.length > 10 ? 'max-h-[240px] overflow-y-auto pr-2' : ''}`}
                               >
-                                {playHistory.playDates.map((date, index) => (
-                                  <div key={index} className="text-xs text-gray-600">
-                                    {new Date(date).toLocaleDateString('en-US', {
+                                {playHistory.playDates.map((item) => (
+                                  <div key={item.id} className="text-xs text-gray-600 flex items-center gap-2 group h-6">
+                                    <span>
+                                    {new Date(item.playedAt).toLocaleDateString('en-US', {
                                       year: 'numeric',
                                       month: 'short',
                                       day: 'numeric',
                                       hour: '2-digit',
                                       minute: '2-digit'
                                     })}
+                                    </span>
+                                    <button
+                                      onClick={() => handleDeletePlayHistory(item.id)}
+                                      className="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-red-50 rounded"
+                                      title="Delete this play"
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </button>
                                   </div>
                                 ))}
                               </div>
@@ -776,6 +840,16 @@ export default function ReleaseDetailPage() {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={!!playToDelete}
+        title="Delete Play Record"
+        message={getDeleteMessage()}
+        confirmLabel="Delete"
+        isDangerous={true}
+        onConfirm={confirmDeletePlayHistory}
+        onCancel={() => setPlayToDelete(null)}
+      />
     </div>
   );
 }

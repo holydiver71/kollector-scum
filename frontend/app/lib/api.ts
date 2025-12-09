@@ -261,10 +261,15 @@ export async function createNowPlaying(musicReleaseId: number): Promise<NowPlayi
 }
 
 // Play History
+export interface PlayHistoryItemDto {
+  id: number;
+  playedAt: string;
+}
+
 export interface PlayHistoryDto {
   musicReleaseId: number;
   playCount: number;
-  playDates: string[];
+  playDates: PlayHistoryItemDto[];
 }
 
 /**
@@ -274,6 +279,17 @@ export interface PlayHistoryDto {
  */
 export async function getPlayHistory(musicReleaseId: number): Promise<PlayHistoryDto> {
   return fetchJson<PlayHistoryDto>(`/api/NowPlaying/release/${musicReleaseId}/history`);
+}
+
+/**
+ * Deletes a now playing record
+ * @param id - The ID of the now playing record
+ */
+export async function deleteNowPlaying(id: number): Promise<void> {
+  return fetchJson<void>(`/api/NowPlaying/${id}`, {
+    method: 'DELETE',
+    parse: false
+  });
 }
 
 // Recently Played
