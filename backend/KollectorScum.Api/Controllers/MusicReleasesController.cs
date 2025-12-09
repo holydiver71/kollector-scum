@@ -20,15 +20,18 @@ namespace KollectorScum.Api.Controllers
         private readonly IMusicReleaseQueryService _queryService;
         private readonly IMusicReleaseCommandService _commandService;
         private readonly ILogger<MusicReleasesController> _logger;
+        private readonly IWebHostEnvironment _env;
 
         public MusicReleasesController(
             IMusicReleaseQueryService queryService,
             IMusicReleaseCommandService commandService,
-            ILogger<MusicReleasesController> logger)
+            ILogger<MusicReleasesController> logger,
+            IWebHostEnvironment env)
         {
             _queryService = queryService ?? throw new ArgumentNullException(nameof(queryService));
             _commandService = commandService ?? throw new ArgumentNullException(nameof(commandService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _env = env ?? throw new ArgumentNullException(nameof(env));
         }
 
         /// <summary>
@@ -54,12 +57,19 @@ namespace KollectorScum.Api.Controllers
         {
             try
             {
+                // Validate year range to avoid server-side exceptions when invalid ranges provided
+                if (parameters?.YearFrom.HasValue == true && parameters?.YearTo.HasValue == true && parameters.YearFrom > parameters.YearTo)
+                {
+                    _logger.LogWarning("Invalid year range: YearFrom {YearFrom} > YearTo {YearTo}", parameters.YearFrom, parameters.YearTo);
+                    return BadRequest("Invalid year range: 'YearFrom' cannot be greater than 'YearTo'.");
+                }
                 var result = await _queryService.GetMusicReleasesAsync(parameters);
                 return Ok(result);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting music releases");
+                // Always return a generic error response to avoid leaking internal details
                 return StatusCode(500, "An error occurred while retrieving music releases");
             }
         }
