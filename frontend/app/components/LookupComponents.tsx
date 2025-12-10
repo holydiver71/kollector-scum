@@ -252,6 +252,13 @@ export function CountryDropdown({ value, onSelect, className }: {
   );
 }
 
+interface KollectionDto {
+  id: number;
+  name: string;
+  genreIds: number[];
+  genreNames: string[];
+}
+
 export function GenreDropdown({ value, onSelect, className, kollectionId }: {
   value?: number;
   onSelect: (genre: Genre | null) => void;
@@ -266,7 +273,7 @@ export function GenreDropdown({ value, onSelect, className, kollectionId }: {
   useEffect(() => {
     if (kollectionId) {
       setLoadingKollection(true);
-      fetchJson<any>(`/api/kollections/${kollectionId}`)
+      fetchJson<KollectionDto>(`/api/kollections/${kollectionId}`)
         .then((kollection) => {
           setKollectionGenreIds(kollection.genreIds || []);
         })

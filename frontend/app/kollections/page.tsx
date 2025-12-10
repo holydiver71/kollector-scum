@@ -31,7 +31,12 @@ export default function KollectionsPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
-  const { data: genres, loading: genresLoading } = useLookupData<any>("genres");
+  interface Genre {
+    id: number;
+    name: string;
+  }
+
+  const { data: genres, loading: genresLoading } = useLookupData<Genre>("genres");
 
   useEffect(() => {
     loadKollections();
@@ -216,7 +221,7 @@ export default function KollectionsPage() {
                 ) : (
                   <div className="max-h-64 overflow-y-auto border border-gray-300 rounded-md p-3 bg-gray-50">
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                      {genres.map((genre: any) => (
+                      {genres.map((genre: Genre) => (
                         <label
                           key={genre.id}
                           className="flex items-center space-x-2 cursor-pointer hover:bg-gray-100 p-2 rounded"
