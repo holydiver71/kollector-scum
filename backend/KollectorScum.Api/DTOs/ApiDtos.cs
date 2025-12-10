@@ -877,4 +877,72 @@ namespace KollectorScum.Api.DTOs
         public int PlayCount { get; set; } = 1;
     }
 
+    // ===== KOLLECTION DTOs =====
+
+    /// <summary>
+    /// DTO for kollection data
+    /// </summary>
+    public class KollectionDto
+    {
+        /// <summary>
+        /// Kollection ID
+        /// </summary>
+        public int Id { get; set; }
+
+        /// <summary>
+        /// Kollection name
+        /// </summary>
+        public string Name { get; set; } = string.Empty;
+
+        /// <summary>
+        /// List of genre IDs in this kollection
+        /// </summary>
+        public List<int> GenreIds { get; set; } = new();
+
+        /// <summary>
+        /// List of genre names in this kollection (for display)
+        /// </summary>
+        public List<string> GenreNames { get; set; } = new();
+    }
+
+    /// <summary>
+    /// DTO for creating a new kollection
+    /// </summary>
+    public class CreateKollectionDto
+    {
+        /// <summary>
+        /// Kollection name
+        /// </summary>
+        [Required]
+        [StringLength(100, MinimumLength = 1)]
+        public string Name { get; set; } = string.Empty;
+
+        /// <summary>
+        /// List of genre IDs to include in this kollection
+        /// </summary>
+        [Required]
+        [MinLength(1, ErrorMessage = "At least one genre must be selected")]
+        public List<int> GenreIds { get; set; } = new();
+    }
+
+    /// <summary>
+    /// DTO for updating a kollection
+    /// </summary>
+    public class UpdateKollectionDto
+    {
+        /// <summary>
+        /// Kollection name
+        /// </summary>
+        [Required]
+        [StringLength(100, MinimumLength = 1)]
+        public string Name { get; set; } = string.Empty;
+
+        /// <summary>
+        /// List of genre IDs to include in this kollection
+        /// </summary>
+        [Required]
+        [MinLength(1, ErrorMessage = "At least one genre must be selected")]
+        public List<int> GenreIds { get; set; } = new();
+    }
+
 }

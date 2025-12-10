@@ -280,6 +280,43 @@ namespace KollectorScum.Api.Migrations
                     b.ToTable("Stores");
                 });
 
+            modelBuilder.Entity("KollectorScum.Api.Models.Kollection", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Kollections_Name");
+
+                    b.ToTable("Kollections");
+                });
+
+            modelBuilder.Entity("KollectorScum.Api.Models.KollectionGenre", b =>
+                {
+                    b.Property<int>("KollectionId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("GenreId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("KollectionId", "GenreId");
+
+                    b.HasIndex("GenreId");
+
+                    b.ToTable("KollectionGenres");
+                });
+
             modelBuilder.Entity("KollectorScum.Api.Models.MusicRelease", b =>
                 {
                     b.HasOne("KollectorScum.Api.Models.Artist", null)
@@ -367,6 +404,30 @@ namespace KollectorScum.Api.Migrations
             modelBuilder.Entity("KollectorScum.Api.Models.Store", b =>
                 {
                     b.Navigation("MusicReleases");
+                });
+
+            modelBuilder.Entity("KollectorScum.Api.Models.KollectionGenre", b =>
+                {
+                    b.HasOne("KollectorScum.Api.Models.Genre", "Genre")
+                        .WithMany()
+                        .HasForeignKey("GenreId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("KollectorScum.Api.Models.Kollection", "Kollection")
+                        .WithMany("KollectionGenres")
+                        .HasForeignKey("KollectionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Genre");
+
+                    b.Navigation("Kollection");
+                });
+
+            modelBuilder.Entity("KollectorScum.Api.Models.Kollection", b =>
+                {
+                    b.Navigation("KollectionGenres");
                 });
 #pragma warning restore 612, 618
         }

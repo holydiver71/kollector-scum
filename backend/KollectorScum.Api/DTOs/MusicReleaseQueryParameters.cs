@@ -22,6 +22,11 @@ namespace KollectorScum.Api.DTOs
         public int? GenreId { get; set; }
 
         /// <summary>
+        /// Filter by kollection ID (applies genre filter based on kollection)
+        /// </summary>
+        public int? KollectionId { get; set; }
+
+        /// <summary>
         /// Filter by label ID
         /// </summary>
         public int? LabelId { get; set; }

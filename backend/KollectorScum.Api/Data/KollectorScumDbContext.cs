@@ -58,6 +58,16 @@ namespace KollectorScum.Api.Data
         public DbSet<Models.NowPlaying> NowPlayings { get; set; }
 
         /// <summary>
+        /// Gets or sets the Kollections DbSet
+        /// </summary>
+        public DbSet<Models.Kollection> Kollections { get; set; }
+
+        /// <summary>
+        /// Gets or sets the KollectionGenres DbSet
+        /// </summary>
+        public DbSet<Models.KollectionGenre> KollectionGenres { get; set; }
+
+        /// <summary>
         /// Configure the database model and relationships
         /// </summary>
         /// <param name="modelBuilder">The model builder</param>
@@ -129,6 +139,27 @@ namespace KollectorScum.Api.Data
                 .WithMany()
                 .HasForeignKey(np => np.MusicReleaseId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure Kollection relationships
+            modelBuilder.Entity<Models.KollectionGenre>()
+                .HasKey(kg => new { kg.KollectionId, kg.GenreId });
+
+            modelBuilder.Entity<Models.KollectionGenre>()
+                .HasOne(kg => kg.Kollection)
+                .WithMany(k => k.KollectionGenres)
+                .HasForeignKey(kg => kg.KollectionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Models.KollectionGenre>()
+                .HasOne(kg => kg.Genre)
+                .WithMany()
+                .HasForeignKey(kg => kg.GenreId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Models.Kollection>()
+                .HasIndex(k => k.Name)
+                .IsUnique()
+                .HasDatabaseName("IX_Kollections_Name");
         }
     }
 }
