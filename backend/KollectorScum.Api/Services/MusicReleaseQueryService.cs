@@ -144,10 +144,27 @@ namespace KollectorScum.Api.Services
         /// </summary>
         private Expression<Func<MusicRelease, bool>>? BuildFilterExpression(MusicReleaseQueryParameters parameters)
         {
+            // Get genre IDs from kollection if specified
+            List<int>? kollectionGenreIds = null;
+            if (parameters.KollectionId.HasValue)
+            {
+                kollectionGenreIds = _context.KollectionGenres
+                    .Where(kg => kg.KollectionId == parameters.KollectionId.Value)
+                    .Select(kg => kg.GenreId)
+                    .ToList();
+                
+                // If kollection has no genres or doesn't exist, return no results
+                if (kollectionGenreIds.Count == 0)
+                {
+                    return mr => false;
+                }
+            }
+
             // Return null if no filters applied
             if (string.IsNullOrEmpty(parameters.Search) && 
                 !parameters.ArtistId.HasValue && 
                 !parameters.GenreId.HasValue &&
+                !parameters.KollectionId.HasValue &&
                 !parameters.LabelId.HasValue && 
                 !parameters.CountryId.HasValue && 
                 !parameters.FormatId.HasValue && 
@@ -173,6 +190,13 @@ namespace KollectorScum.Api.Services
                      mr.Genres.Contains($"[{parameters.GenreId.Value},") || 
                      mr.Genres.Contains($",{parameters.GenreId.Value}]") || 
                      mr.Genres.Contains($",{parameters.GenreId.Value},")))) &&
+                // Kollection filter: check if release has any of the kollection's genres
+                (kollectionGenreIds == null || (mr.Genres != null && 
+                    kollectionGenreIds.Any(genreId =>
+                        mr.Genres.Contains($"[{genreId}]") || 
+                        mr.Genres.Contains($"[{genreId},") || 
+                        mr.Genres.Contains($",{genreId}]") || 
+                        mr.Genres.Contains($",{genreId},")))) &&
                 (!parameters.LabelId.HasValue || mr.LabelId == parameters.LabelId.Value) &&
                 (!parameters.CountryId.HasValue || mr.CountryId == parameters.CountryId.Value) &&
                 (!parameters.FormatId.HasValue || mr.FormatId == parameters.FormatId.Value) &&
