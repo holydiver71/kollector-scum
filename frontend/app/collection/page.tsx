@@ -19,6 +19,7 @@ interface SearchFilters {
   yearTo?: number;
   sortBy?: string;
   sortOrder?: string;
+  kollectionId?: number;
 }
 
 export default function CollectionPage() {
@@ -53,6 +54,7 @@ export default function CollectionPage() {
       const yearTo = searchParams.get('yearTo');
       const sortBy = searchParams.get('sortBy');
       const sortOrder = searchParams.get('sortOrder');
+      const kollectionId = searchParams.get('kollectionId');
 
       if (search) urlFilters.search = search;
       if (artistId) urlFilters.artistId = parseInt(artistId);
@@ -65,6 +67,7 @@ export default function CollectionPage() {
       if (yearTo) urlFilters.yearTo = parseInt(yearTo);
       if (sortBy) urlFilters.sortBy = sortBy;
       if (sortOrder) urlFilters.sortOrder = sortOrder;
+      if (kollectionId) urlFilters.kollectionId = parseInt(kollectionId);
 
       console.log('CollectionPage URL params:', { artistId, urlFilters });
       // Avoid changing state if the parsed filters match the existing filters
@@ -139,7 +142,8 @@ export default function CollectionPage() {
     filters.formatId !== undefined ||
     filters.live !== undefined ||
     filters.yearFrom !== undefined ||
-    filters.yearTo !== undefined
+    filters.yearTo !== undefined ||
+    filters.kollectionId !== undefined
   );
 
   return (
@@ -164,6 +168,7 @@ export default function CollectionPage() {
                 showSearchInput={false}
                 openAdvanced={showAdvancedFromParams}
                 onAdvancedToggle={handleAdvancedToggle}
+                kollectionId={filters.kollectionId}
               />
             )}
 

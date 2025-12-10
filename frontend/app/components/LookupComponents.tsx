@@ -252,12 +252,35 @@ export function CountryDropdown({ value, onSelect, className }: {
   );
 }
 
-export function GenreDropdown({ value, onSelect, className }: {
+export function GenreDropdown({ value, onSelect, className, kollectionId }: {
   value?: number;
   onSelect: (genre: Genre | null) => void;
   className?: string;
+  kollectionId?: number;
 }) {
-  const { data, loading, error } = useLookupData<Genre>("genres");
+  const { data: allGenres, loading, error } = useLookupData<Genre>("genres");
+  const [kollectionGenreIds, setKollectionGenreIds] = useState<number[]>([]);
+  const [loadingKollection, setLoadingKollection] = useState(false);
+
+  // Load kollection genres if kollectionId is provided
+  useEffect(() => {
+    if (kollectionId) {
+      setLoadingKollection(true);
+      fetchJson<any>(`/api/kollections/${kollectionId}`)
+        .then((kollection) => {
+          setKollectionGenreIds(kollection.genreIds || []);
+        })
+        .catch((err) => {
+          console.error('Failed to load kollection genres:', err);
+          setKollectionGenreIds([]);
+        })
+        .finally(() => {
+          setLoadingKollection(false);
+        });
+    } else {
+      setKollectionGenreIds([]);
+    }
+  }, [kollectionId]);
 
   if (error) {
     return (
@@ -267,13 +290,18 @@ export function GenreDropdown({ value, onSelect, className }: {
     );
   }
 
+  // Filter genres based on kollection
+  const data = kollectionId && kollectionGenreIds.length > 0
+    ? allGenres.filter(genre => kollectionGenreIds.includes(genre.id))
+    : allGenres;
+
   return (
     <LookupDropdown
       items={data}
       value={value}
       placeholder="Select genre..."
       onSelect={onSelect}
-      loading={loading}
+      loading={loading || loadingKollection}
       searchable={true}
       className={className}
     />
