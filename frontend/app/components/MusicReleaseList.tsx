@@ -42,6 +42,7 @@ interface MusicReleaseFilters {
   yearTo?: number;
   sortBy?: string;
   sortOrder?: string;
+  kollectionId?: number;
 }
 
 interface MusicReleaseListProps {
@@ -285,6 +286,7 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
         ...(filters.live !== undefined && { Live: filters.live.toString() }),
         ...(filters.yearFrom && { YearFrom: filters.yearFrom.toString() }),
         ...(filters.yearTo && { YearTo: filters.yearTo.toString() }),
+        ...(filters.kollectionId && { KollectionId: filters.kollectionId.toString() }),
           ...(effectiveFilters.sortBy && { SortBy: effectiveFilters.sortBy }),
           ...(effectiveFilters.sortOrder && { SortOrder: effectiveFilters.sortOrder })
       });

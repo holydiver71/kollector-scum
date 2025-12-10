@@ -326,3 +326,97 @@ export async function getRandomReleaseId(): Promise<number> {
   const response = await fetchJson<RandomReleaseResponse>('/api/musicreleases/random');
   return response.id;
 }
+
+// Kollections
+export interface KollectionDto {
+  id: number;
+  name: string;
+  genreIds: number[];
+  genreNames: string[];
+}
+
+export interface CreateKollectionDto {
+  name: string;
+  genreIds: number[];
+}
+
+export interface UpdateKollectionDto {
+  name: string;
+  genreIds: number[];
+}
+
+export interface PagedKollectionsResponse {
+  items: KollectionDto[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+}
+
+/**
+ * Gets all kollections with optional search
+ * @param search - Optional search term to filter by name
+ * @param page - Page number (default 1)
+ * @param pageSize - Page size (default 50)
+ * @returns Paged list of kollections
+ */
+export async function getKollections(search?: string, page: number = 1, pageSize: number = 50): Promise<PagedKollectionsResponse> {
+  const params = new URLSearchParams();
+  params.append('page', page.toString());
+  params.append('pageSize', pageSize.toString());
+  if (search) {
+    params.append('search', search);
+  }
+  return fetchJson<PagedKollectionsResponse>(`/api/kollections?${params.toString()}`);
+}
+
+/**
+ * Gets a specific kollection by ID
+ * @param id - The kollection ID
+ * @returns The kollection details
+ */
+export async function getKollection(id: number): Promise<KollectionDto> {
+  return fetchJson<KollectionDto>(`/api/kollections/${id}`);
+}
+
+/**
+ * Creates a new kollection
+ * @param data - The kollection data to create
+ * @returns The created kollection
+ */
+export async function createKollection(data: CreateKollectionDto): Promise<KollectionDto> {
+  return fetchJson<KollectionDto>('/api/kollections', {
+    method: 'POST',
+    body: JSON.stringify(data),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+}
+
+/**
+ * Updates an existing kollection
+ * @param id - The kollection ID
+ * @param data - The updated kollection data
+ * @returns The updated kollection
+ */
+export async function updateKollection(id: number, data: UpdateKollectionDto): Promise<KollectionDto> {
+  return fetchJson<KollectionDto>(`/api/kollections/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+}
+
+/**
+ * Deletes a kollection
+ * @param id - The kollection ID
+ */
+export async function deleteKollection(id: number): Promise<void> {
+  return fetchJson<void>(`/api/kollections/${id}`, {
+    method: 'DELETE',
+    parse: false,
+  });
+}
