@@ -39,6 +39,8 @@ export default function Header() {
     loadKollections();
   }, []);
 
+  const selectedKollectionId = searchParams?.get('kollectionId');
+
   const handleKollectionChange = (kollectionId: string) => {
     const params = new URLSearchParams(Array.from(searchParams?.entries() || []));
     
@@ -81,7 +83,7 @@ export default function Header() {
                 </label>
                 <select
                   id="kollection-select"
-                  value={searchParams?.get('kollectionId') || 'all'}
+                  value={selectedKollectionId || 'all'}
                   onChange={(e) => handleKollectionChange(e.target.value)}
                   className="w-full sm:w-64 px-3 py-2 bg-white/10 backdrop-blur-sm text-white border border-white/20 rounded-md focus:outline-none focus:ring-2 focus:ring-white/50"
                 >
