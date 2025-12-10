@@ -25,7 +25,20 @@
 }
 
 body {
-  background: var(--background);
+  /* Diagonal top-left to bottom-right gradient from mid-red to very dark red */
+  /* Keep a CSS variable fallback for compatibility */
+  background: linear-gradient(
+    to bottom right,
+    #120306 10%,
+    #8C240D 30%,
+    #C93B2A 50%,
+    #8C240D 70%,
+    #120306 100%
+  );
+  /* Provide a fallback solid color in case gradients are unsupported */
+  background-color: var(--background);
+  /* Pin to viewport so background behaves consistently across routes */
+  background-attachment: fixed;
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
