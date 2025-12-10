@@ -144,10 +144,27 @@ namespace KollectorScum.Api.Services
         /// </summary>
         private Expression<Func<MusicRelease, bool>>? BuildFilterExpression(MusicReleaseQueryParameters parameters)
         {
+            // Get genre IDs from kollection if specified
+            List<int>? kollectionGenreIds = null;
+            if (parameters.KollectionId.HasValue)
+            {
+                kollectionGenreIds = _context.KollectionGenres
+                    .Where(kg => kg.KollectionId == parameters.KollectionId.Value)
+                    .Select(kg => kg.GenreId)
+                    .ToList();
+
+                // If kollection has no genres or doesn't exist, return no results
+                if (kollectionGenreIds.Count == 0)
+                {
+                    return mr => false;
+                }
+            }
+
             // Return null if no filters applied
             if (string.IsNullOrEmpty(parameters.Search) && 
                 !parameters.ArtistId.HasValue && 
                 !parameters.GenreId.HasValue &&
+                !parameters.KollectionId.HasValue &&
                 !parameters.LabelId.HasValue && 
                 !parameters.CountryId.HasValue && 
                 !parameters.FormatId.HasValue && 
@@ -158,27 +175,112 @@ namespace KollectorScum.Api.Services
                 return null;
             }
 
-            // Build composite filter
+            // Build composite filter using expression tree so EF can translate constants
             // Note: Artists and Genres are stored as JSON arrays like "[1,2,3]"
-            // We need to check if the JSON array contains the specific ID
-            return mr =>
-                (string.IsNullOrEmpty(parameters.Search) || mr.Title.ToLower().Contains(parameters.Search.ToLower())) &&
-                (!parameters.ArtistId.HasValue || (mr.Artists != null && 
-                    (mr.Artists.Contains($"[{parameters.ArtistId.Value}]") || 
-                     mr.Artists.Contains($"[{parameters.ArtistId.Value},") || 
-                     mr.Artists.Contains($",{parameters.ArtistId.Value}]") || 
-                     mr.Artists.Contains($",{parameters.ArtistId.Value},")))) &&
-                (!parameters.GenreId.HasValue || (mr.Genres != null && 
-                    (mr.Genres.Contains($"[{parameters.GenreId.Value}]") || 
-                     mr.Genres.Contains($"[{parameters.GenreId.Value},") || 
-                     mr.Genres.Contains($",{parameters.GenreId.Value}]") || 
-                     mr.Genres.Contains($",{parameters.GenreId.Value},")))) &&
-                (!parameters.LabelId.HasValue || mr.LabelId == parameters.LabelId.Value) &&
-                (!parameters.CountryId.HasValue || mr.CountryId == parameters.CountryId.Value) &&
-                (!parameters.FormatId.HasValue || mr.FormatId == parameters.FormatId.Value) &&
-                (!parameters.Live.HasValue || mr.Live == parameters.Live.Value) &&
-                (!parameters.YearFrom.HasValue || (mr.ReleaseYear.HasValue && mr.ReleaseYear.Value >= new DateTime(parameters.YearFrom.Value, 1, 1, 0, 0, 0, DateTimeKind.Utc))) &&
-                (!parameters.YearTo.HasValue || (mr.ReleaseYear.HasValue && mr.ReleaseYear.Value <= new DateTime(parameters.YearTo.Value, 12, 31, 23, 59, 59, 999, DateTimeKind.Utc)));
+            var param = Expression.Parameter(typeof(MusicRelease), "mr");
+            var clauses = new List<Expression>();
+
+            var containsMethod = typeof(string).GetMethod("Contains", new[] { typeof(string) })!;
+            var toLowerMethod = typeof(string).GetMethod("ToLower", Array.Empty<Type>());
+
+            // Title search
+            if (!string.IsNullOrEmpty(parameters.Search))
+            {
+                var titleProp = Expression.Property(param, nameof(MusicRelease.Title));
+                Expression titleLower = titleProp;
+                if (toLowerMethod != null)
+                    titleLower = Expression.Call(titleProp, toLowerMethod!);
+
+                var searchConst = Expression.Constant(parameters.Search.ToLower());
+                var searchContains = Expression.Call(titleLower, containsMethod, searchConst);
+                clauses.Add(searchContains);
+            }
+
+            // Helper for JSON-array contains checks
+            Expression BuildJsonContainsExpression(string propName, int id)
+            {
+                var prop = Expression.Property(param, propName);
+                var notNull = Expression.NotEqual(prop, Expression.Constant(null, typeof(string)));
+
+                var c1 = Expression.Call(prop, containsMethod, Expression.Constant("[" + id + "]"));
+                var c2 = Expression.Call(prop, containsMethod, Expression.Constant("[" + id + ","));
+                var c3 = Expression.Call(prop, containsMethod, Expression.Constant("," + id + "]"));
+                var c4 = Expression.Call(prop, containsMethod, Expression.Constant("," + id + ","));
+
+                var anyForId = Expression.OrElse(Expression.OrElse(c1, c2), Expression.OrElse(c3, c4));
+                return Expression.AndAlso(notNull, anyForId);
+            }
+
+            if (parameters.ArtistId.HasValue)
+                clauses.Add(BuildJsonContainsExpression(nameof(MusicRelease.Artists), parameters.ArtistId.Value));
+
+            if (parameters.GenreId.HasValue)
+                clauses.Add(BuildJsonContainsExpression(nameof(MusicRelease.Genres), parameters.GenreId.Value));
+
+            // Kollection genres ORed together
+            if (kollectionGenreIds != null)
+            {
+                Expression? kollectionOr = null;
+                foreach (var gid in kollectionGenreIds)
+                {
+                    var expr = BuildJsonContainsExpression(nameof(MusicRelease.Genres), gid);
+                    kollectionOr = kollectionOr == null ? expr : Expression.OrElse(kollectionOr, expr);
+                }
+
+                if (kollectionOr != null)
+                    clauses.Add(kollectionOr);
+            }
+
+            if (parameters.LabelId.HasValue)
+            {
+                var prop = Expression.Property(param, nameof(MusicRelease.LabelId));
+                clauses.Add(Expression.Equal(prop, Expression.Constant(parameters.LabelId.Value, typeof(int?))));
+            }
+
+            if (parameters.CountryId.HasValue)
+            {
+                var prop = Expression.Property(param, nameof(MusicRelease.CountryId));
+                clauses.Add(Expression.Equal(prop, Expression.Constant(parameters.CountryId.Value, typeof(int?))));
+            }
+
+            if (parameters.FormatId.HasValue)
+            {
+                var prop = Expression.Property(param, nameof(MusicRelease.FormatId));
+                clauses.Add(Expression.Equal(prop, Expression.Constant(parameters.FormatId.Value, typeof(int?))));
+            }
+
+            if (parameters.Live.HasValue)
+            {
+                var prop = Expression.Property(param, nameof(MusicRelease.Live));
+                clauses.Add(Expression.Equal(prop, Expression.Constant(parameters.Live.Value)));
+            }
+
+            if (parameters.YearFrom.HasValue)
+            {
+                var prop = Expression.Property(param, nameof(MusicRelease.ReleaseYear));
+                var hasValue = Expression.Property(prop, "HasValue");
+                var value = Expression.Property(prop, "Value");
+                var compare = Expression.GreaterThanOrEqual(value, Expression.Constant(new DateTime(parameters.YearFrom.Value, 1, 1, 0, 0, 0, DateTimeKind.Utc)));
+                clauses.Add(Expression.AndAlso(hasValue, compare));
+            }
+
+            if (parameters.YearTo.HasValue)
+            {
+                var prop = Expression.Property(param, nameof(MusicRelease.ReleaseYear));
+                var hasValue = Expression.Property(prop, "HasValue");
+                var value = Expression.Property(prop, "Value");
+                var compare = Expression.LessThanOrEqual(value, Expression.Constant(new DateTime(parameters.YearTo.Value, 12, 31, 23, 59, 59, 999, DateTimeKind.Utc)));
+                clauses.Add(Expression.AndAlso(hasValue, compare));
+            }
+
+            if (!clauses.Any())
+                return null;
+
+            Expression combined = clauses[0];
+            for (int i = 1; i < clauses.Count; i++)
+                combined = Expression.AndAlso(combined, clauses[i]);
+
+            return Expression.Lambda<Func<MusicRelease, bool>>(combined, param);
         }
 
         public async Task<MusicReleaseDto?> GetMusicReleaseAsync(int id)
