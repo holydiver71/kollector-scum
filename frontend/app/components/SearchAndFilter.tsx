@@ -25,9 +25,10 @@ interface SearchAndFilterProps {
   showSearchInput?: boolean; // control rendering of the search input (header moved search)
   openAdvanced?: boolean; // allow external control of advanced filters visibility
   onAdvancedToggle?: (open: boolean) => void; // notify parent when advanced panel toggles
+  kollectionId?: number; // filter genres to only those in the kollection
 }
 
-export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync = false, showSearchInput = true, openAdvanced, onAdvancedToggle }: SearchAndFilterProps) {
+export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync = false, showSearchInput = true, openAdvanced, onAdvancedToggle, kollectionId }: SearchAndFilterProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [filters, setFilters] = useState<SearchFilters>(initialFilters || {});
@@ -331,6 +332,7 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
               <GenreDropdown
                 value={filters.genreId}
                 onSelect={(genre) => updateFilters({ genreId: genre?.id })}
+                kollectionId={kollectionId}
               />
             </div>
 

@@ -36,14 +36,32 @@ namespace KollectorScum.Api.Services
             // Apply individual filters from parameters
             if (_parameters.ArtistId.HasValue)
             {
-                _query = _query.Where(mr => mr.Artists != null && 
-                    mr.Artists.Contains(_parameters.ArtistId.Value.ToString()));
+                var id = _parameters.ArtistId.Value.ToString();
+                var exact = "[" + id + "]";
+                var start = "[" + id + ",";
+                var middle = "," + id + ",";
+                var end = "," + id + "]";
+
+                _query = _query.Where(mr => mr.Artists != null && (
+                    mr.Artists.Contains(exact) ||
+                    mr.Artists.Contains(start) ||
+                    mr.Artists.Contains(middle) ||
+                    mr.Artists.Contains(end)));
             }
 
             if (_parameters.GenreId.HasValue)
             {
-                _query = _query.Where(mr => mr.Genres != null && 
-                    mr.Genres.Contains(_parameters.GenreId.Value.ToString()));
+                var id = _parameters.GenreId.Value.ToString();
+                var exact = "[" + id + "]";
+                var start = "[" + id + ",";
+                var middle = "," + id + ",";
+                var end = "," + id + "]";
+
+                _query = _query.Where(mr => mr.Genres != null && (
+                    mr.Genres.Contains(exact) ||
+                    mr.Genres.Contains(start) ||
+                    mr.Genres.Contains(middle) ||
+                    mr.Genres.Contains(end)));
             }
 
             if (_parameters.LabelId.HasValue)
