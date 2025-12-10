@@ -143,7 +143,7 @@ export default function CollectionPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-transparent">
       {/* Page Header intentionally removed — header/hero provides page title and context */}
 
       {/* Main Content */}
