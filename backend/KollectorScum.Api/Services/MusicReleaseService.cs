@@ -56,16 +56,52 @@ namespace KollectorScum.Api.Services
                 labelId.HasValue || countryId.HasValue || formatId.HasValue || live.HasValue ||
                 yearFrom.HasValue || yearTo.HasValue)
             {
-                filter = mr => 
-                    (string.IsNullOrEmpty(search) || mr.Title.ToLower().Contains(search.ToLower())) &&
-                    (!artistId.HasValue || (mr.Artists != null && mr.Artists.Contains(artistId.Value.ToString()))) &&
-                    (!genreId.HasValue || (mr.Genres != null && mr.Genres.Contains(genreId.Value.ToString()))) &&
+                var searchLower = !string.IsNullOrEmpty(search) ? search.ToLower() : null;
+
+                string? artistExact = null, artistStart = null, artistMiddle = null, artistEnd = null;
+                if (artistId.HasValue)
+                {
+                    var id = artistId.Value.ToString();
+                    artistExact = "[" + id + "]";
+                    artistStart = "[" + id + ",";
+                    artistMiddle = "," + id + ",";
+                    artistEnd = "," + id + "]";
+                }
+
+                string? genreExact = null, genreStart = null, genreMiddle = null, genreEnd = null;
+                if (genreId.HasValue)
+                {
+                    var id = genreId.Value.ToString();
+                    genreExact = "[" + id + "]";
+                    genreStart = "[" + id + ",";
+                    genreMiddle = "," + id + ",";
+                    genreEnd = "," + id + "]";
+                }
+
+                DateTime? startDt = null, endDt = null;
+                if (yearFrom.HasValue)
+                {
+                    startDt = new DateTime(yearFrom.Value, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                }
+                if (yearTo.HasValue)
+                {
+                    endDt = new DateTime(yearTo.Value, 12, 31, 23, 59, 59, 999, DateTimeKind.Utc);
+                }
+
+                filter = mr =>
+                    (string.IsNullOrEmpty(searchLower) || mr.Title.ToLower().Contains(searchLower)) &&
+                    (!artistId.HasValue || (mr.Artists != null && (
+                        mr.Artists.Contains(artistExact) || mr.Artists.Contains(artistStart) ||
+                        mr.Artists.Contains(artistMiddle) || mr.Artists.Contains(artistEnd)))) &&
+                    (!genreId.HasValue || (mr.Genres != null && (
+                        mr.Genres.Contains(genreExact) || mr.Genres.Contains(genreStart) ||
+                        mr.Genres.Contains(genreMiddle) || mr.Genres.Contains(genreEnd)))) &&
                     (!labelId.HasValue || mr.LabelId == labelId.Value) &&
                     (!countryId.HasValue || mr.CountryId == countryId.Value) &&
                     (!formatId.HasValue || mr.FormatId == formatId.Value) &&
                     (!live.HasValue || mr.Live == live.Value) &&
-                    (!yearFrom.HasValue || (mr.ReleaseYear.HasValue && mr.ReleaseYear.Value >= new DateTime(yearFrom.Value, 1, 1, 0, 0, 0, DateTimeKind.Utc))) &&
-                    (!yearTo.HasValue || (mr.ReleaseYear.HasValue && mr.ReleaseYear.Value <= new DateTime(yearTo.Value, 12, 31, 23, 59, 59, 999, DateTimeKind.Utc)));
+                    (!yearFrom.HasValue || (mr.ReleaseYear.HasValue && mr.ReleaseYear.Value >= startDt.Value)) &&
+                    (!yearTo.HasValue || (mr.ReleaseYear.HasValue && mr.ReleaseYear.Value <= endDt.Value));
             }
 
             var pagedResult = await _musicReleaseRepository.GetPagedAsync(
