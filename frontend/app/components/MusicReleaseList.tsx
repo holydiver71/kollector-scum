@@ -5,8 +5,9 @@ import Image from "next/image";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { fetchJson, createNowPlaying } from "../lib/api";
 import { LoadingSpinner, Skeleton } from "./LoadingComponents";
-import { Play, Check, User, Clock, Calendar, Disc3, ChevronLeft, ChevronRight, Eye } from "lucide-react";
+import { Play, Check, User, Clock, Calendar, Disc3, ChevronLeft, ChevronRight, Eye, List } from "lucide-react";
 import SortPanel from "./SortPanel";
+import { AddToListDialog } from "./AddToListDialog";
 
 // Type definitions for music releases
 interface MusicRelease {
@@ -68,6 +69,7 @@ export const MusicReleaseCard = React.memo(function MusicReleaseCard({ release }
   const [imageError, setImageError] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showAddToList, setShowAddToList] = useState(false);
 
   const handleNowPlaying = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -84,6 +86,12 @@ export const MusicReleaseCard = React.memo(function MusicReleaseCard({ release }
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleAddToList = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowAddToList(true);
   };
 
   const releaseYear = new Date(release.releaseYear).getFullYear();
@@ -133,9 +141,24 @@ export const MusicReleaseCard = React.memo(function MusicReleaseCard({ release }
                 <Play className="w-5 h-5" />
               )}
             </button>
+
+            <button
+              onClick={handleAddToList}
+              className="bg-white text-[#D93611] rounded-full w-10 h-10 flex items-center justify-center hover:scale-110 transition-transform shadow-lg"
+              title="Add to list"
+            >
+              <List className="w-5 h-5" />
+            </button>
           </div>
         </div>
       </div>
+      
+      <AddToListDialog
+        releaseId={release.id}
+        releaseTitle={release.title}
+        isOpen={showAddToList}
+        onClose={() => setShowAddToList(false)}
+      />
       
       <div className="p-3">
         <h3 className="font-bold text-sm text-gray-900 truncate mb-0.5" title={release.title}>
