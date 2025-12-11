@@ -139,7 +139,6 @@ export function AddToListDialog({ releaseId, releaseTitle, isOpen, onClose }: Ad
                 placeholder="e.g., My Top 10 Metal Records"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D93611] focus:border-transparent mb-3"
                 disabled={submitting}
-                autoFocus
               />
               <div className="flex gap-2">
                 <button

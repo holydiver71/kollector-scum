@@ -31,44 +31,43 @@ export default function ListDetailPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadListAndReleases();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+    const loadListAndReleases = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-  const loadListAndReleases = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+        const listData = await getList(parseInt(id));
+        setList(listData);
 
-      const listData = await getList(parseInt(id));
-      setList(listData);
-
-      // Fetch releases for the list
-      if (listData.releaseIds.length > 0) {
-        // Create a query string with all release IDs
-        const idsParam = listData.releaseIds.join(',');
-        const params = new URLSearchParams({
-          ids: idsParam,
-          pageSize: listData.releaseIds.length.toString()
-        });
-        
-        const releasesData = await fetchJson<{ items: MusicRelease[] }>(`/api/musicreleases?${params.toString()}`);
-        
-        // Sort releases in the order they appear in the list
-        const sortedReleases = listData.releaseIds
-          .map(id => releasesData.items.find(r => r.id === id))
-          .filter((r): r is MusicRelease => r !== undefined);
-        
-        setReleases(sortedReleases);
-      } else {
-        setReleases([]);
+        // Fetch releases for the list
+        if (listData.releaseIds.length > 0) {
+          // Create a query string with all release IDs
+          const idsParam = listData.releaseIds.join(',');
+          const params = new URLSearchParams({
+            ids: idsParam,
+            pageSize: listData.releaseIds.length.toString()
+          });
+          
+          const releasesData = await fetchJson<{ items: MusicRelease[] }>(`/api/musicreleases?${params.toString()}`);
+          
+          // Sort releases in the order they appear in the list
+          const sortedReleases = listData.releaseIds
+            .map(id => releasesData.items.find(r => r.id === id))
+            .filter((r): r is MusicRelease => r !== undefined);
+          
+          setReleases(sortedReleases);
+        } else {
+          setReleases([]);
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load list");
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load list");
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    loadListAndReleases();
+  }, [id]);
 
   if (loading) {
     return (
