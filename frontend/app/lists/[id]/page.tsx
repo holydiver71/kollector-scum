@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { getList, fetchJson, removeReleaseFromList, type ListDto } from "../../lib/api";
+import { getList, fetchJson, type ListDto } from "../../lib/api";
 import { LoadingSpinner } from "../../components/LoadingComponents";
 import { MusicReleaseCard } from "../../components/MusicReleaseList";
 import { ArrowLeft } from "lucide-react";
@@ -23,7 +23,6 @@ interface MusicRelease {
 
 export default function ListDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const id = params.id as string;
 
   const [list, setList] = useState<ListDto | null>(null);
@@ -33,6 +32,7 @@ export default function ListDetailPage() {
 
   useEffect(() => {
     loadListAndReleases();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const loadListAndReleases = async () => {
