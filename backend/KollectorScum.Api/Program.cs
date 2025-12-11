@@ -89,6 +89,7 @@ builder.Services.AddScoped<IGenericCrudService<KollectorScum.Api.Models.Format, 
 builder.Services.AddScoped<IGenericCrudService<KollectorScum.Api.Models.Packaging, KollectorScum.Api.DTOs.PackagingDto>, PackagingService>();
 builder.Services.AddScoped<IGenericCrudService<KollectorScum.Api.Models.Store, KollectorScum.Api.DTOs.StoreDto>, StoreService>();
 builder.Services.AddScoped<IKollectionService, KollectionService>();
+builder.Services.AddScoped<IListService, ListService>();
 
 // Register business logic services
 builder.Services.AddScoped<IEntityResolverService, EntityResolverService>();
