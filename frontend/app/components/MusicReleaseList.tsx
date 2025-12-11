@@ -6,6 +6,7 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { fetchJson, createNowPlaying } from "../lib/api";
 import { LoadingSpinner, Skeleton } from "./LoadingComponents";
 import { Play, Check, User, Clock, Calendar, Disc3, ChevronLeft, ChevronRight, Eye } from "lucide-react";
+import SortPanel from "./SortPanel";
 
 // Type definitions for music releases
 interface MusicRelease {
@@ -182,6 +183,7 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
   const [totalPages, setTotalPages] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const [iconAnimating, setIconAnimating] = useState(false);
+  const [showSortOpen, setShowSortOpen] = useState<boolean>(false);
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -217,6 +219,12 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
     // run when search params / path / router or default values change
   }, [searchParams, pathname, router, effectiveFilters.sortBy, effectiveFilters.sortOrder]);
 
+  // Keep a small local state for the open state so the middle button updates visually
+  // immediately when clicked (router.replace updates searchParams asynchronously).
+  useEffect(() => {
+    setShowSortOpen(searchParams?.get('showSort') === 'true');
+  }, [searchParams]);
+
   // order matches the SortPanel button order (left-to-right)
   const sortOptions: { sortBy: string; sortOrder: string }[] = [
     { sortBy: 'title', sortOrder: 'asc' },
@@ -242,6 +250,92 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
         return order === 'desc' ? 'Original Release Year (Newest First)' : 'Original Release Year (Oldest First)';
       default:
         return 'Sort';
+    }
+  };
+
+  const renderSortIcon = () => {
+    const order = effectiveFilters.sortOrder === 'asc' ? 'asc' : 'desc';
+    switch (effectiveFilters.sortBy) {
+      case 'title':
+        return (
+          <div className="flex items-center gap-1">
+            <Disc3 className="w-5 h-5 text-white" />
+            {order === 'asc' ? (
+              <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                <polygon points="6,10 2.5,5 4.2,5 4.2,2 7.8,2 7.8,5 9.5,5" />
+              </svg>
+            ) : (
+              <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                <polygon points="6,2 9.5,7 7.8,7 7.8,10 4.2,10 4.2,7 2.5,7" />
+              </svg>
+            )}
+          </div>
+        );
+      case 'artist':
+        return (
+          <div className="flex items-center gap-1">
+            <User className="w-5 h-5 text-white" />
+            {order === 'asc' ? (
+              <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                <polygon points="6,10 2.5,5 4.2,5 4.2,2 7.8,2 7.8,5 9.5,5" />
+              </svg>
+            ) : (
+              <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                <polygon points="6,2 9.5,7 7.8,7 7.8,10 4.2,10 4.2,7 2.5,7" />
+              </svg>
+            )}
+          </div>
+        );
+      case 'dateadded':
+        return (
+          <div className="flex items-center gap-1">
+            <Clock className="w-5 h-5 text-white" />
+            {order === 'asc' ? (
+              <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                <polygon points="6,2 9.5,7 7.8,7 7.8,10 4.2,10 4.2,7 2.5,7" />
+              </svg>
+            ) : (
+              <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                <polygon points="6,10 2.5,5 4.2,5 4.2,2 7.8,2 7.8,5 9.5,5" />
+              </svg>
+            )}
+          </div>
+        );
+      case 'origreleaseyear':
+        return (
+          <div className="flex items-center gap-1">
+            <Calendar className="w-5 h-5 text-white" />
+            {order === 'asc' ? (
+              <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                <polygon points="6,2 9.5,7 7.8,7 7.8,10 4.2,10 4.2,7 2.5,7" />
+              </svg>
+            ) : (
+              <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                <polygon points="6,10 2.5,5 4.2,5 4.2,2 7.8,2 7.8,5 9.5,5" />
+              </svg>
+            )}
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const applySortChange = (newSort: { sortBy?: string; sortOrder?: string }) => {
+    // If a parent handler exists, defer to it
+    if (typeof onSortChange === 'function') {
+      onSortChange({ ...(filters || {}), ...(newSort || {}) });
+      return;
+    }
+
+    try {
+      const params = new URLSearchParams(searchParams ? searchParams.toString() : '');
+      if (newSort.sortBy) params.set('sortBy', newSort.sortBy);
+      if (newSort.sortOrder) params.set('sortOrder', newSort.sortOrder);
+      const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+      router.replace(newUrl, { scroll: false });
+    } catch (e) {
+      // ignore
     }
   };
 
@@ -406,7 +500,7 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
   return (
     <div>
       {/* Results Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className={`flex items-center justify-between ${searchParams?.get('showSort') === 'true' ? 'mb-4' : 'mb-6'}`}>
         <div className="text-sm text-gray-600">
           Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalCount)} of {totalCount} releases
         </div>
@@ -421,12 +515,31 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
               <ChevronLeft className="w-4 h-4 text-white" />
             </button>
 
-            <div
-              className={`px-1 py-1 flex items-center gap-2 text-sm transition-transform duration-200 w-16 justify-center`}
+            <button
+              type="button"
+              onClick={() => {
+                try {
+                  const params = new URLSearchParams(searchParams ? searchParams.toString() : '');
+                  const currently = params.get('showSort') === 'true';
+                  if (currently) {
+                    params.delete('showSort');
+                    setShowSortOpen(false);
+                  } else {
+                    params.set('showSort', 'true');
+                    setShowSortOpen(true);
+                  }
+                  const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+                  router.replace(newUrl, { scroll: false });
+                } catch (e) {
+                  // ignore
+                }
+              }}
               title={getSortLabel(effectiveFilters.sortBy, effectiveFilters.sortOrder)}
               aria-label={`Current sort: ${getSortLabel(effectiveFilters.sortBy, effectiveFilters.sortOrder)}`}
+              aria-expanded={showSortOpen}
+              className={`px-1 py-1 flex items-center gap-2 text-sm transition-transform duration-200 w-16 justify-center focus:outline-none`}
             >
-              <div className={`${iconAnimating ? 'scale-105 opacity-90' : 'scale-100 opacity-100'} inline-flex items-center justify-center rounded-md px-2 py-0.5 bg-[#F28A2E]/50`}> 
+              <div className={`${iconAnimating ? 'scale-105 opacity-90' : 'scale-100 opacity-100'} inline-flex items-center justify-center rounded-md px-2 py-0.5 ${showSortOpen ? 'bg-[#F28A2E]/50 hover:bg-[#F28A2E]/40 text-white' : 'bg-white/10 hover:bg-white/20 text-white'}`}> 
                 {loading ? (
                   <div className="flex items-center gap-1">
                     <div className="w-8 h-5 flex items-center justify-center">
@@ -435,79 +548,13 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
                   </div>
                 ) : (
                   (filters?.sortBy) ? (
-                    (() => {
-                      const order = effectiveFilters.sortOrder === 'asc' ? 'asc' : 'desc';
-                      switch (effectiveFilters.sortBy) {
-                        case 'title':
-                          return (
-                            <div className="flex items-center gap-1">
-                              <Disc3 className="w-5 h-5 text-white" />
-                              {order === 'asc' ? (
-                                <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                                  <polygon points="6,10 2.5,5 4.2,5 4.2,2 7.8,2 7.8,5 9.5,5" />
-                                </svg>
-                              ) : (
-                                <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                                  <polygon points="6,2 9.5,7 7.8,7 7.8,10 4.2,10 4.2,7 2.5,7" />
-                                </svg>
-                              )}
-                            </div>
-                          );
-                        case 'artist':
-                          return (
-                            <div className="flex items-center gap-1">
-                              <User className="w-5 h-5 text-white" />
-                              {order === 'asc' ? (
-                                <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                                  <polygon points="6,10 2.5,5 4.2,5 4.2,2 7.8,2 7.8,5 9.5,5" />
-                                </svg>
-                              ) : (
-                                <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                                  <polygon points="6,2 9.5,7 7.8,7 7.8,10 4.2,10 4.2,7 2.5,7" />
-                                </svg>
-                              )}
-                            </div>
-                          );
-                        case 'dateadded':
-                          return (
-                            <div className="flex items-center gap-1">
-                              <Clock className="w-5 h-5 text-white" />
-                              {order === 'asc' ? (
-                                <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                                  <polygon points="6,2 9.5,7 7.8,7 7.8,10 4.2,10 4.2,7 2.5,7" />
-                                </svg>
-                              ) : (
-                                <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                                  <polygon points="6,10 2.5,5 4.2,5 4.2,2 7.8,2 7.8,5 9.5,5" />
-                                </svg>
-                              )}
-                            </div>
-                          );
-                        case 'origreleaseyear':
-                          return (
-                            <div className="flex items-center gap-1">
-                              <Calendar className="w-5 h-5 text-white" />
-                              {order === 'asc' ? (
-                                <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                                  <polygon points="6,2 9.5,7 7.8,7 7.8,10 4.2,10 4.2,7 2.5,7" />
-                                </svg>
-                              ) : (
-                                <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                                  <polygon points="6,10 2.5,5 4.2,5 4.2,2 7.8,2 7.8,5 9.5,5" />
-                                </svg>
-                              )}
-                            </div>
-                          );
-                        default:
-                          return null;
-                      }
-                    })()
+                    renderSortIcon()
                   ) : (
                     <div className="text-sm">Sort</div>
                   )
                 )}
               </div>
-            </div>
+            </button>
 
             <button
               type="button"
@@ -522,6 +569,26 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
           {/* loading spinner is shown in the middle segment to avoid layout shift */}
         </div>
       </div>
+
+      {searchParams?.get('showSort') === 'true' && (
+        <div className="w-full mt-0 mb-4">
+          <SortPanel
+            filters={filters}
+            onChange={(newSort) => applySortChange(newSort)}
+            open={true}
+            onClose={() => {
+              try {
+                const params = new URLSearchParams(searchParams ? searchParams.toString() : '');
+                params.delete('showSort');
+                const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+                router.replace(newUrl, { scroll: false });
+              } catch (e) {
+                // ignore
+              }
+            }}
+          />
+        </div>
+      )}
 
       {/* Release Cards - Grid matching mock-up */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 mb-8">
