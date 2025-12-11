@@ -2,7 +2,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { SearchAndFilter } from "../components/SearchAndFilter";
-import SortPanel from "../components/SortPanel";
 import { useLookupData } from "../components/LookupComponents";
 import { MusicReleaseList } from "../components/MusicReleaseList";
 import { X } from "lucide-react";
@@ -172,14 +171,7 @@ export default function CollectionPage() {
               />
             )}
 
-            {showSortFromParams && (
-              <SortPanel
-                filters={filters}
-                onChange={(newSort) => handleFiltersChange({ ...filters, ...newSort })}
-                open={showSortFromParams}
-                onClose={() => handleSortToggle(false)}
-              />
-            )}
+            {/* Sort panel is rendered inside `MusicReleaseList` so it appears below the header */}
 
             {/* Active filters display (show currently applied filters as chips) */}
             {hasAppliedFilters && (
