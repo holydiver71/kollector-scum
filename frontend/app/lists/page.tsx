@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getLists, deleteList, updateList, createList, type ListSummaryDto } from "../lib/api";
 import { LoadingSpinner } from "../components/LoadingComponents";
@@ -8,7 +7,6 @@ import { Plus, Edit2, Trash2, Check, X } from "lucide-react";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 
 export default function ListsPage() {
-  const router = useRouter();
   const [lists, setLists] = useState<ListSummaryDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +42,15 @@ export default function ListsPage() {
       setSubmitting(true);
       setError(null);
       const newList = await createList({ name: newListName.trim() });
-      setLists(prev => [newList, ...prev]);
+      // Convert ListDto to ListSummaryDto
+      const newListSummary: ListSummaryDto = {
+        id: newList.id,
+        name: newList.name,
+        releaseCount: 0, // New list has no releases
+        createdAt: newList.createdAt,
+        lastModified: newList.lastModified
+      };
+      setLists(prev => [newListSummary, ...prev]);
       setNewListName("");
       setShowCreateForm(false);
     } catch (err) {
