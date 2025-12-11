@@ -68,6 +68,16 @@ namespace KollectorScum.Api.Data
         public DbSet<Models.KollectionGenre> KollectionGenres { get; set; }
 
         /// <summary>
+        /// Gets or sets the Lists DbSet
+        /// </summary>
+        public DbSet<Models.List> Lists { get; set; }
+
+        /// <summary>
+        /// Gets or sets the ListReleases DbSet
+        /// </summary>
+        public DbSet<Models.ListRelease> ListReleases { get; set; }
+
+        /// <summary>
         /// Configure the database model and relationships
         /// </summary>
         /// <param name="modelBuilder">The model builder</param>
@@ -160,6 +170,28 @@ namespace KollectorScum.Api.Data
                 .HasIndex(k => k.Name)
                 .IsUnique()
                 .HasDatabaseName("IX_Kollections_Name");
+
+            // Configure List relationships
+            modelBuilder.Entity<Models.List>()
+                .HasIndex(l => l.Name)
+                .HasDatabaseName("IX_Lists_Name");
+
+            modelBuilder.Entity<Models.ListRelease>()
+                .HasIndex(lr => new { lr.ListId, lr.ReleaseId })
+                .IsUnique()
+                .HasDatabaseName("IX_ListReleases_ListId_ReleaseId");
+
+            modelBuilder.Entity<Models.ListRelease>()
+                .HasOne(lr => lr.List)
+                .WithMany(l => l.ListReleases)
+                .HasForeignKey(lr => lr.ListId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Models.ListRelease>()
+                .HasOne(lr => lr.Release)
+                .WithMany()
+                .HasForeignKey(lr => lr.ReleaseId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
