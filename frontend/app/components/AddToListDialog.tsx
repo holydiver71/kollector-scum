@@ -64,7 +64,15 @@ export function AddToListDialog({ releaseId, releaseTitle, isOpen, onClose }: Ad
       setError(null);
       const newList = await createList({ name: newListName.trim() });
       await addReleaseToList(newList.id, releaseId);
-      setLists(prev => [newList, ...prev]);
+      // Convert ListDto to ListSummaryDto
+      const newListSummary: ListSummaryDto = {
+        id: newList.id,
+        name: newList.name,
+        releaseCount: 1, // We just added one release
+        createdAt: newList.createdAt,
+        lastModified: newList.lastModified
+      };
+      setLists(prev => [newListSummary, ...prev]);
       setReleaseLists(prev => [...prev, newList.id]);
       setNewListName("");
       setShowNewListForm(false);
