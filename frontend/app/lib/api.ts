@@ -420,3 +420,133 @@ export async function deleteKollection(id: number): Promise<void> {
     parse: false,
   });
 }
+
+// Lists
+export interface ListSummaryDto {
+  id: number;
+  name: string;
+  releaseCount: number;
+  createdAt: string;
+  lastModified: string;
+}
+
+export interface ListDto {
+  id: number;
+  name: string;
+  createdAt: string;
+  lastModified: string;
+  releaseIds: number[];
+}
+
+export interface CreateListDto {
+  name: string;
+}
+
+export interface UpdateListDto {
+  name: string;
+}
+
+/**
+ * Gets all lists
+ * @returns List of list summaries
+ */
+export async function getLists(): Promise<ListSummaryDto[]> {
+  return fetchJson<ListSummaryDto[]>('/api/lists');
+}
+
+/**
+ * Gets a specific list by ID
+ * @param id - The list ID
+ * @returns List details
+ */
+export async function getList(id: number): Promise<ListDto> {
+  return fetchJson<ListDto>(`/api/lists/${id}`);
+}
+
+/**
+ * Gets release IDs in a specific list
+ * @param id - The list ID
+ * @returns List of release IDs
+ */
+export async function getListReleases(id: number): Promise<number[]> {
+  return fetchJson<number[]>(`/api/lists/${id}/releases`);
+}
+
+/**
+ * Creates a new list
+ * @param data - The list creation data
+ * @returns The created list
+ */
+export async function createList(data: CreateListDto): Promise<ListDto> {
+  return fetchJson<ListDto>('/api/lists', {
+    method: 'POST',
+    body: JSON.stringify(data),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+}
+
+/**
+ * Updates an existing list
+ * @param id - The list ID
+ * @param data - The updated list data
+ * @returns The updated list
+ */
+export async function updateList(id: number, data: UpdateListDto): Promise<ListDto> {
+  return fetchJson<ListDto>(`/api/lists/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+}
+
+/**
+ * Deletes a list
+ * @param id - The list ID
+ */
+export async function deleteList(id: number): Promise<void> {
+  return fetchJson<void>(`/api/lists/${id}`, {
+    method: 'DELETE',
+    parse: false,
+  });
+}
+
+/**
+ * Adds a release to a list
+ * @param listId - The list ID
+ * @param releaseId - The release ID
+ */
+export async function addReleaseToList(listId: number, releaseId: number): Promise<void> {
+  return fetchJson<void>(`/api/lists/${listId}/releases`, {
+    method: 'POST',
+    body: JSON.stringify({ releaseId }),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    parse: false,
+  });
+}
+
+/**
+ * Removes a release from a list
+ * @param listId - The list ID
+ * @param releaseId - The release ID
+ */
+export async function removeReleaseFromList(listId: number, releaseId: number): Promise<void> {
+  return fetchJson<void>(`/api/lists/${listId}/releases/${releaseId}`, {
+    method: 'DELETE',
+    parse: false,
+  });
+}
+
+/**
+ * Gets all lists that contain a specific release
+ * @param releaseId - The release ID
+ * @returns List of list summaries
+ */
+export async function getListsForRelease(releaseId: number): Promise<ListSummaryDto[]> {
+  return fetchJson<ListSummaryDto[]>(`/api/lists/by-release/${releaseId}`);
+}
