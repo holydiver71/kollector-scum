@@ -40,6 +40,15 @@ var jwtSettings = builder.Configuration.GetSection("Jwt");
 var jwtKey = jwtSettings["Key"];
 if (!string.IsNullOrEmpty(jwtKey))
 {
+    // Warn if using placeholder key in production
+    if (!builder.Environment.IsDevelopment() && 
+        (jwtKey.Contains("YourSecureKeyHere") || jwtKey.Contains("ChangeInProduction")))
+    {
+        throw new InvalidOperationException(
+            "JWT Key must be changed from default value in production. " +
+            "Set the Jwt:Key configuration to a secure random string of at least 32 characters.");
+    }
+
     builder.Services.AddAuthentication(options =>
     {
         options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;

@@ -3,7 +3,7 @@
 import { fetchJson } from './api';
 
 // Store token in localStorage (fallback, prefer httpOnly cookies in production)
-const TOKEN_KEY = 'auth_token';
+export const TOKEN_KEY = 'auth_token';
 
 /**
  * Gets the stored JWT token
