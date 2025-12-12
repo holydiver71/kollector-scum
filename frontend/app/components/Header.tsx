@@ -51,6 +51,12 @@ export default function Header() {
     
     const newUrl = params.toString() ? `/collection?${params.toString()}` : '/collection';
     router.push(newUrl);
+    try {
+      if (kollectionId === 'all') localStorage.removeItem('kollectionId');
+      else localStorage.setItem('kollectionId', kollectionId);
+    } catch (e) {
+      // ignore storage errors (e.g., SSR or strict privacy)
+    }
   };
   return (
     <header
@@ -61,24 +67,7 @@ export default function Header() {
       <div className="absolute inset-0 bg-black/40" />
 
       <div className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-4">
-        {/* Top-right kollection selector (no label) */}
-        {isMusicCollection && !loadingKollections && kollections.length > 0 && (
-          <div className="absolute right-6 top-4 z-20">
-            <select
-              id="kollection-select"
-              value={selectedKollectionId || 'all'}
-              onChange={(e) => handleKollectionChange(e.target.value)}
-              className="w-40 md:w-48 px-3 py-2 bg-white/10 backdrop-blur-sm text-white border border-white/20 rounded-md focus:outline-none focus:ring-2 focus:ring-white/50"
-            >
-              <option value="all" className="text-gray-900">All Music</option>
-              {kollections.map((kollection) => (
-                <option key={kollection.id} value={kollection.id} className="text-gray-900">
-                  {kollection.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+        {/* Kollection selector (moved next to search input) — rendered inline with QuickSearch */}
         <div className="flex flex-col md:flex-row items-start gap-2 md:gap-4">
           <Link href="/" aria-label="Home" className="block">
             <img
@@ -120,6 +109,23 @@ export default function Header() {
                   }}
                 />
               </div>
+              {isMusicCollection && !loadingKollections && kollections.length > 0 && (
+                <div className="flex-shrink-0">
+                  <select
+                    id="kollection-select"
+                    value={selectedKollectionId || 'all'}
+                    onChange={(e) => handleKollectionChange(e.target.value)}
+                    className="w-40 md:w-48 px-3 py-2 bg-white/10 backdrop-blur-sm text-white border border-white/20 rounded-md focus:outline-none focus:ring-2 focus:ring-white/50"
+                  >
+                    <option value="all" className="text-gray-900">All Music</option>
+                    {kollections.map((kollection) => (
+                      <option key={kollection.id} value={kollection.id} className="text-gray-900">
+                        {kollection.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               {/* Filters button moved into collection header controls */}
               {/* Sort button removed — sort is now controlled inside the collection list */}
             </div>
