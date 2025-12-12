@@ -120,53 +120,7 @@ export default function Header() {
                   }}
                 />
               </div>
-              {isMusicCollection && (
-                <button
-                  type="button"
-                  onClick={() => {
-                  // Preserve relevant filter/sort query params and merge header search
-                  const preserveKeys = [
-                    'search','artistId','genreId','labelId','countryId','formatId',
-                    'live','yearFrom','yearTo','sortBy','sortOrder'
-                  ];
-
-                  const incoming = searchParams ?? new URLSearchParams();
-                  const params = new URLSearchParams();
-                  preserveKeys.forEach((k) => {
-                    const v = incoming.get(k);
-                    if (v !== null && v !== undefined) params.set(k, v);
-                  });
-
-                  // header input should override any existing search param
-                  if (headerQuery) params.set('search', headerQuery);
-
-                  if (pathname === '/collection') {
-                    // toggle `showAdvanced`
-                    const currentlyOpen = incoming.get('showAdvanced') === 'true';
-                    // toggle: if currently open -> remove, else set to true
-                    if (currentlyOpen) params.delete('showAdvanced');
-                    else params.set('showAdvanced', 'true');
-
-                    const newUrl = params.toString() ? `/collection?${params.toString()}` : '/collection';
-                    router.replace(newUrl, { scroll: false });
-                    return;
-                  }
-
-                  // not on collection — open collection with filters and preserved search
-                  params.set('showAdvanced', 'true');
-                  const newUrl = params.toString() ? `/collection?${params.toString()}` : '/collection';
-                  router.push(newUrl);
-                  }}
-                  className={`inline-flex items-center gap-2 px-3 py-2 rounded-md text-white cursor-pointer ${filtersOpen ? 'bg-[#F28A2E]/50 hover:bg-[#F28A2E]/40' : 'bg-white/10 hover:bg-white/20'}`}
-                  aria-label="Open filters"
-                  title="Open filters"
-                >
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h18M6 12h12M10 19h4" />
-                  </svg>
-                  <span className="hidden sm:inline">Filters</span>
-                </button>
-              )}
+              {/* Filters button moved into collection header controls */}
               {/* Sort button removed — sort is now controlled inside the collection list */}
             </div>
           </div>
