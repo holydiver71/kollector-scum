@@ -83,6 +83,37 @@ namespace KollectorScum.Api.Services
         }
 
         /// <summary>
+        /// Generic search for releases with various parameters
+        /// </summary>
+        public async Task<List<DiscogsSearchResultDto>> SearchGenericAsync(
+            string? query = null,
+            string? type = null,
+            string? genre = null,
+            string? style = null,
+            string? country = null,
+            int? year = null,
+            string? format = null)
+        {
+            try
+            {
+                _logger.LogInformation("Searching Discogs (Generic): Query={Query}, Type={Type}, Genre={Genre}, Year={Year}", 
+                    query, type, genre, year);
+
+                var jsonResponse = await _httpClient.SearchGenericAsync(query, type, genre, style, country, year, format);
+                var results = _mapper.MapSearchResults(jsonResponse);
+
+                _logger.LogInformation("Found {Count} results for generic search", results.Count);
+
+                return results;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in DiscogsService.SearchGenericAsync");
+                throw;
+            }
+        }
+
+        /// <summary>
         /// Get detailed information about a specific release
         /// </summary>
         public async Task<DiscogsReleaseDto?> GetReleaseDetailsAsync(string releaseId)
