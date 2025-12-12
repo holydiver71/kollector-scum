@@ -26,9 +26,10 @@ interface SearchAndFilterProps {
   openAdvanced?: boolean; // allow external control of advanced filters visibility
   onAdvancedToggle?: (open: boolean) => void; // notify parent when advanced panel toggles
   kollectionId?: number; // filter genres to only those in the kollection
+  compact?: boolean; // render with reduced padding/spacing for inline placement
 }
 
-export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync = false, showSearchInput = true, openAdvanced, onAdvancedToggle, kollectionId }: SearchAndFilterProps) {
+export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync = false, showSearchInput = true, openAdvanced, onAdvancedToggle, kollectionId, compact = false }: SearchAndFilterProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [filters, setFilters] = useState<SearchFilters>(initialFilters || {});
@@ -210,13 +211,13 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
 
   return (
     <div 
-      className="relative bg-cover bg-center rounded-lg border border-white/10 p-4 mb-4 sm:p-6 text-white overflow-hidden"
+      className={`relative bg-cover bg-center rounded-lg border border-white/10 ${compact ? 'px-4 py-1 mb-0 sm:py-1' : 'p-4 mb-4 sm:p-6'} text-white overflow-visible`}
       style={{ backgroundImage: "url('/images/Kollector-Skum-bg.png')" }}
     >
       {/* dark overlay for legibility */}
       <div className="absolute inset-0 bg-black/70" />
 
-      <div className="relative z-10 space-y-4">
+      <div className={`relative z-10 ${compact ? 'space-y-2' : 'space-y-4'}`}>
         {/* Search Input with Autocomplete */}
         {showSearchInput && (
         <div>
@@ -282,14 +283,11 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
           className={`transition-all duration-200 ease-in-out overflow-hidden ${
             showAdvanced
               ? 'max-h-[1200px] opacity-100 translate-y-0 py-1'
-              : 'max-h-0 opacity-0 -translate-y-2 py-0'
+              : 'max-h-0 opacity-0 -translate-y-0 py-0'
           }`}
         >
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-gray-200 flex items-center gap-2">
-              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-              </svg>
+          <div className={`flex items-center justify-between ${compact ? 'mb-1' : 'mb-3'}`}>
+            <h3 className="text-sm font-semibold text-gray-200">
               Filters
             </h3>
             <button
