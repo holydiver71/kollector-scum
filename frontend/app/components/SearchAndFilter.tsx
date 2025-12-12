@@ -211,7 +211,7 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
 
   return (
     <div 
-      className={`relative bg-cover bg-center rounded-lg border border-white/10 ${compact ? 'px-4 py-1 mb-0 sm:py-1' : 'p-4 mb-4 sm:p-6'} text-white overflow-hidden`}
+      className={`relative bg-cover bg-center rounded-lg border border-white/10 ${compact ? 'px-4 py-1 mb-0 sm:py-1' : 'p-4 mb-4 sm:p-6'} text-white overflow-visible`}
       style={{ backgroundImage: "url('/images/Kollector-Skum-bg.png')" }}
     >
       {/* dark overlay for legibility */}

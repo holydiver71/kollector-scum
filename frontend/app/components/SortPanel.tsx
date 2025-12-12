@@ -37,8 +37,8 @@ export default function SortPanel({
     <div
       aria-hidden={!open}
       className={`transition-all duration-200 ease-in-out overflow-hidden ${
-        open ? 'max-h-[400px] opacity-100 translate-y-0' : 'max-h-0 opacity-0 -translate-y-0'
-      } bg-gradient-to-br from-red-900 via-red-950 to-black rounded-lg border border-white/10 px-4 py-1 mb-0 text-white w-full`}
+        open ? 'max-h-[640px] opacity-100 translate-y-0' : 'max-h-0 opacity-0 -translate-y-0'
+      } bg-gradient-to-br from-red-900 via-red-950 to-black rounded-lg border border-white/10 px-4 py-4 mb-0 text-white w-full`}
     >
       <div className="flex items-center justify-between">
         <h3
