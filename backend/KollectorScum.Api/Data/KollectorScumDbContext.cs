@@ -78,6 +78,16 @@ namespace KollectorScum.Api.Data
         public DbSet<Models.ListRelease> ListReleases { get; set; }
 
         /// <summary>
+        /// Gets or sets the ApplicationUsers DbSet
+        /// </summary>
+        public DbSet<Models.ApplicationUser> ApplicationUsers { get; set; }
+
+        /// <summary>
+        /// Gets or sets the UserProfiles DbSet
+        /// </summary>
+        public DbSet<Models.UserProfile> UserProfiles { get; set; }
+
+        /// <summary>
         /// Configure the database model and relationships
         /// </summary>
         /// <param name="modelBuilder">The model builder</param>
@@ -192,6 +202,34 @@ namespace KollectorScum.Api.Data
                 .WithMany()
                 .HasForeignKey(lr => lr.ReleaseId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure ApplicationUser relationships
+            modelBuilder.Entity<Models.ApplicationUser>()
+                .HasIndex(u => u.GoogleSub)
+                .IsUnique()
+                .HasDatabaseName("IX_ApplicationUsers_GoogleSub");
+
+            modelBuilder.Entity<Models.ApplicationUser>()
+                .HasIndex(u => u.Email)
+                .HasDatabaseName("IX_ApplicationUsers_Email");
+
+            // Configure UserProfile relationships
+            modelBuilder.Entity<Models.UserProfile>()
+                .HasIndex(up => up.UserId)
+                .IsUnique()
+                .HasDatabaseName("IX_UserProfiles_UserId");
+
+            modelBuilder.Entity<Models.UserProfile>()
+                .HasOne(up => up.User)
+                .WithOne(u => u.UserProfile)
+                .HasForeignKey<Models.UserProfile>(up => up.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Models.UserProfile>()
+                .HasOne(up => up.SelectedKollection)
+                .WithMany()
+                .HasForeignKey(up => up.SelectedKollectionId)
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }
