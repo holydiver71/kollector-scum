@@ -79,6 +79,42 @@ namespace KollectorScum.Api.Services
         }
 
         /// <summary>
+        /// Generic search for releases with various parameters
+        /// </summary>
+        public async Task<string?> SearchGenericAsync(
+            string? query = null,
+            string? type = null,
+            string? genre = null,
+            string? style = null,
+            string? country = null,
+            int? year = null,
+            string? format = null)
+        {
+            try
+            {
+                _logger.LogInformation("Searching Discogs (Generic): Query={Query}, Type={Type}, Genre={Genre}, Year={Year}", 
+                    query, type, genre, year);
+
+                var requestUri = BuildGenericSearchRequestUri(query, type, genre, style, country, year, format);
+                var response = await _httpClient.GetAsync(requestUri);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("Discogs API returned status code: {StatusCode}", response.StatusCode);
+                    return null;
+                }
+
+                var content = await response.Content.ReadAsStringAsync();
+                return content;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error searching Discogs (Generic)");
+                throw;
+            }
+        }
+
+        /// <summary>
         /// Get detailed information about a specific release
         /// </summary>
         public async Task<string?> GetReleaseDetailsAsync(string releaseId)
@@ -134,6 +170,42 @@ namespace KollectorScum.Api.Services
 
             if (year.HasValue)
                 queryParams.Add($"year={year.Value}");
+
+            var queryString = string.Join("&", queryParams);
+            return $"/database/search?{queryString}";
+        }
+
+        private string BuildGenericSearchRequestUri(
+            string? query,
+            string? type,
+            string? genre,
+            string? style,
+            string? country,
+            int? year,
+            string? format)
+        {
+            var queryParams = new List<string>();
+
+            if (!string.IsNullOrEmpty(query))
+                queryParams.Add($"q={Uri.EscapeDataString(query)}");
+
+            if (!string.IsNullOrEmpty(type))
+                queryParams.Add($"type={Uri.EscapeDataString(type)}");
+
+            if (!string.IsNullOrEmpty(genre))
+                queryParams.Add($"genre={Uri.EscapeDataString(genre)}");
+
+            if (!string.IsNullOrEmpty(style))
+                queryParams.Add($"style={Uri.EscapeDataString(style)}");
+
+            if (!string.IsNullOrEmpty(country))
+                queryParams.Add($"country={Uri.EscapeDataString(country)}");
+
+            if (year.HasValue)
+                queryParams.Add($"year={year.Value}");
+
+            if (!string.IsNullOrEmpty(format))
+                queryParams.Add($"format={Uri.EscapeDataString(format)}");
 
             var queryString = string.Join("&", queryParams);
             return $"/database/search?{queryString}";
