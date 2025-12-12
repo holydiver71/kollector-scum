@@ -45,6 +45,33 @@ namespace KollectorScum.Api.Controllers
         }
 
         /// <summary>
+        /// Clears the database and populates it with random releases from Discogs
+        /// </summary>
+        /// <param name="count">Number of releases to seed (default: 200)</param>
+        /// <returns>Result of seeding operation</returns>
+        [HttpPost("discogs-random")]
+        public async Task<ActionResult> SeedFromDiscogs([FromQuery] int count = 200)
+        {
+            try
+            {
+                _logger.LogInformation("Starting random Discogs seeding via API. Count: {Count}", count);
+                
+                // 1. Clear Database
+                await _seedingOrchestrator.ClearDatabaseAsync();
+                
+                // 2. Seed from Discogs
+                var seededCount = await _seedingOrchestrator.SeedFromDiscogsAsync(count);
+                
+                return Ok(new { Message = "Discogs random seeding completed successfully", SeededCount = seededCount });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred during Discogs random seeding");
+                return StatusCode(500, new { Message = "Error occurred during seeding", Error = ex.Message });
+            }
+        }
+
+        /// <summary>
         /// Seeds country data from JSON file (deprecated - use lookup-data endpoint)
         /// </summary>
         /// <returns>Result of seeding operation</returns>
