@@ -159,17 +159,8 @@ export default function CollectionPage() {
             {/* Only render the SearchAndFilter panel when the advanced filters are visible
                 or when the inline search input is required. This removes the empty white
                 panel when filters are hidden (header handles search and the page shows chips). */}
-            {showAdvancedFromParams && (
-              <SearchAndFilter
-                onFiltersChange={handleFiltersChange}
-                initialFilters={filters}
-                enableUrlSync={false}
-                showSearchInput={false}
-                openAdvanced={showAdvancedFromParams}
-                onAdvancedToggle={handleAdvancedToggle}
-                kollectionId={filters.kollectionId}
-              />
-            )}
+            {/* Advanced filters are rendered inside MusicReleaseList so they appear inline between
+                the sort control and the grid of release cards. */}
 
             {/* Sort panel is rendered inside `MusicReleaseList` so it appears below the header */}
 
