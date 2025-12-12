@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X, Plus, Check } from "lucide-react";
 import { getLists, addReleaseToList, createList, getListsForRelease, type ListSummaryDto } from "../lib/api";
 
@@ -19,12 +20,29 @@ export function AddToListDialog({ releaseId, releaseTitle, isOpen, onClose }: Ad
   const [newListName, setNewListName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [addingToList, setAddingToList] = useState<number | null>(null);
+  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
     if (isOpen) {
       loadLists();
     }
   }, [isOpen, releaseId]);
+
+  // Create a container element on mount for the portal so the modal is rendered
+  // at the document body level and is not affected by transformed ancestors.
+  useEffect(() => {
+    const el = document.createElement('div');
+    document.body.appendChild(el);
+    setPortalContainer(el);
+    return () => {
+      try {
+        document.body.removeChild(el);
+      } catch {
+        // ignore
+      }
+      setPortalContainer(null);
+    };
+  }, []);
 
   const loadLists = async () => {
     try {
@@ -83,9 +101,9 @@ export function AddToListDialog({ releaseId, releaseTitle, isOpen, onClose }: Ad
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !portalContainer) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[80vh] overflow-hidden flex flex-col">
         {/* Header */}
@@ -218,6 +236,7 @@ export function AddToListDialog({ releaseId, releaseTitle, isOpen, onClose }: Ad
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    portalContainer
   );
 }
