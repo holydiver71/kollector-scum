@@ -1,5 +1,6 @@
 "use client";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useLayoutEffect } from "react";
+import { createPortal } from 'react-dom';
 import { fetchJson } from "../lib/api";
 
 // Type definitions for lookup data
@@ -57,6 +58,9 @@ export function LookupDropdown<T extends LookupItem>({
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties | null>(null);
 
   const filteredItems = searchable 
     ? items.filter(item => 
@@ -68,9 +72,10 @@ export function LookupDropdown<T extends LookupItem>({
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
-      }
+      const target = e.target as Node;
+      const insideContainer = containerRef.current && containerRef.current.contains(target);
+      const insideDropdown = dropdownRef.current && dropdownRef.current.contains(target);
+      if (!insideContainer && !insideDropdown) setIsOpen(false);
     };
 
     const handleEscape = (e: KeyboardEvent) => {
@@ -85,9 +90,35 @@ export function LookupDropdown<T extends LookupItem>({
     };
   }, []);
 
+  // Position the portal dropdown so it aligns with the button
+  const updateDropdownPosition = () => {
+    const btn = buttonRef.current;
+    if (!btn) return setDropdownStyle(null);
+    const r = btn.getBoundingClientRect();
+    setDropdownStyle({
+      position: 'absolute',
+      top: `${r.bottom + window.scrollY}px`,
+      left: `${r.left + window.scrollX}px`,
+      width: `${r.width}px`,
+      zIndex: 9999,
+    });
+  };
+
+  useLayoutEffect(() => {
+    if (!isOpen) return;
+    updateDropdownPosition();
+    window.addEventListener('resize', updateDropdownPosition);
+    window.addEventListener('scroll', updateDropdownPosition, true);
+    return () => {
+      window.removeEventListener('resize', updateDropdownPosition);
+      window.removeEventListener('scroll', updateDropdownPosition, true);
+    };
+  }, [isOpen]);
+
   return (
     <div ref={containerRef} className={`relative ${className}`}>
       <button
+        ref={buttonRef}
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         disabled={loading}
@@ -103,8 +134,8 @@ export function LookupDropdown<T extends LookupItem>({
         </span>
       </button>
 
-      {isOpen && (
-        <div className="absolute z-50 mt-1 w-full bg-neutral-900 border border-white/10 rounded-md shadow-lg backdrop-blur-xl">
+      {isOpen && dropdownStyle && createPortal(
+        <div ref={dropdownRef} style={dropdownStyle} className="bg-neutral-900 border border-white/10 rounded-md shadow-lg backdrop-blur-xl">
           {searchable && (
             <div className="p-2">
               <input
@@ -152,7 +183,8 @@ export function LookupDropdown<T extends LookupItem>({
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

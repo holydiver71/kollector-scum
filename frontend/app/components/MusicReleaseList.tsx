@@ -6,8 +6,10 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { fetchJson, createNowPlaying } from "../lib/api";
 import { LoadingSpinner, Skeleton } from "./LoadingComponents";
 import { Play, Check, User, Clock, Calendar, Disc3, ChevronLeft, ChevronRight, Eye, List } from "lucide-react";
+
 import SortPanel from "./SortPanel";
 import { AddToListDialog } from "./AddToListDialog";
+import { SearchAndFilter } from "./SearchAndFilter";
 
 // Type definitions for music releases
 interface MusicRelease {
@@ -284,11 +286,11 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
           <div className="flex items-center gap-1">
             <Disc3 className="w-5 h-5 text-white" />
             {order === 'asc' ? (
-              <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+              <svg className="w-4 h-4 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
                 <polygon points="6,10 2.5,5 4.2,5 4.2,2 7.8,2 7.8,5 9.5,5" />
               </svg>
             ) : (
-              <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+              <svg className="w-4 h-4 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
                 <polygon points="6,2 9.5,7 7.8,7 7.8,10 4.2,10 4.2,7 2.5,7" />
               </svg>
             )}
@@ -299,11 +301,11 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
           <div className="flex items-center gap-1">
             <User className="w-5 h-5 text-white" />
             {order === 'asc' ? (
-              <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+              <svg className="w-4 h-4 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
                 <polygon points="6,10 2.5,5 4.2,5 4.2,2 7.8,2 7.8,5 9.5,5" />
               </svg>
             ) : (
-              <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+              <svg className="w-4 h-4 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
                 <polygon points="6,2 9.5,7 7.8,7 7.8,10 4.2,10 4.2,7 2.5,7" />
               </svg>
             )}
@@ -314,11 +316,11 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
           <div className="flex items-center gap-1">
             <Clock className="w-5 h-5 text-white" />
             {order === 'asc' ? (
-              <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+              <svg className="w-4 h-4 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
                 <polygon points="6,2 9.5,7 7.8,7 7.8,10 4.2,10 4.2,7 2.5,7" />
               </svg>
             ) : (
-              <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+              <svg className="w-4 h-4 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
                 <polygon points="6,10 2.5,5 4.2,5 4.2,2 7.8,2 7.8,5 9.5,5" />
               </svg>
             )}
@@ -362,27 +364,7 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
     }
   };
 
-  const cycleSort = (direction: 1 | -1) => {
-    // use effective filters (defaults applied) for cycling
-    const currentIndex = sortOptions.findIndex((o) => o.sortBy === (effectiveFilters.sortBy ?? '') && o.sortOrder === (effectiveFilters.sortOrder ?? ''));
-    const idx = currentIndex === -1 ? 0 : currentIndex;
-    const nextIndex = (idx + direction + sortOptions.length) % sortOptions.length;
-    const next = sortOptions[nextIndex];
-
-    // If parent provided a handler, call it so parent can decide how to apply the change
-    if (typeof onSortChange === 'function') {
-      onSortChange({ ...(filters || {}), sortBy: next.sortBy, sortOrder: next.sortOrder });
-      return;
-    }
-
-    const incoming = searchParams ?? new URLSearchParams();
-    const params = new URLSearchParams(incoming ? incoming.toString() : '');
-    params.set('sortBy', next.sortBy);
-    params.set('sortOrder', next.sortOrder);
-
-    const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
-    router.replace(newUrl, { scroll: false });
-  };
+  // cycleSort removed: prev/next sort controls no longer present; sort panel toggles visibility instead
 
   const fetchReleases = async (page: number = 1) => {
     try {
@@ -523,21 +505,42 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
   return (
     <div>
       {/* Results Header */}
-      <div className={`flex items-center justify-between ${searchParams?.get('showSort') === 'true' ? 'mb-4' : 'mb-6'}`}>
-        <div className="text-sm text-gray-600">
+      <div className={`flex items-center justify-between ${(searchParams?.get('showSort') === 'true' || searchParams?.get('showAdvanced') === 'true') ? 'mb-1' : 'mb-6'}`}>
+        <div className="text-sm text-white">
           Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalCount)} of {totalCount} releases
         </div>
         <div className="flex items-center gap-3">
+          {/* Filters toggle placed to the left of the sort control */}
           <div className="inline-flex items-center divide-x divide-white/10 rounded-md border border-white/10 bg-gradient-to-br from-red-900 via-red-950 to-black shadow-sm overflow-hidden">
             <button
               type="button"
-              onClick={() => cycleSort(-1)}
-              title="Previous sort"
-              className="w-8 h-7 flex items-center justify-center text-white hover:bg-[#F28A2E]/10 transition-colors focus:outline-none"
+              onClick={() => {
+                try {
+                  const params = new URLSearchParams(searchParams ? searchParams.toString() : '');
+                  const currentlyOpen = params.get('showAdvanced') === 'true';
+                  if (currentlyOpen) {
+                    params.delete('showAdvanced');
+                  } else {
+                    params.set('showAdvanced', 'true');
+                    params.delete('showSort');
+                  }
+                  const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+                  router.replace(newUrl, { scroll: false });
+                } catch (e) {
+                  // ignore
+                }
+              }}
+              aria-label="Filters"
+              title="Filters"
+              aria-expanded={searchParams?.get('showAdvanced') === 'true'}
+              className={`px-2 py-2 flex items-center gap-2 text-sm transition-transform duration-200 w-20 h-9 justify-center text-white focus:outline-none`}
             >
-              <ChevronLeft className="w-4 h-4 text-white" />
+              <div className={`${iconAnimating ? 'scale-105 opacity-90' : 'scale-100 opacity-100'} inline-flex items-center justify-center rounded-md w-16 h-7 ${searchParams?.get('showAdvanced') === 'true' ? 'bg-[#F28A2E]/50 hover:bg-[#F28A2E]/40 text-white' : 'bg-white/10 hover:bg-white/20 text-white'}`}>
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 5h18M6 12h12M10 19h4" />
+                </svg>
+              </div>
             </button>
-
             <button
               type="button"
               onClick={() => {
@@ -549,6 +552,8 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
                     setShowSortOpen(false);
                   } else {
                     params.set('showSort', 'true');
+                    // ensure advanced filters are closed when opening sort
+                    params.delete('showAdvanced');
                     setShowSortOpen(true);
                   }
                   const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
@@ -560,12 +565,12 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
               title={getSortLabel(effectiveFilters.sortBy, effectiveFilters.sortOrder)}
               aria-label={`Current sort: ${getSortLabel(effectiveFilters.sortBy, effectiveFilters.sortOrder)}`}
               aria-expanded={showSortOpen}
-              className={`px-1 py-1 flex items-center gap-2 text-sm transition-transform duration-200 w-16 justify-center focus:outline-none`}
+              className={`px-2 py-2 flex items-center gap-2 text-sm transition-transform duration-200 w-20 h-9 justify-center focus:outline-none`}
             >
-              <div className={`${iconAnimating ? 'scale-105 opacity-90' : 'scale-100 opacity-100'} inline-flex items-center justify-center rounded-md px-2 py-0.5 ${showSortOpen ? 'bg-[#F28A2E]/50 hover:bg-[#F28A2E]/40 text-white' : 'bg-white/10 hover:bg-white/20 text-white'}`}> 
+              <div className={`${iconAnimating ? 'scale-105 opacity-90' : 'scale-100 opacity-100'} inline-flex items-center justify-center rounded-md w-16 h-7 ${showSortOpen ? 'bg-[#F28A2E]/50 hover:bg-[#F28A2E]/40 text-white' : 'bg-white/10 hover:bg-white/20 text-white'}`}> 
                 {loading ? (
                   <div className="flex items-center gap-1">
-                    <div className="w-8 h-5 flex items-center justify-center">
+                    <div className="w-12 h-6 flex items-center justify-center">
                       <LoadingSpinner size="small" color="white" />
                     </div>
                   </div>
@@ -579,14 +584,7 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
               </div>
             </button>
 
-            <button
-              type="button"
-              onClick={() => cycleSort(1)}
-              title="Next sort"
-              className="w-8 h-7 flex items-center justify-center text-white hover:bg-[#F28A2E]/10 transition-colors focus:outline-none"
-            >
-              <ChevronRight className="w-4 h-4 text-white" />
-            </button>
+            {/* Next/Previous sort controls removed — sort toggle now opens the SortPanel */}
           </div>
 
           {/* loading spinner is shown in the middle segment to avoid layout shift */}
@@ -594,7 +592,7 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
       </div>
 
       {searchParams?.get('showSort') === 'true' && (
-        <div className="w-full mt-0 mb-4">
+        <div className="w-full mt-0 mb-6">
           <SortPanel
             filters={filters}
             onChange={(newSort) => applySortChange(newSort)}
@@ -603,6 +601,41 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
               try {
                 const params = new URLSearchParams(searchParams ? searchParams.toString() : '');
                 params.delete('showSort');
+                const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+                router.replace(newUrl, { scroll: false });
+              } catch (e) {
+                // ignore
+              }
+            }}
+          />
+        </div>
+      )}
+
+      {searchParams?.get('showAdvanced') === 'true' && (
+        <div className="w-full mt-0 mb-6">
+          <SearchAndFilter
+            onFiltersChange={(newFilters) => {
+              try {
+                const params = new URLSearchParams(searchParams ? searchParams.toString() : '');
+                Object.entries(newFilters as any).forEach(([k, v]) => {
+                  if (v !== undefined && v !== null && v !== '') params.set(k, (v as any).toString());
+                  else params.delete(k);
+                });
+                const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+                router.replace(newUrl, { scroll: false });
+              } catch (e) {
+                // ignore
+              }
+            }}
+            initialFilters={filters}
+            enableUrlSync={false}
+            showSearchInput={false}
+            openAdvanced={true}
+            compact={true}
+            onAdvancedToggle={(open) => {
+              try {
+                const params = new URLSearchParams(searchParams ? searchParams.toString() : '');
+                if (open) params.set('showAdvanced', 'true'); else params.delete('showAdvanced');
                 const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
                 router.replace(newUrl, { scroll: false });
               } catch (e) {

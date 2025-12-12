@@ -22,6 +22,26 @@ namespace KollectorScum.Api.Interfaces
             int? year = null);
 
         /// <summary>
+        /// Generic search for releases with various parameters
+        /// </summary>
+        /// <param name="query">General search query</param>
+        /// <param name="type">Type of item (release, master, artist, label)</param>
+        /// <param name="genre">Genre filter</param>
+        /// <param name="style">Style filter</param>
+        /// <param name="country">Country filter</param>
+        /// <param name="year">Year filter</param>
+        /// <param name="format">Format filter</param>
+        /// <returns>List of matching releases</returns>
+        Task<List<DiscogsSearchResultDto>> SearchGenericAsync(
+            string? query = null,
+            string? type = null,
+            string? genre = null,
+            string? style = null,
+            string? country = null,
+            int? year = null,
+            string? format = null);
+
+        /// <summary>
         /// Get detailed information about a specific release
         /// </summary>
         /// <param name="releaseId">The Discogs release ID</param>
