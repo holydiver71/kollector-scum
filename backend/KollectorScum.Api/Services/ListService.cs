@@ -302,10 +302,10 @@ namespace KollectorScum.Api.Services
                     return Result<List<ListSummaryDto>>.Failure($"Release with ID {releaseId} not found", ErrorType.NotFound);
                 }
 
-                var lists = await _context.ListReleases
-                    .Where(lr => lr.ReleaseId == releaseId)
-                    .Select(lr => lr.List)
+                var lists = await _context.Lists
+                    .Where(l => l.ListReleases.Any(lr => lr.ReleaseId == releaseId))
                     .Include(l => l.ListReleases)
+                    .OrderByDescending(l => l.LastModified)
                     .Select(l => new ListSummaryDto
                     {
                         Id = l.Id,

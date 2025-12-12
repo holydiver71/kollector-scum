@@ -10,6 +10,7 @@ using KollectorScum.Api.Interfaces;
 using KollectorScum.Api.Models;
 using KollectorScum.Api.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 
@@ -32,6 +33,8 @@ builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 builder.Services.AddHealthChecks();
 
 // Register KollectorScumDbContext with PostgreSQL
+// NOTE: Do not suppress EF warnings or apply migrations automatically in production.
+// Migrations should be applied as part of deployment (CI/CD) using `dotnet ef database update`
 builder.Services.AddDbContext<KollectorScumDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -139,6 +142,11 @@ var app = builder.Build();
 
 // Add global error handling middleware
 app.UseMiddleware<ErrorHandlingMiddleware>();
+
+// IMPORTANT: Do not apply migrations automatically at startup in production.
+// Applying migrations at runtime can lead to unexpected schema changes and
+// startup failures. Apply migrations explicitly during deployment using
+// `dotnet ef database update` or equivalent migration scripts.
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
