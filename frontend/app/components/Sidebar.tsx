@@ -40,6 +40,7 @@ const Sidebar: React.FC = () => {
     { name: 'Home', href: '/', icon: Home },
     { name: 'Collection', href: '/collection', icon: Music },
     { name: 'Kollections', href: '/kollections', icon: FolderOpen },
+    { name: 'Lists', href: '/lists', icon: List },
     { name: 'Add Music', href: '/add', icon: PlusCircle },
     { name: 'Artists', href: '/artists', icon: User },
     { name: 'Genres', href: '/genres', icon: List },

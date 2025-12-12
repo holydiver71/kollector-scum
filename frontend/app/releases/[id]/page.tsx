@@ -10,7 +10,8 @@ import { ReleaseLinks } from "../../components/ReleaseLinks";
 import { DeleteReleaseButton } from "../../components/DeleteReleaseButton";
 import { EditReleaseButton } from "../../components/EditReleaseButton";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
-import { Play, Check, X, ChevronDown } from "lucide-react";
+import { AddToListDialog } from "../../components/AddToListDialog";
+import { Play, Check, X, ChevronDown, List } from "lucide-react";
 
 // Type definitions for detailed music release
 interface Artist {
@@ -119,6 +120,7 @@ export default function ReleaseDetailPage() {
   const [playHistory, setPlayHistory] = useState<PlayHistoryDto | null>(null);
   const [playHistoryLoading, setPlayHistoryLoading] = useState(false);
   const [playToDelete, setPlayToDelete] = useState<number | null>(null);
+  const [showAddToList, setShowAddToList] = useState(false);
 
   const handleNowPlayingClick = () => {
     setConfirmationTime(new Date());
@@ -341,6 +343,14 @@ export default function ReleaseDetailPage() {
               <span className="text-sm uppercase tracking-wider font-bold">Back</span>
             </button>
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowAddToList(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-[#D93611] border border-gray-300 hover:bg-gray-50 transition-colors font-semibold text-sm"
+                title="Add to list"
+              >
+                <List className="w-4 h-4" />
+                Add to List
+              </button>
               <EditReleaseButton
                 releaseId={release.id}
                 releaseTitle={release.title}
@@ -849,6 +859,13 @@ export default function ReleaseDetailPage() {
         isDangerous={true}
         onConfirm={confirmDeletePlayHistory}
         onCancel={() => setPlayToDelete(null)}
+      />
+
+      <AddToListDialog
+        releaseId={release.id}
+        releaseTitle={release.title}
+        isOpen={showAddToList}
+        onClose={() => setShowAddToList(false)}
       />
     </div>
   );
