@@ -61,7 +61,10 @@ export function GoogleSignIn({ onSignIn }: GoogleSignInProps) {
       };
 
       return () => {
-        document.body.removeChild(script);
+        // Only remove if script is still in the DOM
+        if (script.parentNode) {
+          document.body.removeChild(script);
+        }
       };
     }
   }, [profile]);

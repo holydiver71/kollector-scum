@@ -28,7 +28,11 @@ namespace KollectorScum.Api.Services
             var key = jwtSettings["Key"];
             var issuer = jwtSettings["Issuer"];
             var audience = jwtSettings["Audience"];
-            var expiryMinutes = int.Parse(jwtSettings["ExpiryMinutes"] ?? "60");
+            var expiryMinutes = 60;
+            if (!int.TryParse(jwtSettings["ExpiryMinutes"], out expiryMinutes))
+            {
+                expiryMinutes = 60; // Default to 60 minutes if parsing fails
+            }
 
             if (string.IsNullOrEmpty(key))
             {
