@@ -40,6 +40,26 @@ export default function CollectionPage() {
     // Next's useSearchParams can return a new object instance on each render in tests
     // so use a stable string value and avoid repeatedly setting state when nothing
     // meaningful changed. Only update filters when the parsed values differ.
+    // If the URL does not include a kollectionId but the user previously selected
+    // one, restore it from localStorage so the selection persists across visits.
+    try {
+      if (searchParams && !isUpdatingUrl.current) {
+        const existing = searchParams.get('kollectionId');
+        if (!existing) {
+          const stored = typeof window !== 'undefined' ? localStorage.getItem('kollectionId') : null;
+          if (stored) {
+            const params = new URLSearchParams(Array.from(searchParams.entries()));
+            params.set('kollectionId', stored);
+            const newUrl = params.toString() ? `/collection?${params.toString()}` : '/collection';
+            isUpdatingUrl.current = true;
+            router.replace(newUrl, { scroll: false });
+            return; // wait for next effect run which will pick up kollectionId
+          }
+        }
+      }
+    } catch (e) {
+      // ignore localStorage/read errors
+    }
     if (searchParams && !isUpdatingUrl.current) {
       const urlFilters: SearchFilters = {};
       const search = searchParams.get('search');
@@ -141,8 +161,7 @@ export default function CollectionPage() {
     filters.formatId !== undefined ||
     filters.live !== undefined ||
     filters.yearFrom !== undefined ||
-    filters.yearTo !== undefined ||
-    filters.kollectionId !== undefined
+    filters.yearTo !== undefined
   );
 
   return (
