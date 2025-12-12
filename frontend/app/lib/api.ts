@@ -32,6 +32,7 @@ interface FetchJsonOptions extends RequestInit {
  */
 function getAuthToken(): string | null {
   if (typeof window === 'undefined') return null;
+  // Import from auth.ts to avoid duplication
   return localStorage.getItem('auth_token');
 }
 
