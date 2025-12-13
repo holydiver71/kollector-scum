@@ -176,7 +176,10 @@ namespace KollectorScum.Api.Data
                 .HasForeignKey(kg => kg.GenreId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Removed global unique index on Name - will be replaced with composite index on UserId + Name
+            modelBuilder.Entity<Models.Kollection>()
+                .HasIndex(k => k.Name)
+                .IsUnique()
+                .HasDatabaseName("IX_Kollections_Name");
 
             // Configure List relationships
             modelBuilder.Entity<Models.List>()
@@ -227,40 +230,6 @@ namespace KollectorScum.Api.Data
                 .WithMany()
                 .HasForeignKey(up => up.SelectedKollectionId)
                 .OnDelete(DeleteBehavior.SetNull);
-
-            // Configure MusicRelease user relationship
-            modelBuilder.Entity<Models.MusicRelease>()
-                .HasIndex(mr => mr.UserId)
-                .HasDatabaseName("IX_MusicReleases_UserId");
-
-            modelBuilder.Entity<Models.MusicRelease>()
-                .HasOne(mr => mr.User)
-                .WithMany()
-                .HasForeignKey(mr => mr.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // Configure Kollection user relationship
-            modelBuilder.Entity<Models.Kollection>()
-                .HasIndex(k => new { k.UserId, k.Name })
-                .IsUnique()
-                .HasDatabaseName("IX_Kollections_UserId_Name");
-
-            modelBuilder.Entity<Models.Kollection>()
-                .HasOne(k => k.User)
-                .WithMany()
-                .HasForeignKey(k => k.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // Configure List user relationship
-            modelBuilder.Entity<Models.List>()
-                .HasIndex(l => l.UserId)
-                .HasDatabaseName("IX_Lists_UserId");
-
-            modelBuilder.Entity<Models.List>()
-                .HasOne(l => l.User)
-                .WithMany()
-                .HasForeignKey(l => l.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
