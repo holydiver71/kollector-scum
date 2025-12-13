@@ -13,6 +13,12 @@ namespace KollectorScum.Api.Models
         public int Id { get; set; }
 
         /// <summary>
+        /// Gets or sets the user identifier who owns this format
+        /// </summary>
+        [Required]
+        public Guid UserId { get; set; }
+
+        /// <summary>
         /// Gets or sets the name of the format
         /// </summary>
         [Required]
