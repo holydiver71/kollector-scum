@@ -44,6 +44,11 @@ namespace KollectorScum.Api.Models
         public DateTime UpdatedAt { get; set; }
 
         /// <summary>
+        /// Gets or sets whether the user has admin privileges
+        /// </summary>
+        public bool IsAdmin { get; set; } = false;
+
+        /// <summary>
         /// Navigation property for the user's profile
         /// </summary>
         public UserProfile? UserProfile { get; set; }
