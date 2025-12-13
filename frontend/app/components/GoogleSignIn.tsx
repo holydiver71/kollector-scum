@@ -27,9 +27,10 @@ declare global {
 
 interface GoogleSignInProps {
   onSignIn?: (profile: UserProfile) => void;
+  className?: string;
 }
 
-export function GoogleSignIn({ onSignIn }: GoogleSignInProps) {
+export function GoogleSignIn({ onSignIn, className }: GoogleSignInProps) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -50,15 +51,25 @@ export function GoogleSignIn({ onSignIn }: GoogleSignInProps) {
   useEffect(() => {
     // Load Google Identity Services script
     if (!profile && typeof window !== 'undefined') {
+      const initialize = () => {
+        // Small delay to ensure DOM is ready and script is fully processed
+        setTimeout(() => {
+          initializeGoogle();
+        }, 100);
+      };
+
+      if (window.google) {
+        initialize();
+        return;
+      }
+
       const script = document.createElement('script');
       script.src = 'https://accounts.google.com/gsi/client';
       script.async = true;
       script.defer = true;
       document.body.appendChild(script);
 
-      script.onload = () => {
-        initializeGoogle();
-      };
+      script.onload = initialize;
 
       return () => {
         // Only remove if script is still in the DOM
@@ -127,13 +138,13 @@ export function GoogleSignIn({ onSignIn }: GoogleSignInProps) {
 
   if (profile) {
     return (
-      <div className="flex items-center gap-3">
-        <span className="text-sm text-gray-700">
+      <div className={`flex items-center gap-3 ${className || ''}`}>
+        <span className="text-sm font-medium text-white">
           {profile.displayName || profile.email}
         </span>
         <button
           onClick={handleSignOut}
-          className="text-sm text-blue-600 hover:text-blue-800 underline"
+          className="text-sm text-blue-300 hover:text-blue-200 underline"
         >
           Sign Out
         </button>
@@ -142,7 +153,7 @@ export function GoogleSignIn({ onSignIn }: GoogleSignInProps) {
   }
 
   return (
-    <div>
+    <div className={className}>
       {error && (
         <div className="text-sm text-red-600 mb-2">{error}</div>
       )}
