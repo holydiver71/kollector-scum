@@ -123,8 +123,6 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(KollectorScum.Api.Repos
 builder.Services.AddScoped<IUnitOfWork, KollectorScum.Api.Repositories.UnitOfWork>();
 
 // Register authentication repositories and services
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IUserRepository, KollectorScum.Api.Repositories.UserRepository>();
 builder.Services.AddScoped<IUserProfileRepository, KollectorScum.Api.Repositories.UserProfileRepository>();
 builder.Services.AddScoped<ITokenService, TokenService>();

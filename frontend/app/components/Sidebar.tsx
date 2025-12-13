@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
@@ -17,7 +17,6 @@ import {
   Menu,
   FolderOpen
 } from 'lucide-react';
-import { isAuthenticated } from '../lib/auth';
 
 interface NavigationItem {
   name: string;
@@ -27,12 +26,6 @@ interface NavigationItem {
 
 const Sidebar: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isAuth, setIsAuth] = useState(false);
-
-  useEffect(() => {
-    // Check authentication status
-    setIsAuth(isAuthenticated());
-  }, []);
     // Keep a global CSS variable so Header (a sibling) can read the sidebar offset
     React.useEffect(() => {
       const offset = isExpanded ? '240px' : '64px';
@@ -70,15 +63,6 @@ const Sidebar: React.FC = () => {
     }
     return pathname.startsWith(href);
   };
-
-  // Don't render sidebar if not authenticated
-  if (!isAuth) {
-    // Set sidebar offset to 0 when hidden
-    React.useEffect(() => {
-      document.documentElement.style.setProperty('--sidebar-offset', '0px');
-    }, []);
-    return null;
-  }
 
   return (
     <aside
