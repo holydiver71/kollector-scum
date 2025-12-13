@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using KollectorScum.Api.Interfaces;
 using KollectorScum.Api.Models;
@@ -13,6 +14,7 @@ namespace KollectorScum.Api.Controllers
     /// API controller for managing music releases
     /// Uses separate services for queries and commands following CQRS principles
     /// </summary>
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class MusicReleasesController : ControllerBase

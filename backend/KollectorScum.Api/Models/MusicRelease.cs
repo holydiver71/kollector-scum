@@ -15,6 +15,18 @@ namespace KollectorScum.Api.Models
         public int Id { get; set; }
 
         /// <summary>
+        /// Gets or sets the user ID who owns this music release
+        /// </summary>
+        [Required]
+        public Guid UserId { get; set; }
+
+        /// <summary>
+        /// Navigation property for the user who owns this release
+        /// </summary>
+        [ForeignKey(nameof(UserId))]
+        public ApplicationUser User { get; set; } = null!;
+
+        /// <summary>
         /// Gets or sets the title of the release
         /// </summary>
         [Required]
