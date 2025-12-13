@@ -7,7 +7,7 @@ namespace KollectorScum.Api.Models
     /// <summary>
     /// Represents a music release entity
     /// </summary>
-    public class MusicRelease
+    public class MusicRelease : IUserOwnedEntity
     {
         /// <summary>
         /// Gets or sets the unique identifier for the music release

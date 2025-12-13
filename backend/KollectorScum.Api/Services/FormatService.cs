@@ -13,8 +13,9 @@ namespace KollectorScum.Api.Services
         public FormatService(
             IRepository<Format> repository,
             IUnitOfWork unitOfWork,
-            ILogger<FormatService> logger)
-            : base(repository, unitOfWork, logger)
+            ILogger<FormatService> logger,
+            IUserContext userContext)
+            : base(repository, unitOfWork, logger, userContext)
         {
         }
 

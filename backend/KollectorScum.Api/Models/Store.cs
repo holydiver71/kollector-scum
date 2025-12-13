@@ -5,7 +5,7 @@ namespace KollectorScum.Api.Models
     /// <summary>
     /// Represents a store entity where music releases can be purchased
     /// </summary>
-    public class Store
+    public class Store : IUserOwnedEntity
     {
         /// <summary>
         /// Gets or sets the unique identifier for the store

@@ -13,8 +13,9 @@ namespace KollectorScum.Api.Services
         public LabelService(
             IRepository<Label> repository,
             IUnitOfWork unitOfWork,
-            ILogger<LabelService> logger)
-            : base(repository, unitOfWork, logger)
+            ILogger<LabelService> logger,
+            IUserContext userContext)
+            : base(repository, unitOfWork, logger, userContext)
         {
         }
 

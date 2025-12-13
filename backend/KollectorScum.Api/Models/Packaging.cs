@@ -5,7 +5,7 @@ namespace KollectorScum.Api.Models
     /// <summary>
     /// Represents a packaging entity for music releases (jewel case, digipak, etc.)
     /// </summary>
-    public class Packaging
+    public class Packaging : IUserOwnedEntity
     {
         /// <summary>
         /// Gets or sets the unique identifier for the packaging
