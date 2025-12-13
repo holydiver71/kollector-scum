@@ -6,6 +6,8 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { QuickSearch } from './SearchAndFilter';
 import type { SearchSuggestion } from '../lib/api';
 import { getKollections, type KollectionDto } from '../lib/api';
+import { GoogleSignIn } from './GoogleSignIn';
+import { type UserProfile } from '../lib/auth';
 
 /**
  * Simple header: logo and site title aligned with the page content container.
@@ -58,6 +60,14 @@ export default function Header() {
       // ignore storage errors (e.g., SSR or strict privacy)
     }
   };
+
+  const handleSignIn = (profile: UserProfile) => {
+    console.log('User signed in:', profile);
+    if (profile.selectedKollectionId) {
+        handleKollectionChange(profile.selectedKollectionId.toString());
+    }
+  };
+
   return (
     <header
       className="relative bg-cover bg-center shadow-sm"
@@ -67,6 +77,10 @@ export default function Header() {
       <div className="absolute inset-0 bg-black/40" />
 
       <div className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-4">
+        <div className="absolute top-4 right-4 sm:right-6 lg:right-8">
+             <GoogleSignIn onSignIn={handleSignIn} />
+        </div>
+
         {/* Kollection selector (moved next to search input) — rendered inline with QuickSearch */}
         <div className="flex flex-col md:flex-row items-start gap-2 md:gap-4">
           <Link href="/" aria-label="Home" className="block">
