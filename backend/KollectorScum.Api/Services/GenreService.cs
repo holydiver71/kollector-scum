@@ -13,8 +13,9 @@ namespace KollectorScum.Api.Services
         public GenreService(
             IRepository<Genre> repository,
             IUnitOfWork unitOfWork,
-            ILogger<GenreService> logger)
-            : base(repository, unitOfWork, logger)
+            ILogger<GenreService> logger,
+            IUserContext userContext)
+            : base(repository, unitOfWork, logger, userContext)
         {
         }
 

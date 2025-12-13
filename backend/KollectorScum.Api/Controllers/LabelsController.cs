@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using KollectorScum.Api.Interfaces;
 using KollectorScum.Api.DTOs;
@@ -7,6 +8,7 @@ namespace KollectorScum.Api.Controllers
     /// <summary>
     /// API controller for managing labels
     /// </summary>
+    [Authorize]
     public class LabelsController : BaseApiController
     {
         private readonly IGenericCrudService<Models.Label, LabelDto> _labelService;

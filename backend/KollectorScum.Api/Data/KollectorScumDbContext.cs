@@ -97,6 +97,10 @@ namespace KollectorScum.Api.Data
 
             // Configure indexes for performance
             modelBuilder.Entity<Models.MusicRelease>()
+                .HasIndex(mr => mr.UserId)
+                .HasDatabaseName("IX_MusicReleases_UserId");
+
+            modelBuilder.Entity<Models.MusicRelease>()
                 .HasIndex(mr => mr.Title)
                 .HasDatabaseName("IX_MusicReleases_Title");
 
@@ -119,6 +123,70 @@ namespace KollectorScum.Api.Data
             modelBuilder.Entity<Models.MusicRelease>()
                 .HasIndex(mr => mr.PackagingId)
                 .HasDatabaseName("IX_MusicReleases_PackagingId");
+
+            // Configure lookup entity indexes and unique constraints
+            modelBuilder.Entity<Models.Artist>()
+                .HasIndex(a => a.UserId)
+                .HasDatabaseName("IX_Artists_UserId");
+
+            modelBuilder.Entity<Models.Artist>()
+                .HasIndex(a => new { a.UserId, a.Name })
+                .IsUnique()
+                .HasDatabaseName("IX_Artists_UserId_Name");
+
+            modelBuilder.Entity<Models.Genre>()
+                .HasIndex(g => g.UserId)
+                .HasDatabaseName("IX_Genres_UserId");
+
+            modelBuilder.Entity<Models.Genre>()
+                .HasIndex(g => new { g.UserId, g.Name })
+                .IsUnique()
+                .HasDatabaseName("IX_Genres_UserId_Name");
+
+            modelBuilder.Entity<Models.Label>()
+                .HasIndex(l => l.UserId)
+                .HasDatabaseName("IX_Labels_UserId");
+
+            modelBuilder.Entity<Models.Label>()
+                .HasIndex(l => new { l.UserId, l.Name })
+                .IsUnique()
+                .HasDatabaseName("IX_Labels_UserId_Name");
+
+            modelBuilder.Entity<Models.Country>()
+                .HasIndex(c => c.UserId)
+                .HasDatabaseName("IX_Countries_UserId");
+
+            modelBuilder.Entity<Models.Country>()
+                .HasIndex(c => new { c.UserId, c.Name })
+                .IsUnique()
+                .HasDatabaseName("IX_Countries_UserId_Name");
+
+            modelBuilder.Entity<Models.Format>()
+                .HasIndex(f => f.UserId)
+                .HasDatabaseName("IX_Formats_UserId");
+
+            modelBuilder.Entity<Models.Format>()
+                .HasIndex(f => new { f.UserId, f.Name })
+                .IsUnique()
+                .HasDatabaseName("IX_Formats_UserId_Name");
+
+            modelBuilder.Entity<Models.Packaging>()
+                .HasIndex(p => p.UserId)
+                .HasDatabaseName("IX_Packagings_UserId");
+
+            modelBuilder.Entity<Models.Packaging>()
+                .HasIndex(p => new { p.UserId, p.Name })
+                .IsUnique()
+                .HasDatabaseName("IX_Packagings_UserId_Name");
+
+            modelBuilder.Entity<Models.Store>()
+                .HasIndex(s => s.UserId)
+                .HasDatabaseName("IX_Stores_UserId");
+
+            modelBuilder.Entity<Models.Store>()
+                .HasIndex(s => new { s.UserId, s.Name })
+                .IsUnique()
+                .HasDatabaseName("IX_Stores_UserId_Name");
 
             // Configure foreign key relationships
             modelBuilder.Entity<Models.MusicRelease>()
@@ -177,11 +245,19 @@ namespace KollectorScum.Api.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Models.Kollection>()
-                .HasIndex(k => k.Name)
+                .HasIndex(k => k.UserId)
+                .HasDatabaseName("IX_Kollections_UserId");
+
+            modelBuilder.Entity<Models.Kollection>()
+                .HasIndex(k => new { k.UserId, k.Name })
                 .IsUnique()
-                .HasDatabaseName("IX_Kollections_Name");
+                .HasDatabaseName("IX_Kollections_UserId_Name");
 
             // Configure List relationships
+            modelBuilder.Entity<Models.List>()
+                .HasIndex(l => l.UserId)
+                .HasDatabaseName("IX_Lists_UserId");
+
             modelBuilder.Entity<Models.List>()
                 .HasIndex(l => l.Name)
                 .HasDatabaseName("IX_Lists_Name");
