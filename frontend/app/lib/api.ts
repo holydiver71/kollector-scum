@@ -27,6 +27,15 @@ interface FetchJsonOptions extends RequestInit {
   swallowErrors?: boolean;
 }
 
+/**
+ * Gets the stored authentication token
+ */
+function getAuthToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  // Import from auth.ts to avoid duplication
+  return localStorage.getItem('auth_token');
+}
+
 export async function fetchJson<T = unknown>(path: string, options: FetchJsonOptions = {}): Promise<T> {
   const { timeoutMs = DEFAULT_TIMEOUT_MS, parse = true, ...init } = options;
   const controller = new AbortController();
@@ -37,8 +46,17 @@ export async function fetchJson<T = unknown>(path: string, options: FetchJsonOpt
     ? path
     : `${API_BASE_URL}${path.startsWith('/') ? '' : '/'}${path}`;
 
+  // Add authorization header if token is available
+  const token = getAuthToken();
+  const headers: HeadersInit = {
+    ...init.headers,
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   try {
-    const res = await fetch(url, { ...init, signal: controller.signal });
+    const res = await fetch(url, { ...init, headers, signal: controller.signal });
     clearTimeout(id);
     if (!res.ok) {
       let body: unknown = null;
