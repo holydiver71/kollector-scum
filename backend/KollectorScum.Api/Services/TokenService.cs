@@ -42,13 +42,20 @@ namespace KollectorScum.Api.Services
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
-            var claims = new[]
+            var claims = new List<Claim>
             {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim("googleSub", user.GoogleSub)
+                new Claim("googleSub", user.GoogleSub),
+                new Claim("IsAdmin", user.IsAdmin.ToString())
             };
+
+            if (user.IsAdmin)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, "Admin"));
+            }
 
             var token = new JwtSecurityToken(
                 issuer: issuer,
