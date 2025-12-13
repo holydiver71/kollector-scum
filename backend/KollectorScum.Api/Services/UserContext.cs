@@ -38,6 +38,10 @@ namespace KollectorScum.Api.Services
         /// <inheritdoc />
         public Guid? GetActingUserId()
         {
+            // TODO: Add audit logging for admin impersonation
+            // TODO: Consider rate limiting for impersonation attempts
+            // TODO: Add security validation beyond just IsAdmin check
+            
             // Check if admin is impersonating another user via header
             var actAsHeader = _httpContextAccessor.HttpContext?.Request.Headers["X-Admin-Act-As"].FirstOrDefault();
             
@@ -45,6 +49,7 @@ namespace KollectorScum.Api.Services
             {
                 if (Guid.TryParse(actAsHeader, out var actAsUserId))
                 {
+                    // TODO: Log admin impersonation: admin ID, target user ID, timestamp
                     return actAsUserId;
                 }
             }
@@ -56,6 +61,7 @@ namespace KollectorScum.Api.Services
             {
                 if (Guid.TryParse(actAsQuery, out var actAsUserId))
                 {
+                    // TODO: Log admin impersonation: admin ID, target user ID, timestamp
                     return actAsUserId;
                 }
             }
