@@ -304,6 +304,8 @@ namespace KollectorScum.Api.Services
 
             // Try to find existing entity by name and userId
             var userIdValue = userId.Value;
+            // Note: Using EF.Property and reflection for generic lookup by name
+            // This is intentional for the generic pattern - specific services can override if needed
             Expression<Func<TEntity, bool>> filter = e =>
                 ((Models.IUserOwnedEntity)e).UserId == userIdValue &&
                 EF.Property<string>(e, "Name") == name;
@@ -321,6 +323,9 @@ namespace KollectorScum.Api.Services
             _logger.LogInformation("Creating new {EntityType} with name '{Name}' for user {UserId}",
                 typeof(TEntity).Name, name, userId);
 
+            // Note: Using Activator and reflection for generic entity creation
+            // Performance impact is acceptable for lookup entities which are created infrequently
+            // Specific services can override this method if different behavior is needed
             var entity = Activator.CreateInstance<TEntity>();
             
             // Set the Name property using reflection
