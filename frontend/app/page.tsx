@@ -3,8 +3,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { LoadingSpinner, Skeleton } from "./components/LoadingComponents";
 import { RecentlyPlayed } from "./components/RecentlyPlayed";
-import { LandingPage } from "./components/LandingPage";
-import { isAuthenticated, type UserProfile } from "./lib/auth";
 
 import { getHealth, getPagedCount, ApiError } from "./lib/api";
 
@@ -13,26 +11,12 @@ interface HealthData { status: string; timestamp: string; service: string; versi
 interface CollectionStats { totalReleases: number; totalArtists: number; totalGenres: number; totalLabels: number; }
 
 export default function Dashboard() {
-  const [isAuth, setIsAuth] = useState(false);
-  const [authChecked, setAuthChecked] = useState(false);
   const [health, setHealth] = useState<HealthData | null>(null);
   const [stats, setStats] = useState<CollectionStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Check authentication first
   useEffect(() => {
-    setIsAuth(isAuthenticated());
-    setAuthChecked(true);
-  }, []);
-
-  useEffect(() => {
-    // Only fetch data if authenticated
-    if (!isAuth || !authChecked) {
-      setLoading(false);
-      return;
-    }
-
     const fetchAll = async () => {
       try {
         setLoading(true);
@@ -60,18 +44,7 @@ export default function Dashboard() {
       }
     };
     fetchAll();
-  }, [isAuth, authChecked]);
-
-  const handleSignIn = (profile: UserProfile) => {
-    setIsAuth(true);
-    // Refresh the page to load user data
-    window.location.reload();
-  };
-
-  // Show landing page if not authenticated
-  if (authChecked && !isAuth) {
-    return <LandingPage onSignIn={handleSignIn} />;
-  }
+  }, []);
 
   if (error) {
     return (

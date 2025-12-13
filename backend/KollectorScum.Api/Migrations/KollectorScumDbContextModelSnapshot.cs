@@ -145,14 +145,11 @@ namespace KollectorScum.Api.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId", "Name")
+                    b.HasIndex("Name")
                         .IsUnique()
-                        .HasDatabaseName("IX_Kollections_UserId_Name");
+                        .HasDatabaseName("IX_Kollections_Name");
 
                     b.ToTable("Kollections");
                 });
@@ -209,16 +206,10 @@ namespace KollectorScum.Api.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
                     b.HasKey("Id");
 
                     b.HasIndex("Name")
                         .HasDatabaseName("IX_Lists_Name");
-
-                    b.HasIndex("UserId")
-                        .HasDatabaseName("IX_Lists_UserId");
 
                     b.ToTable("Lists");
                 });
@@ -329,9 +320,6 @@ namespace KollectorScum.Api.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
                     b.HasKey("Id");
 
                     b.HasIndex("ArtistId");
@@ -357,9 +345,6 @@ namespace KollectorScum.Api.Migrations
 
                     b.HasIndex("Title")
                         .HasDatabaseName("IX_MusicReleases_Title");
-
-                    b.HasIndex("UserId")
-                        .HasDatabaseName("IX_MusicReleases_UserId");
 
                     b.ToTable("MusicReleases");
                 });
@@ -450,17 +435,6 @@ namespace KollectorScum.Api.Migrations
                     b.ToTable("UserProfiles");
                 });
 
-            modelBuilder.Entity("KollectorScum.Api.Models.Kollection", b =>
-                {
-                    b.HasOne("KollectorScum.Api.Models.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("KollectorScum.Api.Models.KollectionGenre", b =>
                 {
                     b.HasOne("KollectorScum.Api.Models.Genre", "Genre")
@@ -478,17 +452,6 @@ namespace KollectorScum.Api.Migrations
                     b.Navigation("Genre");
 
                     b.Navigation("Kollection");
-                });
-
-            modelBuilder.Entity("KollectorScum.Api.Models.List", b =>
-                {
-                    b.HasOne("KollectorScum.Api.Models.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("KollectorScum.Api.Models.ListRelease", b =>
@@ -544,12 +507,6 @@ namespace KollectorScum.Api.Migrations
                         .WithMany("MusicReleases")
                         .HasForeignKey("StoreId");
 
-                    b.HasOne("KollectorScum.Api.Models.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("Country");
 
                     b.Navigation("Format");
@@ -557,8 +514,6 @@ namespace KollectorScum.Api.Migrations
                     b.Navigation("Label");
 
                     b.Navigation("Packaging");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("KollectorScum.Api.Models.NowPlaying", b =>
