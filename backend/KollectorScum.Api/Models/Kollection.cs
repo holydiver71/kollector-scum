@@ -5,7 +5,7 @@ namespace KollectorScum.Api.Models
     /// <summary>
     /// Represents a collection of releases filtered by genres
     /// </summary>
-    public class Kollection
+    public class Kollection : IUserOwnedEntity
     {
         /// <summary>
         /// Gets or sets the unique identifier for the kollection

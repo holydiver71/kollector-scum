@@ -5,7 +5,7 @@ namespace KollectorScum.Api.Models
     /// <summary>
     /// Represents a format entity for music releases (vinyl, CD, digital, etc.)
     /// </summary>
-    public class Format
+    public class Format : IUserOwnedEntity
     {
         /// <summary>
         /// Gets or sets the unique identifier for the format
