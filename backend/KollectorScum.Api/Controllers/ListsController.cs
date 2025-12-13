@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using KollectorScum.Api.DTOs;
 using KollectorScum.Api.Interfaces;
@@ -8,6 +9,7 @@ namespace KollectorScum.Api.Controllers
     /// <summary>
     /// API controller for managing user-defined lists
     /// </summary>
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class ListsController : ControllerBase

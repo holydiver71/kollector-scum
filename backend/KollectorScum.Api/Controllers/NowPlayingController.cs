@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using KollectorScum.Api.Data;
@@ -9,6 +10,7 @@ namespace KollectorScum.Api.Controllers
     /// <summary>
     /// API controller for managing now playing records
     /// </summary>
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class NowPlayingController : ControllerBase

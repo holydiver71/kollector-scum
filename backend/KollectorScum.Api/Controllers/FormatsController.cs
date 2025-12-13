@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using KollectorScum.Api.Interfaces;
 using KollectorScum.Api.DTOs;
@@ -7,6 +8,7 @@ namespace KollectorScum.Api.Controllers
     /// <summary>
     /// API controller for managing formats
     /// </summary>
+    [Authorize]
     public class FormatsController : BaseApiController
     {
         private readonly IGenericCrudService<Models.Format, FormatDto> _formatService;

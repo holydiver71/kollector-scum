@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using KollectorScum.Api.Interfaces;
 using KollectorScum.Api.DTOs;
@@ -7,6 +8,7 @@ namespace KollectorScum.Api.Controllers
     /// <summary>
     /// API controller for managing artists
     /// </summary>
+    [Authorize]
     public class ArtistsController : BaseApiController
     {
         private readonly IGenericCrudService<Models.Artist, ArtistDto> _artistService;
