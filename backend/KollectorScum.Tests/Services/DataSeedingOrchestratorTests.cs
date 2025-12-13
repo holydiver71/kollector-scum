@@ -2,6 +2,7 @@ using KollectorScum.Api.DTOs;
 using KollectorScum.Api.Interfaces;
 using KollectorScum.Api.Models;
 using KollectorScum.Api.Services;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 
@@ -183,6 +184,11 @@ public class DataSeedingOrchestratorTests
 
     private DataSeedingOrchestrator CreateOrchestrator()
     {
+        var mockUnitOfWork = new Mock<IUnitOfWork>();
+        var mockDiscogsService = new Mock<IDiscogsService>();
+        var mockCommandService = new Mock<IMusicReleaseCommandService>();
+        var mockConfiguration = new Mock<IConfiguration>();
+        
         return new DataSeedingOrchestrator(
             _mockCountrySeeder.Object,
             _mockStoreSeeder.Object,
@@ -191,6 +197,10 @@ public class DataSeedingOrchestratorTests
             _mockLabelSeeder.Object,
             _mockArtistSeeder.Object,
             _mockPackagingSeeder.Object,
+            mockUnitOfWork.Object,
+            mockDiscogsService.Object,
+            mockCommandService.Object,
+            mockConfiguration.Object,
             _mockLogger.Object
         );
     }

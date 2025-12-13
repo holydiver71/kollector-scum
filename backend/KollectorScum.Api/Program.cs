@@ -3,6 +3,7 @@
 /// </summary>
 
 
+using System.Text;
 using KollectorScum.Api.Middleware;
 using KollectorScum.Api.Data;
 using KollectorScum.Api.DTOs;
@@ -13,6 +14,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,6 +34,42 @@ builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 builder.Services.AddHealthChecks();
+
+// Configure JWT Authentication
+var jwtSettings = builder.Configuration.GetSection("Jwt");
+var jwtKey = jwtSettings["Key"];
+if (!string.IsNullOrEmpty(jwtKey))
+{
+    // Warn if using placeholder key in production
+    if (!builder.Environment.IsDevelopment() && 
+        (jwtKey.Contains("YourSecureKeyHere") || jwtKey.Contains("ChangeInProduction")))
+    {
+        throw new InvalidOperationException(
+            "JWT Key must be changed from default value in production. " +
+            "Set the Jwt:Key configuration to a secure random string of at least 32 characters.");
+    }
+
+    builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtSettings["Issuer"],
+            ValidAudience = jwtSettings["Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+        };
+    });
+    
+    builder.Services.AddAuthorization();
+}
 
 // Register KollectorScumDbContext with PostgreSQL
 // NOTE: Do not suppress EF warnings or apply migrations automatically in production.
@@ -82,6 +121,12 @@ builder.Services.AddScoped<IMusicReleaseImportService>(serviceProvider =>
 // Register repository layer
 builder.Services.AddScoped(typeof(IRepository<>), typeof(KollectorScum.Api.Repositories.Repository<>));
 builder.Services.AddScoped<IUnitOfWork, KollectorScum.Api.Repositories.UnitOfWork>();
+
+// Register authentication repositories and services
+builder.Services.AddScoped<IUserRepository, KollectorScum.Api.Repositories.UserRepository>();
+builder.Services.AddScoped<IUserProfileRepository, KollectorScum.Api.Repositories.UserProfileRepository>();
+builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IGoogleTokenValidator, GoogleTokenValidator>();
 
 // Register generic CRUD services
 builder.Services.AddScoped<IGenericCrudService<KollectorScum.Api.Models.Artist, KollectorScum.Api.DTOs.ArtistDto>, ArtistService>();
@@ -165,6 +210,10 @@ app.UseCors(policy =>
           .AllowAnyMethod()
           .AllowAnyHeader();
 });
+
+// Add authentication and authorization middleware
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Map controllers
 app.MapControllers();
