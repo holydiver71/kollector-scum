@@ -20,6 +20,7 @@ namespace KollectorScum.Api.Services
         private readonly IMusicReleaseMapperService _mapper;
         private readonly ICollectionStatisticsService _statisticsService;
         private readonly KollectorScumDbContext _context;
+        private readonly ICurrentUserService _currentUserService;
         private readonly ILogger<MusicReleaseQueryService> _logger;
 
         public MusicReleaseQueryService(
@@ -29,6 +30,7 @@ namespace KollectorScum.Api.Services
             IMusicReleaseMapperService mapper,
             ICollectionStatisticsService statisticsService,
             KollectorScumDbContext context,
+            ICurrentUserService currentUserService,
             ILogger<MusicReleaseQueryService> logger)
         {
             _musicReleaseRepository = musicReleaseRepository ?? throw new ArgumentNullException(nameof(musicReleaseRepository));
@@ -37,6 +39,7 @@ namespace KollectorScum.Api.Services
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _statisticsService = statisticsService ?? throw new ArgumentNullException(nameof(statisticsService));
             _context = context ?? throw new ArgumentNullException(nameof(context));
+            _currentUserService = currentUserService ?? throw new ArgumentNullException(nameof(currentUserService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -144,12 +147,15 @@ namespace KollectorScum.Api.Services
         /// </summary>
         private Expression<Func<MusicRelease, bool>>? BuildFilterExpression(MusicReleaseQueryParameters parameters)
         {
+            // Always filter by current user
+            var userId = _currentUserService.GetUserIdOrThrow();
+
             // Get genre IDs from kollection if specified
             List<int>? kollectionGenreIds = null;
             if (parameters.KollectionId.HasValue)
             {
                 kollectionGenreIds = _context.KollectionGenres
-                    .Where(kg => kg.KollectionId == parameters.KollectionId.Value)
+                    .Where(kg => kg.KollectionId == parameters.KollectionId.Value && kg.Kollection.UserId == userId)
                     .Select(kg => kg.GenreId)
                     .ToList();
 
@@ -160,7 +166,7 @@ namespace KollectorScum.Api.Services
                 }
             }
 
-            // Return null if no filters applied
+            // If no other filters, just filter by user ID
             if (string.IsNullOrEmpty(parameters.Search) && 
                 !parameters.ArtistId.HasValue && 
                 !parameters.GenreId.HasValue &&
@@ -172,7 +178,7 @@ namespace KollectorScum.Api.Services
                 !parameters.YearFrom.HasValue && 
                 !parameters.YearTo.HasValue)
             {
-                return null;
+                return mr => mr.UserId == userId;
             }
 
             // Build composite filter using expression tree so EF can translate constants
@@ -273,8 +279,13 @@ namespace KollectorScum.Api.Services
                 clauses.Add(Expression.AndAlso(hasValue, compare));
             }
 
+            // Always add UserId filter
+            var userIdProp = Expression.Property(param, nameof(MusicRelease.UserId));
+            var userIdEquals = Expression.Equal(userIdProp, Expression.Constant(userId));
+            clauses.Add(userIdEquals);
+
             if (!clauses.Any())
-                return null;
+                return mr => mr.UserId == userId;
 
             Expression combined = clauses[0];
             for (int i = 1; i < clauses.Count; i++)
@@ -287,11 +298,12 @@ namespace KollectorScum.Api.Services
         {
             _logger.LogInformation("Getting music release by ID: {Id}", id);
 
+            var userId = _currentUserService.GetUserIdOrThrow();
             var musicRelease = await _musicReleaseRepository.GetByIdAsync(id, "Label,Country,Format,Packaging");
 
-            if (musicRelease == null)
+            if (musicRelease == null || musicRelease.UserId != userId)
             {
-                _logger.LogWarning("Music release not found: {Id}", id);
+                _logger.LogWarning("Music release not found or access denied: {Id}", id);
                 return null;
             }
 
@@ -316,12 +328,13 @@ namespace KollectorScum.Api.Services
 
             _logger.LogInformation("Getting search suggestions for query: {Query}", query);
 
+            var userId = _currentUserService.GetUserIdOrThrow();
             var queryLower = query.ToLower();
             var suggestions = new List<SearchSuggestionDto>();
 
             // Get release title suggestions
             var releases = await _musicReleaseRepository.GetAsync(
-                mr => mr.Title.ToLower().Contains(queryLower),
+                mr => mr.UserId == userId && mr.Title.ToLower().Contains(queryLower),
                 mr => mr.OrderBy(x => x.Title)
             );
 

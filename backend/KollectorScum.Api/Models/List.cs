@@ -13,6 +13,18 @@ namespace KollectorScum.Api.Models
         public int Id { get; set; }
 
         /// <summary>
+        /// Gets or sets the user ID who owns this list
+        /// </summary>
+        [Required]
+        public Guid UserId { get; set; }
+
+        /// <summary>
+        /// Navigation property for the user who owns this list
+        /// </summary>
+        [System.ComponentModel.DataAnnotations.Schema.ForeignKey(nameof(UserId))]
+        public ApplicationUser User { get; set; } = null!;
+
+        /// <summary>
         /// Gets or sets the name of the list
         /// </summary>
         [Required]
