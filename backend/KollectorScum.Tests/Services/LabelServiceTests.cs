@@ -20,14 +20,19 @@ namespace KollectorScum.Tests.Services
         private readonly Mock<IRepository<Label>> _mockRepository;
         private readonly Mock<IUnitOfWork> _mockUnitOfWork;
         private readonly Mock<ILogger<LabelService>> _mockLogger;
+        private readonly Mock<IUserContext> _mockUserContext;
         private readonly LabelService _service;
+        private readonly Guid _userId;
 
         public LabelServiceTests()
         {
             _mockRepository = new Mock<IRepository<Label>>();
             _mockUnitOfWork = new Mock<IUnitOfWork>();
             _mockLogger = new Mock<ILogger<LabelService>>();
-            _service = new LabelService(_mockRepository.Object, _mockUnitOfWork.Object, _mockLogger.Object);
+            _mockUserContext = new Mock<IUserContext>();
+            _userId = Guid.NewGuid();
+            _mockUserContext.Setup(x => x.GetActingUserId()).Returns(_userId);
+            _service = new LabelService(_mockRepository.Object, _mockUnitOfWork.Object, _mockLogger.Object, _mockUserContext.Object);
         }
 
         #region Constructor Tests
@@ -44,7 +49,7 @@ namespace KollectorScum.Tests.Services
         {
             // Act & Assert
             Assert.Throws<ArgumentNullException>(() =>
-                new LabelService(null!, _mockUnitOfWork.Object, _mockLogger.Object));
+                new LabelService(null!, _mockUnitOfWork.Object, _mockLogger.Object, _mockUserContext.Object));
         }
 
         [Fact]
@@ -52,7 +57,7 @@ namespace KollectorScum.Tests.Services
         {
             // Act & Assert
             Assert.Throws<ArgumentNullException>(() =>
-                new LabelService(_mockRepository.Object, null!, _mockLogger.Object));
+                new LabelService(_mockRepository.Object, null!, _mockLogger.Object, _mockUserContext.Object));
         }
 
         [Fact]
@@ -60,7 +65,15 @@ namespace KollectorScum.Tests.Services
         {
             // Act & Assert
             Assert.Throws<ArgumentNullException>(() =>
-                new LabelService(_mockRepository.Object, _mockUnitOfWork.Object, null!));
+                new LabelService(_mockRepository.Object, _mockUnitOfWork.Object, null!, _mockUserContext.Object));
+        }
+
+        [Fact]
+        public void Constructor_WithNullUserContext_ThrowsArgumentNullException()
+        {
+            // Act & Assert
+            Assert.Throws<ArgumentNullException>(() =>
+                new LabelService(_mockRepository.Object, _mockUnitOfWork.Object, _mockLogger.Object, null!));
         }
 
         #endregion
@@ -90,7 +103,7 @@ namespace KollectorScum.Tests.Services
                 .ReturnsAsync(pagedResult);
 
             _mockRepository.Setup(r => r.AddAsync(It.IsAny<Label>()))
-                .ReturnsAsync(new Label { Id = 1, Name = "Blue Note" });
+                .ReturnsAsync(new Label { Id = 1, Name = "Blue Note", UserId = _userId });
 
             _mockUnitOfWork.Setup(u => u.SaveChangesAsync())
                 .ReturnsAsync(1);
@@ -167,7 +180,7 @@ namespace KollectorScum.Tests.Services
                 .ReturnsAsync(pagedResult);
 
             _mockRepository.Setup(r => r.AddAsync(It.IsAny<Label>()))
-                .ReturnsAsync(new Label { Id = 1, Name = labelDto.Name });
+                .ReturnsAsync(new Label { Id = 1, Name = labelDto.Name, UserId = _userId });
 
             _mockUnitOfWork.Setup(u => u.SaveChangesAsync())
                 .ReturnsAsync(1);
@@ -184,7 +197,7 @@ namespace KollectorScum.Tests.Services
         public async Task UpdateAsync_WithValidLabel_UpdatesSuccessfully()
         {
             // Arrange
-            var existingLabel = new Label { Id = 1, Name = "Old Name" };
+            var existingLabel = new Label { Id = 1, Name = "Old Name", UserId = _userId };
             var labelDto = new LabelDto { Id = 1, Name = "New Name" };
 
             _mockRepository.Setup(r => r.GetByIdAsync(1))
@@ -208,7 +221,7 @@ namespace KollectorScum.Tests.Services
         public async Task UpdateAsync_WithInvalidName_ThrowsArgumentException()
         {
             // Arrange
-            var existingLabel = new Label { Id = 1, Name = "Old Name" };
+            var existingLabel = new Label { Id = 1, Name = "Old Name", UserId = _userId };
             var labelDto = new LabelDto { Id = 1, Name = "" };
 
             _mockRepository.Setup(r => r.GetByIdAsync(1))
@@ -230,7 +243,7 @@ namespace KollectorScum.Tests.Services
             {
                 Items = new System.Collections.Generic.List<Label>
                 {
-                    new Label { Id = 1, Name = "Blue Note" }
+                    new Label { Id = 1, Name = "Blue Note", UserId = _userId }
                 },
                 TotalCount = 1,
                 Page = 1,
@@ -268,7 +281,7 @@ namespace KollectorScum.Tests.Services
         public async Task GetByIdAsync_WithValidId_ReturnsLabel()
         {
             // Arrange
-            var label = new Label { Id = 1, Name = "Blue Note" };
+            var label = new Label { Id = 1, Name = "Blue Note", UserId = _userId };
             _mockRepository.Setup(r => r.GetByIdAsync(1))
                 .ReturnsAsync(label);
 
@@ -299,7 +312,7 @@ namespace KollectorScum.Tests.Services
         public async Task DeleteAsync_WithValidId_DeletesSuccessfully()
         {
             // Arrange
-            var label = new Label { Id = 1, Name = "Blue Note" };
+            var label = new Label { Id = 1, Name = "Blue Note", UserId = _userId };
             _mockRepository.Setup(r => r.GetByIdAsync(1))
                 .ReturnsAsync(label);
 

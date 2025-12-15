@@ -5,12 +5,18 @@ namespace KollectorScum.Api.Models
     /// <summary>
     /// Represents a genre entity for categorizing music releases
     /// </summary>
-    public class Genre
+    public class Genre : IUserOwnedEntity
     {
         /// <summary>
         /// Gets or sets the unique identifier for the genre
         /// </summary>
         public int Id { get; set; }
+
+        /// <summary>
+        /// Gets or sets the user identifier who owns this genre
+        /// </summary>
+        [Required]
+        public Guid UserId { get; set; }
 
         /// <summary>
         /// Gets or sets the name of the genre

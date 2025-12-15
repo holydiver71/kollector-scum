@@ -13,8 +13,9 @@ namespace KollectorScum.Api.Services
         public StoreService(
             IRepository<Store> repository,
             IUnitOfWork unitOfWork,
-            ILogger<StoreService> logger)
-            : base(repository, unitOfWork, logger)
+            ILogger<StoreService> logger,
+            IUserContext userContext)
+            : base(repository, unitOfWork, logger, userContext)
         {
         }
 

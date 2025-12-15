@@ -12,13 +12,16 @@ namespace KollectorScum.Api.Services
     {
         private readonly IRepository<MusicRelease> _musicReleaseRepository;
         private readonly ILogger<MusicReleaseDuplicateService> _logger;
+        private readonly IUserContext _userContext;
 
         public MusicReleaseDuplicateService(
             IRepository<MusicRelease> musicReleaseRepository,
-            ILogger<MusicReleaseDuplicateService> logger)
+            ILogger<MusicReleaseDuplicateService> logger,
+            IUserContext userContext)
         {
             _musicReleaseRepository = musicReleaseRepository ?? throw new ArgumentNullException(nameof(musicReleaseRepository));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _userContext = userContext ?? throw new ArgumentNullException(nameof(userContext));
         }
 
         /// <summary>
@@ -32,19 +35,22 @@ namespace KollectorScum.Api.Services
         {
             _logger.LogInformation("Checking for duplicates - Title: {Title}, LabelNumber: {LabelNumber}", title, labelNumber);
 
+            var userId = _userContext.GetActingUserId();
+            if (!userId.HasValue) return new List<MusicRelease>();
+
             var duplicates = new List<MusicRelease>();
 
             // Check by catalog number first (most reliable)
             if (!string.IsNullOrWhiteSpace(labelNumber))
             {
-                var catalogDuplicates = await CheckByCatalogNumberAsync(labelNumber, excludeReleaseId);
+                var catalogDuplicates = await CheckByCatalogNumberAsync(labelNumber, excludeReleaseId, userId.Value);
                 duplicates.AddRange(catalogDuplicates);
             }
 
             // If no catalog matches, check by title and artist
             if (!duplicates.Any() && artistIds != null && artistIds.Any())
             {
-                var titleArtistDuplicates = await CheckByTitleAndArtistAsync(title, artistIds, excludeReleaseId);
+                var titleArtistDuplicates = await CheckByTitleAndArtistAsync(title, artistIds, excludeReleaseId, userId.Value);
                 duplicates.AddRange(titleArtistDuplicates);
             }
 
@@ -54,11 +60,11 @@ namespace KollectorScum.Api.Services
         /// <summary>
         /// Check for duplicates by catalog number
         /// </summary>
-        private async Task<List<MusicRelease>> CheckByCatalogNumberAsync(string labelNumber, int? excludeReleaseId)
+        private async Task<List<MusicRelease>> CheckByCatalogNumberAsync(string labelNumber, int? excludeReleaseId, Guid userId)
         {
             var normalizedCatalog = labelNumber.Trim().ToLower();
             var catalogMatches = await _musicReleaseRepository.GetAsync(
-                filter: r => r.LabelNumber != null && r.LabelNumber.ToLower() == normalizedCatalog);
+                filter: r => r.UserId == userId && r.LabelNumber != null && r.LabelNumber.ToLower() == normalizedCatalog);
 
             if (excludeReleaseId.HasValue)
             {
@@ -80,10 +86,11 @@ namespace KollectorScum.Api.Services
         private async Task<List<MusicRelease>> CheckByTitleAndArtistAsync(
             string title, 
             List<int> artistIds, 
-            int? excludeReleaseId)
+            int? excludeReleaseId,
+            Guid userId)
         {
             var normalizedTitle = title.Trim().ToLower();
-            var allReleases = await _musicReleaseRepository.GetAllAsync();
+            var allReleases = await _musicReleaseRepository.GetAsync(r => r.UserId == userId);
             
             var titleArtistMatches = allReleases.Where(r =>
             {

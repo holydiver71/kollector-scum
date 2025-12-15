@@ -23,6 +23,7 @@ namespace KollectorScum.Tests.Services
         private readonly Mock<IMusicReleaseValidator> _mockValidator;
         private readonly Mock<ILogger<MusicReleaseCommandService>> _mockLogger;
         private readonly Mock<IConfiguration> _mockConfiguration;
+        private readonly Mock<IUserContext> _mockUserContext;
         private readonly MusicReleaseCommandService _service;
         private readonly string _testImagesPath;
 
@@ -35,6 +36,7 @@ namespace KollectorScum.Tests.Services
             _mockValidator = new Mock<IMusicReleaseValidator>();
             _mockLogger = new Mock<ILogger<MusicReleaseCommandService>>();
             _mockConfiguration = new Mock<IConfiguration>();
+            _mockUserContext = new Mock<IUserContext>();
 
             // Setup test directory for images
             _testImagesPath = Path.Combine(Path.GetTempPath(), "kollector-test-images", Guid.NewGuid().ToString());
@@ -51,7 +53,8 @@ namespace KollectorScum.Tests.Services
                 _mockMapper.Object,
                 _mockValidator.Object,
                 _mockLogger.Object,
-                _mockConfiguration.Object
+                _mockConfiguration.Object,
+                _mockUserContext.Object
             );
         }
 
