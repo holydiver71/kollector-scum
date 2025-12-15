@@ -20,6 +20,7 @@ namespace KollectorScum.Api.Services
         private readonly IMusicReleaseValidator _validator;
         private readonly ILogger<MusicReleaseCommandService> _logger;
         private readonly IConfiguration _configuration;
+        private readonly IUserContext _userContext;
 
         public MusicReleaseCommandService(
             IRepository<MusicRelease> musicReleaseRepository,
@@ -28,7 +29,8 @@ namespace KollectorScum.Api.Services
             IMusicReleaseMapperService mapper,
             IMusicReleaseValidator validator,
             ILogger<MusicReleaseCommandService> logger,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IUserContext userContext)
         {
             _musicReleaseRepository = musicReleaseRepository ?? throw new ArgumentNullException(nameof(musicReleaseRepository));
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
@@ -37,6 +39,7 @@ namespace KollectorScum.Api.Services
             _validator = validator ?? throw new ArgumentNullException(nameof(validator));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _userContext = userContext ?? throw new ArgumentNullException(nameof(userContext));
         }
 
         public async Task<Result<CreateMusicReleaseResponseDto>> CreateMusicReleaseAsync(CreateMusicReleaseDto createDto)
@@ -77,8 +80,16 @@ namespace KollectorScum.Api.Services
                 }
 
                 // Create the music release
+                var userId = _userContext.GetActingUserId();
+                if (!userId.HasValue)
+                {
+                    await _unitOfWork.RollbackTransactionAsync();
+                    return Result<CreateMusicReleaseResponseDto>.Failure("User must be authenticated to create a release", ErrorType.ValidationError);
+                }
+
                 var musicRelease = new MusicRelease
                 {
+                    UserId = userId.Value,
                     Title = createDto.Title,
                     ReleaseYear = createDto.ReleaseYear,
                     OrigReleaseYear = createDto.OrigReleaseYear,
@@ -150,6 +161,15 @@ namespace KollectorScum.Api.Services
                     return Result<MusicReleaseDto>.NotFound("Music release", id);
                 }
 
+                // Check ownership
+                var userId = _userContext.GetActingUserId();
+                if (userId.HasValue && existingMusicRelease.UserId != userId.Value)
+                {
+                    _logger.LogWarning("Access denied for music release {Id}. User {UserId} does not own this release.", id, userId);
+                    await _unitOfWork.RollbackTransactionAsync();
+                    return Result<MusicReleaseDto>.Failure("Access denied", ErrorType.AuthorizationError);
+                }
+
                 // Validate update
                 var validationResult = await _validator.ValidateUpdateAsync(id, updateDto);
                 if (!validationResult.IsValid)
@@ -169,7 +189,7 @@ namespace KollectorScum.Api.Services
 
                         // Check if store exists (case-insensitive)
                         var existingStores = await _unitOfWork.Stores.GetAsync(
-                            filter: s => s.Name.ToLower() == storeName.ToLower());
+                            filter: s => s.UserId == userId.Value && s.Name.ToLower() == storeName.ToLower());
                         var existingStore = existingStores.FirstOrDefault();
 
                         if (existingStore != null)
@@ -181,7 +201,7 @@ namespace KollectorScum.Api.Services
                         else
                         {
                             // Create new store
-                            var newStore = new Store { Name = storeName };
+                            var newStore = new Store { Name = storeName, UserId = userId.Value };
                             await _unitOfWork.Stores.AddAsync(newStore);
                             await _unitOfWork.SaveChangesAsync(); // Save to get the ID
                             updateDto.PurchaseInfo.StoreId = newStore.Id;
@@ -259,6 +279,14 @@ namespace KollectorScum.Api.Services
                 {
                     _logger.LogWarning("Music release not found: {Id}", id);
                     return Result<bool>.NotFound("Music release", id);
+                }
+
+                // Check ownership
+                var userId = _userContext.GetActingUserId();
+                if (userId.HasValue && musicRelease.UserId != userId.Value)
+                {
+                    _logger.LogWarning("Access denied for music release {Id}. User {UserId} does not own this release.", id, userId);
+                    return Result<bool>.Failure("Access denied", ErrorType.AuthorizationError);
                 }
 
                 // Delete associated image files before deleting the record

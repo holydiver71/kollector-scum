@@ -18,6 +18,7 @@ namespace KollectorScum.Api.Services
         private readonly IRepository<Genre> _genreRepository;
         private readonly IMusicReleaseMapperService _mapperService;
         private readonly ILogger<CollectionStatisticsService> _logger;
+        private readonly IUserContext _userContext;
 
         public CollectionStatisticsService(
             IRepository<MusicRelease> musicReleaseRepository,
@@ -25,7 +26,8 @@ namespace KollectorScum.Api.Services
             IRepository<Country> countryRepository,
             IRepository<Genre> genreRepository,
             IMusicReleaseMapperService mapperService,
-            ILogger<CollectionStatisticsService> logger)
+            ILogger<CollectionStatisticsService> logger,
+            IUserContext userContext)
         {
             _musicReleaseRepository = musicReleaseRepository;
             _formatRepository = formatRepository;
@@ -33,14 +35,21 @@ namespace KollectorScum.Api.Services
             _genreRepository = genreRepository;
             _mapperService = mapperService;
             _logger = logger;
+            _userContext = userContext ?? throw new ArgumentNullException(nameof(userContext));
         }
 
         public async Task<CollectionStatisticsDto> GetCollectionStatisticsAsync()
         {
             _logger.LogInformation("Getting collection statistics");
 
+            var userId = _userContext.GetActingUserId();
+            if (!userId.HasValue)
+            {
+                return new CollectionStatisticsDto();
+            }
+
             var statistics = new CollectionStatisticsDto();
-            var allReleases = await _musicReleaseRepository.GetAllAsync();
+            var allReleases = await _musicReleaseRepository.GetAsync(r => r.UserId == userId.Value);
             var releasesList = allReleases.ToList();
 
             statistics.TotalReleases = releasesList.Count;

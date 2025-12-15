@@ -14,13 +14,16 @@ namespace KollectorScum.Api.Services
     {
         private readonly KollectorScumDbContext _context;
         private readonly ILogger<KollectionService> _logger;
+        private readonly IUserContext _userContext;
 
         public KollectionService(
             KollectorScumDbContext context,
-            ILogger<KollectionService> logger)
+            ILogger<KollectionService> logger,
+            IUserContext userContext)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _userContext = userContext ?? throw new ArgumentNullException(nameof(userContext));
         }
 
         public async Task<PagedResult<KollectionDto>> GetAllAsync(int page, int pageSize, string? search = null)
@@ -28,7 +31,21 @@ namespace KollectorScum.Api.Services
             _logger.LogInformation("Getting kollections - Page: {Page}, PageSize: {PageSize}, Search: {Search}", 
                 page, pageSize, search);
 
+            var userId = _userContext.GetActingUserId();
+            if (!userId.HasValue)
+            {
+                return new PagedResult<KollectionDto>
+                {
+                    Items = new List<KollectionDto>(),
+                    Page = page,
+                    PageSize = pageSize,
+                    TotalCount = 0,
+                    TotalPages = 0
+                };
+            }
+
             var query = _context.Kollections
+                .Where(k => k.UserId == userId.Value)
                 .Include(k => k.KollectionGenres)
                 .ThenInclude(kg => kg.Genre)
                 .AsQueryable();
@@ -61,10 +78,13 @@ namespace KollectorScum.Api.Services
         {
             _logger.LogInformation("Getting kollection by ID: {Id}", id);
 
+            var userId = _userContext.GetActingUserId();
+            if (!userId.HasValue) return null;
+
             var kollection = await _context.Kollections
                 .Include(k => k.KollectionGenres)
                 .ThenInclude(kg => kg.Genre)
-                .FirstOrDefaultAsync(k => k.Id == id);
+                .FirstOrDefaultAsync(k => k.Id == id && k.UserId == userId.Value);
 
             return kollection != null ? MapToDto(kollection) : null;
         }
@@ -73,25 +93,34 @@ namespace KollectorScum.Api.Services
         {
             _logger.LogInformation("Creating kollection: {Name}", createDto.Name);
 
-            // Check if name already exists
-            if (await _context.Kollections.AnyAsync(k => k.Name.ToLower() == createDto.Name.ToLower()))
+            var userId = _userContext.GetActingUserId();
+            if (!userId.HasValue) throw new UnauthorizedAccessException("User must be logged in to create a kollection.");
+
+            // Check if name already exists for this user
+            if (await _context.Kollections.AnyAsync(k => k.UserId == userId.Value && k.Name.ToLower() == createDto.Name.ToLower()))
             {
                 throw new ArgumentException($"A kollection with the name '{createDto.Name}' already exists.");
             }
 
-            // Verify all genres exist
+            // Verify all genres exist (genres are shared or user-specific? Assuming shared for now or handled by resolver)
+            // Ideally we should check if genres belong to user or are global, but for now let's just check existence.
+            // If genres are user-specific, we should filter here too.
+            // Based on EntityResolverService, genres are user-specific.
+            // So we should check if genres belong to the user.
+            
             var genres = await _context.Genres
-                .Where(g => createDto.GenreIds.Contains(g.Id))
+                .Where(g => createDto.GenreIds.Contains(g.Id) && g.UserId == userId.Value)
                 .ToListAsync();
 
             if (genres.Count != createDto.GenreIds.Count)
             {
-                throw new ArgumentException("One or more genre IDs are invalid.");
+                throw new ArgumentException("One or more genre IDs are invalid or do not belong to the user.");
             }
 
             var kollection = new Kollection
             {
-                Name = createDto.Name
+                Name = createDto.Name,
+                UserId = userId.Value
             };
 
             _context.Kollections.Add(kollection);
@@ -122,9 +151,12 @@ namespace KollectorScum.Api.Services
         {
             _logger.LogInformation("Updating kollection: {Id}", id);
 
+            var userId = _userContext.GetActingUserId();
+            if (!userId.HasValue) return null;
+
             var kollection = await _context.Kollections
                 .Include(k => k.KollectionGenres)
-                .FirstOrDefaultAsync(k => k.Id == id);
+                .FirstOrDefaultAsync(k => k.Id == id && k.UserId == userId.Value);
 
             if (kollection == null)
             {
@@ -132,19 +164,19 @@ namespace KollectorScum.Api.Services
             }
 
             // Check if name already exists (excluding current kollection)
-            if (await _context.Kollections.AnyAsync(k => k.Name.ToLower() == updateDto.Name.ToLower() && k.Id != id))
+            if (await _context.Kollections.AnyAsync(k => k.UserId == userId.Value && k.Name.ToLower() == updateDto.Name.ToLower() && k.Id != id))
             {
                 throw new ArgumentException($"A kollection with the name '{updateDto.Name}' already exists.");
             }
 
-            // Verify all genres exist
+            // Verify all genres exist and belong to user
             var genres = await _context.Genres
-                .Where(g => updateDto.GenreIds.Contains(g.Id))
+                .Where(g => updateDto.GenreIds.Contains(g.Id) && g.UserId == userId.Value)
                 .ToListAsync();
 
             if (genres.Count != updateDto.GenreIds.Count)
             {
-                throw new ArgumentException("One or more genre IDs are invalid.");
+                throw new ArgumentException("One or more genre IDs are invalid or do not belong to the user.");
             }
 
             kollection.Name = updateDto.Name;
@@ -177,7 +209,10 @@ namespace KollectorScum.Api.Services
         {
             _logger.LogInformation("Deleting kollection: {Id}", id);
 
-            var kollection = await _context.Kollections.FindAsync(id);
+            var userId = _userContext.GetActingUserId();
+            if (!userId.HasValue) return false;
+
+            var kollection = await _context.Kollections.FirstOrDefaultAsync(k => k.Id == id && k.UserId == userId.Value);
             if (kollection == null)
             {
                 return false;

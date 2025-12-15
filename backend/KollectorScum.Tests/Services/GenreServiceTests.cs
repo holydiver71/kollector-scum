@@ -20,14 +20,19 @@ namespace KollectorScum.Tests.Services
         private readonly Mock<IRepository<Genre>> _mockRepository;
         private readonly Mock<IUnitOfWork> _mockUnitOfWork;
         private readonly Mock<ILogger<GenreService>> _mockLogger;
+        private readonly Mock<IUserContext> _mockUserContext;
         private readonly GenreService _service;
+        private readonly Guid _userId;
 
         public GenreServiceTests()
         {
             _mockRepository = new Mock<IRepository<Genre>>();
             _mockUnitOfWork = new Mock<IUnitOfWork>();
             _mockLogger = new Mock<ILogger<GenreService>>();
-            _service = new GenreService(_mockRepository.Object, _mockUnitOfWork.Object, _mockLogger.Object);
+            _mockUserContext = new Mock<IUserContext>();
+            _userId = Guid.NewGuid();
+            _mockUserContext.Setup(x => x.GetActingUserId()).Returns(_userId);
+            _service = new GenreService(_mockRepository.Object, _mockUnitOfWork.Object, _mockLogger.Object, _mockUserContext.Object);
         }
 
         #region Constructor Tests
@@ -44,7 +49,7 @@ namespace KollectorScum.Tests.Services
         {
             // Act & Assert
             Assert.Throws<ArgumentNullException>(() =>
-                new GenreService(null!, _mockUnitOfWork.Object, _mockLogger.Object));
+                new GenreService(null!, _mockUnitOfWork.Object, _mockLogger.Object, _mockUserContext.Object));
         }
 
         [Fact]
@@ -52,7 +57,7 @@ namespace KollectorScum.Tests.Services
         {
             // Act & Assert
             Assert.Throws<ArgumentNullException>(() =>
-                new GenreService(_mockRepository.Object, null!, _mockLogger.Object));
+                new GenreService(_mockRepository.Object, null!, _mockLogger.Object, _mockUserContext.Object));
         }
 
         [Fact]
@@ -60,7 +65,15 @@ namespace KollectorScum.Tests.Services
         {
             // Act & Assert
             Assert.Throws<ArgumentNullException>(() =>
-                new GenreService(_mockRepository.Object, _mockUnitOfWork.Object, null!));
+                new GenreService(_mockRepository.Object, _mockUnitOfWork.Object, null!, _mockUserContext.Object));
+        }
+
+        [Fact]
+        public void Constructor_WithNullUserContext_ThrowsArgumentNullException()
+        {
+            // Act & Assert
+            Assert.Throws<ArgumentNullException>(() =>
+                new GenreService(_mockRepository.Object, _mockUnitOfWork.Object, _mockLogger.Object, null!));
         }
 
         #endregion
@@ -90,7 +103,7 @@ namespace KollectorScum.Tests.Services
                 .ReturnsAsync(pagedResult);
 
             _mockRepository.Setup(r => r.AddAsync(It.IsAny<Genre>()))
-                .ReturnsAsync(new Genre { Id = 1, Name = "Rock" });
+                .ReturnsAsync(new Genre { Id = 1, Name = "Rock", UserId = _userId });
 
             _mockUnitOfWork.Setup(u => u.SaveChangesAsync())
                 .ReturnsAsync(1);
@@ -167,7 +180,7 @@ namespace KollectorScum.Tests.Services
                 .ReturnsAsync(pagedResult);
 
             _mockRepository.Setup(r => r.AddAsync(It.IsAny<Genre>()))
-                .ReturnsAsync(new Genre { Id = 1, Name = genreDto.Name });
+                .ReturnsAsync(new Genre { Id = 1, Name = genreDto.Name, UserId = _userId });
 
             _mockUnitOfWork.Setup(u => u.SaveChangesAsync())
                 .ReturnsAsync(1);
@@ -184,7 +197,7 @@ namespace KollectorScum.Tests.Services
         public async Task UpdateAsync_WithValidGenre_UpdatesSuccessfully()
         {
             // Arrange
-            var existingGenre = new Genre { Id = 1, Name = "Old Name" };
+            var existingGenre = new Genre { Id = 1, Name = "Old Name", UserId = _userId };
             var genreDto = new GenreDto { Id = 1, Name = "New Name" };
 
             _mockRepository.Setup(r => r.GetByIdAsync(1))
@@ -208,7 +221,7 @@ namespace KollectorScum.Tests.Services
         public async Task UpdateAsync_WithInvalidName_ThrowsArgumentException()
         {
             // Arrange
-            var existingGenre = new Genre { Id = 1, Name = "Old Name" };
+            var existingGenre = new Genre { Id = 1, Name = "Old Name", UserId = _userId };
             var genreDto = new GenreDto { Id = 1, Name = "" };
 
             _mockRepository.Setup(r => r.GetByIdAsync(1))
@@ -230,7 +243,7 @@ namespace KollectorScum.Tests.Services
             {
                 Items = new System.Collections.Generic.List<Genre>
                 {
-                    new Genre { Id = 1, Name = "Rock" }
+                    new Genre { Id = 1, Name = "Rock", UserId = _userId }
                 },
                 TotalCount = 1,
                 Page = 1,
@@ -268,7 +281,7 @@ namespace KollectorScum.Tests.Services
         public async Task GetByIdAsync_WithValidId_ReturnsGenre()
         {
             // Arrange
-            var genre = new Genre { Id = 1, Name = "Jazz" };
+            var genre = new Genre { Id = 1, Name = "Jazz", UserId = _userId };
             _mockRepository.Setup(r => r.GetByIdAsync(1))
                 .ReturnsAsync(genre);
 
@@ -299,7 +312,7 @@ namespace KollectorScum.Tests.Services
         public async Task DeleteAsync_WithValidId_DeletesSuccessfully()
         {
             // Arrange
-            var genre = new Genre { Id = 1, Name = "Classical" };
+            var genre = new Genre { Id = 1, Name = "Classical", UserId = _userId };
             _mockRepository.Setup(r => r.GetByIdAsync(1))
                 .ReturnsAsync(genre);
 

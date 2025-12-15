@@ -19,6 +19,7 @@ namespace KollectorScum.Tests.Services
         private readonly Mock<IRepository<Packaging>> _mockPackagingRepo;
         private readonly Mock<IUnitOfWork> _mockUnitOfWork;
         private readonly Mock<ILogger<EntityResolverService>> _mockLogger;
+        private readonly Mock<IUserContext> _mockUserContext;
         private readonly EntityResolverService _service;
 
         public EntityResolverServiceTests()
@@ -31,6 +32,7 @@ namespace KollectorScum.Tests.Services
             _mockPackagingRepo = new Mock<IRepository<Packaging>>();
             _mockUnitOfWork = new Mock<IUnitOfWork>();
             _mockLogger = new Mock<ILogger<EntityResolverService>>();
+            _mockUserContext = new Mock<IUserContext>();
 
             _service = new EntityResolverService(
                 _mockArtistRepo.Object,
@@ -40,7 +42,8 @@ namespace KollectorScum.Tests.Services
                 _mockFormatRepo.Object,
                 _mockPackagingRepo.Object,
                 _mockUnitOfWork.Object,
-                _mockLogger.Object
+                _mockLogger.Object,
+                _mockUserContext.Object
             );
         }
 

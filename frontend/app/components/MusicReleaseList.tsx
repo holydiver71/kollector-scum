@@ -3,7 +3,8 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { fetchJson, createNowPlaying } from "../lib/api";
+import { fetchJson, createNowPlaying, ApiError } from "../lib/api";
+import { clearAuthToken } from "../lib/auth";
 import { LoadingSpinner, Skeleton } from "./LoadingComponents";
 import { Play, Check, User, Clock, Calendar, Disc3, ChevronLeft, ChevronRight, Eye, List } from "lucide-react";
 
@@ -400,6 +401,15 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
       setTotalCount(response.totalCount);
     } catch (err) {
       console.error('Error fetching releases:', err);
+      
+      // Handle 401 Unauthorized
+      const apiError = err as ApiError;
+      if (apiError?.status === 401) {
+        clearAuthToken();
+        window.location.href = '/';
+        return;
+      }
+
       // Try to surface server status/details if available (ApiError shape from fetchJson)
       let message = 'Failed to load releases';
       try {

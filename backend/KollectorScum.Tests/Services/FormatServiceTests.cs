@@ -20,14 +20,19 @@ namespace KollectorScum.Tests.Services
         private readonly Mock<IRepository<Format>> _mockRepository;
         private readonly Mock<IUnitOfWork> _mockUnitOfWork;
         private readonly Mock<ILogger<FormatService>> _mockLogger;
+        private readonly Mock<IUserContext> _mockUserContext;
         private readonly FormatService _service;
+        private readonly Guid _userId;
 
         public FormatServiceTests()
         {
             _mockRepository = new Mock<IRepository<Format>>();
             _mockUnitOfWork = new Mock<IUnitOfWork>();
             _mockLogger = new Mock<ILogger<FormatService>>();
-            _service = new FormatService(_mockRepository.Object, _mockUnitOfWork.Object, _mockLogger.Object);
+            _mockUserContext = new Mock<IUserContext>();
+            _userId = Guid.NewGuid();
+            _mockUserContext.Setup(x => x.GetActingUserId()).Returns(_userId);
+            _service = new FormatService(_mockRepository.Object, _mockUnitOfWork.Object, _mockLogger.Object, _mockUserContext.Object);
         }
 
         #region Constructor Tests
@@ -44,7 +49,7 @@ namespace KollectorScum.Tests.Services
         {
             // Act & Assert
             Assert.Throws<ArgumentNullException>(() =>
-                new FormatService(null!, _mockUnitOfWork.Object, _mockLogger.Object));
+                new FormatService(null!, _mockUnitOfWork.Object, _mockLogger.Object, _mockUserContext.Object));
         }
 
         [Fact]
@@ -52,7 +57,7 @@ namespace KollectorScum.Tests.Services
         {
             // Act & Assert
             Assert.Throws<ArgumentNullException>(() =>
-                new FormatService(_mockRepository.Object, null!, _mockLogger.Object));
+                new FormatService(_mockRepository.Object, null!, _mockLogger.Object, _mockUserContext.Object));
         }
 
         [Fact]
@@ -60,7 +65,15 @@ namespace KollectorScum.Tests.Services
         {
             // Act & Assert
             Assert.Throws<ArgumentNullException>(() =>
-                new FormatService(_mockRepository.Object, _mockUnitOfWork.Object, null!));
+                new FormatService(_mockRepository.Object, _mockUnitOfWork.Object, null!, _mockUserContext.Object));
+        }
+
+        [Fact]
+        public void Constructor_WithNullUserContext_ThrowsArgumentNullException()
+        {
+            // Act & Assert
+            Assert.Throws<ArgumentNullException>(() =>
+                new FormatService(_mockRepository.Object, _mockUnitOfWork.Object, _mockLogger.Object, null!));
         }
 
         #endregion
@@ -90,7 +103,7 @@ namespace KollectorScum.Tests.Services
                 .ReturnsAsync(pagedResult);
 
             _mockRepository.Setup(r => r.AddAsync(It.IsAny<Format>()))
-                .ReturnsAsync(new Format { Id = 1, Name = "Vinyl" });
+                .ReturnsAsync(new Format { Id = 1, Name = "Vinyl", UserId = _userId });
 
             _mockUnitOfWork.Setup(u => u.SaveChangesAsync())
                 .ReturnsAsync(1);
@@ -167,7 +180,7 @@ namespace KollectorScum.Tests.Services
                 .ReturnsAsync(pagedResult);
 
             _mockRepository.Setup(r => r.AddAsync(It.IsAny<Format>()))
-                .ReturnsAsync(new Format { Id = 1, Name = formatDto.Name });
+                .ReturnsAsync(new Format { Id = 1, Name = formatDto.Name, UserId = _userId });
 
             _mockUnitOfWork.Setup(u => u.SaveChangesAsync())
                 .ReturnsAsync(1);
@@ -184,7 +197,7 @@ namespace KollectorScum.Tests.Services
         public async Task UpdateAsync_WithValidFormat_UpdatesSuccessfully()
         {
             // Arrange
-            var existingFormat = new Format { Id = 1, Name = "Old Name" };
+            var existingFormat = new Format { Id = 1, Name = "Old Name", UserId = _userId };
             var formatDto = new FormatDto { Id = 1, Name = "New Name" };
 
             _mockRepository.Setup(r => r.GetByIdAsync(1))
@@ -208,7 +221,7 @@ namespace KollectorScum.Tests.Services
         public async Task UpdateAsync_WithInvalidName_ThrowsArgumentException()
         {
             // Arrange
-            var existingFormat = new Format { Id = 1, Name = "Old Name" };
+            var existingFormat = new Format { Id = 1, Name = "Old Name", UserId = _userId };
             var formatDto = new FormatDto { Id = 1, Name = "" };
 
             _mockRepository.Setup(r => r.GetByIdAsync(1))
@@ -230,7 +243,7 @@ namespace KollectorScum.Tests.Services
             {
                 Items = new System.Collections.Generic.List<Format>
                 {
-                    new Format { Id = 1, Name = "Vinyl" }
+                    new Format { Id = 1, Name = "Vinyl", UserId = _userId }
                 },
                 TotalCount = 1,
                 Page = 1,
@@ -268,7 +281,7 @@ namespace KollectorScum.Tests.Services
         public async Task GetByIdAsync_WithValidId_ReturnsFormat()
         {
             // Arrange
-            var format = new Format { Id = 1, Name = "Vinyl" };
+            var format = new Format { Id = 1, Name = "Vinyl", UserId = _userId };
             _mockRepository.Setup(r => r.GetByIdAsync(1))
                 .ReturnsAsync(format);
 
@@ -299,7 +312,7 @@ namespace KollectorScum.Tests.Services
         public async Task DeleteAsync_WithValidId_DeletesSuccessfully()
         {
             // Arrange
-            var format = new Format { Id = 1, Name = "Vinyl" };
+            var format = new Format { Id = 1, Name = "Vinyl", UserId = _userId };
             _mockRepository.Setup(r => r.GetByIdAsync(1))
                 .ReturnsAsync(format);
 
