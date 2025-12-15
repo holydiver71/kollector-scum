@@ -5,12 +5,18 @@ namespace KollectorScum.Api.Models
     /// <summary>
     /// Represents an artist entity for music releases
     /// </summary>
-    public class Artist
+    public class Artist : IUserOwnedEntity
     {
         /// <summary>
         /// Gets or sets the unique identifier for the artist
         /// </summary>
         public int Id { get; set; }
+
+        /// <summary>
+        /// Gets or sets the user identifier who owns this artist
+        /// </summary>
+        [Required]
+        public Guid UserId { get; set; }
 
         /// <summary>
         /// Gets or sets the name of the artist

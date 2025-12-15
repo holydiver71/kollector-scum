@@ -6,6 +6,8 @@ using KollectorScum.Api.Interfaces;
 using KollectorScum.Api.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Moq;
 using Xunit;
 
@@ -17,6 +19,8 @@ namespace KollectorScum.Tests.Controllers
         private readonly Mock<IUserRepository> _mockUserRepository;
         private readonly Mock<IUserProfileRepository> _mockUserProfileRepository;
         private readonly Mock<ITokenService> _mockTokenService;
+        private readonly Mock<IConfiguration> _mockConfiguration;
+        private readonly Mock<IHostEnvironment> _mockEnvironment;
         private readonly Mock<ILogger<AuthController>> _mockLogger;
         private readonly AuthController _controller;
 
@@ -26,6 +30,8 @@ namespace KollectorScum.Tests.Controllers
             _mockUserRepository = new Mock<IUserRepository>();
             _mockUserProfileRepository = new Mock<IUserProfileRepository>();
             _mockTokenService = new Mock<ITokenService>();
+            _mockConfiguration = new Mock<IConfiguration>();
+            _mockEnvironment = new Mock<IHostEnvironment>();
             _mockLogger = new Mock<ILogger<AuthController>>();
 
             _controller = new AuthController(
@@ -33,6 +39,8 @@ namespace KollectorScum.Tests.Controllers
                 _mockUserRepository.Object,
                 _mockUserProfileRepository.Object,
                 _mockTokenService.Object,
+                _mockConfiguration.Object,
+                _mockEnvironment.Object,
                 _mockLogger.Object
             );
         }

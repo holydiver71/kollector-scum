@@ -1,5 +1,6 @@
 using KollectorScum.Api.DTOs;
 using KollectorScum.Api.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Linq.Expressions;
 
@@ -16,15 +17,18 @@ namespace KollectorScum.Api.Services
         protected readonly IRepository<TEntity> _repository;
         protected readonly IUnitOfWork _unitOfWork;
         protected readonly ILogger _logger;
+        protected readonly IUserContext _userContext;
 
         protected GenericCrudService(
             IRepository<TEntity> repository,
             IUnitOfWork unitOfWork,
-            ILogger logger)
+            ILogger logger,
+            IUserContext userContext)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _userContext = userContext ?? throw new ArgumentNullException(nameof(userContext));
         }
 
         /// <summary>
@@ -37,15 +41,32 @@ namespace KollectorScum.Api.Services
             Expression<Func<TEntity, bool>>? filter = null,
             Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null)
         {
-            _logger.LogInformation("Getting all {EntityType} - Page: {Page}, PageSize: {PageSize}, Search: {Search}",
-                typeof(TEntity).Name, page, pageSize, search);
+            var userId = _userContext.GetActingUserId();
+            if (!userId.HasValue)
+            {
+                throw new UnauthorizedAccessException("User must be authenticated");
+            }
+
+            _logger.LogInformation("Getting all {EntityType} for user {UserId} - Page: {Page}, PageSize: {PageSize}, Search: {Search}",
+                typeof(TEntity).Name, userId, page, pageSize, search);
+
+            // Add userId filter for user-owned entities
+            Expression<Func<TEntity, bool>>? combinedFilter = filter;
+            if (typeof(Models.IUserOwnedEntity).IsAssignableFrom(typeof(TEntity)))
+            {
+                var userIdValue = userId.Value;
+                Expression<Func<TEntity, bool>> userFilter = e => ((Models.IUserOwnedEntity)e).UserId == userIdValue;
+                combinedFilter = combinedFilter == null ? userFilter : CombineFilters(combinedFilter, userFilter);
+            }
 
             // Combine search filter with custom filter
-            Expression<Func<TEntity, bool>>? combinedFilter = filter;
             if (!string.IsNullOrWhiteSpace(search))
             {
                 var searchFilter = BuildSearchFilter(search);
-                combinedFilter = combinedFilter == null ? searchFilter : CombineFilters(combinedFilter, searchFilter);
+                if (searchFilter != null)
+                {
+                    combinedFilter = combinedFilter == null ? searchFilter : CombineFilters(combinedFilter, searchFilter);
+                }
             }
 
             // Default ordering if none provided
@@ -74,9 +95,28 @@ namespace KollectorScum.Api.Services
         /// </summary>
         public virtual async Task<TDto?> GetByIdAsync(int id)
         {
-            _logger.LogInformation("Getting {EntityType} by ID: {Id}", typeof(TEntity).Name, id);
+            var userId = _userContext.GetActingUserId();
+            if (!userId.HasValue)
+            {
+                throw new UnauthorizedAccessException("User must be authenticated");
+            }
+
+            _logger.LogInformation("Getting {EntityType} by ID: {Id} for user {UserId}", typeof(TEntity).Name, id, userId);
 
             var entity = await _repository.GetByIdAsync(id);
+            
+            // Verify user owns the entity
+            if (entity != null && typeof(Models.IUserOwnedEntity).IsAssignableFrom(typeof(TEntity)))
+            {
+                var userOwnedEntity = entity as Models.IUserOwnedEntity;
+                if (userOwnedEntity?.UserId != userId.Value)
+                {
+                    _logger.LogWarning("User {UserId} attempted to access {EntityType} {Id} owned by {OwnerId}",
+                        userId, typeof(TEntity).Name, id, userOwnedEntity?.UserId);
+                    return default;
+                }
+            }
+            
             return entity == null ? default : MapToDto(entity);
         }
 
@@ -85,15 +125,29 @@ namespace KollectorScum.Api.Services
         /// </summary>
         public virtual async Task<TDto> CreateAsync(TDto dto)
         {
-            _logger.LogInformation("Creating new {EntityType}", typeof(TEntity).Name);
+            var userId = _userContext.GetActingUserId();
+            if (!userId.HasValue)
+            {
+                throw new UnauthorizedAccessException("User must be authenticated");
+            }
+
+            _logger.LogInformation("Creating new {EntityType} for user {UserId}", typeof(TEntity).Name, userId);
 
             ValidateDto(dto);
 
             var entity = MapToEntity(dto);
+            
+            // Set UserId for user-owned entities
+            if (entity is Models.IUserOwnedEntity userOwnedEntity)
+            {
+                userOwnedEntity.UserId = userId.Value;
+            }
+            
             await _repository.AddAsync(entity);
             await _unitOfWork.SaveChangesAsync();
 
-            _logger.LogInformation("Created {EntityType} with ID: {Id}", typeof(TEntity).Name, GetEntityId(entity));
+            _logger.LogInformation("Created {EntityType} with ID: {Id} for user {UserId}", 
+                typeof(TEntity).Name, GetEntityId(entity), userId);
 
             return MapToDto(entity);
         }
@@ -103,7 +157,13 @@ namespace KollectorScum.Api.Services
         /// </summary>
         public virtual async Task<TDto?> UpdateAsync(int id, TDto dto)
         {
-            _logger.LogInformation("Updating {EntityType} with ID: {Id}", typeof(TEntity).Name, id);
+            var userId = _userContext.GetActingUserId();
+            if (!userId.HasValue)
+            {
+                throw new UnauthorizedAccessException("User must be authenticated");
+            }
+
+            _logger.LogInformation("Updating {EntityType} with ID: {Id} for user {UserId}", typeof(TEntity).Name, id, userId);
 
             var existingEntity = await _repository.GetByIdAsync(id);
             if (existingEntity == null)
@@ -112,13 +172,24 @@ namespace KollectorScum.Api.Services
                 return default;
             }
 
+            // Verify user owns the entity
+            if (existingEntity is Models.IUserOwnedEntity userOwnedEntity)
+            {
+                if (userOwnedEntity.UserId != userId.Value)
+                {
+                    _logger.LogWarning("User {UserId} attempted to update {EntityType} {Id} owned by {OwnerId}",
+                        userId, typeof(TEntity).Name, id, userOwnedEntity.UserId);
+                    throw new UnauthorizedAccessException("Cannot update entity owned by another user");
+                }
+            }
+
             ValidateDto(dto);
 
             UpdateEntity(existingEntity, dto);
             _repository.Update(existingEntity);
             await _unitOfWork.SaveChangesAsync();
 
-            _logger.LogInformation("Updated {EntityType} with ID: {Id}", typeof(TEntity).Name, id);
+            _logger.LogInformation("Updated {EntityType} with ID: {Id} for user {UserId}", typeof(TEntity).Name, id, userId);
 
             return MapToDto(existingEntity);
         }
@@ -128,7 +199,13 @@ namespace KollectorScum.Api.Services
         /// </summary>
         public virtual async Task<bool> DeleteAsync(int id)
         {
-            _logger.LogInformation("Deleting {EntityType} with ID: {Id}", typeof(TEntity).Name, id);
+            var userId = _userContext.GetActingUserId();
+            if (!userId.HasValue)
+            {
+                throw new UnauthorizedAccessException("User must be authenticated");
+            }
+
+            _logger.LogInformation("Deleting {EntityType} with ID: {Id} for user {UserId}", typeof(TEntity).Name, id, userId);
 
             var entity = await _repository.GetByIdAsync(id);
             if (entity == null)
@@ -137,10 +214,21 @@ namespace KollectorScum.Api.Services
                 return false;
             }
 
+            // Verify user owns the entity
+            if (entity is Models.IUserOwnedEntity userOwnedEntity)
+            {
+                if (userOwnedEntity.UserId != userId.Value)
+                {
+                    _logger.LogWarning("User {UserId} attempted to delete {EntityType} {Id} owned by {OwnerId}",
+                        userId, typeof(TEntity).Name, id, userOwnedEntity.UserId);
+                    throw new UnauthorizedAccessException("Cannot delete entity owned by another user");
+                }
+            }
+
             _repository.Delete(entity);
             await _unitOfWork.SaveChangesAsync();
 
-            _logger.LogInformation("Deleted {EntityType} with ID: {Id}", typeof(TEntity).Name, id);
+            _logger.LogInformation("Deleted {EntityType} with ID: {Id} for user {UserId}", typeof(TEntity).Name, id, userId);
 
             return true;
         }
@@ -193,6 +281,73 @@ namespace KollectorScum.Api.Services
                 throw new ArgumentNullException(nameof(dto));
             }
             // Additional validation can be added in derived classes
+        }
+
+        /// <summary>
+        /// Gets or creates an entity by name (for lookup tables)
+        /// </summary>
+        public virtual async Task<TDto> GetOrCreateByNameAsync(string name)
+        {
+            var userId = _userContext.GetActingUserId();
+            if (!userId.HasValue)
+            {
+                throw new UnauthorizedAccessException("User must be authenticated");
+            }
+
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                throw new ArgumentException("Name cannot be empty", nameof(name));
+            }
+
+            _logger.LogInformation("Getting or creating {EntityType} with name '{Name}' for user {UserId}",
+                typeof(TEntity).Name, name, userId);
+
+            // Try to find existing entity by name and userId
+            var userIdValue = userId.Value;
+            // Note: Using EF.Property and reflection for generic lookup by name
+            // This is intentional for the generic pattern - specific services can override if needed
+            Expression<Func<TEntity, bool>> filter = e =>
+                ((Models.IUserOwnedEntity)e).UserId == userIdValue &&
+                EF.Property<string>(e, "Name") == name;
+
+            var existing = await _repository.GetAsync(filter);
+            var existingEntity = existing.FirstOrDefault();
+
+            if (existingEntity != null)
+            {
+                _logger.LogInformation("Found existing {EntityType} with name '{Name}'", typeof(TEntity).Name, name);
+                return MapToDto(existingEntity);
+            }
+
+            // Create new entity
+            _logger.LogInformation("Creating new {EntityType} with name '{Name}' for user {UserId}",
+                typeof(TEntity).Name, name, userId);
+
+            // Note: Using Activator and reflection for generic entity creation
+            // Performance impact is acceptable for lookup entities which are created infrequently
+            // Specific services can override this method if different behavior is needed
+            var entity = Activator.CreateInstance<TEntity>();
+            
+            // Set the Name property using reflection
+            var nameProperty = typeof(TEntity).GetProperty("Name");
+            if (nameProperty != null && nameProperty.CanWrite)
+            {
+                nameProperty.SetValue(entity, name);
+            }
+            
+            // Set UserId
+            if (entity is Models.IUserOwnedEntity userOwnedEntity)
+            {
+                userOwnedEntity.UserId = userId.Value;
+            }
+
+            await _repository.AddAsync(entity);
+            await _unitOfWork.SaveChangesAsync();
+
+            _logger.LogInformation("Created {EntityType} with name '{Name}' and ID: {Id} for user {UserId}",
+                typeof(TEntity).Name, name, GetEntityId(entity), userId);
+
+            return MapToDto(entity);
         }
 
         /// <summary>

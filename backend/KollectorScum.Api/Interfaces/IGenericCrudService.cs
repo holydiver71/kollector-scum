@@ -39,5 +39,10 @@ namespace KollectorScum.Api.Interfaces
         /// Deletes an entity by ID
         /// </summary>
         Task<bool> DeleteAsync(int id);
+
+        /// <summary>
+        /// Gets or creates an entity by name (for lookup tables)
+        /// </summary>
+        Task<TDto> GetOrCreateByNameAsync(string name);
     }
 }

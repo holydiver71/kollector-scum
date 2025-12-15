@@ -13,8 +13,9 @@ namespace KollectorScum.Api.Services
         public ArtistService(
             IRepository<Artist> repository,
             IUnitOfWork unitOfWork,
-            ILogger<ArtistService> logger)
-            : base(repository, unitOfWork, logger)
+            ILogger<ArtistService> logger,
+            IUserContext userContext)
+            : base(repository, unitOfWork, logger, userContext)
         {
         }
 

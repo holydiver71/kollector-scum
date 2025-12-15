@@ -18,6 +18,7 @@ namespace KollectorScum.Api.Services
         private readonly IRepository<Packaging> _packagingRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<EntityResolverService> _logger;
+        private readonly IUserContext _userContext;
 
         public EntityResolverService(
             IRepository<Artist> artistRepository,
@@ -27,7 +28,8 @@ namespace KollectorScum.Api.Services
             IRepository<Format> formatRepository,
             IRepository<Packaging> packagingRepository,
             IUnitOfWork unitOfWork,
-            ILogger<EntityResolverService> logger)
+            ILogger<EntityResolverService> logger,
+            IUserContext userContext)
         {
             _artistRepository = artistRepository;
             _genreRepository = genreRepository;
@@ -37,6 +39,7 @@ namespace KollectorScum.Api.Services
             _packagingRepository = packagingRepository;
             _unitOfWork = unitOfWork;
             _logger = logger;
+            _userContext = userContext ?? throw new ArgumentNullException(nameof(userContext));
         }
 
         public async Task<List<int>?> ResolveOrCreateArtistsAsync(
@@ -45,6 +48,12 @@ namespace KollectorScum.Api.Services
             CreatedEntitiesDto createdEntities)
         {
             var resolvedIds = new List<int>();
+            var userId = _userContext.GetActingUserId();
+
+            if (!userId.HasValue)
+            {
+                throw new UnauthorizedAccessException("User must be authenticated to resolve entities");
+            }
 
             if (artistIds != null)
             {
@@ -57,7 +66,7 @@ namespace KollectorScum.Api.Services
                 {
                     var trimmedName = name.Trim();
                     var existing = await _artistRepository.GetFirstOrDefaultAsync(
-                        a => a.Name.ToLower() == trimmedName.ToLower());
+                        a => a.UserId == userId.Value && a.Name.ToLower() == trimmedName.ToLower());
 
                     if (existing != null)
                     {
@@ -66,7 +75,7 @@ namespace KollectorScum.Api.Services
                     }
                     else
                     {
-                        var newArtist = new Artist { Name = trimmedName };
+                        var newArtist = new Artist { Name = trimmedName, UserId = userId.Value };
                         await _artistRepository.AddAsync(newArtist);
                         await _unitOfWork.SaveChangesAsync();
                         
@@ -88,6 +97,12 @@ namespace KollectorScum.Api.Services
             CreatedEntitiesDto createdEntities)
         {
             var resolvedIds = new List<int>();
+            var userId = _userContext.GetActingUserId();
+
+            if (!userId.HasValue)
+            {
+                throw new UnauthorizedAccessException("User must be authenticated to resolve entities");
+            }
 
             if (genreIds != null)
             {
@@ -100,7 +115,7 @@ namespace KollectorScum.Api.Services
                 {
                     var trimmedName = name.Trim();
                     var existing = await _genreRepository.GetFirstOrDefaultAsync(
-                        g => g.Name.ToLower() == trimmedName.ToLower());
+                        g => g.UserId == userId.Value && g.Name.ToLower() == trimmedName.ToLower());
 
                     if (existing != null)
                     {
@@ -109,7 +124,7 @@ namespace KollectorScum.Api.Services
                     }
                     else
                     {
-                        var newGenre = new Genre { Name = trimmedName };
+                        var newGenre = new Genre { Name = trimmedName, UserId = userId.Value };
                         await _genreRepository.AddAsync(newGenre);
                         await _unitOfWork.SaveChangesAsync();
                         
@@ -133,11 +148,17 @@ namespace KollectorScum.Api.Services
             if (labelId.HasValue)
                 return labelId;
 
+            var userId = _userContext.GetActingUserId();
+            if (!userId.HasValue)
+            {
+                throw new UnauthorizedAccessException("User must be authenticated to resolve entities");
+            }
+
             if (!string.IsNullOrWhiteSpace(labelName))
             {
                 var trimmedName = labelName.Trim();
                 var existing = await _labelRepository.GetFirstOrDefaultAsync(
-                    l => l.Name.ToLower() == trimmedName.ToLower());
+                    l => l.UserId == userId.Value && l.Name.ToLower() == trimmedName.ToLower());
 
                 if (existing != null)
                 {
@@ -146,7 +167,7 @@ namespace KollectorScum.Api.Services
                 }
                 else
                 {
-                    var newLabel = new Label { Name = trimmedName };
+                    var newLabel = new Label { Name = trimmedName, UserId = userId.Value };
                     await _labelRepository.AddAsync(newLabel);
                     await _unitOfWork.SaveChangesAsync();
                     
@@ -169,11 +190,17 @@ namespace KollectorScum.Api.Services
             if (countryId.HasValue)
                 return countryId;
 
+            var userId = _userContext.GetActingUserId();
+            if (!userId.HasValue)
+            {
+                throw new UnauthorizedAccessException("User must be authenticated to resolve entities");
+            }
+
             if (!string.IsNullOrWhiteSpace(countryName))
             {
                 var trimmedName = countryName.Trim();
                 var existing = await _countryRepository.GetFirstOrDefaultAsync(
-                    c => c.Name.ToLower() == trimmedName.ToLower());
+                    c => c.UserId == userId.Value && c.Name.ToLower() == trimmedName.ToLower());
 
                 if (existing != null)
                 {
@@ -182,7 +209,7 @@ namespace KollectorScum.Api.Services
                 }
                 else
                 {
-                    var newCountry = new Country { Name = trimmedName };
+                    var newCountry = new Country { Name = trimmedName, UserId = userId.Value };
                     await _countryRepository.AddAsync(newCountry);
                     await _unitOfWork.SaveChangesAsync();
                     
@@ -205,11 +232,17 @@ namespace KollectorScum.Api.Services
             if (formatId.HasValue)
                 return formatId;
 
+            var userId = _userContext.GetActingUserId();
+            if (!userId.HasValue)
+            {
+                throw new UnauthorizedAccessException("User must be authenticated to resolve entities");
+            }
+
             if (!string.IsNullOrWhiteSpace(formatName))
             {
                 var trimmedName = formatName.Trim();
                 var existing = await _formatRepository.GetFirstOrDefaultAsync(
-                    f => f.Name.ToLower() == trimmedName.ToLower());
+                    f => f.UserId == userId.Value && f.Name.ToLower() == trimmedName.ToLower());
 
                 if (existing != null)
                 {
@@ -218,7 +251,7 @@ namespace KollectorScum.Api.Services
                 }
                 else
                 {
-                    var newFormat = new Format { Name = trimmedName };
+                    var newFormat = new Format { Name = trimmedName, UserId = userId.Value };
                     await _formatRepository.AddAsync(newFormat);
                     await _unitOfWork.SaveChangesAsync();
                     
@@ -241,11 +274,17 @@ namespace KollectorScum.Api.Services
             if (packagingId.HasValue)
                 return packagingId;
 
+            var userId = _userContext.GetActingUserId();
+            if (!userId.HasValue)
+            {
+                throw new UnauthorizedAccessException("User must be authenticated to resolve entities");
+            }
+
             if (!string.IsNullOrWhiteSpace(packagingName))
             {
                 var trimmedName = packagingName.Trim();
                 var existing = await _packagingRepository.GetFirstOrDefaultAsync(
-                    p => p.Name.ToLower() == trimmedName.ToLower());
+                    p => p.UserId == userId.Value && p.Name.ToLower() == trimmedName.ToLower());
 
                 if (existing != null)
                 {
@@ -254,7 +293,7 @@ namespace KollectorScum.Api.Services
                 }
                 else
                 {
-                    var newPackaging = new Packaging { Name = trimmedName };
+                    var newPackaging = new Packaging { Name = trimmedName, UserId = userId.Value };
                     await _packagingRepository.AddAsync(newPackaging);
                     await _unitOfWork.SaveChangesAsync();
                     

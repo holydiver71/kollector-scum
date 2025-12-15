@@ -13,8 +13,9 @@ namespace KollectorScum.Api.Services
         public CountryService(
             IRepository<Country> repository,
             IUnitOfWork unitOfWork,
-            ILogger<CountryService> logger)
-            : base(repository, unitOfWork, logger)
+            ILogger<CountryService> logger,
+            IUserContext userContext)
+            : base(repository, unitOfWork, logger, userContext)
         {
         }
 

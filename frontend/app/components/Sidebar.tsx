@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { isAuthenticated } from '../lib/auth';
 import { 
   Home, 
   Music, 
@@ -26,15 +27,25 @@ interface NavigationItem {
 
 const Sidebar: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
-    // Keep a global CSS variable so Header (a sibling) can read the sidebar offset
-    React.useEffect(() => {
-      const offset = isExpanded ? '240px' : '64px';
-      document.documentElement.style.setProperty('--sidebar-offset', offset);
-      return () => {
-        // preserve last known value (do not remove) - tests may expect a value
-      };
-    }, [isExpanded]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const pathname = usePathname();
+
+  // Check auth state on mount and route changes
+  useEffect(() => {
+    setIsLoggedIn(isAuthenticated());
+  }, [pathname]);
+
+  // Keep a global CSS variable so Header (a sibling) can read the sidebar offset
+  useEffect(() => {
+    if (!isLoggedIn) {
+      document.documentElement.style.setProperty('--sidebar-offset', '0px');
+      return;
+    }
+    const offset = isExpanded ? '240px' : '64px';
+    document.documentElement.style.setProperty('--sidebar-offset', offset);
+  }, [isExpanded, isLoggedIn]);
+
+  if (!isLoggedIn) return null;
 
   const navigationItems: NavigationItem[] = [
     { name: 'Home', href: '/', icon: Home },

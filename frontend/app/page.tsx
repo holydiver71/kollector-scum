@@ -5,6 +5,7 @@ import { LoadingSpinner, Skeleton } from "./components/LoadingComponents";
 import { RecentlyPlayed } from "./components/RecentlyPlayed";
 
 import { getHealth, getPagedCount, ApiError } from "./lib/api";
+import { isAuthenticated, clearAuthToken } from "./lib/auth";
 
 // Data contracts
 interface HealthData { status: string; timestamp: string; service: string; version: string; }
@@ -15,9 +16,18 @@ export default function Dashboard() {
   const [stats, setStats] = useState<CollectionStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
-    const fetchAll = async () => {
+    const checkAuthAndFetch = async () => {
+      const authenticated = isAuthenticated();
+      setIsLoggedIn(authenticated);
+
+      if (!authenticated) {
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         setError(null);
@@ -34,7 +44,17 @@ export default function Dashboard() {
         setStats({ totalReleases, totalArtists, totalGenres, totalLabels });
       } catch (e) {
         console.error(e);
-        if ((e as ApiError)?.url) {
+        const apiError = e as ApiError;
+        
+        // If unauthorized, clear token and show landing page
+        if (apiError?.status === 401) {
+          clearAuthToken();
+          setIsLoggedIn(false);
+          setLoading(false);
+          return;
+        }
+
+        if (apiError?.url) {
           setError(`${(e as Error).message} -> ${(e as ApiError).url}`);
         } else {
           setError(e instanceof Error ? e.message : 'Unknown error');
@@ -43,8 +63,27 @@ export default function Dashboard() {
         setLoading(false);
       }
     };
-    fetchAll();
+    checkAuthAndFetch();
   }, []);
+
+  if (!isLoggedIn && !loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+        <div className="text-center max-w-2xl">
+          <h1 className="text-6xl font-black text-gray-900 mb-6">KOLLECTOR SKÜM</h1>
+          <p className="text-xl text-gray-600 mb-8">
+            Your personal music collection manager.
+            <br/>
+            Organize, discover, and track your physical media.
+          </p>
+          <div className="p-8 bg-white rounded-xl shadow-lg border border-gray-200">
+            <p className="text-lg font-medium text-gray-800 mb-4">Please sign in to access your collection</p>
+            <p className="text-sm text-gray-500">Use the Google Sign-In button in the top right corner.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (error) {
     return (

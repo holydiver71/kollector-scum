@@ -13,8 +13,9 @@ namespace KollectorScum.Api.Services
         public PackagingService(
             IRepository<Packaging> repository,
             IUnitOfWork unitOfWork,
-            ILogger<PackagingService> logger)
-            : base(repository, unitOfWork, logger)
+            ILogger<PackagingService> logger,
+            IUserContext userContext)
+            : base(repository, unitOfWork, logger, userContext)
         {
         }
 
