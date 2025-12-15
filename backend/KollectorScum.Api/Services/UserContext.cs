@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using KollectorScum.Api.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace KollectorScum.Api.Services
 {
@@ -9,10 +10,12 @@ namespace KollectorScum.Api.Services
     public class UserContext : IUserContext
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ILogger<UserContext> _logger;
 
-        public UserContext(IHttpContextAccessor httpContextAccessor)
+        public UserContext(IHttpContextAccessor httpContextAccessor, ILogger<UserContext> logger)
         {
             _httpContextAccessor = httpContextAccessor;
+            _logger = logger;
         }
 
         /// <inheritdoc />
@@ -22,10 +25,18 @@ namespace KollectorScum.Api.Services
             
             if (string.IsNullOrEmpty(userIdClaim))
             {
+                _logger.LogWarning("UserContext: No NameIdentifier claim found.");
                 return null;
             }
 
-            return Guid.TryParse(userIdClaim, out var userId) ? userId : null;
+            if (Guid.TryParse(userIdClaim, out var userId))
+            {
+                _logger.LogInformation("UserContext: Resolved UserId {UserId}", userId);
+                return userId;
+            }
+            
+            _logger.LogError("UserContext: Failed to parse UserId claim: {UserIdClaim}", userIdClaim);
+            return null;
         }
 
         /// <inheritdoc />

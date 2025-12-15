@@ -14,15 +14,18 @@ namespace KollectorScum.Api.Services
         private readonly IRepository<MusicRelease> _musicReleaseRepository;
         private readonly IRepository<Artist> _artistRepository;
         private readonly ILogger<MusicReleaseDuplicateDetector> _logger;
+        private readonly IUserContext _userContext;
 
         public MusicReleaseDuplicateDetector(
             IRepository<MusicRelease> musicReleaseRepository,
             IRepository<Artist> artistRepository,
-            ILogger<MusicReleaseDuplicateDetector> logger)
+            ILogger<MusicReleaseDuplicateDetector> logger,
+            IUserContext userContext)
         {
             _musicReleaseRepository = musicReleaseRepository ?? throw new ArgumentNullException(nameof(musicReleaseRepository));
             _artistRepository = artistRepository ?? throw new ArgumentNullException(nameof(artistRepository));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _userContext = userContext ?? throw new ArgumentNullException(nameof(userContext));
         }
 
         public async Task<List<MusicRelease>> FindDuplicatesAsync(
@@ -32,6 +35,9 @@ namespace KollectorScum.Api.Services
         {
             _logger.LogInformation("Checking for duplicates - Catalog: {Catalog}, Title: {Title}", catalogNumber, title);
 
+            var userId = _userContext.GetActingUserId();
+            if (!userId.HasValue) return new List<MusicRelease>();
+
             var duplicates = new List<MusicRelease>();
 
             // First check: Exact catalog number match
@@ -39,7 +45,7 @@ namespace KollectorScum.Api.Services
             {
                 var normalizedCatalog = catalogNumber.Trim().ToLower();
                 var catalogMatches = await _musicReleaseRepository.GetAsync(
-                    filter: r => r.LabelNumber != null && r.LabelNumber.ToLower() == normalizedCatalog);
+                    filter: r => r.UserId == userId.Value && r.LabelNumber != null && r.LabelNumber.ToLower() == normalizedCatalog);
                 
                 duplicates.AddRange(catalogMatches);
                 
@@ -57,8 +63,8 @@ namespace KollectorScum.Api.Services
                 var normalizedTitle = title.Trim().ToLower();
                 var normalizedArtistNames = artistNames.Select(a => a.Trim().ToLower()).ToList();
                 
-                var allReleases = await _musicReleaseRepository.GetAllAsync();
-                var allArtists = await _artistRepository.GetAllAsync();
+                var allReleases = await _musicReleaseRepository.GetAsync(r => r.UserId == userId.Value);
+                var allArtists = await _artistRepository.GetAsync(a => a.UserId == userId.Value);
                 
                 var titleArtistMatches = allReleases.Where(r =>
                 {

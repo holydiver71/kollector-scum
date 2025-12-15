@@ -18,6 +18,7 @@ namespace KollectorScum.Tests.Services
         private readonly Mock<IRepository<Genre>> _mockGenreRepo;
         private readonly Mock<IMusicReleaseMapperService> _mockMapperService;
         private readonly Mock<ILogger<CollectionStatisticsService>> _mockLogger;
+        private readonly Mock<IUserContext> _mockUserContext;
         private readonly CollectionStatisticsService _service;
 
         public CollectionStatisticsServiceTests()
@@ -28,6 +29,7 @@ namespace KollectorScum.Tests.Services
             _mockGenreRepo = new Mock<IRepository<Genre>>();
             _mockMapperService = new Mock<IMusicReleaseMapperService>();
             _mockLogger = new Mock<ILogger<CollectionStatisticsService>>();
+            _mockUserContext = new Mock<IUserContext>();
 
             _service = new CollectionStatisticsService(
                 _mockMusicReleaseRepo.Object,
@@ -35,7 +37,8 @@ namespace KollectorScum.Tests.Services
                 _mockCountryRepo.Object,
                 _mockGenreRepo.Object,
                 _mockMapperService.Object,
-                _mockLogger.Object
+                _mockLogger.Object,
+                _mockUserContext.Object
             );
         }
 

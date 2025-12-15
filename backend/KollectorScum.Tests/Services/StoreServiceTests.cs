@@ -20,14 +20,19 @@ namespace KollectorScum.Tests.Services
         private readonly Mock<IRepository<Store>> _mockRepository;
         private readonly Mock<IUnitOfWork> _mockUnitOfWork;
         private readonly Mock<ILogger<StoreService>> _mockLogger;
+        private readonly Mock<IUserContext> _mockUserContext;
         private readonly StoreService _service;
+        private readonly Guid _userId;
 
         public StoreServiceTests()
         {
             _mockRepository = new Mock<IRepository<Store>>();
             _mockUnitOfWork = new Mock<IUnitOfWork>();
             _mockLogger = new Mock<ILogger<StoreService>>();
-            _service = new StoreService(_mockRepository.Object, _mockUnitOfWork.Object, _mockLogger.Object);
+            _mockUserContext = new Mock<IUserContext>();
+            _userId = Guid.NewGuid();
+            _mockUserContext.Setup(x => x.GetActingUserId()).Returns(_userId);
+            _service = new StoreService(_mockRepository.Object, _mockUnitOfWork.Object, _mockLogger.Object, _mockUserContext.Object);
         }
 
         #region Constructor Tests
@@ -44,7 +49,7 @@ namespace KollectorScum.Tests.Services
         {
             // Act & Assert
             Assert.Throws<ArgumentNullException>(() =>
-                new StoreService(null!, _mockUnitOfWork.Object, _mockLogger.Object));
+                new StoreService(null!, _mockUnitOfWork.Object, _mockLogger.Object, _mockUserContext.Object));
         }
 
         [Fact]
@@ -52,7 +57,7 @@ namespace KollectorScum.Tests.Services
         {
             // Act & Assert
             Assert.Throws<ArgumentNullException>(() =>
-                new StoreService(_mockRepository.Object, null!, _mockLogger.Object));
+                new StoreService(_mockRepository.Object, null!, _mockLogger.Object, _mockUserContext.Object));
         }
 
         [Fact]
@@ -60,7 +65,15 @@ namespace KollectorScum.Tests.Services
         {
             // Act & Assert
             Assert.Throws<ArgumentNullException>(() =>
-                new StoreService(_mockRepository.Object, _mockUnitOfWork.Object, null!));
+                new StoreService(_mockRepository.Object, _mockUnitOfWork.Object, null!, _mockUserContext.Object));
+        }
+
+        [Fact]
+        public void Constructor_WithNullUserContext_ThrowsArgumentNullException()
+        {
+            // Act & Assert
+            Assert.Throws<ArgumentNullException>(() =>
+                new StoreService(_mockRepository.Object, _mockUnitOfWork.Object, _mockLogger.Object, null!));
         }
 
         #endregion
@@ -90,7 +103,7 @@ namespace KollectorScum.Tests.Services
                 .ReturnsAsync(pagedResult);
 
             _mockRepository.Setup(r => r.AddAsync(It.IsAny<Store>()))
-                .ReturnsAsync(new Store { Id = 1, Name = "Tower Records" });
+                .ReturnsAsync(new Store { Id = 1, Name = "Tower Records", UserId = _userId });
 
             _mockUnitOfWork.Setup(u => u.SaveChangesAsync())
                 .ReturnsAsync(1);
@@ -167,7 +180,7 @@ namespace KollectorScum.Tests.Services
                 .ReturnsAsync(pagedResult);
 
             _mockRepository.Setup(r => r.AddAsync(It.IsAny<Store>()))
-                .ReturnsAsync(new Store { Id = 1, Name = storeDto.Name });
+                .ReturnsAsync(new Store { Id = 1, Name = storeDto.Name, UserId = _userId });
 
             _mockUnitOfWork.Setup(u => u.SaveChangesAsync())
                 .ReturnsAsync(1);
@@ -184,7 +197,7 @@ namespace KollectorScum.Tests.Services
         public async Task UpdateAsync_WithValidStore_UpdatesSuccessfully()
         {
             // Arrange
-            var existingStore = new Store { Id = 1, Name = "Old Name" };
+            var existingStore = new Store { Id = 1, Name = "Old Name", UserId = _userId };
             var storeDto = new StoreDto { Id = 1, Name = "New Name" };
 
             _mockRepository.Setup(r => r.GetByIdAsync(1))
@@ -208,7 +221,7 @@ namespace KollectorScum.Tests.Services
         public async Task UpdateAsync_WithInvalidName_ThrowsArgumentException()
         {
             // Arrange
-            var existingStore = new Store { Id = 1, Name = "Old Name" };
+            var existingStore = new Store { Id = 1, Name = "Old Name", UserId = _userId };
             var storeDto = new StoreDto { Id = 1, Name = "" };
 
             _mockRepository.Setup(r => r.GetByIdAsync(1))
@@ -230,7 +243,7 @@ namespace KollectorScum.Tests.Services
             {
                 Items = new System.Collections.Generic.List<Store>
                 {
-                    new Store { Id = 1, Name = "Tower Records" }
+                    new Store { Id = 1, Name = "Tower Records", UserId = _userId }
                 },
                 TotalCount = 1,
                 Page = 1,
@@ -268,7 +281,7 @@ namespace KollectorScum.Tests.Services
         public async Task GetByIdAsync_WithValidId_ReturnsStore()
         {
             // Arrange
-            var store = new Store { Id = 1, Name = "Tower Records" };
+            var store = new Store { Id = 1, Name = "Tower Records", UserId = _userId };
             _mockRepository.Setup(r => r.GetByIdAsync(1))
                 .ReturnsAsync(store);
 
@@ -299,7 +312,7 @@ namespace KollectorScum.Tests.Services
         public async Task DeleteAsync_WithValidId_DeletesSuccessfully()
         {
             // Arrange
-            var store = new Store { Id = 1, Name = "Tower Records" };
+            var store = new Store { Id = 1, Name = "Tower Records", UserId = _userId };
             _mockRepository.Setup(r => r.GetByIdAsync(1))
                 .ReturnsAsync(store);
 

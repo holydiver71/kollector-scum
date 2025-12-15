@@ -7,7 +7,7 @@ import { QuickSearch } from './SearchAndFilter';
 import type { SearchSuggestion } from '../lib/api';
 import { getKollections, type KollectionDto } from '../lib/api';
 import { GoogleSignIn } from './GoogleSignIn';
-import { type UserProfile } from '../lib/auth';
+import { isAuthenticated, type UserProfile } from '../lib/auth';
 
 /**
  * Simple header: logo and site title aligned with the page content container.
@@ -28,6 +28,11 @@ export default function Header() {
   // Load kollections
   React.useEffect(() => {
     const loadKollections = async () => {
+      if (!isAuthenticated()) {
+        setLoadingKollections(false);
+        return;
+      }
+
       try {
         const response = await getKollections();
         setKollections(response.items);
@@ -65,6 +70,9 @@ export default function Header() {
     console.log('User signed in:', profile);
     if (profile.selectedKollectionId) {
         handleKollectionChange(profile.selectedKollectionId.toString());
+    } else {
+        // If no specific kollection is selected, just go to the main collection page
+        router.push('/collection');
     }
   };
 

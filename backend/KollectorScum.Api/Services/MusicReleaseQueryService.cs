@@ -21,6 +21,7 @@ namespace KollectorScum.Api.Services
         private readonly ICollectionStatisticsService _statisticsService;
         private readonly KollectorScumDbContext _context;
         private readonly ILogger<MusicReleaseQueryService> _logger;
+        private readonly IUserContext _userContext;
 
         public MusicReleaseQueryService(
             IRepository<MusicRelease> musicReleaseRepository,
@@ -29,7 +30,8 @@ namespace KollectorScum.Api.Services
             IMusicReleaseMapperService mapper,
             ICollectionStatisticsService statisticsService,
             KollectorScumDbContext context,
-            ILogger<MusicReleaseQueryService> logger)
+            ILogger<MusicReleaseQueryService> logger,
+            IUserContext userContext)
         {
             _musicReleaseRepository = musicReleaseRepository ?? throw new ArgumentNullException(nameof(musicReleaseRepository));
             _artistRepository = artistRepository ?? throw new ArgumentNullException(nameof(artistRepository));
@@ -38,6 +40,7 @@ namespace KollectorScum.Api.Services
             _statisticsService = statisticsService ?? throw new ArgumentNullException(nameof(statisticsService));
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _userContext = userContext ?? throw new ArgumentNullException(nameof(userContext));
         }
 
         public async Task<PagedResult<MusicReleaseSummaryDto>> GetMusicReleasesAsync(
@@ -51,6 +54,19 @@ namespace KollectorScum.Api.Services
 
             // Build filter expression from parameters
             Expression<Func<MusicRelease, bool>>? filter = BuildFilterExpression(parameters);
+
+            if (filter == null)
+            {
+                _logger.LogError("GetMusicReleasesAsync: Filter is null! Returning empty result.");
+                return new PagedResult<MusicReleaseSummaryDto>
+                {
+                    Items = new List<MusicReleaseSummaryDto>(),
+                    Page = parameters.Pagination.PageNumber,
+                    PageSize = parameters.Pagination.PageSize,
+                    TotalCount = 0,
+                    TotalPages = 0
+                };
+            }
 
             // For artist sorting, we need to get all filtered results first, then sort after mapping
             // because artist names are resolved from IDs during mapping
@@ -160,25 +176,25 @@ namespace KollectorScum.Api.Services
                 }
             }
 
-            // Return null if no filters applied
-            if (string.IsNullOrEmpty(parameters.Search) && 
-                !parameters.ArtistId.HasValue && 
-                !parameters.GenreId.HasValue &&
-                !parameters.KollectionId.HasValue &&
-                !parameters.LabelId.HasValue && 
-                !parameters.CountryId.HasValue && 
-                !parameters.FormatId.HasValue && 
-                !parameters.Live.HasValue &&
-                !parameters.YearFrom.HasValue && 
-                !parameters.YearTo.HasValue)
-            {
-                return null;
-            }
-
             // Build composite filter using expression tree so EF can translate constants
             // Note: Artists and Genres are stored as JSON arrays like "[1,2,3]"
             var param = Expression.Parameter(typeof(MusicRelease), "mr");
             var clauses = new List<Expression>();
+
+            // Always filter by current user
+            var userId = _userContext.GetActingUserId();
+            _logger.LogInformation("BuildFilterExpression: ActingUserId {UserId}", userId);
+
+            if (!userId.HasValue)
+            {
+                // Security: If no user context, return no results
+                // We return a filter that always evaluates to false
+                _logger.LogWarning("BuildFilterExpression: No user context, returning false filter.");
+                return mr => false;
+            }
+
+            var userIdProp = Expression.Property(param, nameof(MusicRelease.UserId));
+            clauses.Add(Expression.Equal(userIdProp, Expression.Constant(userId.Value)));
 
             var containsMethod = typeof(string).GetMethod("Contains", new[] { typeof(string) })!;
             var toLowerMethod = typeof(string).GetMethod("ToLower", Array.Empty<Type>());
@@ -274,13 +290,18 @@ namespace KollectorScum.Api.Services
             }
 
             if (!clauses.Any())
+            {
+                _logger.LogError("BuildFilterExpression: Clauses is empty! This should never happen.");
                 return null;
+            }
 
             Expression combined = clauses[0];
             for (int i = 1; i < clauses.Count; i++)
                 combined = Expression.AndAlso(combined, clauses[i]);
 
-            return Expression.Lambda<Func<MusicRelease, bool>>(combined, param);
+            var lambda = Expression.Lambda<Func<MusicRelease, bool>>(combined, param);
+            _logger.LogInformation("BuildFilterExpression: Filter: {Filter}", lambda.ToString());
+            return lambda;
         }
 
         public async Task<MusicReleaseDto?> GetMusicReleaseAsync(int id)
@@ -292,6 +313,14 @@ namespace KollectorScum.Api.Services
             if (musicRelease == null)
             {
                 _logger.LogWarning("Music release not found: {Id}", id);
+                return null;
+            }
+
+            // Check ownership
+            var userId = _userContext.GetActingUserId();
+            if (userId.HasValue && musicRelease.UserId != userId.Value)
+            {
+                _logger.LogWarning("Access denied for music release {Id}. User {UserId} does not own this release.", id, userId);
                 return null;
             }
 
@@ -318,10 +347,16 @@ namespace KollectorScum.Api.Services
 
             var queryLower = query.ToLower();
             var suggestions = new List<SearchSuggestionDto>();
+            var userId = _userContext.GetActingUserId();
+
+            if (!userId.HasValue)
+            {
+                return new List<SearchSuggestionDto>();
+            }
 
             // Get release title suggestions
             var releases = await _musicReleaseRepository.GetAsync(
-                mr => mr.Title.ToLower().Contains(queryLower),
+                mr => mr.UserId == userId.Value && mr.Title.ToLower().Contains(queryLower),
                 mr => mr.OrderBy(x => x.Title)
             );
 
@@ -335,7 +370,7 @@ namespace KollectorScum.Api.Services
 
             // Get artist suggestions
             var artists = await _artistRepository.GetAsync(
-                a => a.Name.ToLower().Contains(queryLower),
+                a => a.UserId == userId.Value && a.Name.ToLower().Contains(queryLower),
                 a => a.OrderBy(x => x.Name)
             );
 
@@ -348,7 +383,7 @@ namespace KollectorScum.Api.Services
 
             // Get label suggestions
             var labels = await _labelRepository.GetAsync(
-                l => l.Name.ToLower().Contains(queryLower),
+                l => l.UserId == userId.Value && l.Name.ToLower().Contains(queryLower),
                 l => l.OrderBy(x => x.Name)
             );
 
@@ -375,7 +410,13 @@ namespace KollectorScum.Api.Services
         {
             _logger.LogInformation("Getting random music release ID");
 
-            var totalCount = await _musicReleaseRepository.CountAsync();
+            var userId = _userContext.GetActingUserId();
+            if (!userId.HasValue)
+            {
+                return null;
+            }
+
+            var totalCount = await _musicReleaseRepository.CountAsync(mr => mr.UserId == userId.Value);
             
             if (totalCount == 0)
             {
@@ -391,7 +432,7 @@ namespace KollectorScum.Api.Services
             var pagedResult = await _musicReleaseRepository.GetPagedAsync(
                 pageNumber: skip + 1,
                 pageSize: 1,
-                filter: null,
+                filter: mr => mr.UserId == userId.Value,
                 orderBy: q => q.OrderBy(r => r.Id)
             );
 
