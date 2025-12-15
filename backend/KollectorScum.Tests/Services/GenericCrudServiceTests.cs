@@ -21,14 +21,19 @@ namespace KollectorScum.Tests.Services
         private readonly Mock<IRepository<Artist>> _mockRepository;
         private readonly Mock<IUnitOfWork> _mockUnitOfWork;
         private readonly Mock<ILogger<ArtistService>> _mockLogger;
+        private readonly Mock<IUserContext> _mockUserContext;
         private readonly ArtistService _service;
+        private readonly Guid _userId;
 
         public GenericCrudServiceTests()
         {
             _mockRepository = new Mock<IRepository<Artist>>();
             _mockUnitOfWork = new Mock<IUnitOfWork>();
             _mockLogger = new Mock<ILogger<ArtistService>>();
-            _service = new ArtistService(_mockRepository.Object, _mockUnitOfWork.Object, _mockLogger.Object);
+            _mockUserContext = new Mock<IUserContext>();
+            _userId = Guid.NewGuid();
+            _mockUserContext.Setup(x => x.GetActingUserId()).Returns(_userId);
+            _service = new ArtistService(_mockRepository.Object, _mockUnitOfWork.Object, _mockLogger.Object, _mockUserContext.Object);
         }
 
         #region GetAllAsync Tests
@@ -41,9 +46,9 @@ namespace KollectorScum.Tests.Services
             {
                 Items = new List<Artist>
                 {
-                    new Artist { Id = 1, Name = "Artist 1" },
-                    new Artist { Id = 2, Name = "Artist 2" },
-                    new Artist { Id = 3, Name = "Artist 3" }
+                    new Artist { Id = 1, Name = "Artist 1", UserId = _userId },
+                    new Artist { Id = 2, Name = "Artist 2", UserId = _userId },
+                    new Artist { Id = 3, Name = "Artist 3", UserId = _userId }
                 },
                 TotalCount = 3,
                 Page = 1,
@@ -78,7 +83,7 @@ namespace KollectorScum.Tests.Services
             {
                 Items = new List<Artist>
                 {
-                    new Artist { Id = 1, Name = "The Beatles" }
+                    new Artist { Id = 1, Name = "The Beatles", UserId = _userId }
                 },
                 TotalCount = 1,
                 Page = 1,
@@ -141,8 +146,8 @@ namespace KollectorScum.Tests.Services
             {
                 Items = new List<Artist>
                 {
-                    new Artist { Id = 1, Name = "Artist 1" },
-                    new Artist { Id = 2, Name = "Artist 2" }
+                    new Artist { Id = 1, Name = "Artist 1", UserId = _userId },
+                    new Artist { Id = 2, Name = "Artist 2", UserId = _userId }
                 },
                 TotalCount = 25,
                 Page = 1,
@@ -175,7 +180,7 @@ namespace KollectorScum.Tests.Services
         public async Task GetByIdAsync_ExistingId_ReturnsDto()
         {
             // Arrange
-            var artist = new Artist { Id = 1, Name = "Test Artist" };
+            var artist = new Artist { Id = 1, Name = "Test Artist", UserId = _userId };
             _mockRepository.Setup(r => r.GetByIdAsync(1))
                 .ReturnsAsync(artist);
 
@@ -211,7 +216,7 @@ namespace KollectorScum.Tests.Services
         {
             // Arrange
             var dto = new ArtistDto { Name = "New Artist" };
-            var createdArtist = new Artist { Id = 1, Name = "New Artist" };
+            var createdArtist = new Artist { Id = 1, Name = "New Artist", UserId = _userId };
 
             _mockRepository.Setup(r => r.AddAsync(It.IsAny<Artist>()))
                 .ReturnsAsync(createdArtist);
@@ -280,7 +285,7 @@ namespace KollectorScum.Tests.Services
         public async Task UpdateAsync_ExistingEntity_UpdatesAndReturnsDto()
         {
             // Arrange
-            var existingArtist = new Artist { Id = 1, Name = "Old Name" };
+            var existingArtist = new Artist { Id = 1, Name = "Old Name", UserId = _userId };
             var updateDto = new ArtistDto { Id = 1, Name = "New Name" };
 
             _mockRepository.Setup(r => r.GetByIdAsync(1))
@@ -321,7 +326,7 @@ namespace KollectorScum.Tests.Services
         public async Task UpdateAsync_InvalidDto_ThrowsArgumentException()
         {
             // Arrange
-            var existingArtist = new Artist { Id = 1, Name = "Old Name" };
+            var existingArtist = new Artist { Id = 1, Name = "Old Name", UserId = _userId };
             var updateDto = new ArtistDto { Id = 1, Name = "" };
 
             _mockRepository.Setup(r => r.GetByIdAsync(1))
@@ -336,7 +341,7 @@ namespace KollectorScum.Tests.Services
         public async Task UpdateAsync_NameExactly200Characters_Succeeds()
         {
             // Arrange
-            var existingArtist = new Artist { Id = 1, Name = "Old Name" };
+            var existingArtist = new Artist { Id = 1, Name = "Old Name", UserId = _userId };
             var updateDto = new ArtistDto { Id = 1, Name = new string('A', 200) };
 
             _mockRepository.Setup(r => r.GetByIdAsync(1))
@@ -360,7 +365,7 @@ namespace KollectorScum.Tests.Services
         public async Task DeleteAsync_ExistingEntity_DeletesAndReturnsTrue()
         {
             // Arrange
-            var artist = new Artist { Id = 1, Name = "Test Artist" };
+            var artist = new Artist { Id = 1, Name = "Test Artist", UserId = _userId };
             _mockRepository.Setup(r => r.GetByIdAsync(1))
                 .ReturnsAsync(artist);
             _mockUnitOfWork.Setup(u => u.SaveChangesAsync())

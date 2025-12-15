@@ -9,6 +9,8 @@ using KollectorScum.Api.Data;
 using KollectorScum.Api.DTOs;
 using KollectorScum.Api.Interfaces;
 using KollectorScum.Api.Models;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,7 +30,19 @@ namespace KollectorScum.Tests.Integration
 
         public AddReleaseIntegrationTests(WebApplicationFactory<Program> factory)
         {
-            _factory = factory;
+            _factory = factory.WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureTestServices(services =>
+                {
+                    services.AddAuthentication(options =>
+                    {
+                        options.DefaultAuthenticateScheme = "Test";
+                        options.DefaultChallengeScheme = "Test";
+                    })
+                    .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("Test", options => { });
+                });
+            });
+
             // Use camelCase to match frontend and backend JSON configuration
             _jsonOptions = new JsonSerializerOptions
             {
@@ -110,23 +124,23 @@ namespace KollectorScum.Tests.Integration
             var createDto = new CreateMusicReleaseDto
             {
                 Title = $"Complete Test Album {uniqueSuffix}",
-                ReleaseYear = new DateTime(1983, 1, 1),
-                OrigReleaseYear = new DateTime(1982, 1, 1),
+                ReleaseYear = new DateTime(1983, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                OrigReleaseYear = new DateTime(1982, 1, 1, 0, 0, 0, DateTimeKind.Utc),
                 ArtistNames = new List<string> { $"Test Artist {uniqueSuffix}" },
                 GenreNames = new List<string> { $"Test Genre {uniqueSuffix}" },
                 Live = false,
                 LabelName = $"Test Label {uniqueSuffix}",
                 CountryName = $"Test Country {uniqueSuffix}",
-                LabelNumber = "TEST-001",
+                LabelNumber = $"TEST-{uniqueSuffix}",
                 Upc = "123456789012",
                 LengthInSeconds = 3600,
                 FormatName = $"Test Format {uniqueSuffix}",
                 PackagingName = $"Test Packaging {uniqueSuffix}",
                 Images = new MusicReleaseImageDto
                 {
-                    CoverFront = "https://example.com/front.jpg",
-                    CoverBack = "https://example.com/back.jpg",
-                    Thumbnail = "https://example.com/thumb.jpg"
+                    CoverFront = "front.jpg",
+                    CoverBack = "back.jpg",
+                    Thumbnail = "thumb.jpg"
                 },
                 Links = new List<MusicReleaseLinkDto>
                 {
@@ -171,7 +185,7 @@ namespace KollectorScum.Tests.Integration
             Assert.Equal(1983, result.Release.ReleaseYear?.Year);
             Assert.Equal(1982, result.Release.OrigReleaseYear?.Year);
             Assert.NotNull(result.Release.Images);
-            Assert.Equal("https://example.com/front.jpg", result.Release.Images.CoverFront);
+            Assert.Equal("front.jpg", result.Release.Images.CoverFront);
             Assert.NotNull(result.Release.Links);
             Assert.Single(result.Release.Links);
             Assert.NotNull(result.Release.Media);
@@ -288,7 +302,8 @@ namespace KollectorScum.Tests.Integration
                 Live = false,
                 Images = new MusicReleaseImageDto
                 {
-                    CoverFront = "not-a-valid-url"
+                    // Validator rejects full URLs, expects filenames
+                    CoverFront = "http://example.com/image.jpg"
                 }
             };
 
