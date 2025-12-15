@@ -13,14 +13,18 @@ namespace KollectorScum.Tests.Services
         private readonly Mock<IRepository<Artist>> _mockRepository;
         private readonly Mock<IUnitOfWork> _mockUnitOfWork;
         private readonly Mock<ILogger<ArtistService>> _mockLogger;
+        private readonly Mock<IUserContext> _mockUserContext;
         private readonly ArtistService _service;
+        private readonly Guid _userId = Guid.Parse("11111111-1111-1111-1111-111111111111");
 
         public ArtistServiceTests()
         {
             _mockRepository = new Mock<IRepository<Artist>>();
             _mockUnitOfWork = new Mock<IUnitOfWork>();
             _mockLogger = new Mock<ILogger<ArtistService>>();
-            _service = new ArtistService(_mockRepository.Object, _mockUnitOfWork.Object, _mockLogger.Object);
+            _mockUserContext = new Mock<IUserContext>();
+            _mockUserContext.Setup(x => x.GetActingUserId()).Returns(_userId);
+            _service = new ArtistService(_mockRepository.Object, _mockUnitOfWork.Object, _mockLogger.Object, _mockUserContext.Object);
         }
 
         #region Constructor Tests
@@ -29,7 +33,7 @@ namespace KollectorScum.Tests.Services
         public void Constructor_WithValidParameters_CreatesInstance()
         {
             // Arrange & Act
-            var service = new ArtistService(_mockRepository.Object, _mockUnitOfWork.Object, _mockLogger.Object);
+            var service = new ArtistService(_mockRepository.Object, _mockUnitOfWork.Object, _mockLogger.Object, _mockUserContext.Object);
 
             // Assert
             Assert.NotNull(service);
@@ -40,7 +44,7 @@ namespace KollectorScum.Tests.Services
         {
             // Arrange & Act & Assert
             Assert.Throws<ArgumentNullException>(() =>
-                new ArtistService(null!, _mockUnitOfWork.Object, _mockLogger.Object));
+                new ArtistService(null!, _mockUnitOfWork.Object, _mockLogger.Object, _mockUserContext.Object));
         }
 
         [Fact]
@@ -48,7 +52,7 @@ namespace KollectorScum.Tests.Services
         {
             // Arrange & Act & Assert
             Assert.Throws<ArgumentNullException>(() =>
-                new ArtistService(_mockRepository.Object, null!, _mockLogger.Object));
+                new ArtistService(_mockRepository.Object, null!, _mockLogger.Object, _mockUserContext.Object));
         }
 
         [Fact]
@@ -56,7 +60,15 @@ namespace KollectorScum.Tests.Services
         {
             // Arrange & Act & Assert
             Assert.Throws<ArgumentNullException>(() =>
-                new ArtistService(_mockRepository.Object, _mockUnitOfWork.Object, null!));
+                new ArtistService(_mockRepository.Object, _mockUnitOfWork.Object, null!, _mockUserContext.Object));
+        }
+
+        [Fact]
+        public void Constructor_WithNullUserContext_ThrowsArgumentNullException()
+        {
+            // Arrange & Act & Assert
+            Assert.Throws<ArgumentNullException>(() =>
+                new ArtistService(_mockRepository.Object, _mockUnitOfWork.Object, _mockLogger.Object, null!));
         }
 
         #endregion
@@ -68,7 +80,7 @@ namespace KollectorScum.Tests.Services
         {
             // Arrange
             var dto = new ArtistDto { Name = "Valid Artist Name" };
-            var artist = new Artist { Id = 1, Name = dto.Name };
+            var artist = new Artist { Id = 1, Name = dto.Name, UserId = _userId };
 
             _mockRepository.Setup(r => r.AddAsync(It.IsAny<Artist>()))
                 .ReturnsAsync(artist);
@@ -131,7 +143,7 @@ namespace KollectorScum.Tests.Services
             // Arrange
             var name = new string('A', 200);
             var dto = new ArtistDto { Name = name };
-            var artist = new Artist { Id = 1, Name = name };
+            var artist = new Artist { Id = 1, Name = name, UserId = _userId };
 
             _mockRepository.Setup(r => r.AddAsync(It.IsAny<Artist>()))
                 .ReturnsAsync(artist);
@@ -151,7 +163,7 @@ namespace KollectorScum.Tests.Services
         {
             // Arrange
             var dto = new ArtistDto { Id = 1, Name = "Updated Artist" };
-            var artist = new Artist { Id = 1, Name = "Original Artist" };
+            var artist = new Artist { Id = 1, Name = "Original Artist", UserId = _userId };
 
             _mockRepository.Setup(r => r.GetByIdAsync(dto.Id))
                 .ReturnsAsync(artist);
@@ -172,7 +184,7 @@ namespace KollectorScum.Tests.Services
         public async Task UpdateAsync_WithInvalidName_ThrowsArgumentException()
         {
             // Arrange
-            var existingArtist = new Artist { Id = 1, Name = "Old Name" };
+            var existingArtist = new Artist { Id = 1, Name = "Old Name", UserId = _userId };
             var dto = new ArtistDto { Id = 1, Name = string.Empty };
 
             _mockRepository.Setup(r => r.GetByIdAsync(1))
@@ -194,7 +206,7 @@ namespace KollectorScum.Tests.Services
             {
                 Items = new List<Artist>
                 {
-                    new Artist { Id = 1, Name = "The Beatles" }
+                    new Artist { Id = 1, Name = "The Beatles", UserId = _userId }
                 },
                 TotalCount = 1,
                 Page = 1,
@@ -232,7 +244,7 @@ namespace KollectorScum.Tests.Services
         public async Task GetByIdAsync_WithValidId_ReturnsArtist()
         {
             // Arrange
-            var artist = new Artist { Id = 1, Name = "Test Artist" };
+            var artist = new Artist { Id = 1, Name = "Test Artist", UserId = _userId };
             _mockRepository.Setup(r => r.GetByIdAsync(1))
                 .ReturnsAsync(artist);
 
@@ -262,7 +274,7 @@ namespace KollectorScum.Tests.Services
         public async Task DeleteAsync_WithValidId_ReturnsTrue()
         {
             // Arrange
-            var artist = new Artist { Id = 1, Name = "Test Artist" };
+            var artist = new Artist { Id = 1, Name = "Test Artist", UserId = _userId };
             _mockRepository.Setup(r => r.GetByIdAsync(1))
                 .ReturnsAsync(artist);
             _mockUnitOfWork.Setup(u => u.SaveChangesAsync())

@@ -5,6 +5,7 @@ using KollectorScum.Api.DTOs;
 using KollectorScum.Api.Models;
 using KollectorScum.Api.Services;
 using KollectorScum.Api.Data;
+using KollectorScum.Api.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -20,6 +21,7 @@ namespace KollectorScum.Tests.Services
     {
         private readonly KollectorScumDbContext _context;
         private readonly Mock<ILogger<KollectionService>> _mockLogger;
+        private readonly Mock<IUserContext> _mockUserContext;
         private readonly KollectionService _service;
 
         public KollectionServiceTests()
@@ -30,7 +32,8 @@ namespace KollectorScum.Tests.Services
 
             _context = new KollectorScumDbContext(options);
             _mockLogger = new Mock<ILogger<KollectionService>>();
-            _service = new KollectionService(_context, _mockLogger.Object);
+            _mockUserContext = new Mock<IUserContext>();
+            _service = new KollectionService(_context, _mockLogger.Object, _mockUserContext.Object);
 
             // Seed test data
             SeedTestData();
@@ -71,7 +74,7 @@ namespace KollectorScum.Tests.Services
         {
             // Act & Assert
             Assert.Throws<ArgumentNullException>(() =>
-                new KollectionService(null!, _mockLogger.Object));
+                new KollectionService(null!, _mockLogger.Object, _mockUserContext.Object));
         }
 
         [Fact]
@@ -79,7 +82,7 @@ namespace KollectorScum.Tests.Services
         {
             // Act & Assert
             Assert.Throws<ArgumentNullException>(() =>
-                new KollectionService(_context, null!));
+                new KollectionService(_context, null!, _mockUserContext.Object));
         }
 
         #endregion

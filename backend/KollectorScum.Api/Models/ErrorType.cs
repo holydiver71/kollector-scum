@@ -31,6 +31,11 @@ namespace KollectorScum.Api.Models
         DatabaseError,
 
         /// <summary>
+        /// User is not authorized to perform the action
+        /// </summary>
+        AuthorizationError,
+
+        /// <summary>
         /// An unexpected internal error occurred
         /// </summary>
         InternalError

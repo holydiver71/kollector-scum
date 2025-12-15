@@ -130,6 +130,8 @@ export function GoogleSignIn({ onSignIn, className }: GoogleSignInProps) {
   const handleSignOut = () => {
     setProfile(null);
     signOut();
+    // Redirect to home page which handles the logged-out state
+    window.location.href = '/';
   };
 
   if (loading && !profile) {

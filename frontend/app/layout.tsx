@@ -6,6 +6,7 @@ import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import Footer from "./components/Footer";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import AuthGuard from "./components/AuthGuard";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -27,24 +28,26 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.variable} font-sans antialiased`}>
         <ErrorBoundary>
-          <div className="min-h-screen flex">
-            <Sidebar />
-            <div
-                className="flex-1 flex flex-col transition-all duration-300 overflow-y-auto app-scroll-container"
-                // margin-left driven by --sidebar-offset which is set by Sidebar
-                style={{ marginLeft: 'var(--sidebar-offset, 64px)' }}
-            >
-              <Suspense fallback={<div />}>
-                <Header />
-              </Suspense>
-              <main className="flex-1">
+          <AuthGuard>
+            <div className="min-h-screen flex">
+              <Sidebar />
+              <div
+                  className="flex-1 flex flex-col transition-all duration-300 overflow-y-auto app-scroll-container"
+                  // margin-left driven by --sidebar-offset which is set by Sidebar
+                  style={{ marginLeft: 'var(--sidebar-offset, 64px)' }}
+              >
                 <Suspense fallback={<div />}>
-                  {children}
+                  <Header />
                 </Suspense>
-              </main>
-              <Footer />
+                <main className="flex-1">
+                  <Suspense fallback={<div />}>
+                    {children}
+                  </Suspense>
+                </main>
+                <Footer />
+              </div>
             </div>
-          </div>
+          </AuthGuard>
         </ErrorBoundary>
       </body>
     </html>
