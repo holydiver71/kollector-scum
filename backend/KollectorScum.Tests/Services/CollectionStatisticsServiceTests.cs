@@ -30,6 +30,10 @@ namespace KollectorScum.Tests.Services
             _mockMapperService = new Mock<IMusicReleaseMapperService>();
             _mockLogger = new Mock<ILogger<CollectionStatisticsService>>();
             _mockUserContext = new Mock<IUserContext>();
+            var defaultUserId = Guid.Parse("12337b39-c346-449c-b269-33b2e820d74f");
+            _mockUserContext.Setup(u => u.GetActingUserId()).Returns(defaultUserId);
+            _mockUserContext.Setup(u => u.GetUserId()).Returns(defaultUserId);
+            _mockUserContext.Setup(u => u.IsAdmin()).Returns(false);
 
             _service = new CollectionStatisticsService(
                 _mockMusicReleaseRepo.Object,
@@ -46,7 +50,10 @@ namespace KollectorScum.Tests.Services
         public async Task GetCollectionStatisticsAsync_WithNoReleases_ReturnsEmptyStatistics()
         {
             // Arrange
-            _mockMusicReleaseRepo.Setup(r => r.GetAllAsync())
+            _mockMusicReleaseRepo.Setup(r => r.GetAsync(
+                It.IsAny<System.Linq.Expressions.Expression<Func<MusicRelease, bool>>>(),
+                It.IsAny<Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>>>(),
+                It.IsAny<string>()))
                 .ReturnsAsync(new List<MusicRelease>());
 
             // Act
@@ -74,7 +81,11 @@ namespace KollectorScum.Tests.Services
                 new MusicRelease { Id = 3, Title = "Album 3", Artists = "[1,2]", Genres = "[1,2]", LabelId = 1, DateAdded = DateTime.UtcNow }
             };
 
-            _mockMusicReleaseRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(releases);
+            _mockMusicReleaseRepo.Setup(r => r.GetAsync(
+                It.IsAny<System.Linq.Expressions.Expression<Func<MusicRelease, bool>>>(),
+                It.IsAny<Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>>>(),
+                It.IsAny<string>()))
+                .ReturnsAsync(releases);
             
             _mockMapperService.Setup(m => m.MapToSummaryDto(It.IsAny<MusicRelease>()))
                 .Returns((MusicRelease mr) => new MusicReleaseSummaryDto { Id = mr.Id, Title = mr.Title });
@@ -116,7 +127,11 @@ namespace KollectorScum.Tests.Services
                 }
             };
 
-            _mockMusicReleaseRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(releases);
+            _mockMusicReleaseRepo.Setup(r => r.GetAsync(
+                It.IsAny<System.Linq.Expressions.Expression<Func<MusicRelease, bool>>>(),
+                It.IsAny<Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>>>(),
+                It.IsAny<string>()))
+                .ReturnsAsync(releases);
             
             _mockMapperService.Setup(m => m.MapToSummaryDto(It.IsAny<MusicRelease>()))
                 .Returns((MusicRelease mr) => new MusicReleaseSummaryDto { Id = mr.Id, Title = mr.Title });
@@ -167,7 +182,11 @@ namespace KollectorScum.Tests.Services
                 }
             };
 
-            _mockMusicReleaseRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(releases);
+            _mockMusicReleaseRepo.Setup(r => r.GetAsync(
+                It.IsAny<System.Linq.Expressions.Expression<Func<MusicRelease, bool>>>(),
+                It.IsAny<Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>>>(),
+                It.IsAny<string>()))
+                .ReturnsAsync(releases);
             
             _mockMapperService.Setup(m => m.MapToSummaryDto(It.IsAny<MusicRelease>()))
                 .Returns((MusicRelease mr) => new MusicReleaseSummaryDto { Id = mr.Id, Title = mr.Title });
@@ -192,7 +211,11 @@ namespace KollectorScum.Tests.Services
                 new MusicRelease { Id = 3, Title = "Album 3", ReleaseYear = new DateTime(2021, 1, 1), Artists = "[1]", DateAdded = DateTime.UtcNow }
             };
 
-            _mockMusicReleaseRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(releases);
+            _mockMusicReleaseRepo.Setup(r => r.GetAsync(
+                It.IsAny<System.Linq.Expressions.Expression<Func<MusicRelease, bool>>>(),
+                It.IsAny<Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>>>(),
+                It.IsAny<string>()))
+                .ReturnsAsync(releases);
             
             _mockMapperService.Setup(m => m.MapToSummaryDto(It.IsAny<MusicRelease>()))
                 .Returns((MusicRelease mr) => new MusicReleaseSummaryDto { Id = mr.Id, Title = mr.Title });
@@ -230,7 +253,11 @@ namespace KollectorScum.Tests.Services
                 new Format { Id = 2, Name = "Vinyl" }
             };
 
-            _mockMusicReleaseRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(releases);
+            _mockMusicReleaseRepo.Setup(r => r.GetAsync(
+                It.IsAny<System.Linq.Expressions.Expression<Func<MusicRelease, bool>>>(),
+                It.IsAny<Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>>>(),
+                It.IsAny<string>()))
+                .ReturnsAsync(releases);
             _mockFormatRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(formats);
             
             _mockMapperService.Setup(m => m.MapToSummaryDto(It.IsAny<MusicRelease>()))
@@ -271,7 +298,11 @@ namespace KollectorScum.Tests.Services
                 new Country { Id = 2, Name = "US" }
             };
 
-            _mockMusicReleaseRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(releases);
+            _mockMusicReleaseRepo.Setup(r => r.GetAsync(
+                It.IsAny<System.Linq.Expressions.Expression<Func<MusicRelease, bool>>>(),
+                It.IsAny<Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>>>(),
+                It.IsAny<string>()))
+                .ReturnsAsync(releases);
             _mockCountryRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(countries);
             
             _mockMapperService.Setup(m => m.MapToSummaryDto(It.IsAny<MusicRelease>()))
@@ -311,7 +342,11 @@ namespace KollectorScum.Tests.Services
                 new Genre { Id = 2, Name = "Pop" }
             };
 
-            _mockMusicReleaseRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(releases);
+            _mockMusicReleaseRepo.Setup(r => r.GetAsync(
+                It.IsAny<System.Linq.Expressions.Expression<Func<MusicRelease, bool>>>(),
+                It.IsAny<Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>>>(),
+                It.IsAny<string>()))
+                .ReturnsAsync(releases);
             _mockGenreRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(genres);
             
             _mockMapperService.Setup(m => m.MapToSummaryDto(It.IsAny<MusicRelease>()))
@@ -349,7 +384,11 @@ namespace KollectorScum.Tests.Services
                 });
             }
 
-            _mockMusicReleaseRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(releases);
+            _mockMusicReleaseRepo.Setup(r => r.GetAsync(
+                It.IsAny<System.Linq.Expressions.Expression<Func<MusicRelease, bool>>>(),
+                It.IsAny<Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>>>(),
+                It.IsAny<string>()))
+                .ReturnsAsync(releases);
             
             _mockMapperService.Setup(m => m.MapToSummaryDto(It.IsAny<MusicRelease>()))
                 .Returns((MusicRelease mr) => new MusicReleaseSummaryDto { Id = mr.Id, Title = mr.Title });
@@ -374,7 +413,11 @@ namespace KollectorScum.Tests.Services
                 new MusicRelease { Id = 2, Title = "Album 2", ReleaseYear = new DateTime(2020, 1, 1), Artists = "[1]", DateAdded = DateTime.UtcNow }
             };
 
-            _mockMusicReleaseRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(releases);
+            _mockMusicReleaseRepo.Setup(r => r.GetAsync(
+                It.IsAny<System.Linq.Expressions.Expression<Func<MusicRelease, bool>>>(),
+                It.IsAny<Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>>>(),
+                It.IsAny<string>()))
+                .ReturnsAsync(releases);
             
             _mockMapperService.Setup(m => m.MapToSummaryDto(It.IsAny<MusicRelease>()))
                 .Returns((MusicRelease mr) => new MusicReleaseSummaryDto { Id = mr.Id, Title = mr.Title });
@@ -415,7 +458,11 @@ namespace KollectorScum.Tests.Services
                 }
             };
 
-            _mockMusicReleaseRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(releases);
+            _mockMusicReleaseRepo.Setup(r => r.GetAsync(
+                It.IsAny<System.Linq.Expressions.Expression<Func<MusicRelease, bool>>>(),
+                It.IsAny<Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>>>(),
+                It.IsAny<string>()))
+                .ReturnsAsync(releases);
             
             _mockMapperService.Setup(m => m.MapToSummaryDto(It.IsAny<MusicRelease>()))
                 .Returns((MusicRelease mr) => new MusicReleaseSummaryDto { Id = mr.Id, Title = mr.Title });

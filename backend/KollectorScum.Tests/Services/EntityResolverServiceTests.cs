@@ -33,6 +33,10 @@ namespace KollectorScum.Tests.Services
             _mockUnitOfWork = new Mock<IUnitOfWork>();
             _mockLogger = new Mock<ILogger<EntityResolverService>>();
             _mockUserContext = new Mock<IUserContext>();
+            var defaultUserId = Guid.Parse("12337b39-c346-449c-b269-33b2e820d74f");
+            _mockUserContext.Setup(u => u.GetActingUserId()).Returns(defaultUserId);
+            _mockUserContext.Setup(u => u.GetUserId()).Returns(defaultUserId);
+            _mockUserContext.Setup(u => u.IsAdmin()).Returns(false);
 
             _service = new EntityResolverService(
                 _mockArtistRepo.Object,
