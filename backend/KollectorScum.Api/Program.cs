@@ -225,23 +225,9 @@ app.UseAuthorization();
 app.MapControllers();
 
 // Map health checks
-app.MapHealthChecks("/health");
 
-// DEBUG: Log Admin User Details
-using (var scope = app.Services.CreateScope())
-{
-    var userRepo = scope.ServiceProvider.GetRequiredService<IUserRepository>();
-    var adminId = Guid.Parse("12337b39-c346-449c-b269-33b2e820d74f");
-    var adminUser = await userRepo.FindByIdAsync(adminId);
-    if (adminUser != null)
-    {
-        Console.WriteLine($"DEBUG: Admin User Found: ID={adminUser.Id}, Email={adminUser.Email}, GoogleSub={adminUser.GoogleSub}, IsAdmin={adminUser.IsAdmin}");
-    }
-    else
-    {
-        Console.WriteLine("DEBUG: Admin User NOT Found.");
-    }
-}
+// Map health checks
+app.MapHealthChecks("/health");
 
 app.Run();
 

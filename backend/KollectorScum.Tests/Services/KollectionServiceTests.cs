@@ -22,6 +22,7 @@ namespace KollectorScum.Tests.Services
         private readonly KollectorScumDbContext _context;
         private readonly Mock<ILogger<KollectionService>> _mockLogger;
         private readonly Mock<IUserContext> _mockUserContext;
+        private readonly Guid _defaultUserId;
         private readonly KollectionService _service;
 
         public KollectionServiceTests()
@@ -33,6 +34,10 @@ namespace KollectorScum.Tests.Services
             _context = new KollectorScumDbContext(options);
             _mockLogger = new Mock<ILogger<KollectionService>>();
             _mockUserContext = new Mock<IUserContext>();
+            _defaultUserId = Guid.Parse("12337b39-c346-449c-b269-33b2e820d74f");
+            _mockUserContext.Setup(u => u.GetActingUserId()).Returns(_defaultUserId);
+            _mockUserContext.Setup(u => u.GetUserId()).Returns(_defaultUserId);
+            _mockUserContext.Setup(u => u.IsAdmin()).Returns(false);
             _service = new KollectionService(_context, _mockLogger.Object, _mockUserContext.Object);
 
             // Seed test data
@@ -43,11 +48,11 @@ namespace KollectorScum.Tests.Services
         {
             var genres = new List<Genre>
             {
-                new Genre { Id = 1, Name = "Heavy Metal" },
-                new Genre { Id = 2, Name = "Thrash Metal" },
-                new Genre { Id = 3, Name = "Death Metal" },
-                new Genre { Id = 4, Name = "Rock" },
-                new Genre { Id = 5, Name = "Indie" }
+                new Genre { Id = 1, Name = "Heavy Metal", UserId = _defaultUserId },
+                new Genre { Id = 2, Name = "Thrash Metal", UserId = _defaultUserId },
+                new Genre { Id = 3, Name = "Death Metal", UserId = _defaultUserId },
+                new Genre { Id = 4, Name = "Rock", UserId = _defaultUserId },
+                new Genre { Id = 5, Name = "Indie", UserId = _defaultUserId }
             };
 
             _context.Genres.AddRange(genres);

@@ -16,6 +16,7 @@ namespace KollectorScum.Tests.Services
     /// </summary>
     public class MusicReleaseCommandServiceTests : IDisposable
     {
+        private readonly Guid defaultUserId;
         private readonly Mock<IRepository<MusicRelease>> _mockMusicReleaseRepo;
         private readonly Mock<IUnitOfWork> _mockUnitOfWork;
         private readonly Mock<IEntityResolverService> _mockEntityResolver;
@@ -37,6 +38,10 @@ namespace KollectorScum.Tests.Services
             _mockLogger = new Mock<ILogger<MusicReleaseCommandService>>();
             _mockConfiguration = new Mock<IConfiguration>();
             _mockUserContext = new Mock<IUserContext>();
+            defaultUserId = Guid.Parse("12337b39-c346-449c-b269-33b2e820d74f");
+            _mockUserContext.Setup(u => u.GetActingUserId()).Returns(defaultUserId);
+            _mockUserContext.Setup(u => u.GetUserId()).Returns(defaultUserId);
+            _mockUserContext.Setup(u => u.IsAdmin()).Returns(false);
 
             // Setup test directory for images
             _testImagesPath = Path.Combine(Path.GetTempPath(), "kollector-test-images", Guid.NewGuid().ToString());
@@ -95,7 +100,8 @@ namespace KollectorScum.Tests.Services
             {
                 Id = 1,
                 Title = "Album to Delete",
-                Images = JsonSerializer.Serialize(imageDto)
+                Images = JsonSerializer.Serialize(imageDto),
+                UserId = defaultUserId
             };
 
             _mockMusicReleaseRepo.Setup(r => r.GetByIdAsync(1))
@@ -133,7 +139,8 @@ namespace KollectorScum.Tests.Services
             {
                 Id = 1,
                 Title = "Album without Images",
-                Images = null
+                Images = null,
+                UserId = defaultUserId
             };
 
             _mockMusicReleaseRepo.Setup(r => r.GetByIdAsync(1))
@@ -173,7 +180,8 @@ namespace KollectorScum.Tests.Services
             {
                 Id = 1,
                 Title = "Album with Partial Images",
-                Images = JsonSerializer.Serialize(imageDto)
+                Images = JsonSerializer.Serialize(imageDto),
+                UserId = defaultUserId
             };
 
             _mockMusicReleaseRepo.Setup(r => r.GetByIdAsync(1))
@@ -210,7 +218,8 @@ namespace KollectorScum.Tests.Services
             {
                 Id = 1,
                 Title = "Album with Missing Image Files",
-                Images = JsonSerializer.Serialize(imageDto)
+                Images = JsonSerializer.Serialize(imageDto),
+                UserId = defaultUserId
             };
 
             _mockMusicReleaseRepo.Setup(r => r.GetByIdAsync(1))
@@ -236,7 +245,8 @@ namespace KollectorScum.Tests.Services
             {
                 Id = 1,
                 Title = "Album with Invalid Image JSON",
-                Images = "invalid json {]"
+                Images = "invalid json {]",
+                UserId = defaultUserId
             };
 
             _mockMusicReleaseRepo.Setup(r => r.GetByIdAsync(1))
@@ -279,6 +289,8 @@ namespace KollectorScum.Tests.Services
             {
                 Id = 1,
                 Title = "Album to Delete"
+                ,
+                UserId = defaultUserId
             };
 
             _mockMusicReleaseRepo.Setup(r => r.GetByIdAsync(1))
@@ -321,7 +333,8 @@ namespace KollectorScum.Tests.Services
                 {
                     Id = 1,
                     Title = "Album with Locked Image",
-                    Images = JsonSerializer.Serialize(imageDto)
+                    Images = JsonSerializer.Serialize(imageDto),
+                    UserId = defaultUserId
                 };
 
                 _mockMusicReleaseRepo.Setup(r => r.GetByIdAsync(1))
@@ -375,7 +388,8 @@ namespace KollectorScum.Tests.Services
             {
                 Id = 1,
                 Title = "Complete Album",
-                Images = JsonSerializer.Serialize(imageDto)
+                Images = JsonSerializer.Serialize(imageDto),
+                UserId = defaultUserId
             };
 
             _mockMusicReleaseRepo.Setup(r => r.GetByIdAsync(1))
