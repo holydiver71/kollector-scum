@@ -4,6 +4,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { SearchAndFilter } from "../components/SearchAndFilter";
 import { useLookupData } from "../components/LookupComponents";
 import { MusicReleaseList } from "../components/MusicReleaseList";
+import { DiscogsImportDialog } from "../components/DiscogsImportDialog";
 import { X } from "lucide-react";
 
 interface SearchFilters {
@@ -27,6 +28,8 @@ export default function CollectionPage() {
   const [filters, setFilters] = useState<SearchFilters>({});
   const isUpdatingUrl = useRef(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [showImportDialog, setShowImportDialog] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Load lookup tables to show friendly names for selected ids in the active filters chip list
   const { data: artists } = useLookupData<any>("artists");
@@ -173,7 +176,15 @@ export default function CollectionPage() {
         {/* Search and Filters - only show after initialization to avoid passing empty filters */}
         {isInitialized && (
           <>
-            
+            {/* Import Button */}
+            <div className="mb-6 flex justify-end">
+              <button
+                onClick={() => setShowImportDialog(true)}
+                className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-red-600 to-red-700 rounded-md hover:from-red-700 hover:to-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 shadow-lg shadow-red-900/50 transition-all"
+              >
+                Import from Discogs
+              </button>
+            </div>
 
             {/* Only render the SearchAndFilter panel when the advanced filters are visible
                 or when the inline search input is required. This removes the empty white
@@ -336,12 +347,24 @@ export default function CollectionPage() {
 
             {/* Results */}
             <MusicReleaseList 
+              key={refreshKey}
               filters={filters}
               pageSize={60}
             />
           </>
         )}
       </div>
+
+      {/* Import Dialog */}
+      <DiscogsImportDialog
+        isOpen={showImportDialog}
+        onClose={() => setShowImportDialog(false)}
+        onSuccess={() => {
+          setShowImportDialog(false);
+          // Refresh the list by updating the key
+          setRefreshKey(prev => prev + 1);
+        }}
+      />
     </div>
   );
 }
