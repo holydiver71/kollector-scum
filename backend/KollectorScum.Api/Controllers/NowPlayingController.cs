@@ -218,53 +218,74 @@ namespace KollectorScum.Api.Controllers
         {
             try
             {
-                // Get the most recent play date and play count for each release using a subquery
-                var releasePlayStats = _context.NowPlayings
-                    .GroupBy(np => np.MusicReleaseId)
-                    .Select(g => new { 
-                        MusicReleaseId = g.Key, 
-                        LatestPlayedAt = g.Max(np => np.PlayedAt),
-                        PlayCount = g.Count()
-                    });
+                // We want to show a recent sequence of plays. The "xN" badge should only
+                // indicate consecutive back-to-back plays that happened on the same day.
+                // To do that we fetch a buffer of recent NowPlaying records (newest first),
+                // then collapse adjacent entries that refer to the same release and share
+                // the same date. Finally return up to `limit` items.
 
-                // Join back to get the full record and include the MusicRelease
-                var recentlyPlayed = await _context.NowPlayings
+                var fetchLimit = Math.Min(limit * 10, 1000); // buffer to allow collapsing
+
+                var recentPlays = await _context.NowPlayings
                     .Include(np => np.MusicRelease)
-                    .Join(releasePlayStats,
-                        np => new { np.MusicReleaseId, LatestPlayedAt = np.PlayedAt },
-                        stats => new { stats.MusicReleaseId, LatestPlayedAt = stats.LatestPlayedAt },
-                        (np, stats) => new { NowPlaying = np, stats.PlayCount })
-                    .OrderByDescending(x => x.NowPlaying.PlayedAt)
-                    .Take(limit)
+                    .OrderByDescending(np => np.PlayedAt)
+                    .Take(fetchLimit)
                     .ToListAsync();
 
-                var result = recentlyPlayed.Select(x =>
+                var collapsed = new List<RecentlyPlayedItemDto>();
+
+                foreach (var np in recentPlays)
                 {
                     string? coverFront = null;
-                    if (x.NowPlaying.MusicRelease?.Images != null)
+                    if (np.MusicRelease?.Images != null)
                     {
                         try
                         {
                             var images = System.Text.Json.JsonSerializer.Deserialize<MusicReleaseImageDto>(
-                                x.NowPlaying.MusicRelease.Images,
+                                np.MusicRelease.Images,
                                 new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                             coverFront = images?.CoverFront;
                         }
                         catch
                         {
-                            // If parsing fails, leave coverFront as null
+                            // ignore parse errors
                         }
                     }
 
-                    return new RecentlyPlayedItemDto
+                    if (collapsed.Count == 0)
                     {
-                        Id = x.NowPlaying.MusicReleaseId,
-                        CoverFront = coverFront,
-                        PlayedAt = x.NowPlaying.PlayedAt,
-                        PlayCount = x.PlayCount
-                    };
-                }).ToList();
+                        collapsed.Add(new RecentlyPlayedItemDto
+                        {
+                            Id = np.MusicReleaseId,
+                            CoverFront = coverFront,
+                            PlayedAt = np.PlayedAt,
+                            PlayCount = 1
+                        });
+                        continue;
+                    }
 
+                    var last = collapsed.Last();
+
+                    // Consider as back-to-back same-day repeat only if the same release
+                    // and the PlayedAt dates (UTC) fall on the same calendar day
+                    if (last.Id == np.MusicReleaseId && last.PlayedAt.Date == np.PlayedAt.Date)
+                    {
+                        last.PlayCount += 1;
+                        // Keep the PlayedAt as the most recent (already the case since we iterate desc)
+                    }
+                    else
+                    {
+                        collapsed.Add(new RecentlyPlayedItemDto
+                        {
+                            Id = np.MusicReleaseId,
+                            CoverFront = coverFront,
+                            PlayedAt = np.PlayedAt,
+                            PlayCount = 1
+                        });
+                    }
+                }
+
+                var result = collapsed.Take(limit).ToList();
                 return Ok(result);
             }
             catch (Exception ex)

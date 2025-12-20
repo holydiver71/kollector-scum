@@ -7,7 +7,7 @@ import DiscogsSearch from "../components/DiscogsSearch";
 import DiscogsSearchResults from "../components/DiscogsSearchResults";
 import DiscogsReleasePreview from "../components/DiscogsReleasePreview";
 import type { DiscogsSearchResult, DiscogsRelease } from "../lib/discogs-types";
-import { API_BASE_URL } from "../lib/api";
+import { fetchJson, API_BASE_URL } from "../lib/api";
 
 type Tab = "manual" | "discogs";
 
@@ -40,20 +40,12 @@ export default function AddReleasePage() {
   useEffect(() => {
     const fetchLookupData = async () => {
       try {
-        const [artistsRes, labelsRes, genresRes, countriesRes, formatsRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/api/artists`),
-          fetch(`${API_BASE_URL}/api/labels`),
-          fetch(`${API_BASE_URL}/api/genres`),
-          fetch(`${API_BASE_URL}/api/countries`),
-          fetch(`${API_BASE_URL}/api/formats`),
-        ]);
-
         const [artists, labels, genres, countries, formats] = await Promise.all([
-          artistsRes.json() as Promise<LookupItem[]>,
-          labelsRes.json() as Promise<LookupItem[]>,
-          genresRes.json() as Promise<LookupItem[]>,
-          countriesRes.json() as Promise<LookupItem[]>,
-          formatsRes.json() as Promise<LookupItem[]>,
+          fetchJson<LookupItem[]>('/api/artists'),
+          fetchJson<LookupItem[]>('/api/labels'),
+          fetchJson<LookupItem[]>('/api/genres'),
+          fetchJson<LookupItem[]>('/api/countries'),
+          fetchJson<LookupItem[]>('/api/formats'),
         ]);
 
         // Ensure we have arrays before mapping
