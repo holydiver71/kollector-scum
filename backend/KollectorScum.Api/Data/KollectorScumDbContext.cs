@@ -124,6 +124,12 @@ namespace KollectorScum.Api.Data
                 .HasIndex(mr => mr.PackagingId)
                 .HasDatabaseName("IX_MusicReleases_PackagingId");
 
+            modelBuilder.Entity<Models.MusicRelease>()
+                .HasIndex(mr => new { mr.UserId, mr.DiscogsId })
+                .IsUnique()
+                .HasFilter("\"DiscogsId\" IS NOT NULL")
+                .HasDatabaseName("IX_MusicReleases_UserId_DiscogsId");
+
             // Configure lookup entity indexes and unique constraints
             modelBuilder.Entity<Models.Artist>()
                 .HasIndex(a => a.UserId)
