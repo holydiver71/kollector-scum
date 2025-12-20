@@ -142,5 +142,15 @@ namespace KollectorScum.Api.Models
         /// Gets or sets the media items (stored as JSON)
         /// </summary>
         public string? Media { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Discogs release ID for imported releases
+        /// </summary>
+        public int? DiscogsId { get; set; }
+
+        /// <summary>
+        /// Gets or sets user notes about this release
+        /// </summary>
+        public string? Notes { get; set; }
     }
 }
