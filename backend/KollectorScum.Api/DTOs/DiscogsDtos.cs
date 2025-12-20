@@ -321,4 +321,159 @@ namespace KollectorScum.Api.DTOs
         /// </summary>
         public string Value { get; set; } = string.Empty;
     }
+
+    /// <summary>
+    /// DTO for Discogs user collection response
+    /// </summary>
+    public class DiscogsCollectionResponseDto
+    {
+        /// <summary>
+        /// Pagination information
+        /// </summary>
+        public DiscogsPaginationDto? Pagination { get; set; }
+
+        /// <summary>
+        /// List of releases in collection
+        /// </summary>
+        public List<DiscogsCollectionReleaseDto> Releases { get; set; } = new();
+    }
+
+    /// <summary>
+    /// DTO for pagination information
+    /// </summary>
+    public class DiscogsPaginationDto
+    {
+        /// <summary>
+        /// Current page number
+        /// </summary>
+        public int Page { get; set; }
+
+        /// <summary>
+        /// Number of items per page
+        /// </summary>
+        public int PerPage { get; set; }
+
+        /// <summary>
+        /// Total number of pages
+        /// </summary>
+        public int Pages { get; set; }
+
+        /// <summary>
+        /// Total number of items
+        /// </summary>
+        public int Items { get; set; }
+    }
+
+    /// <summary>
+    /// DTO for a release in user's collection
+    /// </summary>
+    public class DiscogsCollectionReleaseDto
+    {
+        /// <summary>
+        /// Instance ID (unique to this collection item)
+        /// </summary>
+        public string? InstanceId { get; set; }
+
+        /// <summary>
+        /// Rating (0-5)
+        /// </summary>
+        public int? Rating { get; set; }
+
+        /// <summary>
+        /// Basic information about the release
+        /// </summary>
+        public DiscogsBasicInfoDto? BasicInformation { get; set; }
+
+        /// <summary>
+        /// User notes about this release
+        /// </summary>
+        public List<DiscogsNoteDto>? Notes { get; set; }
+
+        /// <summary>
+        /// Date added to collection
+        /// </summary>
+        public string? DateAdded { get; set; }
+    }
+
+    /// <summary>
+    /// DTO for basic release information in collection
+    /// </summary>
+    public class DiscogsBasicInfoDto
+    {
+        /// <summary>
+        /// Release ID
+        /// </summary>
+        public int Id { get; set; }
+
+        /// <summary>
+        /// Release title
+        /// </summary>
+        public string Title { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Release year
+        /// </summary>
+        public int? Year { get; set; }
+
+        /// <summary>
+        /// List of artists
+        /// </summary>
+        public List<DiscogsArtistDto> Artists { get; set; } = new();
+
+        /// <summary>
+        /// List of labels
+        /// </summary>
+        public List<DiscogsLabelDto> Labels { get; set; } = new();
+
+        /// <summary>
+        /// List of formats
+        /// </summary>
+        public List<DiscogsFormatDto> Formats { get; set; } = new();
+
+        /// <summary>
+        /// List of genres
+        /// </summary>
+        public List<string> Genres { get; set; } = new();
+
+        /// <summary>
+        /// List of styles (sub-genres)
+        /// </summary>
+        public List<string> Styles { get; set; } = new();
+
+        /// <summary>
+        /// Country of release
+        /// </summary>
+        public string? Country { get; set; }
+
+        /// <summary>
+        /// Cover image URL
+        /// </summary>
+        public string? CoverImage { get; set; }
+
+        /// <summary>
+        /// Thumbnail URL
+        /// </summary>
+        public string? Thumb { get; set; }
+
+        /// <summary>
+        /// Resource URL for full details
+        /// </summary>
+        public string? ResourceUrl { get; set; }
+    }
+
+    /// <summary>
+    /// DTO for notes on collection items
+    /// </summary>
+    public class DiscogsNoteDto
+    {
+        /// <summary>
+        /// Note field ID
+        /// </summary>
+        public int FieldId { get; set; }
+
+        /// <summary>
+        /// Note value/text
+        /// </summary>
+        public string? Value { get; set; }
+    }
 }
