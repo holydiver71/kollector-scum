@@ -217,6 +217,9 @@ app.UseCors(policy =>
           .AllowAnyHeader();
 });
 
+// Enable static files for serving cover art
+app.UseStaticFiles();
+
 // Add authentication and authorization middleware
 app.UseAuthentication();
 app.UseAuthorization();
