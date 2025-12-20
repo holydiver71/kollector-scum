@@ -47,5 +47,14 @@ namespace KollectorScum.Api.Interfaces
         /// <param name="releaseId">The Discogs release ID</param>
         /// <returns>Full release details</returns>
         Task<DiscogsReleaseDto?> GetReleaseDetailsAsync(string releaseId);
+
+        /// <summary>
+        /// Get user's collection with pagination
+        /// </summary>
+        /// <param name="username">Discogs username</param>
+        /// <param name="page">Page number (default: 1)</param>
+        /// <param name="perPage">Items per page (default: 100, max: 100)</param>
+        /// <returns>Collection response with releases and pagination info</returns>
+        Task<DiscogsCollectionResponseDto?> GetUserCollectionAsync(string username, int page = 1, int perPage = 100);
     }
 }

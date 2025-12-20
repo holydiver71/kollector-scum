@@ -210,5 +210,44 @@ namespace KollectorScum.Api.Services
             var queryString = string.Join("&", queryParams);
             return $"/database/search?{queryString}";
         }
+
+        /// <summary>
+        /// Get user's collection
+        /// </summary>
+        public async Task<string?> GetUserCollectionAsync(string username, int page = 1, int perPage = 100)
+        {
+            try
+            {
+                _logger.LogInformation("Fetching collection for user: {Username}, page: {Page}", username, page);
+
+                // Ensure perPage is within valid range (1-100)
+                perPage = Math.Clamp(perPage, 1, 100);
+
+                var requestUri = $"/users/{Uri.EscapeDataString(username)}/collection/folders/0/releases?page={page}&per_page={perPage}";
+                var response = await _httpClient.GetAsync(requestUri);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("Discogs API returned status code: {StatusCode} for user: {Username}",
+                        response.StatusCode, username);
+                    return null;
+                }
+
+                var content = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("Successfully fetched collection page {Page} for user: {Username}", page, username);
+
+                return content;
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "HTTP error when fetching collection for user: {Username}", username);
+                throw new Exception($"Failed to connect to Discogs API: {ex.Message}", ex);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching collection for user: {Username}", username);
+                throw;
+            }
+        }
     }
 }
