@@ -20,6 +20,9 @@ namespace KollectorScum.Api.Services
         private readonly HttpClient _httpClient;
         private readonly string _coverArtPath;
 
+        // Constants for filename sanitization
+        private const int MaxFilenameLength = 200;
+
         public DiscogsCollectionImportService(
             IDiscogsService discogsService,
             IUnitOfWork unitOfWork,
@@ -167,6 +170,9 @@ namespace KollectorScum.Api.Services
                 var artistIds = await GetOrCreateArtistsAsync(basicInfo.Artists, userId);
                 var genreIds = await GetOrCreateGenresAsync(basicInfo.Genres, basicInfo.Styles, userId);
 
+                // Save any newly created lookup entities before creating the music release
+                await _unitOfWork.SaveChangesAsync();
+
                 // Download cover art
                 string? coverImageFilename = null;
                 if (!string.IsNullOrEmpty(basicInfo.CoverImage))
@@ -229,7 +235,7 @@ namespace KollectorScum.Api.Services
             // Create new format
             var format = new Format { UserId = userId, Name = formatName };
             await _unitOfWork.Formats.AddAsync(format);
-            await _unitOfWork.SaveChangesAsync();
+            // Note: SaveChangesAsync will be called by the caller after all lookups are resolved
             
             return format.Id;
         }
@@ -253,7 +259,7 @@ namespace KollectorScum.Api.Services
             // Create new label
             var label = new Label { UserId = userId, Name = labelName };
             await _unitOfWork.Labels.AddAsync(label);
-            await _unitOfWork.SaveChangesAsync();
+            // Note: SaveChangesAsync will be called by the caller after all lookups are resolved
             
             return label.Id;
         }
@@ -274,7 +280,7 @@ namespace KollectorScum.Api.Services
             // Create new country
             var country = new Country { UserId = userId, Name = countryName };
             await _unitOfWork.Countries.AddAsync(country);
-            await _unitOfWork.SaveChangesAsync();
+            // Note: SaveChangesAsync will be called by the caller after all lookups are resolved
             
             return country.Id;
         }
@@ -302,7 +308,7 @@ namespace KollectorScum.Api.Services
                     // Create new artist
                     var newArtist = new Artist { UserId = userId, Name = artist.Name };
                     await _unitOfWork.Artists.AddAsync(newArtist);
-                    await _unitOfWork.SaveChangesAsync();
+                    // Note: SaveChangesAsync will be called by the caller after all lookups are resolved
                     artistIds.Add(newArtist.Id);
                 }
             }
@@ -335,7 +341,7 @@ namespace KollectorScum.Api.Services
                     // Create new genre
                     var newGenre = new Genre { UserId = userId, Name = genreName };
                     await _unitOfWork.Genres.AddAsync(newGenre);
-                    await _unitOfWork.SaveChangesAsync();
+                    // Note: SaveChangesAsync will be called by the caller after all lookups are resolved
                     genreIds.Add(newGenre.Id);
                 }
             }
@@ -407,10 +413,10 @@ namespace KollectorScum.Api.Services
 
             // Limit length
             var result = sanitized.ToString();
-            if (result.Length > 200)
+            if (result.Length > MaxFilenameLength)
             {
                 var extension = Path.GetExtension(result);
-                result = result.Substring(0, 200 - extension.Length) + extension;
+                result = result.Substring(0, MaxFilenameLength - extension.Length) + extension;
             }
 
             return result;
