@@ -20,5 +20,12 @@ namespace KollectorScum.Api.Interfaces
         /// <param name="jsonResponse">Raw JSON response from Discogs release endpoint</param>
         /// <returns>Release detail DTO or null if mapping fails</returns>
         DiscogsReleaseDto? MapReleaseDetails(string? jsonResponse);
+
+        /// <summary>
+        /// Map user collection JSON to DTO
+        /// </summary>
+        /// <param name="jsonResponse">Raw JSON response from Discogs collection endpoint</param>
+        /// <returns>Collection response DTO or null if mapping fails</returns>
+        DiscogsCollectionResponseDto? MapCollectionResponse(string? jsonResponse);
     }
 }

@@ -206,6 +206,88 @@ namespace KollectorScum.Api.Services
             }).ToList();
         }
 
+        /// <summary>
+        /// Map user collection JSON to DTO
+        /// </summary>
+        public DiscogsCollectionResponseDto? MapCollectionResponse(string? jsonResponse)
+        {
+            if (string.IsNullOrEmpty(jsonResponse))
+            {
+                _logger.LogWarning("Empty JSON response provided for collection mapping");
+                return null;
+            }
+
+            try
+            {
+                var collectionResponse = JsonSerializer.Deserialize<DiscogsCollectionApiResponse>(jsonResponse, _jsonOptions);
+
+                if (collectionResponse == null)
+                {
+                    _logger.LogWarning("Failed to deserialize collection response");
+                    return null;
+                }
+
+                _logger.LogInformation("Successfully mapped collection with {Count} releases", 
+                    collectionResponse.Releases?.Count ?? 0);
+
+                var dto = new DiscogsCollectionResponseDto
+                {
+                    Pagination = collectionResponse.Pagination != null ? new DiscogsPaginationDto
+                    {
+                        Page = collectionResponse.Pagination.Page,
+                        PerPage = collectionResponse.Pagination.PerPage,
+                        Pages = collectionResponse.Pagination.Pages,
+                        Items = collectionResponse.Pagination.Items
+                    } : null,
+                    Releases = MapCollectionReleases(collectionResponse.Releases)
+                };
+
+                return dto;
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(ex, "JSON deserialization error when mapping collection");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error mapping collection response");
+                return null;
+            }
+        }
+
+        private List<DiscogsCollectionReleaseDto> MapCollectionReleases(List<DiscogsCollectionReleaseResponse>? releases)
+        {
+            if (releases == null) return new List<DiscogsCollectionReleaseDto>();
+
+            return releases.Select(r => new DiscogsCollectionReleaseDto
+            {
+                InstanceId = r.InstanceId?.ToString(),
+                Rating = r.Rating,
+                DateAdded = r.DateAdded,
+                Notes = r.Notes?.Select(n => new DiscogsNoteDto
+                {
+                    FieldId = n.FieldId,
+                    Value = n.Value
+                }).ToList(),
+                BasicInformation = r.BasicInformation != null ? new DiscogsBasicInfoDto
+                {
+                    Id = r.BasicInformation.Id,
+                    Title = r.BasicInformation.Title ?? string.Empty,
+                    Year = r.BasicInformation.Year,
+                    Country = r.BasicInformation.Country,
+                    CoverImage = r.BasicInformation.CoverImage,
+                    Thumb = r.BasicInformation.Thumb,
+                    ResourceUrl = r.BasicInformation.ResourceUrl,
+                    Artists = MapArtists(r.BasicInformation.Artists),
+                    Labels = MapLabels(r.BasicInformation.Labels),
+                    Formats = MapFormats(r.BasicInformation.Formats),
+                    Genres = r.BasicInformation.Genres ?? new List<string>(),
+                    Styles = r.BasicInformation.Styles ?? new List<string>()
+                } : null
+            }).ToList();
+        }
+
         #region Internal Response Models (for deserialization)
 
         private class DiscogsSearchResponse
@@ -291,6 +373,51 @@ namespace KollectorScum.Api.Services
         private class DiscogsIdentifierResponse
         {
             public string? Type { get; set; }
+            public string? Value { get; set; }
+        }
+
+        private class DiscogsCollectionApiResponse
+        {
+            public DiscogsPaginationResponse? Pagination { get; set; }
+            public List<DiscogsCollectionReleaseResponse>? Releases { get; set; }
+        }
+
+        private class DiscogsPaginationResponse
+        {
+            public int Page { get; set; }
+            public int PerPage { get; set; }
+            public int Pages { get; set; }
+            public int Items { get; set; }
+        }
+
+        private class DiscogsCollectionReleaseResponse
+        {
+            public long? InstanceId { get; set; }
+            public int? Rating { get; set; }
+            public DiscogsBasicInfoResponse? BasicInformation { get; set; }
+            public List<DiscogsNoteResponse>? Notes { get; set; }
+            public string? DateAdded { get; set; }
+        }
+
+        private class DiscogsBasicInfoResponse
+        {
+            public int Id { get; set; }
+            public string? Title { get; set; }
+            public int? Year { get; set; }
+            public List<DiscogsArtistResponse>? Artists { get; set; }
+            public List<DiscogsLabelResponse>? Labels { get; set; }
+            public List<DiscogsFormatResponse>? Formats { get; set; }
+            public List<string>? Genres { get; set; }
+            public List<string>? Styles { get; set; }
+            public string? Country { get; set; }
+            public string? CoverImage { get; set; }
+            public string? Thumb { get; set; }
+            public string? ResourceUrl { get; set; }
+        }
+
+        private class DiscogsNoteResponse
+        {
+            public int FieldId { get; set; }
             public string? Value { get; set; }
         }
 
