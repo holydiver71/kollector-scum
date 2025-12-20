@@ -137,19 +137,19 @@ export function RecentlyPlayed({ maxItems = 24 }: RecentlyPlayedProps) {
     );
   }
 
-  // Group items by date and determine which ones show date headings
-  // Only the first item for each date should show the date heading
-  let lastDateString = "";
+  // Group items by relative date and determine which ones show date headings
+  // Only the first item for each relative date period should show the date heading
+  let lastRelativeDateString = "";
   const itemsWithDateInfo = items.map((item) => {
     const playedDate = new Date(item.playedAt);
-    const dateString = playedDate.toDateString();
-    const showDate = dateString !== lastDateString;
-    lastDateString = dateString;
+    const relativeDate = formatRelativeDate(playedDate);
+    const showDate = relativeDate !== lastRelativeDateString;
+    lastRelativeDateString = relativeDate;
     
     return {
       ...item,
       showDate,
-      relativeDate: formatRelativeDate(playedDate),
+      relativeDate,
     };
   });
 
@@ -174,6 +174,13 @@ export function RecentlyPlayed({ maxItems = 24 }: RecentlyPlayedProps) {
             <Link
               href={`/releases/${item.id}`}
               className="block aspect-square rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-200 relative"
+              title={`Played on ${new Date(item.playedAt).toLocaleString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}`}
             >
               <img
                 src={getImageUrl(item.coverFront)}
