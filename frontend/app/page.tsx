@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { LoadingSpinner, Skeleton } from "./components/LoadingComponents";
 import { RecentlyPlayed } from "./components/RecentlyPlayed";
+import { WelcomeScreen } from "./components/WelcomeScreen";
+import { useCollection } from "./contexts/CollectionContext";
 
 import { getHealth, getPagedCount, ApiError } from "./lib/api";
 import { isAuthenticated, clearAuthToken } from "./lib/auth";
@@ -17,6 +19,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
+  const { setHasCollection } = useCollection();
 
   useEffect(() => {
     const checkAuthAndFetch = async () => {
@@ -42,6 +46,12 @@ export default function Dashboard() {
         ]);
 
         setStats({ totalReleases, totalArtists, totalGenres, totalLabels });
+        
+        // Update collection context and show welcome screen for empty collections
+        setHasCollection(totalReleases > 0);
+        if (totalReleases === 0) {
+          setShowWelcome(true);
+        }
       } catch (e) {
         console.error(e);
         const apiError = e as ApiError;
@@ -63,8 +73,39 @@ export default function Dashboard() {
         setLoading(false);
       }
     };
+    
     checkAuthAndFetch();
+    
+    // Re-check authentication when token changes in localStorage
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'auth_token') {
+        checkAuthAndFetch();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also listen for custom event fired after sign-in
+    const handleAuthChange = () => {
+      checkAuthAndFetch();
+    };
+    
+    window.addEventListener('authChanged', handleAuthChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('authChanged', handleAuthChange);
+    };
   }, []);
+
+  const handleDismissWelcome = () => {
+    setShowWelcome(false);
+  };
+
+  const handleStartFresh = () => {
+    // Mark that user has chosen to start fresh (allow access to app)
+    setHasCollection(true);
+  };
 
   if (!isLoggedIn && !loading) {
     return (
@@ -99,6 +140,11 @@ export default function Dashboard() {
         </div>
       </div>
     );
+  }
+
+  // Show welcome screen for new users with empty collections
+  if (showWelcome && !loading) {
+    return <WelcomeScreen onDismiss={handleDismissWelcome} onStartFresh={handleStartFresh} />;
   }
 
   const statCards = [

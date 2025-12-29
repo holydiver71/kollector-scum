@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { isAuthenticated } from '../lib/auth';
+import { useCollection } from '../contexts/CollectionContext';
 import { 
   Home, 
   Music, 
@@ -18,6 +19,8 @@ import {
   Menu,
   FolderOpen
 } from 'lucide-react';
+import { Shuffle } from 'lucide-react';
+import { getRandomReleaseId } from '../lib/api';
 
 interface NavigationItem {
   name: string;
@@ -29,23 +32,37 @@ const Sidebar: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+  const { hasCollection, isReady } = useCollection();
 
   // Check auth state on mount and route changes
   useEffect(() => {
     setIsLoggedIn(isAuthenticated());
+    
+    // Listen for auth changes
+    const handleAuthChange = () => {
+      setIsLoggedIn(isAuthenticated());
+    };
+    
+    window.addEventListener('authChanged', handleAuthChange);
+    
+    return () => {
+      window.removeEventListener('authChanged', handleAuthChange);
+    };
   }, [pathname]);
 
   // Keep a global CSS variable so Header (a sibling) can read the sidebar offset
   useEffect(() => {
-    if (!isLoggedIn) {
+    if (!isLoggedIn || !hasCollection) {
       document.documentElement.style.setProperty('--sidebar-offset', '0px');
       return;
     }
     const offset = isExpanded ? '240px' : '64px';
     document.documentElement.style.setProperty('--sidebar-offset', offset);
-  }, [isExpanded, isLoggedIn]);
+  }, [isExpanded, isLoggedIn, hasCollection]);
 
-  if (!isLoggedIn) return null;
+  // Don't show sidebar if not logged in or collection is empty
+  if (!isLoggedIn || !hasCollection) return null;
 
   const navigationItems: NavigationItem[] = [
     { name: 'Home', href: '/', icon: Home },
@@ -130,6 +147,36 @@ const Sidebar: React.FC = () => {
             );
           })}
 
+          {/* Random Album quick action */}
+          <li className="relative group">
+            <button
+              onClick={async () => {
+                try {
+                  const id = await getRandomReleaseId();
+                  if (id) {
+                    router.push(`/releases/${id}`);
+                  }
+                } catch (err) {
+                  console.error('Failed to get random release id', err);
+                }
+              }}
+              className={`flex items-center w-full text-left px-4 py-3 transition-colors hover:bg-gray-800`}
+            >
+              <Shuffle className="sidebar-icon w-6 h-6 min-w-6 text-center" />
+              <span
+                className={`ml-4 sidebar-text whitespace-nowrap overflow-hidden transition-opacity duration-300 ${
+                  isExpanded ? 'opacity-100' : 'opacity-0'
+                }`}
+              >
+                Random Album
+              </span>
+            </button>
+            {!isExpanded && (
+              <div className="tooltip absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-gray-800 text-white px-3 py-1 rounded text-sm whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+                Random Album
+              </div>
+            )}
+          </li>
           {/* Divider */}
           <li className="my-4 border-t border-gray-800"></li>
 

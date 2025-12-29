@@ -20,6 +20,13 @@ namespace KollectorScum.Api.Services
         private readonly HttpClient _httpClient;
         private readonly string _coverArtPath;
 
+        // Cache for lookups created during import to avoid duplicates
+        private Dictionary<string, int> _artistCache = new();
+        private Dictionary<string, int> _genreCache = new();
+        private Dictionary<string, int> _formatCache = new();
+        private Dictionary<string, int> _labelCache = new();
+        private Dictionary<string, int> _countryCache = new();
+
         // Constants for filename sanitization
         private const int MaxFilenameLength = 200;
 
@@ -47,6 +54,13 @@ namespace KollectorScum.Api.Services
         /// </summary>
         public async Task<DiscogsImportResult> ImportCollectionAsync(string username, Guid userId)
         {
+            // Clear caches at the start of each import
+            _artistCache.Clear();
+            _genreCache.Clear();
+            _formatCache.Clear();
+            _labelCache.Clear();
+            _countryCache.Clear();
+
             var stopwatch = Stopwatch.StartNew();
             var result = new DiscogsImportResult();
 
@@ -86,7 +100,14 @@ namespace KollectorScum.Api.Services
                     await Task.Delay(1000);
                 }
 
-                result.Success = true;
+                // Import is only successful if at least one release was imported
+                result.Success = result.ImportedReleases > 0;
+                
+                if (!result.Success && result.TotalReleases > 0)
+                {
+                    result.Errors.Add("No releases could be imported. All releases failed to import.");
+                }
+                
                 _logger.LogInformation("Discogs import completed for {Username}: {Imported} imported, {Skipped} skipped, {Failed} failed",
                     username, result.ImportedReleases, result.SkippedReleases, result.FailedReleases);
             }
@@ -107,14 +128,31 @@ namespace KollectorScum.Api.Services
 
         private async Task ProcessReleasesAsync(List<DiscogsCollectionReleaseDto> releases, Guid userId, DiscogsImportResult result)
         {
+            if (releases == null || releases.Count == 0)
+            {
+                _logger.LogWarning("No releases to process");
+                return;
+            }
+            
+            _logger.LogDebug("Processing {Count} releases", releases.Count);
+            
             foreach (var release in releases)
             {
                 try
                 {
+                    if (release == null)
+                    {
+                        result.FailedReleases++;
+                        result.Errors.Add("Release object is null");
+                        _logger.LogWarning("Encountered null release object");
+                        continue;
+                    }
+                    
                     if (release.BasicInformation == null)
                     {
                         result.FailedReleases++;
-                        result.Errors.Add($"Release missing basic information");
+                        result.Errors.Add($"Release missing basic information (InstanceId: {release.InstanceId})");
+                        _logger.LogWarning("Release {InstanceId} missing BasicInformation", release.InstanceId ?? "unknown");
                         continue;
                     }
 
@@ -163,15 +201,12 @@ namespace KollectorScum.Api.Services
 
             try
             {
-                // Resolve or create lookups
+                // Resolve or create lookups (these methods now save immediately if creating new entities)
                 var formatId = await GetOrCreateFormatAsync(basicInfo.Formats, userId);
                 var labelId = await GetOrCreateLabelAsync(basicInfo.Labels, userId);
                 var countryId = await GetOrCreateCountryAsync(basicInfo.Country, userId);
                 var artistIds = await GetOrCreateArtistsAsync(basicInfo.Artists, userId);
                 var genreIds = await GetOrCreateGenresAsync(basicInfo.Genres, basicInfo.Styles, userId);
-
-                // Save any newly created lookup entities before creating the music release
-                await _unitOfWork.SaveChangesAsync();
 
                 // Download cover art
                 string? coverImageFilename = null;
@@ -189,7 +224,7 @@ namespace KollectorScum.Api.Services
                     UserId = userId,
                     DiscogsId = basicInfo.Id,
                     Title = basicInfo.Title,
-                    ReleaseYear = basicInfo.Year.HasValue ? new DateTime(basicInfo.Year.Value, 1, 1) : null,
+                    ReleaseYear = basicInfo.Year.HasValue ? DateTime.SpecifyKind(new DateTime(basicInfo.Year.Value, 1, 1), DateTimeKind.Utc) : null,
                     FormatId = formatId,
                     LabelId = labelId,
                     CountryId = countryId,
@@ -223,19 +258,30 @@ namespace KollectorScum.Api.Services
             var formatName = formats.First().Name;
             if (string.IsNullOrEmpty(formatName)) return null;
 
+            var cacheKey = $"{userId}:{formatName}";
+
+            // Check cache first
+            if (_formatCache.TryGetValue(cacheKey, out var cachedId))
+            {
+                return cachedId;
+            }
+
             // Try to find existing format
             var existing = await _unitOfWork.Formats
                 .GetAsync(f => f.UserId == userId && f.Name == formatName);
             
             if (existing.Any())
             {
-                return existing.First().Id;
+                var id = existing.First().Id;
+                _formatCache[cacheKey] = id;
+                return id;
             }
 
             // Create new format
             var format = new Format { UserId = userId, Name = formatName };
             await _unitOfWork.Formats.AddAsync(format);
-            // Note: SaveChangesAsync will be called by the caller after all lookups are resolved
+            await _unitOfWork.SaveChangesAsync(); // Save immediately to get the generated ID
+            _formatCache[cacheKey] = format.Id;
             
             return format.Id;
         }
@@ -247,19 +293,30 @@ namespace KollectorScum.Api.Services
             var labelName = labels.First().Name;
             if (string.IsNullOrEmpty(labelName)) return null;
 
+            var cacheKey = $"{userId}:{labelName}";
+
+            // Check cache first
+            if (_labelCache.TryGetValue(cacheKey, out var cachedId))
+            {
+                return cachedId;
+            }
+
             // Try to find existing label
             var existing = await _unitOfWork.Labels
                 .GetAsync(l => l.UserId == userId && l.Name == labelName);
             
             if (existing.Any())
             {
-                return existing.First().Id;
+                var id = existing.First().Id;
+                _labelCache[cacheKey] = id;
+                return id;
             }
 
             // Create new label
             var label = new Label { UserId = userId, Name = labelName };
             await _unitOfWork.Labels.AddAsync(label);
-            // Note: SaveChangesAsync will be called by the caller after all lookups are resolved
+            await _unitOfWork.SaveChangesAsync(); // Save immediately to get the generated ID
+            _labelCache[cacheKey] = label.Id;
             
             return label.Id;
         }
@@ -268,19 +325,30 @@ namespace KollectorScum.Api.Services
         {
             if (string.IsNullOrEmpty(countryName)) return null;
 
+            var cacheKey = $"{userId}:{countryName}";
+
+            // Check cache first
+            if (_countryCache.TryGetValue(cacheKey, out var cachedId))
+            {
+                return cachedId;
+            }
+
             // Try to find existing country
             var existing = await _unitOfWork.Countries
                 .GetAsync(c => c.UserId == userId && c.Name == countryName);
             
             if (existing.Any())
             {
-                return existing.First().Id;
+                var id = existing.First().Id;
+                _countryCache[cacheKey] = id;
+                return id;
             }
 
             // Create new country
             var country = new Country { UserId = userId, Name = countryName };
             await _unitOfWork.Countries.AddAsync(country);
-            // Note: SaveChangesAsync will be called by the caller after all lookups are resolved
+            await _unitOfWork.SaveChangesAsync(); // Save immediately to get the generated ID
+            _countryCache[cacheKey] = country.Id;
             
             return country.Id;
         }
@@ -295,20 +363,32 @@ namespace KollectorScum.Api.Services
             {
                 if (string.IsNullOrEmpty(artist.Name)) continue;
 
-                // Try to find existing artist
+                var cacheKey = $"{userId}:{artist.Name}";
+
+                // Check cache first
+                if (_artistCache.TryGetValue(cacheKey, out var cachedId))
+                {
+                    artistIds.Add(cachedId);
+                    continue;
+                }
+
+                // Try to find existing artist in database
                 var existing = await _unitOfWork.Artists
                     .GetAsync(a => a.UserId == userId && a.Name == artist.Name);
                 
                 if (existing.Any())
                 {
-                    artistIds.Add(existing.First().Id);
+                    var id = existing.First().Id;
+                    _artistCache[cacheKey] = id;
+                    artistIds.Add(id);
                 }
                 else
                 {
                     // Create new artist
                     var newArtist = new Artist { UserId = userId, Name = artist.Name };
                     await _unitOfWork.Artists.AddAsync(newArtist);
-                    // Note: SaveChangesAsync will be called by the caller after all lookups are resolved
+                    await _unitOfWork.SaveChangesAsync(); // Save immediately to get the generated ID
+                    _artistCache[cacheKey] = newArtist.Id;
                     artistIds.Add(newArtist.Id);
                 }
             }
@@ -328,20 +408,32 @@ namespace KollectorScum.Api.Services
             {
                 if (string.IsNullOrEmpty(genreName)) continue;
 
+                var cacheKey = $"{userId}:{genreName}";
+
+                // Check cache first
+                if (_genreCache.TryGetValue(cacheKey, out var cachedId))
+                {
+                    genreIds.Add(cachedId);
+                    continue;
+                }
+
                 // Try to find existing genre
                 var existing = await _unitOfWork.Genres
                     .GetAsync(g => g.UserId == userId && g.Name == genreName);
                 
                 if (existing.Any())
                 {
-                    genreIds.Add(existing.First().Id);
+                    var id = existing.First().Id;
+                    _genreCache[cacheKey] = id;
+                    genreIds.Add(id);
                 }
                 else
                 {
                     // Create new genre
                     var newGenre = new Genre { UserId = userId, Name = genreName };
                     await _unitOfWork.Genres.AddAsync(newGenre);
-                    // Note: SaveChangesAsync will be called by the caller after all lookups are resolved
+                    await _unitOfWork.SaveChangesAsync(); // Save immediately to get the generated ID
+                    _genreCache[cacheKey] = newGenre.Id;
                     genreIds.Add(newGenre.Id);
                 }
             }
