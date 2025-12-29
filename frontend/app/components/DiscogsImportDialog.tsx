@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { fetchJson } from "../lib/api";
 
 export interface DiscogsImportDialogProps {
   isOpen: boolean;
@@ -59,6 +60,10 @@ export function DiscogsImportDialog({
 
   const handleClose = () => {
     if (!isImporting) {
+      // If import was successful, trigger the success callback
+      if (result?.success) {
+        onSuccess();
+      }
       setUsername("");
       setResult(null);
       setError(null);
@@ -77,33 +82,17 @@ export function DiscogsImportDialog({
     setResult(null);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-      
-      const response = await fetch(`${apiUrl}/api/import/discogs`, {
+      const data = await fetchJson<ImportResult>("/api/import/discogs", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
         },
         body: JSON.stringify({ username: username.trim() }),
-        signal: AbortSignal.timeout(600000), // 10 minute timeout
+        timeoutMs: 600000, // 10 minute timeout
       });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-      }
-
-      const data: ImportResult = await response.json();
       setResult(data);
       
-      if (data.success) {
-        // Wait a moment before calling onSuccess to show the results
-        setTimeout(() => {
-          onSuccess();
-        }, 3000);
-      }
+      // Don't auto-close - let user review results and close manually
     } catch (err: any) {
       console.error("Error importing from Discogs:", err);
       if (err.name === "AbortError") {

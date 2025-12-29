@@ -68,12 +68,10 @@ export default function Header() {
 
   const handleSignIn = (profile: UserProfile) => {
     console.log('User signed in:', profile);
-    if (profile.selectedKollectionId) {
-        handleKollectionChange(profile.selectedKollectionId.toString());
-    } else {
-        // If no specific kollection is selected, just go to the main collection page
-        router.push('/collection');
-    }
+    // Dispatch event to notify other components
+    window.dispatchEvent(new Event('authChanged'));
+    // Redirect to home page so welcome screen shows for empty collections
+    router.push('/');
   };
 
   return (
