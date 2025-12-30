@@ -20,6 +20,14 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Configure Kestrel for long-running operations (e.g., Discogs import)
+builder.WebHost.ConfigureKestrel(options =>
+{
+    // Increase request body read timeout for large imports
+    options.Limits.RequestHeadersTimeout = TimeSpan.FromMinutes(30);
+    // Keep connection alive during long operations
+    options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(30);
+});
 
 // Add services to the container.
 builder.Services.AddControllers()
