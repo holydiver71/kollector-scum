@@ -34,5 +34,19 @@ namespace KollectorScum.Api.Interfaces
         /// <param name="kollectionId">The kollection ID to validate</param>
         /// <returns>True if the kollection exists, false otherwise</returns>
         Task<bool> KollectionExistsAsync(int kollectionId);
+
+        /// <summary>
+        /// Gets the count of music releases for a user
+        /// </summary>
+        /// <param name="userId">The user ID</param>
+        /// <returns>The count of music releases</returns>
+        Task<int> GetUserMusicReleaseCountAsync(Guid userId);
+
+        /// <summary>
+        /// Deletes all music releases for a user
+        /// </summary>
+        /// <param name="userId">The user ID</param>
+        /// <returns>The number of releases deleted</returns>
+        Task<int> DeleteAllUserMusicReleasesAsync(Guid userId);
     }
 }

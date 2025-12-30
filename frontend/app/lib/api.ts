@@ -568,3 +568,29 @@ export async function removeReleaseFromList(listId: number, releaseId: number): 
 export async function getListsForRelease(releaseId: number): Promise<ListSummaryDto[]> {
   return fetchJson<ListSummaryDto[]>(`/api/lists/by-release/${releaseId}`);
 }
+
+// Profile and Collection Management
+export interface DeleteCollectionResponse {
+  albumsDeleted: number;
+  success: boolean;
+  message?: string;
+}
+
+/**
+ * Gets the count of albums in the user's collection
+ * @returns The count of albums
+ */
+export async function getCollectionCount(): Promise<number> {
+  const stats = await getCollectionStatistics();
+  return stats.totalReleases;
+}
+
+/**
+ * Deletes all albums in the user's collection
+ * @returns Response with count of deleted albums
+ */
+export async function deleteCollection(): Promise<DeleteCollectionResponse> {
+  return fetchJson<DeleteCollectionResponse>('/api/profile/collection', {
+    method: 'DELETE',
+  });
+}

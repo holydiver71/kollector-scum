@@ -36,4 +36,25 @@ namespace KollectorScum.Api.DTOs
         /// </summary>
         public int? SelectedKollectionId { get; set; }
     }
+
+    /// <summary>
+    /// Response DTO for collection deletion
+    /// </summary>
+    public class DeleteCollectionResponse
+    {
+        /// <summary>
+        /// Gets or sets the number of albums deleted
+        /// </summary>
+        public int AlbumsDeleted { get; set; }
+
+        /// <summary>
+        /// Gets or sets whether the operation was successful
+        /// </summary>
+        public bool Success { get; set; }
+
+        /// <summary>
+        /// Gets or sets an optional message
+        /// </summary>
+        public string? Message { get; set; }
+    }
 }
