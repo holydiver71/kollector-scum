@@ -88,7 +88,7 @@ export function DiscogsImportDialog({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ username: username.trim() }),
-        timeoutMs: 600000, // 10 minute timeout
+        timeoutMs: 1800000, // 30 minute timeout for large collections
       });
       setResult(data);
       
@@ -141,6 +141,11 @@ export function DiscogsImportDialog({
           <p className="text-sm text-gray-400 mt-1">
             Enter your Discogs username to import your collection
           </p>
+          {!isImporting && !result && (
+            <p className="text-xs text-gray-500 mt-2">
+              Note: Large collections may take 10-20 minutes to import
+            </p>
+          )}
         </div>
 
         {/* Dialog Content */}
@@ -179,7 +184,9 @@ export function DiscogsImportDialog({
                 Importing your collection...
                 <br />
                 <span className="text-sm text-gray-400">
-                  This may take a few minutes for large collections
+                  This may take several minutes for large collections.
+                  <br />
+                  Please do not close this dialog.
                 </span>
               </p>
             </div>
