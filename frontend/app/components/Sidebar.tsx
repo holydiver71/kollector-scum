@@ -33,7 +33,7 @@ const Sidebar: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const { hasCollection, isReady } = useCollection();
+  const { hasCollection, isReady, setHasCollection } = useCollection();
 
   // Check auth state on mount and route changes
   useEffect(() => {
@@ -51,9 +51,33 @@ const Sidebar: React.FC = () => {
     };
   }, [pathname]);
 
+  // Initialize collection status if not already set
+  useEffect(() => {
+    const checkCollection = async () => {
+      if (isLoggedIn && hasCollection === null) {
+        try {
+          const response = await fetch('/api/musicreleases?Pagination.PageNumber=1&Pagination.PageSize=1', {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+          });
+          if (response.ok) {
+            const data = await response.json();
+            setHasCollection(data.totalCount > 0);
+          }
+        } catch (err) {
+          console.error('Failed to check collection status:', err);
+          // Assume collection exists on error to avoid blocking UI
+          setHasCollection(true);
+        }
+      }
+    };
+    checkCollection();
+  }, [isLoggedIn, hasCollection, setHasCollection]);
+
   // Keep a global CSS variable so Header (a sibling) can read the sidebar offset
   useEffect(() => {
-    if (!isLoggedIn || !hasCollection) {
+    if (!isLoggedIn || hasCollection === false) {
       document.documentElement.style.setProperty('--sidebar-offset', '0px');
       return;
     }
@@ -62,7 +86,7 @@ const Sidebar: React.FC = () => {
   }, [isExpanded, isLoggedIn, hasCollection]);
 
   // Don't show sidebar if not logged in or collection is empty
-  if (!isLoggedIn || !hasCollection) return null;
+  if (!isLoggedIn || hasCollection === false) return null;
 
   const navigationItems: NavigationItem[] = [
     { name: 'Home', href: '/', icon: Home },
