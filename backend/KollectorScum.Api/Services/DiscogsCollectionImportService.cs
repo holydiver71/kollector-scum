@@ -158,6 +158,13 @@ namespace KollectorScum.Api.Services
             
             foreach (var release in releases)
             {
+                // TODO: Remove this check after testing
+                if (result.ImportedReleases >= TestImportLimit)
+                {
+                    _logger.LogWarning("Import limit of {Limit} albums reached, stopping", TestImportLimit);
+                    return;
+                }
+                
                 try
                 {
                     if (release == null)
