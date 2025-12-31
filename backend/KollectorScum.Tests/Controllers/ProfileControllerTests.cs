@@ -229,5 +229,124 @@ namespace KollectorScum.Tests.Controllers
             _mockUserProfileRepository.Verify(x => x.CreateAsync(It.IsAny<UserProfile>()), Times.Once);
             _mockUserProfileRepository.Verify(x => x.UpdateAsync(It.IsAny<UserProfile>()), Times.Never);
         }
+
+        #region DeleteCollection Tests
+
+        [Fact]
+        public async Task DeleteCollection_WithValidUser_DeletesAllReleasesAndImages()
+        {
+            // Arrange
+            var userId = Guid.NewGuid();
+            var user = new ApplicationUser
+            {
+                Id = userId,
+                GoogleSub = "google-sub-123",
+                Email = "test@example.com",
+                DisplayName = "Test User"
+            };
+
+            SetupUserClaims(userId);
+
+            _mockUserRepository
+                .Setup(x => x.FindByIdAsync(userId))
+                .ReturnsAsync(user);
+
+            _mockUserProfileRepository
+                .Setup(x => x.GetUserMusicReleaseCountAsync(userId))
+                .ReturnsAsync(10);
+
+            _mockUserProfileRepository
+                .Setup(x => x.DeleteAllUserMusicReleasesAsync(userId))
+                .ReturnsAsync(10);
+
+            // Act
+            var result = await _controller.DeleteCollection();
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var response = Assert.IsType<DeleteCollectionResponse>(okResult.Value);
+            Assert.Equal(10, response.AlbumsDeleted);
+            Assert.True(response.Success);
+            Assert.NotNull(response.Message);
+            Assert.Contains("10 album(s)", response.Message);
+
+            // Verify that DeleteAllUserMusicReleasesAsync was called (which now includes image deletion)
+            _mockUserProfileRepository.Verify(x => x.DeleteAllUserMusicReleasesAsync(userId), Times.Once);
+        }
+
+        [Fact]
+        public async Task DeleteCollection_WithNoReleases_ReturnsZeroCount()
+        {
+            // Arrange
+            var userId = Guid.NewGuid();
+            var user = new ApplicationUser
+            {
+                Id = userId,
+                GoogleSub = "google-sub-123",
+                Email = "test@example.com",
+                DisplayName = "Test User"
+            };
+
+            SetupUserClaims(userId);
+
+            _mockUserRepository
+                .Setup(x => x.FindByIdAsync(userId))
+                .ReturnsAsync(user);
+
+            _mockUserProfileRepository
+                .Setup(x => x.GetUserMusicReleaseCountAsync(userId))
+                .ReturnsAsync(0);
+
+            _mockUserProfileRepository
+                .Setup(x => x.DeleteAllUserMusicReleasesAsync(userId))
+                .ReturnsAsync(0);
+
+            // Act
+            var result = await _controller.DeleteCollection();
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var response = Assert.IsType<DeleteCollectionResponse>(okResult.Value);
+            Assert.Equal(0, response.AlbumsDeleted);
+            Assert.True(response.Success);
+
+            _mockUserProfileRepository.Verify(x => x.DeleteAllUserMusicReleasesAsync(userId), Times.Once);
+        }
+
+        [Fact]
+        public async Task DeleteCollection_WithInvalidUser_ReturnsUnauthorized()
+        {
+            // Arrange - No claims set up
+
+            // Act
+            var result = await _controller.DeleteCollection();
+
+            // Assert
+            Assert.IsType<UnauthorizedObjectResult>(result.Result);
+
+            _mockUserProfileRepository.Verify(x => x.DeleteAllUserMusicReleasesAsync(It.IsAny<Guid>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task DeleteCollection_WithNonExistentUser_ReturnsNotFound()
+        {
+            // Arrange
+            var userId = Guid.NewGuid();
+            SetupUserClaims(userId);
+
+            _mockUserRepository
+                .Setup(x => x.FindByIdAsync(userId))
+                .ReturnsAsync((ApplicationUser?)null);
+
+            // Act
+            var result = await _controller.DeleteCollection();
+
+            // Assert
+            Assert.IsType<NotFoundObjectResult>(result.Result);
+
+            _mockUserProfileRepository.Verify(x => x.DeleteAllUserMusicReleasesAsync(It.IsAny<Guid>()), Times.Never);
+        }
+
+        #endregion
     }
 }
