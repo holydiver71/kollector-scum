@@ -18,6 +18,7 @@ namespace KollectorScum.Api.Services
         private readonly ILogger<DiscogsCollectionImportService> _logger;
         private readonly IConfiguration _configuration;
         private readonly HttpClient _httpClient;
+        private readonly string _imagesPath;
         private readonly string _coverArtPath;
 
         // Cache for lookups created during import to avoid duplicates
@@ -46,7 +47,9 @@ namespace KollectorScum.Api.Services
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             
-            _coverArtPath = _configuration["CoverArtPath"] ?? "wwwroot/images/covers";
+            // Use ImagesPath (same as ImagesController) instead of CoverArtPath
+            _imagesPath = _configuration["ImagesPath"] ?? "/home/andy/music-images";
+            _coverArtPath = Path.Combine(_imagesPath, "covers");
             
             // Ensure cover art directory exists
             Directory.CreateDirectory(_coverArtPath);
