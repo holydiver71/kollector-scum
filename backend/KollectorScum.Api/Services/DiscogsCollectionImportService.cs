@@ -180,7 +180,9 @@ namespace KollectorScum.Api.Services
                     else
                     {
                         result.FailedReleases++;
-                        result.Errors.Add($"Failed to map release: {release.BasicInformation.Title}");
+                        var errorMsg = $"Failed to map release: {release.BasicInformation.Title}";
+                        result.Errors.Add(errorMsg);
+                        _logger.LogWarning("{ErrorMsg} (Discogs ID: {DiscogsId})", errorMsg, release.BasicInformation.Id);
                     }
                 }
                 catch (Exception ex)
@@ -218,13 +220,31 @@ namespace KollectorScum.Api.Services
                 // Extract notes
                 var notes = release.Notes?.FirstOrDefault()?.Value;
 
+                // Validate and parse year
+                DateTime? releaseYear = null;
+                if (basicInfo.Year.HasValue && basicInfo.Year.Value >= 1 && basicInfo.Year.Value <= 9999)
+                {
+                    try
+                    {
+                        releaseYear = DateTime.SpecifyKind(new DateTime(basicInfo.Year.Value, 1, 1), DateTimeKind.Utc);
+                    }
+                    catch (ArgumentOutOfRangeException ex)
+                    {
+                        _logger.LogWarning(ex, "Invalid year value {Year} for release {Title}", basicInfo.Year.Value, basicInfo.Title);
+                    }
+                }
+                else if (basicInfo.Year.HasValue)
+                {
+                    _logger.LogWarning("Year value {Year} out of valid range for release {Title}", basicInfo.Year.Value, basicInfo.Title);
+                }
+
                 // Create MusicRelease entity
                 var musicRelease = new MusicRelease
                 {
                     UserId = userId,
                     DiscogsId = basicInfo.Id,
                     Title = basicInfo.Title,
-                    ReleaseYear = basicInfo.Year.HasValue ? DateTime.SpecifyKind(new DateTime(basicInfo.Year.Value, 1, 1), DateTimeKind.Utc) : null,
+                    ReleaseYear = releaseYear,
                     FormatId = formatId,
                     LabelId = labelId,
                     CountryId = countryId,
