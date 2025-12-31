@@ -117,8 +117,9 @@ export async function updateUserProfile(
  */
 export function signOut(): void {
   clearAuthToken();
-  // Optionally redirect or refresh the page
+  // Clear other user-specific localStorage items
   if (typeof window !== 'undefined') {
+    localStorage.removeItem('kollectionId');
     window.location.reload();
   }
 }
