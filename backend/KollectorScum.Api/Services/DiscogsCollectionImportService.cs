@@ -204,17 +204,20 @@ namespace KollectorScum.Api.Services
             try
             {
                 // Fetch full release details to get tracklist
+                // Add delay to respect Discogs rate limit (60 requests/minute = 1 request per second)
                 DiscogsReleaseDto? fullRelease = null;
                 if (basicInfo.Id > 0)
                 {
                     try
                     {
+                        await Task.Delay(1100); // 1.1 second delay to stay safely under rate limit
                         fullRelease = await _discogsService.GetReleaseDetailsAsync(basicInfo.Id.ToString());
                         _logger.LogDebug("Fetched full details for release {Title} (ID: {Id})", basicInfo.Title, basicInfo.Id);
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogWarning(ex, "Failed to fetch full details for release {Title} (ID: {Id})", basicInfo.Title, basicInfo.Id);
+                        _logger.LogWarning(ex, "Failed to fetch full details for release {Title} (ID: {Id}) - continuing without tracklist", basicInfo.Title, basicInfo.Id);
+                        // Continue without tracklist rather than failing the entire import
                     }
                 }
 
