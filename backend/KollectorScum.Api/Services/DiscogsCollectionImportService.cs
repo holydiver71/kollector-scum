@@ -203,6 +203,21 @@ namespace KollectorScum.Api.Services
 
             try
             {
+                // Fetch full release details to get tracklist
+                DiscogsReleaseDto? fullRelease = null;
+                if (basicInfo.Id > 0)
+                {
+                    try
+                    {
+                        fullRelease = await _discogsService.GetReleaseDetailsAsync(basicInfo.Id.ToString());
+                        _logger.LogDebug("Fetched full details for release {Title} (ID: {Id})", basicInfo.Title, basicInfo.Id);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to fetch full details for release {Title} (ID: {Id})", basicInfo.Title, basicInfo.Id);
+                    }
+                }
+
                 // Resolve or create lookups (these methods now save immediately if creating new entities)
                 var formatId = await GetOrCreateFormatAsync(basicInfo.Formats, userId);
                 var labelId = await GetOrCreateLabelAsync(basicInfo.Labels, userId);
@@ -262,6 +277,16 @@ namespace KollectorScum.Api.Services
                     musicRelease.Images = JsonSerializer.Serialize(images);
                 }
 
+                // Build Media (tracks) from full release details
+                if (fullRelease != null && fullRelease.Tracklist != null && fullRelease.Tracklist.Count > 0)
+                {
+                    var media = BuildMediaFromTracklist(fullRelease.Tracklist, basicInfo.Title, formatId, artistIds, genreIds, releaseYear);
+                    if (media != null)
+                    {
+                        musicRelease.Media = JsonSerializer.Serialize(media);
+                    }
+                }
+
                 return musicRelease;
             }
             catch (Exception ex)
@@ -269,6 +294,82 @@ namespace KollectorScum.Api.Services
                 _logger.LogError(ex, "Error mapping release to MusicRelease: {Title}", basicInfo.Title);
                 return null;
             }
+        }
+
+        private List<object>? BuildMediaFromTracklist(List<DiscogsTrackDto> tracklist, string releaseTitle, int? formatId, List<int> artistIds, List<int> genreIds, DateTime? releaseYear)
+        {
+            if (tracklist == null || tracklist.Count == 0) return null;
+
+            var tracks = new List<object>();
+            int trackIndex = 1;
+
+            foreach (var track in tracklist)
+            {
+                // Skip non-track items (like headings)
+                if (string.IsNullOrEmpty(track.Title)) continue;
+
+                var trackObj = new
+                {
+                    Title = track.Title,
+                    ReleaseYear = releaseYear?.ToString("yyyy-MM-dd") ?? "",
+                    Artists = artistIds,
+                    Genres = genreIds,
+                    Live = false,
+                    LengthSecs = ParseDuration(track.Duration),
+                    Index = trackIndex++
+                };
+
+                tracks.Add(trackObj);
+            }
+
+            if (tracks.Count == 0) return null;
+
+            var mediaList = new List<object>
+            {
+                new
+                {
+                    Title = releaseTitle,
+                    FormatId = formatId ?? 0,
+                    Index = 1,
+                    Tracks = tracks
+                }
+            };
+
+            return mediaList;
+        }
+
+        private int ParseDuration(string? duration)
+        {
+            if (string.IsNullOrWhiteSpace(duration)) return 0;
+
+            try
+            {
+                // Duration format can be: "3:45", "1:23:45", etc.
+                var parts = duration.Split(':');
+                
+                if (parts.Length == 2)
+                {
+                    // MM:SS format
+                    if (int.TryParse(parts[0], out var minutes) && int.TryParse(parts[1], out var seconds))
+                    {
+                        return (minutes * 60) + seconds;
+                    }
+                }
+                else if (parts.Length == 3)
+                {
+                    // HH:MM:SS format
+                    if (int.TryParse(parts[0], out var hours) && int.TryParse(parts[1], out var minutes) && int.TryParse(parts[2], out var seconds))
+                    {
+                        return (hours * 3600) + (minutes * 60) + seconds;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to parse duration: {Duration}", duration);
+            }
+
+            return 0;
         }
 
         private async Task<int?> GetOrCreateFormatAsync(List<DiscogsFormatDto> formats, Guid userId)
