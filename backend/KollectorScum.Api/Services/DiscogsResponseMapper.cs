@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using KollectorScum.Api.DTOs;
 using KollectorScum.Api.Interfaces;
 
@@ -206,6 +207,129 @@ namespace KollectorScum.Api.Services
             }).ToList();
         }
 
+        /// <summary>
+        /// Map user collection JSON to DTO
+        /// </summary>
+        public DiscogsCollectionResponseDto? MapCollectionResponse(string? jsonResponse)
+        {
+            if (string.IsNullOrEmpty(jsonResponse))
+            {
+                _logger.LogWarning("Empty JSON response provided for collection mapping");
+                return null;
+            }
+
+            try
+            {
+                var collectionResponse = JsonSerializer.Deserialize<DiscogsCollectionApiResponse>(jsonResponse, _jsonOptions);
+
+                if (collectionResponse == null)
+                {
+                    _logger.LogWarning("Failed to deserialize collection response");
+                    return null;
+                }
+
+                _logger.LogInformation("Successfully mapped collection with {Count} releases", 
+                    collectionResponse.Releases?.Count ?? 0);
+
+                var dto = new DiscogsCollectionResponseDto
+                {
+                    Pagination = collectionResponse.Pagination != null ? new DiscogsPaginationDto
+                    {
+                        Page = collectionResponse.Pagination.Page,
+                        PerPage = collectionResponse.Pagination.PerPage,
+                        Pages = collectionResponse.Pagination.Pages,
+                        Items = collectionResponse.Pagination.Items
+                    } : null,
+                    Releases = MapCollectionReleases(collectionResponse.Releases)
+                };
+
+                return dto;
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(ex, "JSON deserialization error when mapping collection");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error mapping collection response");
+                return null;
+            }
+        }
+
+        private List<DiscogsCollectionReleaseDto> MapCollectionReleases(List<DiscogsCollectionReleaseResponse>? releases)
+        {
+            if (releases == null)
+            {
+                _logger.LogWarning("MapCollectionReleases: releases list is null");
+                return new List<DiscogsCollectionReleaseDto>();
+            }
+            
+            _logger.LogDebug("Mapping {Count} collection releases", releases.Count);
+            
+            var mappedReleases = new List<DiscogsCollectionReleaseDto>();
+            
+            for (int i = 0; i < releases.Count; i++)
+            {
+                var r = releases[i];
+                
+                if (r == null)
+                {
+                    _logger.LogWarning("Release at index {Index} is null", i);
+                    continue;
+                }
+                
+                if (r.BasicInformation == null)
+                {
+                    _logger.LogWarning("Release at index {Index} (InstanceId: {InstanceId}) has null BasicInformation", 
+                        i, r.InstanceId);
+                    // Still add the release so we can track the failure
+                    mappedReleases.Add(new DiscogsCollectionReleaseDto
+                    {
+                        InstanceId = r.InstanceId?.ToString(),
+                        Rating = r.Rating,
+                        DateAdded = r.DateAdded,
+                        Notes = r.Notes?.Select(n => new DiscogsNoteDto
+                        {
+                            FieldId = n.FieldId,
+                            Value = n.Value
+                        }).ToList(),
+                        BasicInformation = null
+                    });
+                    continue;
+                }
+
+                mappedReleases.Add(new DiscogsCollectionReleaseDto
+                {
+                    InstanceId = r.InstanceId?.ToString(),
+                    Rating = r.Rating,
+                    DateAdded = r.DateAdded,
+                    Notes = r.Notes?.Select(n => new DiscogsNoteDto
+                    {
+                        FieldId = n.FieldId,
+                        Value = n.Value
+                    }).ToList(),
+                    BasicInformation = new DiscogsBasicInfoDto
+                    {
+                        Id = r.BasicInformation.Id,
+                        Title = r.BasicInformation.Title ?? string.Empty,
+                        Year = r.BasicInformation.Year,
+                        Country = r.BasicInformation.Country,
+                        CoverImage = r.BasicInformation.CoverImage,
+                        Thumb = r.BasicInformation.Thumb,
+                        ResourceUrl = r.BasicInformation.ResourceUrl,
+                        Artists = MapArtists(r.BasicInformation.Artists),
+                        Labels = MapLabels(r.BasicInformation.Labels),
+                        Formats = MapFormats(r.BasicInformation.Formats),
+                        Genres = r.BasicInformation.Genres ?? new List<string>(),
+                        Styles = r.BasicInformation.Styles ?? new List<string>()
+                    }
+                });
+            }
+            
+            return mappedReleases;
+        }
+
         #region Internal Response Models (for deserialization)
 
         private class DiscogsSearchResponse
@@ -291,6 +415,83 @@ namespace KollectorScum.Api.Services
         private class DiscogsIdentifierResponse
         {
             public string? Type { get; set; }
+            public string? Value { get; set; }
+        }
+
+        private class DiscogsCollectionApiResponse
+        {
+            public DiscogsPaginationResponse? Pagination { get; set; }
+            public List<DiscogsCollectionReleaseResponse>? Releases { get; set; }
+        }
+
+        private class DiscogsPaginationResponse
+        {
+            public int Page { get; set; }
+            public int PerPage { get; set; }
+            public int Pages { get; set; }
+            public int Items { get; set; }
+        }
+
+        private class DiscogsCollectionReleaseResponse
+        {
+            [JsonPropertyName("instance_id")]
+            public long? InstanceId { get; set; }
+            
+            [JsonPropertyName("rating")]
+            public int? Rating { get; set; }
+            
+            [JsonPropertyName("basic_information")]
+            public DiscogsBasicInfoResponse? BasicInformation { get; set; }
+            
+            [JsonPropertyName("notes")]
+            public List<DiscogsNoteResponse>? Notes { get; set; }
+            
+            [JsonPropertyName("date_added")]
+            public string? DateAdded { get; set; }
+        }
+
+        private class DiscogsBasicInfoResponse
+        {
+            [JsonPropertyName("id")]
+            public int Id { get; set; }
+            
+            [JsonPropertyName("title")]
+            public string? Title { get; set; }
+            
+            [JsonPropertyName("year")]
+            public int? Year { get; set; }
+            
+            [JsonPropertyName("artists")]
+            public List<DiscogsArtistResponse>? Artists { get; set; }
+            
+            [JsonPropertyName("labels")]
+            public List<DiscogsLabelResponse>? Labels { get; set; }
+            
+            [JsonPropertyName("formats")]
+            public List<DiscogsFormatResponse>? Formats { get; set; }
+            
+            [JsonPropertyName("genres")]
+            public List<string>? Genres { get; set; }
+            
+            [JsonPropertyName("styles")]
+            public List<string>? Styles { get; set; }
+            
+            [JsonPropertyName("country")]
+            public string? Country { get; set; }
+            
+            [JsonPropertyName("cover_image")]
+            public string? CoverImage { get; set; }
+            
+            [JsonPropertyName("thumb")]
+            public string? Thumb { get; set; }
+            
+            [JsonPropertyName("resource_url")]
+            public string? ResourceUrl { get; set; }
+        }
+
+        private class DiscogsNoteResponse
+        {
+            public int FieldId { get; set; }
             public string? Value { get; set; }
         }
 
