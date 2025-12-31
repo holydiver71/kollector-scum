@@ -29,6 +29,9 @@ namespace KollectorScum.Api.Services
 
         // Constants for filename sanitization
         private const int MaxFilenameLength = 200;
+        
+        // TODO: Remove this limit after testing - currently limiting import to 50 albums for testing
+        private const int TestImportLimit = 50;
 
         public DiscogsCollectionImportService(
             IDiscogsService discogsService,
@@ -84,20 +87,37 @@ namespace KollectorScum.Api.Services
                 // Process first page
                 await ProcessReleasesAsync(firstPage.Releases, userId, result);
 
-                // Process remaining pages
-                var totalPages = firstPage.Pagination.Pages;
-                for (int page = 2; page <= totalPages; page++)
+                // TODO: Remove this check after testing
+                if (result.ImportedReleases >= TestImportLimit)
                 {
-                    _logger.LogInformation("Processing page {Page} of {TotalPages}", page, totalPages);
-                    
-                    var pageData = await _discogsService.GetUserCollectionAsync(username, page, 100);
-                    if (pageData?.Releases != null)
+                    _logger.LogWarning("Import limited to {Limit} albums for testing purposes", TestImportLimit);
+                    result.Errors.Add($"Import limited to {TestImportLimit} albums for testing");
+                }
+                else
+                {
+                    // Process remaining pages
+                    var totalPages = firstPage.Pagination.Pages;
+                    for (int page = 2; page <= totalPages; page++)
                     {
-                        await ProcessReleasesAsync(pageData.Releases, userId, result);
-                    }
+                        _logger.LogInformation("Processing page {Page} of {TotalPages}", page, totalPages);
+                        
+                        var pageData = await _discogsService.GetUserCollectionAsync(username, page, 100);
+                        if (pageData?.Releases != null)
+                        {
+                            await ProcessReleasesAsync(pageData.Releases, userId, result);
+                        }
 
-                    // Add small delay to respect rate limits
-                    await Task.Delay(1000);
+                        // TODO: Remove this check after testing
+                        if (result.ImportedReleases >= TestImportLimit)
+                        {
+                            _logger.LogWarning("Import limit of {Limit} albums reached", TestImportLimit);
+                            result.Errors.Add($"Import limited to {TestImportLimit} albums for testing");
+                            break;
+                        }
+
+                        // Add small delay to respect rate limits
+                        await Task.Delay(1000);
+                    }
                 }
 
                 // Import is only successful if at least one release was imported
