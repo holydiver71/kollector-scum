@@ -7,6 +7,8 @@ import Sidebar from "./components/Sidebar";
 import Footer from "./components/Footer";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import AuthGuard from "./components/AuthGuard";
+import { CollectionProvider } from "./contexts/CollectionContext";
+import { CollectionGuard } from "./components/CollectionGuard";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -29,24 +31,28 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans antialiased`}>
         <ErrorBoundary>
           <AuthGuard>
-            <div className="min-h-screen flex">
-              <Sidebar />
-              <div
-                  className="flex-1 flex flex-col transition-all duration-300 overflow-y-auto app-scroll-container"
-                  // margin-left driven by --sidebar-offset which is set by Sidebar
-                  style={{ marginLeft: 'var(--sidebar-offset, 64px)' }}
-              >
-                <Suspense fallback={<div />}>
-                  <Header />
-                </Suspense>
-                <main className="flex-1">
-                  <Suspense fallback={<div />}>
-                    {children}
-                  </Suspense>
-                </main>
-                <Footer />
-              </div>
-            </div>
+            <CollectionProvider>
+              <CollectionGuard>
+                <div className="min-h-screen flex">
+                  <Sidebar />
+                  <div
+                      className="flex-1 flex flex-col transition-all duration-300 overflow-y-auto app-scroll-container"
+                      // margin-left driven by --sidebar-offset which is set by Sidebar
+                      style={{ marginLeft: 'var(--sidebar-offset, 64px)' }}
+                  >
+                    <Suspense fallback={<div />}>
+                      <Header />
+                    </Suspense>
+                    <main className="flex-1">
+                      <Suspense fallback={<div />}>
+                        {children}
+                      </Suspense>
+                    </main>
+                    <Footer />
+                  </div>
+                </div>
+              </CollectionGuard>
+            </CollectionProvider>
           </AuthGuard>
         </ErrorBoundary>
       </body>

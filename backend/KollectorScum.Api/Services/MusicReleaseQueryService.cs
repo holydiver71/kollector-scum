@@ -164,15 +164,27 @@ namespace KollectorScum.Api.Services
             List<int>? kollectionGenreIds = null;
             if (parameters.KollectionId.HasValue)
             {
+                // First check if the kollection exists
+                var kollectionExists = _context.Kollections
+                    .Any(k => k.Id == parameters.KollectionId.Value);
+                
+                if (!kollectionExists)
+                {
+                    _logger.LogWarning("BuildFilterExpression: Kollection {KollectionId} not found", parameters.KollectionId.Value);
+                    return mr => false;
+                }
+
                 kollectionGenreIds = _context.KollectionGenres
                     .Where(kg => kg.KollectionId == parameters.KollectionId.Value)
                     .Select(kg => kg.GenreId)
                     .ToList();
 
-                // If kollection has no genres or doesn't exist, return no results
+                // If kollection has no genres, log it but continue - don't filter by genre
                 if (kollectionGenreIds.Count == 0)
                 {
-                    return mr => false;
+                    _logger.LogInformation("BuildFilterExpression: Kollection {KollectionId} has no genres assigned, will not filter by genre", parameters.KollectionId.Value);
+                    // Don't return false - just don't add genre filtering
+                    kollectionGenreIds = null;
                 }
             }
 

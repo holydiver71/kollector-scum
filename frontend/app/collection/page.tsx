@@ -27,6 +27,7 @@ export default function CollectionPage() {
   const [filters, setFilters] = useState<SearchFilters>({});
   const isUpdatingUrl = useRef(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Load lookup tables to show friendly names for selected ids in the active filters chip list
   const { data: artists } = useLookupData<any>("artists");
@@ -173,8 +174,6 @@ export default function CollectionPage() {
         {/* Search and Filters - only show after initialization to avoid passing empty filters */}
         {isInitialized && (
           <>
-            
-
             {/* Only render the SearchAndFilter panel when the advanced filters are visible
                 or when the inline search input is required. This removes the empty white
                 panel when filters are hidden (header handles search and the page shows chips). */}
@@ -336,6 +335,7 @@ export default function CollectionPage() {
 
             {/* Results */}
             <MusicReleaseList 
+              key={refreshKey}
               filters={filters}
               pageSize={60}
             />
