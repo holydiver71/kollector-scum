@@ -12,8 +12,6 @@ import {
   User, 
   List, 
   BarChart3, 
-  FileUp, 
-  FileDown, 
   Settings, 
   UserCircle,
   Menu,
@@ -97,11 +95,6 @@ const Sidebar: React.FC = () => {
     { name: 'Artists', href: '/artists', icon: User },
     { name: 'Genres', href: '/genres', icon: List },
     { name: 'Statistics', href: '/statistics', icon: BarChart3 },
-  ];
-
-  const bottomItems: NavigationItem[] = [
-    { name: 'Import', href: '/import', icon: FileUp },
-    { name: 'Export', href: '/export', icon: FileDown },
   ];
 
   const settingsItems: NavigationItem[] = [
@@ -201,41 +194,6 @@ const Sidebar: React.FC = () => {
               </div>
             )}
           </li>
-          {/* Divider */}
-          <li className="my-4 border-t border-gray-800"></li>
-
-          {/* Bottom Navigation Items */}
-          {bottomItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = isActiveLink(item.href);
-            
-            return (
-              <li key={item.name} className="relative group">
-                <Link
-                  href={item.href}
-                  className={`flex items-center px-4 py-3 transition-colors ${
-                    isActive
-                      ? 'bg-[#D93611]'
-                      : 'hover:bg-gray-800'
-                  }`}
-                >
-                  <Icon className="sidebar-icon w-6 h-6 min-w-6 text-center" />
-                  <span
-                    className={`ml-4 sidebar-text whitespace-nowrap overflow-hidden transition-opacity duration-300 ${
-                      isExpanded ? 'opacity-100' : 'opacity-0'
-                    }`}
-                  >
-                    {item.name}
-                  </span>
-                </Link>
-                {!isExpanded && (
-                  <div className="tooltip absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-gray-800 text-white px-3 py-1 rounded text-sm whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
-                    {item.name}
-                  </div>
-                )}
-              </li>
-            );
-          })}
         </ul>
       </nav>
 
