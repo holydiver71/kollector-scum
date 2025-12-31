@@ -53,16 +53,18 @@ export default function Dashboard() {
           setShowWelcome(true);
         }
       } catch (e) {
-        console.error(e);
         const apiError = e as ApiError;
         
-        // If unauthorized, clear token and show landing page
+        // If unauthorized, clear token and show landing page (don't log as this is expected behavior)
         if (apiError?.status === 401) {
           clearAuthToken();
           setIsLoggedIn(false);
           setLoading(false);
           return;
         }
+
+        // Log other errors (not 401)
+        console.error(e);
 
         if (apiError?.url) {
           setError(`${(e as Error).message} -> ${(e as ApiError).url}`);

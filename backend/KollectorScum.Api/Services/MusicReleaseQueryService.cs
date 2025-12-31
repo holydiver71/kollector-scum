@@ -52,268 +52,210 @@ namespace KollectorScum.Api.Services
             _logger.LogInformation("Getting music releases - Page: {Page}, PageSize: {PageSize}", 
                 parameters.Pagination.PageNumber, parameters.Pagination.PageSize);
 
-            // Build filter expression from parameters
-            Expression<Func<MusicRelease, bool>>? filter = BuildFilterExpression(parameters);
+            // Build filter expression from parameters (without JSON array filters)
+            var filter = BuildBaseFilter(parameters);
 
-            if (filter == null)
-            {
-                _logger.LogError("GetMusicReleasesAsync: Filter is null! Returning empty result.");
-                return new PagedResult<MusicReleaseSummaryDto>
-                {
-                    Items = new List<MusicReleaseSummaryDto>(),
-                    Page = parameters.Pagination.PageNumber,
-                    PageSize = parameters.Pagination.PageSize,
-                    TotalCount = 0,
-                    TotalPages = 0
-                };
-            }
-
-            // For artist sorting, we need to get all filtered results first, then sort after mapping
-            // because artist names are resolved from IDs during mapping
-            var sortBy = parameters.SortBy?.ToLower();
-            if (sortBy == "artist")
-            {
-                // Get all filtered results without pagination
-                var allFilteredReleases = await _musicReleaseRepository.GetAsync(
-                    filter,
-                    null, // No ordering at DB level
-                    "Label,Country,Format"
-                );
-
-                // Map to DTOs
-                var allDtos = await Task.Run(() => allFilteredReleases.Select(mr => _mapper.MapToSummaryDto(mr)).ToList());
-
-                // Sort by artist name
-                var sortOrder = parameters.SortOrder?.ToLower();
-                var sortedDtos = sortOrder == "desc"
-                    ? allDtos.OrderByDescending(dto => dto.ArtistNames?.FirstOrDefault() ?? string.Empty).ToList()
-                    : allDtos.OrderBy(dto => dto.ArtistNames?.FirstOrDefault() ?? string.Empty).ToList();
-
-                // Apply pagination
-                var totalCount = sortedDtos.Count;
-                var pagedItems = sortedDtos
-                    .Skip((parameters.Pagination.PageNumber - 1) * parameters.Pagination.PageSize)
-                    .Take(parameters.Pagination.PageSize)
-                    .ToList();
-
-                return new PagedResult<MusicReleaseSummaryDto>
-                {
-                    Items = pagedItems,
-                    Page = parameters.Pagination.PageNumber,
-                    PageSize = parameters.Pagination.PageSize,
-                    TotalCount = totalCount,
-                    TotalPages = (int)Math.Ceiling(totalCount / (double)parameters.Pagination.PageSize)
-                };
-            }
-
-            // Build sort expression for other sort options
-            Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>> orderBy = BuildSortExpression(parameters);
-
-            // Get paged results
-            var pagedResult = await _musicReleaseRepository.GetPagedAsync(
-                parameters.Pagination.PageNumber,
-                parameters.Pagination.PageSize,
+            // Get all filtered results (will apply JSON filtering client-side)
+            var allFilteredReleases = await _musicReleaseRepository.GetAsync(
                 filter,
-                orderBy,
+                null,
                 "Label,Country,Format"
             );
 
+            // Apply client-side JSON filtering
+            var clientFiltered = ApplyJsonFilters(allFilteredReleases, parameters).ToList();
+
             // Map to DTOs
-            var summaryDtos = await Task.Run(() => pagedResult.Items.Select(mr => _mapper.MapToSummaryDto(mr)).ToList());
+            var allDtos = await Task.Run(() => clientFiltered.Select(mr => _mapper.MapToSummaryDto(mr)).ToList());
 
-            return new PagedResult<MusicReleaseSummaryDto>
-            {
-                Items = summaryDtos,
-                Page = pagedResult.Page,
-                PageSize = pagedResult.PageSize,
-                TotalCount = pagedResult.TotalCount,
-                TotalPages = pagedResult.TotalPages
-            };
-        }
-
-        /// <summary>
-        /// Builds a sort expression from query parameters
-        /// </summary>
-        private Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>> BuildSortExpression(MusicReleaseQueryParameters parameters)
-        {
+            // Apply sorting
             var sortBy = parameters.SortBy?.ToLower();
             var sortOrder = parameters.SortOrder?.ToLower();
             var isDescending = sortOrder == "desc";
 
-            return sortBy switch
+            var sortedDtos = sortBy switch
             {
+                "artist" => isDescending
+                    ? allDtos.OrderByDescending(dto => dto.ArtistNames?.FirstOrDefault() ?? string.Empty).ToList()
+                    : allDtos.OrderBy(dto => dto.ArtistNames?.FirstOrDefault() ?? string.Empty).ToList(),
                 "dateadded" => isDescending
-                    ? mr => mr.OrderByDescending(x => x.DateAdded)
-                    : mr => mr.OrderBy(x => x.DateAdded),
+                    ? allDtos.OrderByDescending(dto => dto.DateAdded).ToList()
+                    : allDtos.OrderBy(dto => dto.DateAdded).ToList(),
                 "title" => isDescending
-                    ? mr => mr.OrderByDescending(x => x.Title)
-                    : mr => mr.OrderBy(x => x.Title),
+                    ? allDtos.OrderByDescending(dto => dto.Title).ToList()
+                    : allDtos.OrderBy(dto => dto.Title).ToList(),
                 "origreleaseyear" => isDescending
-                    ? mr => mr.OrderByDescending(x => x.OrigReleaseYear)
-                    : mr => mr.OrderBy(x => x.OrigReleaseYear),
-                _ => mr => mr.OrderBy(x => x.Title) // Default to title ascending
+                    ? allDtos.OrderByDescending(dto => dto.OrigReleaseYear).ToList()
+                    : allDtos.OrderBy(dto => dto.OrigReleaseYear).ToList(),
+                _ => allDtos.OrderBy(dto => dto.Title).ToList()
+            };
+
+            // Apply pagination
+            var totalCount = sortedDtos.Count;
+            var pagedItems = sortedDtos
+                .Skip((parameters.Pagination.PageNumber - 1) * parameters.Pagination.PageSize)
+                .Take(parameters.Pagination.PageSize)
+                .ToList();
+
+            return new PagedResult<MusicReleaseSummaryDto>
+            {
+                Items = pagedItems,
+                Page = parameters.Pagination.PageNumber,
+                PageSize = parameters.Pagination.PageSize,
+                TotalCount = totalCount,
+                TotalPages = (int)Math.Ceiling(totalCount / (double)parameters.Pagination.PageSize)
             };
         }
 
         /// <summary>
-        /// Builds a filter expression from query parameters
+        /// Applies client-side filtering for JSON array fields (Artists, Genres)
         /// </summary>
-        private Expression<Func<MusicRelease, bool>>? BuildFilterExpression(MusicReleaseQueryParameters parameters)
+        private IEnumerable<MusicRelease> ApplyJsonFilters(
+            IEnumerable<MusicRelease> releases,
+            MusicReleaseQueryParameters parameters)
         {
-            // Get genre IDs from kollection if specified
-            List<int>? kollectionGenreIds = null;
+            var result = releases;
+
+            // Filter by artist
+            if (parameters.ArtistId.HasValue)
+            {
+                result = result.Where(mr => CheckJsonArrayContains(mr.Artists, parameters.ArtistId.Value));
+            }
+
+            // Filter by genre
+            if (parameters.GenreId.HasValue)
+            {
+                result = result.Where(mr => CheckJsonArrayContains(mr.Genres, parameters.GenreId.Value));
+            }
+
+            // Filter by kollection genres (OR logic)
             if (parameters.KollectionId.HasValue)
             {
-                // First check if the kollection exists
-                var kollectionExists = _context.Kollections
-                    .Any(k => k.Id == parameters.KollectionId.Value);
-                
-                if (!kollectionExists)
-                {
-                    _logger.LogWarning("BuildFilterExpression: Kollection {KollectionId} not found", parameters.KollectionId.Value);
-                    return mr => false;
-                }
-
-                kollectionGenreIds = _context.KollectionGenres
+                var kollectionGenreIds = _context.KollectionGenres
                     .Where(kg => kg.KollectionId == parameters.KollectionId.Value)
                     .Select(kg => kg.GenreId)
                     .ToList();
 
-                // If kollection has no genres, log it but continue - don't filter by genre
-                if (kollectionGenreIds.Count == 0)
+                if (kollectionGenreIds.Any())
                 {
-                    _logger.LogInformation("BuildFilterExpression: Kollection {KollectionId} has no genres assigned, will not filter by genre", parameters.KollectionId.Value);
-                    // Don't return false - just don't add genre filtering
-                    kollectionGenreIds = null;
+                    result = result.Where(mr =>
+                        kollectionGenreIds.Any(gid => CheckJsonArrayContains(mr.Genres, gid)));
                 }
             }
 
-            // Build composite filter using expression tree so EF can translate constants
-            // Note: Artists and Genres are stored as JSON arrays like "[1,2,3]"
-            var param = Expression.Parameter(typeof(MusicRelease), "mr");
-            var clauses = new List<Expression>();
+            return result;
+        }
 
+        /// <summary>
+        /// Checks if a JSON array string contains a specific ID
+        /// </summary>
+        private static bool CheckJsonArrayContains(string? jsonArray, int id)
+        {
+            if (string.IsNullOrEmpty(jsonArray))
+                return false;
+
+            return jsonArray.Contains($"[{id}]") ||
+                   jsonArray.Contains($"[{id},") ||
+                   jsonArray.Contains($",{id}]") ||
+                   jsonArray.Contains($",{id},");
+        }
+
+        /// <summary>
+        /// Builds a base filter expression from query parameters (excluding JSON array filters)
+        /// </summary>
+        private Expression<Func<MusicRelease, bool>> BuildBaseFilter(MusicReleaseQueryParameters parameters)
+        {
             // Always filter by current user
             var userId = _userContext.GetActingUserId();
-            _logger.LogInformation("BuildFilterExpression: ActingUserId {UserId}", userId);
+            _logger.LogInformation("BuildBaseFilter: ActingUserId {UserId}", userId);
 
             if (!userId.HasValue)
             {
                 // Security: If no user context, return no results
-                // We return a filter that always evaluates to false
-                _logger.LogWarning("BuildFilterExpression: No user context, returning false filter.");
+                _logger.LogWarning("BuildBaseFilter: No user context, returning false filter.");
                 return mr => false;
             }
 
-            var userIdProp = Expression.Property(param, nameof(MusicRelease.UserId));
-            clauses.Add(Expression.Equal(userIdProp, Expression.Constant(userId.Value)));
-
-            var containsMethod = typeof(string).GetMethod("Contains", new[] { typeof(string) })!;
-            var toLowerMethod = typeof(string).GetMethod("ToLower", Array.Empty<Type>());
+            Expression<Func<MusicRelease, bool>> filter = mr => mr.UserId == userId.Value;
 
             // Title search
             if (!string.IsNullOrEmpty(parameters.Search))
             {
-                var titleProp = Expression.Property(param, nameof(MusicRelease.Title));
-                Expression titleLower = titleProp;
-                if (toLowerMethod != null)
-                    titleLower = Expression.Call(titleProp, toLowerMethod!);
-
-                var searchConst = Expression.Constant(parameters.Search.ToLower());
-                var searchContains = Expression.Call(titleLower, containsMethod, searchConst);
-                clauses.Add(searchContains);
+                var searchLower = parameters.Search.ToLower();
+                filter = CombineWithAnd(filter, mr => mr.Title.ToLower().Contains(searchLower));
             }
 
-            // Helper for JSON-array contains checks
-            Expression BuildJsonContainsExpression(string propName, int id)
-            {
-                var prop = Expression.Property(param, propName);
-                var notNull = Expression.NotEqual(prop, Expression.Constant(null, typeof(string)));
-
-                var c1 = Expression.Call(prop, containsMethod, Expression.Constant("[" + id + "]"));
-                var c2 = Expression.Call(prop, containsMethod, Expression.Constant("[" + id + ","));
-                var c3 = Expression.Call(prop, containsMethod, Expression.Constant("," + id + "]"));
-                var c4 = Expression.Call(prop, containsMethod, Expression.Constant("," + id + ","));
-
-                var anyForId = Expression.OrElse(Expression.OrElse(c1, c2), Expression.OrElse(c3, c4));
-                return Expression.AndAlso(notNull, anyForId);
-            }
-
-            if (parameters.ArtistId.HasValue)
-                clauses.Add(BuildJsonContainsExpression(nameof(MusicRelease.Artists), parameters.ArtistId.Value));
-
-            if (parameters.GenreId.HasValue)
-                clauses.Add(BuildJsonContainsExpression(nameof(MusicRelease.Genres), parameters.GenreId.Value));
-
-            // Kollection genres ORed together
-            if (kollectionGenreIds != null)
-            {
-                Expression? kollectionOr = null;
-                foreach (var gid in kollectionGenreIds)
-                {
-                    var expr = BuildJsonContainsExpression(nameof(MusicRelease.Genres), gid);
-                    kollectionOr = kollectionOr == null ? expr : Expression.OrElse(kollectionOr, expr);
-                }
-
-                if (kollectionOr != null)
-                    clauses.Add(kollectionOr);
-            }
-
+            // Simple property filters that EF Core can translate
             if (parameters.LabelId.HasValue)
             {
-                var prop = Expression.Property(param, nameof(MusicRelease.LabelId));
-                clauses.Add(Expression.Equal(prop, Expression.Constant(parameters.LabelId.Value, typeof(int?))));
+                filter = CombineWithAnd(filter, mr => mr.LabelId == parameters.LabelId.Value);
             }
 
             if (parameters.CountryId.HasValue)
             {
-                var prop = Expression.Property(param, nameof(MusicRelease.CountryId));
-                clauses.Add(Expression.Equal(prop, Expression.Constant(parameters.CountryId.Value, typeof(int?))));
+                filter = CombineWithAnd(filter, mr => mr.CountryId == parameters.CountryId.Value);
             }
 
             if (parameters.FormatId.HasValue)
             {
-                var prop = Expression.Property(param, nameof(MusicRelease.FormatId));
-                clauses.Add(Expression.Equal(prop, Expression.Constant(parameters.FormatId.Value, typeof(int?))));
+                filter = CombineWithAnd(filter, mr => mr.FormatId == parameters.FormatId.Value);
             }
 
             if (parameters.Live.HasValue)
             {
-                var prop = Expression.Property(param, nameof(MusicRelease.Live));
-                clauses.Add(Expression.Equal(prop, Expression.Constant(parameters.Live.Value)));
+                filter = CombineWithAnd(filter, mr => mr.Live == parameters.Live.Value);
             }
 
             if (parameters.YearFrom.HasValue)
             {
-                var prop = Expression.Property(param, nameof(MusicRelease.ReleaseYear));
-                var hasValue = Expression.Property(prop, "HasValue");
-                var value = Expression.Property(prop, "Value");
-                var compare = Expression.GreaterThanOrEqual(value, Expression.Constant(new DateTime(parameters.YearFrom.Value, 1, 1, 0, 0, 0, DateTimeKind.Utc)));
-                clauses.Add(Expression.AndAlso(hasValue, compare));
+                var yearFrom = new DateTime(parameters.YearFrom.Value, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                filter = CombineWithAnd(filter, mr => mr.ReleaseYear.HasValue && mr.ReleaseYear.Value >= yearFrom);
             }
 
             if (parameters.YearTo.HasValue)
             {
-                var prop = Expression.Property(param, nameof(MusicRelease.ReleaseYear));
-                var hasValue = Expression.Property(prop, "HasValue");
-                var value = Expression.Property(prop, "Value");
-                var compare = Expression.LessThanOrEqual(value, Expression.Constant(new DateTime(parameters.YearTo.Value, 12, 31, 23, 59, 59, 999, DateTimeKind.Utc)));
-                clauses.Add(Expression.AndAlso(hasValue, compare));
+                var yearTo = new DateTime(parameters.YearTo.Value, 12, 31, 23, 59, 59, 999, DateTimeKind.Utc);
+                filter = CombineWithAnd(filter, mr => mr.ReleaseYear.HasValue && mr.ReleaseYear.Value <= yearTo);
             }
 
-            if (!clauses.Any())
+            _logger.LogInformation("BuildBaseFilter: Filter built successfully");
+            return filter;
+        }
+
+        /// <summary>
+        /// Helper to combine two filter expressions with AND
+        /// </summary>
+        private Expression<Func<MusicRelease, bool>> CombineWithAnd(
+            Expression<Func<MusicRelease, bool>> first,
+            Expression<Func<MusicRelease, bool>> second)
+        {
+            var parameter = Expression.Parameter(typeof(MusicRelease));
+            var leftVisitor = new ReplaceExpressionVisitor(first.Parameters[0], parameter);
+            var left = leftVisitor.Visit(first.Body);
+            var rightVisitor = new ReplaceExpressionVisitor(second.Parameters[0], parameter);
+            var right = rightVisitor.Visit(second.Body);
+            return Expression.Lambda<Func<MusicRelease, bool>>(
+                Expression.AndAlso(left!, right!), parameter);
+        }
+
+        /// <summary>
+        /// Expression visitor to replace parameters in lambda expressions
+        /// </summary>
+        private class ReplaceExpressionVisitor : ExpressionVisitor
+        {
+            private readonly Expression _oldValue;
+            private readonly Expression _newValue;
+
+            public ReplaceExpressionVisitor(Expression oldValue, Expression newValue)
             {
-                _logger.LogError("BuildFilterExpression: Clauses is empty! This should never happen.");
-                return null;
+                _oldValue = oldValue;
+                _newValue = newValue;
             }
 
-            Expression combined = clauses[0];
-            for (int i = 1; i < clauses.Count; i++)
-                combined = Expression.AndAlso(combined, clauses[i]);
-
-            var lambda = Expression.Lambda<Func<MusicRelease, bool>>(combined, param);
-            _logger.LogInformation("BuildFilterExpression: Filter: {Filter}", lambda.ToString());
-            return lambda;
+            public override Expression? Visit(Expression? node)
+            {
+                return node == _oldValue ? _newValue : base.Visit(node);
+            }
         }
 
         public async Task<MusicReleaseDto?> GetMusicReleaseAsync(int id)

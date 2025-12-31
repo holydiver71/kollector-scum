@@ -125,6 +125,45 @@ namespace KollectorScum.Api.Controllers
             });
         }
 
+        /// <summary>
+        /// Deletes all music releases in the user's collection
+        /// </summary>
+        /// <returns>The delete collection response with count of albums deleted</returns>
+        [HttpDelete("collection")]
+        [ProducesResponseType(typeof(DeleteCollectionResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<DeleteCollectionResponse>> DeleteCollection()
+        {
+            var userId = GetUserIdFromClaims();
+            if (userId == null)
+            {
+                return Unauthorized(new { message = "Invalid user ID in token" });
+            }
+
+            var user = await _userRepository.FindByIdAsync(userId.Value);
+            if (user == null)
+            {
+                return NotFound(new { message = "User not found" });
+            }
+
+            // Get count before deleting
+            var count = await _userProfileRepository.GetUserMusicReleaseCountAsync(userId.Value);
+
+            // Delete all releases for the user
+            var deletedCount = await _userProfileRepository.DeleteAllUserMusicReleasesAsync(userId.Value);
+
+            _logger.LogInformation("Deleted {DeletedCount} music releases for user {UserId}",
+                deletedCount, userId.Value);
+
+            return Ok(new DeleteCollectionResponse
+            {
+                AlbumsDeleted = deletedCount,
+                Success = true,
+                Message = $"Successfully deleted {deletedCount} album(s) from your collection."
+            });
+        }
+
         private Guid? GetUserIdFromClaims()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
