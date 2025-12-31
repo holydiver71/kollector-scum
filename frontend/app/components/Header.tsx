@@ -29,15 +29,18 @@ export default function Header() {
   React.useEffect(() => {
     const loadKollections = async () => {
       if (!isAuthenticated()) {
+        console.log('[Header] Not authenticated, skipping kollections load');
         setLoadingKollections(false);
         return;
       }
 
       try {
+        console.log('[Header] Loading kollections...');
         const response = await getKollections();
+        console.log('[Header] Kollections loaded:', response.items.length, 'items', response);
         setKollections(response.items);
       } catch (err) {
-        console.error('Failed to load kollections:', err);
+        console.error('[Header] Failed to load kollections:', err);
       } finally {
         setLoadingKollections(false);
       }
@@ -129,7 +132,7 @@ export default function Header() {
                   }}
                 />
               </div>
-              {isMusicCollection && !loadingKollections && (
+              {isMusicCollection && !loadingKollections && kollections.length > 0 && (
                 <div className="flex-shrink-0">
                   <select
                     id="kollection-select"
