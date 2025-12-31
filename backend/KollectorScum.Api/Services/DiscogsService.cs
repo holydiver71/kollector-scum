@@ -142,6 +142,37 @@ namespace KollectorScum.Api.Services
                 throw;
             }
         }
+
+        /// <summary>
+        /// Get user's collection with pagination
+        /// </summary>
+        public async Task<DiscogsCollectionResponseDto?> GetUserCollectionAsync(string username, int page = 1, int perPage = 100)
+        {
+            try
+            {
+                _logger.LogInformation("Getting collection for user: {Username}, page: {Page}", username, page);
+
+                var jsonResponse = await _httpClient.GetUserCollectionAsync(username, page, perPage);
+                var collectionDto = _mapper.MapCollectionResponse(jsonResponse);
+
+                if (collectionDto != null)
+                {
+                    _logger.LogInformation("Successfully retrieved collection for user: {Username}, {Count} releases", 
+                        username, collectionDto.Releases.Count);
+                }
+                else
+                {
+                    _logger.LogWarning("No collection data found for user: {Username}", username);
+                }
+
+                return collectionDto;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in DiscogsService.GetUserCollectionAsync for user: {Username}", username);
+                throw;
+            }
+        }
     }
 }
 
