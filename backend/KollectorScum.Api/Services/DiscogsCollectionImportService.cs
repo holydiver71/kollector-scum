@@ -310,10 +310,27 @@ namespace KollectorScum.Api.Services
                 // Build Media (tracks) from full release details
                 if (fullRelease != null && fullRelease.Tracklist != null && fullRelease.Tracklist.Count > 0)
                 {
+                    _logger.LogInformation("Building tracklist for {Title} - {TrackCount} tracks found", basicInfo.Title, fullRelease.Tracklist.Count);
                     var media = BuildMediaFromTracklist(fullRelease.Tracklist, basicInfo.Title, formatId, artistIds, genreIds, releaseYear);
                     if (media != null)
                     {
                         musicRelease.Media = JsonSerializer.Serialize(media);
+                        _logger.LogInformation("Successfully added tracklist to {Title}", basicInfo.Title);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("BuildMediaFromTracklist returned null for {Title}", basicInfo.Title);
+                    }
+                }
+                else
+                {
+                    if (fullRelease == null)
+                    {
+                        _logger.LogWarning("No full release data fetched for {Title} - skipping tracklist", basicInfo.Title);
+                    }
+                    else if (fullRelease.Tracklist == null || fullRelease.Tracklist.Count == 0)
+                    {
+                        _logger.LogInformation("Release {Title} has no tracklist in Discogs data", basicInfo.Title);
                     }
                 }
 
