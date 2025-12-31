@@ -129,7 +129,7 @@ export default function Header() {
                   }}
                 />
               </div>
-              {isMusicCollection && !loadingKollections && kollections.length > 0 && (
+              {isMusicCollection && !loadingKollections && (
                 <div className="flex-shrink-0">
                   <select
                     id="kollection-select"
