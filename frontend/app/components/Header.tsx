@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { QuickSearch } from './SearchAndFilter';
-import type { SearchSuggestion } from '../lib/api';
+import type { SearchSuggestion, ApiError } from '../lib/api';
 import { getKollections, type KollectionDto } from '../lib/api';
 import { GoogleSignIn } from './GoogleSignIn';
 import { isAuthenticated, type UserProfile } from '../lib/auth';
@@ -37,6 +37,12 @@ export default function Header() {
         const response = await getKollections();
         setKollections(response.items);
       } catch (err) {
+        // Handle 401 silently - user will be redirected by other components
+        const apiError = err as ApiError;
+        if (apiError?.status === 401) {
+          setLoadingKollections(false);
+          return;
+        }
         console.error('Failed to load kollections:', err);
       } finally {
         setLoadingKollections(false);

@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using KollectorScum.Api.DTOs;
 using KollectorScum.Api.Interfaces;
 using KollectorScum.Api.Models;
+using KollectorScum.Api.Models.ValueObjects;
 
 namespace KollectorScum.Api.Services
 {
@@ -156,13 +157,17 @@ namespace KollectorScum.Api.Services
                         continue;
                     }
 
-                    // Check if already imported
-                    var existing = await _unitOfWork.MusicReleases
-                        .GetAsync(mr => mr.UserId == userId && mr.DiscogsId == release.BasicInformation.Id);
+                    // Check if release already exists for this user
+                    var discogsId = release.BasicInformation.Id;
+                    var existingRelease = await _unitOfWork.MusicReleases.GetAsync(
+                        mr => mr.UserId == userId && mr.DiscogsId == discogsId
+                    );
                     
-                    if (existing.Any())
+                    if (existingRelease.Any())
                     {
                         result.SkippedReleases++;
+                        _logger.LogDebug("Skipped existing release: {Title} (Discogs ID: {DiscogsId})", 
+                            release.BasicInformation.Title, discogsId);
                         continue;
                     }
 
@@ -180,7 +185,9 @@ namespace KollectorScum.Api.Services
                     else
                     {
                         result.FailedReleases++;
-                        result.Errors.Add($"Failed to map release: {release.BasicInformation.Title}");
+                        var errorMsg = $"Failed to map release: {release.BasicInformation.Title}";
+                        result.Errors.Add(errorMsg);
+                        _logger.LogWarning(errorMsg);
                     }
                 }
                 catch (Exception ex)
@@ -201,6 +208,24 @@ namespace KollectorScum.Api.Services
 
             try
             {
+                // Fetch full release details to get track information
+                DiscogsReleaseDto? releaseDetails = null;
+                try
+                {
+                    releaseDetails = await _discogsService.GetReleaseDetailsAsync(basicInfo.Id.ToString());
+                    if (releaseDetails == null)
+                    {
+                        _logger.LogWarning("Could not fetch release details for ID {ReleaseId}", basicInfo.Id);
+                    }
+                    
+                    // Small delay to respect Discogs rate limits (60 requests per minute)
+                    await Task.Delay(1100);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Error fetching release details for ID {ReleaseId}, will continue without track info", basicInfo.Id);
+                }
+
                 // Resolve or create lookups (these methods now save immediately if creating new entities)
                 var formatId = await GetOrCreateFormatAsync(basicInfo.Formats, userId);
                 var labelId = await GetOrCreateLabelAsync(basicInfo.Labels, userId);
@@ -218,13 +243,31 @@ namespace KollectorScum.Api.Services
                 // Extract notes
                 var notes = release.Notes?.FirstOrDefault()?.Value;
 
+                // Validate and parse year
+                DateTime? releaseYear = null;
+                if (basicInfo.Year.HasValue && basicInfo.Year.Value >= 1 && basicInfo.Year.Value <= 9999)
+                {
+                    try
+                    {
+                        releaseYear = DateTime.SpecifyKind(new DateTime(basicInfo.Year.Value, 1, 1), DateTimeKind.Utc);
+                    }
+                    catch (ArgumentOutOfRangeException ex)
+                    {
+                        _logger.LogWarning(ex, "Invalid year value {Year} for release {Title}", basicInfo.Year.Value, basicInfo.Title);
+                    }
+                }
+                else if (basicInfo.Year.HasValue)
+                {
+                    _logger.LogWarning("Year value {Year} out of valid range for release {Title}", basicInfo.Year.Value, basicInfo.Title);
+                }
+
                 // Create MusicRelease entity
                 var musicRelease = new MusicRelease
                 {
                     UserId = userId,
                     DiscogsId = basicInfo.Id,
                     Title = basicInfo.Title,
-                    ReleaseYear = basicInfo.Year.HasValue ? DateTime.SpecifyKind(new DateTime(basicInfo.Year.Value, 1, 1), DateTimeKind.Utc) : null,
+                    ReleaseYear = releaseYear,
                     FormatId = formatId,
                     LabelId = labelId,
                     CountryId = countryId,
@@ -242,11 +285,23 @@ namespace KollectorScum.Api.Services
                     musicRelease.Images = JsonSerializer.Serialize(images);
                 }
 
+                // Map tracks from release details if available
+                if (releaseDetails != null && releaseDetails.Tracklist != null && releaseDetails.Tracklist.Count > 0)
+                {
+                    var mediaList = MapTracksToMedia(releaseDetails.Tracklist, formatId, artistIds, genreIds, releaseYear);
+                    if (mediaList.Count > 0)
+                    {
+                        musicRelease.Media = JsonSerializer.Serialize(mediaList);
+                        _logger.LogDebug("Mapped {TrackCount} tracks for release {Title}", 
+                            mediaList.Sum(m => m.Tracks.Count), basicInfo.Title);
+                    }
+                }
+
                 return musicRelease;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error mapping release to MusicRelease: {Title}", basicInfo.Title);
+                _logger.LogError(ex, "Error mapping release to MusicRelease: {Title} - {ErrorMessage}", basicInfo.Title, ex.Message);
                 return null;
             }
         }
@@ -280,7 +335,7 @@ namespace KollectorScum.Api.Services
             // Create new format
             var format = new Format { UserId = userId, Name = formatName };
             await _unitOfWork.Formats.AddAsync(format);
-            await _unitOfWork.SaveChangesAsync(); // Save immediately to get the generated ID
+            await _unitOfWork.SaveChangesAsync(); // Must save to get ID for foreign key
             _formatCache[cacheKey] = format.Id;
             
             return format.Id;
@@ -315,7 +370,7 @@ namespace KollectorScum.Api.Services
             // Create new label
             var label = new Label { UserId = userId, Name = labelName };
             await _unitOfWork.Labels.AddAsync(label);
-            await _unitOfWork.SaveChangesAsync(); // Save immediately to get the generated ID
+            await _unitOfWork.SaveChangesAsync(); // Must save to get ID for foreign key
             _labelCache[cacheKey] = label.Id;
             
             return label.Id;
@@ -347,7 +402,7 @@ namespace KollectorScum.Api.Services
             // Create new country
             var country = new Country { UserId = userId, Name = countryName };
             await _unitOfWork.Countries.AddAsync(country);
-            await _unitOfWork.SaveChangesAsync(); // Save immediately to get the generated ID
+            await _unitOfWork.SaveChangesAsync(); // Must save to get ID for foreign key
             _countryCache[cacheKey] = country.Id;
             
             return country.Id;
@@ -387,7 +442,7 @@ namespace KollectorScum.Api.Services
                     // Create new artist
                     var newArtist = new Artist { UserId = userId, Name = artist.Name };
                     await _unitOfWork.Artists.AddAsync(newArtist);
-                    await _unitOfWork.SaveChangesAsync(); // Save immediately to get the generated ID
+                    await _unitOfWork.SaveChangesAsync(); // Must save to get ID for serialization
                     _artistCache[cacheKey] = newArtist.Id;
                     artistIds.Add(newArtist.Id);
                 }
@@ -432,7 +487,7 @@ namespace KollectorScum.Api.Services
                     // Create new genre
                     var newGenre = new Genre { UserId = userId, Name = genreName };
                     await _unitOfWork.Genres.AddAsync(newGenre);
-                    await _unitOfWork.SaveChangesAsync(); // Save immediately to get the generated ID
+                    await _unitOfWork.SaveChangesAsync(); // Must save to get ID for serialization
                     _genreCache[cacheKey] = newGenre.Id;
                     genreIds.Add(newGenre.Id);
                 }
@@ -481,6 +536,101 @@ namespace KollectorScum.Api.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error downloading cover art from {Url}", imageUrl);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Map Discogs tracklist to Media/Track structure
+        /// </summary>
+        private List<Media> MapTracksToMedia(List<DiscogsTrackDto> tracklist, int? formatId, List<int> artistIds, List<int> genreIds, DateTime? releaseYear)
+        {
+            var mediaList = new List<Media>();
+            
+            if (tracklist == null || tracklist.Count == 0)
+                return mediaList;
+
+            // Create a single media item with all tracks
+            // Note: More sophisticated implementations could split by disc/side based on position formatting
+            var media = new Media
+            {
+                Title = "Disc 1",
+                FormatId = formatId ?? 0,
+                Index = 0,
+                Tracks = new List<Track>()
+            };
+
+            int trackIndex = 0;
+            foreach (var discogsTrack in tracklist)
+            {
+                // Parse duration from string format (e.g., "3:45" or "3:45:12")
+                int? lengthInSeconds = ParseDuration(discogsTrack.Duration);
+
+                // Use track-specific artists if available, otherwise use album artists
+                var trackArtistIds = artistIds;
+                if (discogsTrack.Artists != null && discogsTrack.Artists.Count > 0)
+                {
+                    // For now, we'll use the album artists
+                    // A more sophisticated implementation could resolve track-specific artists
+                    _logger.LogDebug("Track '{Title}' has specific artists, but using album artists for simplicity", discogsTrack.Title);
+                }
+
+                var track = new Track
+                {
+                    Title = discogsTrack.Title,
+                    ReleaseYear = releaseYear,
+                    Artists = trackArtistIds.Count > 0 ? JsonSerializer.Serialize(trackArtistIds) : null,
+                    Genres = genreIds.Count > 0 ? JsonSerializer.Serialize(genreIds) : null,
+                    Live = false,
+                    LengthSecs = lengthInSeconds,
+                    Index = trackIndex++
+                };
+
+                media.Tracks.Add(track);
+            }
+
+            if (media.Tracks.Count > 0)
+            {
+                mediaList.Add(media);
+            }
+
+            return mediaList;
+        }
+
+        /// <summary>
+        /// Parse duration string (e.g., "3:45", "1:23:45") to seconds
+        /// </summary>
+        private int? ParseDuration(string? duration)
+        {
+            if (string.IsNullOrWhiteSpace(duration))
+                return null;
+
+            try
+            {
+                var parts = duration.Split(':');
+                int totalSeconds = 0;
+
+                if (parts.Length == 2)
+                {
+                    // Format: MM:SS
+                    totalSeconds = int.Parse(parts[0]) * 60 + int.Parse(parts[1]);
+                }
+                else if (parts.Length == 3)
+                {
+                    // Format: HH:MM:SS
+                    totalSeconds = int.Parse(parts[0]) * 3600 + int.Parse(parts[1]) * 60 + int.Parse(parts[2]);
+                }
+                else
+                {
+                    _logger.LogWarning("Unexpected duration format: {Duration}", duration);
+                    return null;
+                }
+
+                return totalSeconds;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error parsing duration: {Duration}", duration);
                 return null;
             }
         }
