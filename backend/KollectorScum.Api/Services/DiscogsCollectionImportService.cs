@@ -350,6 +350,10 @@ namespace KollectorScum.Api.Services
             var tracks = new List<object>();
             int trackIndex = 1;
 
+            // Convert IDs to strings to match existing data format
+            var artistIdsAsStrings = artistIds.Select(id => id.ToString()).ToList();
+            var genreIdsAsStrings = genreIds.Select(id => id.ToString()).ToList();
+
             foreach (var track in tracklist)
             {
                 // Skip non-track items (like headings)
@@ -359,8 +363,8 @@ namespace KollectorScum.Api.Services
                 {
                     Title = track.Title,
                     ReleaseYear = releaseYear?.ToString("yyyy-MM-dd") ?? "",
-                    Artists = artistIds,
-                    Genres = genreIds,
+                    Artists = artistIdsAsStrings,
+                    Genres = genreIdsAsStrings,
                     Live = false,
                     LengthSecs = ParseDuration(track.Duration),
                     Index = trackIndex++
