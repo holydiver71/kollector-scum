@@ -10,6 +10,10 @@ data/musicreleases.json
 data/packagings.json
 data/stores.json
 
+# Cover art images (user-generated content from Discogs import)
+backend/KollectorScum.Api/wwwroot/images/covers/
+**/wwwroot/images/covers/
+
 # Node modules
 node_modules/
 
