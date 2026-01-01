@@ -110,62 +110,79 @@ export default function ListsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <LoadingSpinner />
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#D93611]"></div>
+            <p className="mt-4 text-gray-600">Loading lists...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <div className="border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-8 py-6">
-          <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-6">
+          <div>
             <h1 className="text-3xl font-bold text-gray-900">My Lists</h1>
+            <p className="mt-2 text-gray-600">
+              Organize your music collection by theme or style
+            </p>
+          </div>
+          {!showCreateForm && (
             <button
               onClick={() => setShowCreateForm(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[#D93611] text-white rounded-lg hover:bg-[#C02F0F] transition-colors font-semibold"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[#D93611] text-white rounded-md hover:bg-[#B82D0E] transition-colors"
             >
-              <Plus className="w-5 h-5" />
-              Create List
+              <Plus className="h-5 w-5" />
+              New List
             </button>
-          </div>
+          )}
         </div>
-      </div>
-
-      {/* Content */}
-      <div className="max-w-7xl mx-auto px-8 py-8">
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-sm text-red-600">{error}</p>
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+            {error}
           </div>
         )}
 
         {/* Create List Form */}
         {showCreateForm && (
-          <div className="mb-6 p-6 bg-gray-50 rounded-lg border border-gray-200">
+          <div className="mb-6 bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+            <h2 className="text-xl font-semibold mb-4">
+              Create List
+            </h2>
             <form onSubmit={handleCreateList}>
-              <label htmlFor="newListName" className="block text-sm font-semibold text-gray-700 mb-2">
-                List Name
-              </label>
-              <input
-                id="newListName"
-                type="text"
-                value={newListName}
-                onChange={(e) => setNewListName(e.target.value)}
-                placeholder="e.g., My Top 10 Metal Records"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D93611] focus:border-transparent mb-4"
-                disabled={submitting}
-                autoFocus
-              />
-              <div className="flex gap-2">
+              <div className="mb-4">
+                <label
+                  htmlFor="newListName"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Name
+                </label>
+                <input
+                  id="newListName"
+                  type="text"
+                  value={newListName}
+                  onChange={(e) => setNewListName(e.target.value)}
+                  placeholder="e.g., My Top 10 Metal Records"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#D93611]"
+                  disabled={submitting}
+                  autoFocus
+                  required
+                />
+              </div>
+
+              <div className="flex gap-3">
                 <button
                   type="submit"
                   disabled={submitting || !newListName.trim()}
-                  className="px-4 py-2 bg-[#D93611] text-white rounded-lg hover:bg-[#C02F0F] disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-semibold"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-[#D93611] text-white rounded-md hover:bg-[#B82D0E] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {submitting ? "Creating..." : "Create List"}
+                  <Check className="h-5 w-5" />
+                  {submitting ? "Creating..." : "Save"}
                 </button>
                 <button
                   type="button"
@@ -174,8 +191,9 @@ export default function ListsPage() {
                     setNewListName("");
                   }}
                   disabled={submitting}
-                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors disabled:opacity-50"
                 >
+                  <X className="h-5 w-5" />
                   Cancel
                 </button>
               </div>
@@ -183,98 +201,95 @@ export default function ListsPage() {
           </div>
         )}
 
-        {/* Lists */}
+        {/* List */}
         {lists.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-gray-500 text-lg mb-4">You haven&apos;t created any lists yet.</p>
-            <p className="text-gray-400 mb-8">
-              Create lists to organize your music collection by theme, genre, or any other way you like!
-            </p>
-            <button
-              onClick={() => setShowCreateForm(true)}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-[#D93611] text-white rounded-lg hover:bg-[#C02F0F] transition-colors font-semibold"
-            >
-              <Plus className="w-5 h-5" />
-              Create Your First List
-            </button>
+          <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
+            <p className="text-gray-500 mb-4">No lists yet</p>
+            {!showCreateForm && (
+              <button
+                onClick={() => setShowCreateForm(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-[#D93611] text-white rounded-md hover:bg-[#B82D0E] transition-colors"
+              >
+                <Plus className="h-5 w-5" />
+                Create Your First List
+              </button>
+            )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {lists.map((list) => (
               <div
                 key={list.id}
-                className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow"
+                className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
               >
                 {editingId === list.id ? (
-                  <div className="mb-4">
+                  <div className="mb-3">
                     <input
                       type="text"
                       value={editingName}
                       onChange={(e) => setEditingName(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D93611] focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#D93611] mb-2"
                       disabled={submitting}
                       autoFocus
                     />
-                    <div className="flex gap-2 mt-2">
+                    <div className="flex gap-2">
                       <button
                         onClick={() => handleSaveEdit(list.id)}
                         disabled={submitting || !editingName.trim()}
-                        className="flex items-center justify-center w-8 h-8 rounded bg-green-500 text-white hover:bg-green-600 disabled:opacity-50 transition-colors"
+                        className="p-1 text-blue-600 hover:bg-blue-50 rounded disabled:opacity-50 transition-colors"
                         title="Save"
                       >
-                        <Check className="w-4 h-4" />
+                        <Check className="h-4 w-4" />
                       </button>
                       <button
                         onClick={handleCancelEdit}
                         disabled={submitting}
-                        className="flex items-center justify-center w-8 h-8 rounded bg-red-500 text-white hover:bg-red-600 disabled:opacity-50 transition-colors"
+                        className="p-1 text-red-600 hover:bg-red-50 rounded disabled:opacity-50 transition-colors"
                         title="Cancel"
                       >
-                        <X className="w-4 h-4" />
+                        <X className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <Link href={`/lists/${list.id}`} className="block mb-4">
-                    <h2 className="text-xl font-bold text-gray-900 hover:text-[#D93611] transition-colors mb-2">
-                      {list.name}
-                    </h2>
-                    <p className="text-sm text-gray-600">
+                  <div className="mb-3">
+                    <Link href={`/lists/${list.id}`}>
+                      <h3 className="text-lg font-semibold text-gray-900 hover:text-[#D93611] transition-colors mb-1">
+                        {list.name}
+                      </h3>
+                    </Link>
+                    <p className="text-sm text-gray-500">
                       {list.releaseCount} {list.releaseCount === 1 ? "release" : "releases"}
                     </p>
-                  </Link>
+                  </div>
                 )}
 
-                <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                  <p className="text-xs text-gray-500">
-                    Updated {new Date(list.lastModified).toLocaleDateString()}
-                  </p>
-                  {editingId !== list.id && (
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleStartEdit(list)}
-                        className="p-2 text-gray-600 hover:text-[#D93611] transition-colors"
-                        title="Rename list"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => setDeletingId(list.id)}
-                        className="p-2 text-gray-600 hover:text-red-600 transition-colors"
-                        title="Delete list"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  )}
-                </div>
+                {editingId !== list.id && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleStartEdit(list)}
+                      className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                      title="Edit"
+                      disabled={showCreateForm}
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => setDeletingId(list.id)}
+                      className="p-1 text-red-600 hover:bg-red-50 rounded"
+                      title="Delete"
+                      disabled={showCreateForm}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
         )}
-      </div>
 
-      <ConfirmDialog
+        <ConfirmDialog
         isOpen={!!deletingId}
         title="Delete List"
         message={`Are you sure you want to delete "${getDeletingListName()}"? This action cannot be undone.`}
@@ -283,6 +298,7 @@ export default function ListsPage() {
         onConfirm={handleDeleteList}
         onCancel={() => setDeletingId(null)}
       />
+      </div>
     </div>
   );
 }

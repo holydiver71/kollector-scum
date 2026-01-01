@@ -40,12 +40,30 @@ export default function Header() {
         console.log('[Header] Kollections loaded:', response.items.length, 'items', response);
         setKollections(response.items);
       } catch (err) {
+        // Handle 401 silently - user will be redirected by other components
+        const apiError = err as ApiError;
+        if (apiError?.status === 401) {
+          setLoadingKollections(false);
+          return;
+        }
         console.error('[Header] Failed to load kollections:', err);
       } finally {
         setLoadingKollections(false);
       }
     };
+    
     loadKollections();
+    
+    // Listen for auth changes to reload kollections
+    const handleAuthChange = () => {
+      loadKollections();
+    };
+    
+    window.addEventListener('authChanged', handleAuthChange);
+    
+    return () => {
+      window.removeEventListener('authChanged', handleAuthChange);
+    };
   }, []);
 
   const selectedKollectionId = searchParams?.get('kollectionId');
