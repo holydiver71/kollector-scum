@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { QuickSearch } from './SearchAndFilter';
 import type { SearchSuggestion } from '../lib/api';
-import { getKollections, type KollectionDto } from '../lib/api';
+import { getKollections, type KollectionDto, type ApiError } from '../lib/api';
 import { GoogleSignIn } from './GoogleSignIn';
 import { isAuthenticated, type UserProfile } from '../lib/auth';
 
