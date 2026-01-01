@@ -611,10 +611,10 @@ export default function ReleaseDetailPage() {
                  {/* Tracklist Section */}
                  <div>
                     <div className="bg-gray-50 rounded-xl p-1 border border-gray-100">
-                       <TrackList 
-                          media={release.media} 
+                        <TrackList 
+                          media={release.media || []} 
                           albumArtists={release.artists?.map(artist => artist.name) || []}
-                       />
+                        />
                     </div>
                  </div>
 
