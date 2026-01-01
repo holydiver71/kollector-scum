@@ -272,7 +272,10 @@ export default function KollectionsPage() {
         {/* List */}
         {kollections.length === 0 ? (
           <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
-            <p className="text-gray-500 mb-4">No kollections yet</p>
+            <p className="text-gray-500 text-lg mb-4">You haven&apos;t created any lists yet.</p>
+            <p className="text-gray-400 mb-8">
+              Create Kollections to organize your music collection genre!
+            </p>
             {!showForm && (
               <button
                 onClick={handleCreate}
