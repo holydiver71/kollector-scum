@@ -199,6 +199,7 @@ builder.Services.AddScoped<IUnitOfWork, KollectorScum.Api.Repositories.UnitOfWor
 // Register authentication repositories and services
 builder.Services.AddScoped<IUserRepository, KollectorScum.Api.Repositories.UserRepository>();
 builder.Services.AddScoped<IUserProfileRepository, KollectorScum.Api.Repositories.UserProfileRepository>();
+builder.Services.AddScoped<IUserInvitationRepository, KollectorScum.Api.Repositories.UserInvitationRepository>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IGoogleTokenValidator, GoogleTokenValidator>();
 

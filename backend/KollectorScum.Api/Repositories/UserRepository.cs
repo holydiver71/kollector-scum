@@ -59,5 +59,27 @@ namespace KollectorScum.Api.Repositories
             await _context.SaveChangesAsync();
             return user;
         }
+
+        /// <inheritdoc />
+        public async Task<List<ApplicationUser>> GetAllAsync()
+        {
+            return await _context.ApplicationUsers
+                .OrderBy(u => u.Email)
+                .ToListAsync();
+        }
+
+        /// <inheritdoc />
+        public async Task<bool> DeleteAsync(Guid userId)
+        {
+            var user = await _context.ApplicationUsers.FindAsync(userId);
+            if (user == null)
+            {
+                return false;
+            }
+
+            _context.ApplicationUsers.Remove(user);
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }

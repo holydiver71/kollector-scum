@@ -41,5 +41,18 @@ namespace KollectorScum.Api.Interfaces
         /// <param name="user">The user to update</param>
         /// <returns>The updated user</returns>
         Task<ApplicationUser> UpdateAsync(ApplicationUser user);
+
+        /// <summary>
+        /// Gets all users
+        /// </summary>
+        /// <returns>List of all users</returns>
+        Task<List<ApplicationUser>> GetAllAsync();
+
+        /// <summary>
+        /// Deletes a user by their ID
+        /// </summary>
+        /// <param name="userId">The user ID to delete</param>
+        /// <returns>True if deleted, false if not found</returns>
+        Task<bool> DeleteAsync(Guid userId);
     }
 }
