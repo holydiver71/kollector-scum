@@ -24,6 +24,11 @@ namespace KollectorScum.Api.DTOs
         /// Gets or sets the selected kollection ID
         /// </summary>
         public int? SelectedKollectionId { get; set; }
+
+        /// <summary>
+        /// Gets or sets whether the user is an admin
+        /// </summary>
+        public bool IsAdmin { get; set; }
     }
 
     /// <summary>
