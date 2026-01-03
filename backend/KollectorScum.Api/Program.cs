@@ -20,6 +20,14 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Many hosting platforms (e.g., Render) set a PORT environment variable that the app must bind to.
+// Ensure Kestrel listens on 0.0.0.0:$PORT when provided.
+var port = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrWhiteSpace(port) && int.TryParse(port, out var parsedPort) && parsedPort > 0)
+{
+    builder.WebHost.UseUrls($"http://0.0.0.0:{parsedPort}");
+}
+
 // Configure Kestrel for long-running operations (e.g., Discogs import)
 builder.WebHost.ConfigureKestrel(options =>
 {
@@ -43,13 +51,62 @@ builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 builder.Services.AddHealthChecks();
 
+// Configure CORS for frontend integration
+// - Development: allow all origins if no explicit origins are configured
+// - Staging/Production: require explicit allowed origins
+var frontendOriginsRaw =
+    builder.Configuration["Frontend:Origins"] ??
+    builder.Configuration["Frontend:Origin"] ??
+    builder.Configuration["FRONTEND_ORIGINS"] ??
+    builder.Configuration["FRONTEND_ORIGIN"];
+
+static string[] ParseCorsOrigins(string? raw)
+{
+    if (string.IsNullOrWhiteSpace(raw))
+    {
+        return Array.Empty<string>();
+    }
+
+    return raw
+        .Split(new[] { ',', ';', ' ' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToArray();
+}
+
+var allowedFrontendOrigins = ParseCorsOrigins(frontendOriginsRaw);
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("FrontendCorsPolicy", policy =>
+    {
+        if (allowedFrontendOrigins.Length == 0)
+        {
+            if (!builder.Environment.IsProduction() && !builder.Environment.IsStaging())
+            {
+                policy.AllowAnyOrigin()
+                      .AllowAnyMethod()
+                      .AllowAnyHeader();
+                return;
+            }
+
+            throw new InvalidOperationException(
+                "CORS is not configured. Set Frontend:Origin(s) (e.g. env var Frontend__Origin or Frontend__Origins) " +
+                "to your frontend URL(s) for staging/production.");
+        }
+
+        policy.WithOrigins(allowedFrontendOrigins)
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 // Configure JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var jwtKey = jwtSettings["Key"];
 if (!string.IsNullOrEmpty(jwtKey))
 {
     // Warn if using placeholder key in production
-    if (!builder.Environment.IsDevelopment() && 
+    if ((builder.Environment.IsProduction() || builder.Environment.IsStaging()) &&
         (jwtKey.Contains("YourSecureKeyHere") || jwtKey.Contains("ChangeInProduction")))
     {
         throw new InvalidOperationException(
@@ -88,8 +145,11 @@ builder.Services.AddScoped<IUserContext, UserContext>();
 // Register KollectorScumDbContext with PostgreSQL
 // NOTE: Do not suppress EF warnings or apply migrations automatically in production.
 // Migrations should be applied as part of deployment (CI/CD) using `dotnet ef database update`
-builder.Services.AddDbContext<KollectorScumDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+if (!builder.Environment.IsEnvironment("Test"))
+{
+    builder.Services.AddDbContext<KollectorScumDbContext>(options =>
+        options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+}
 
 // Register split seeding services (Phase 1.4 refactoring)
 builder.Services.AddScoped<ILookupSeeder<Country, CountryJsonDto>, CountrySeeder>();
@@ -220,12 +280,7 @@ if (app.Environment.IsDevelopment())
 }
 
 // Add CORS for frontend integration
-app.UseCors(policy =>
-{
-    policy.AllowAnyOrigin()
-          .AllowAnyMethod()
-          .AllowAnyHeader();
-});
+app.UseCors("FrontendCorsPolicy");
 
 // Enable static files for serving cover art
 app.UseStaticFiles();
@@ -237,7 +292,79 @@ app.UseAuthorization();
 // Map controllers
 app.MapControllers();
 
-// Map health checks
+// Runtime info (used by frontend footer indicator)
+app.MapGet("/runtime-info", (IConfiguration configuration, IHostEnvironment environment) =>
+{
+    var configuredTarget = configuration["Database:Target"] ?? configuration["Database__Target"]; // allow both forms
+    var normalizedTarget = NormalizeDatabaseTarget(configuredTarget);
+    if (normalizedTarget is null)
+    {
+        normalizedTarget = InferDatabaseTarget(configuration, environment);
+    }
+
+    return Results.Ok(new
+    {
+        environment = environment.EnvironmentName,
+        databaseTarget = normalizedTarget
+    });
+});
+
+static string? NormalizeDatabaseTarget(string? raw)
+{
+    if (string.IsNullOrWhiteSpace(raw))
+    {
+        return null;
+    }
+
+    raw = raw.Trim();
+    return raw.ToLowerInvariant() switch
+    {
+        "local" => "local",
+        "dev" => "local",
+        "development" => "local",
+        "staging" => "staging",
+        "stage" => "staging",
+        "prod" => "production",
+        "production" => "production",
+        _ => null
+    };
+}
+
+static string InferDatabaseTarget(IConfiguration configuration, IHostEnvironment environment)
+{
+    var connectionString = configuration.GetConnectionString("DefaultConnection");
+
+    if (!string.IsNullOrWhiteSpace(connectionString))
+    {
+        try
+        {
+            var builder = new Npgsql.NpgsqlConnectionStringBuilder(connectionString);
+            var host = builder.Host?.Trim();
+            if (string.Equals(host, "localhost", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(host, "127.0.0.1", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(host, "::1", StringComparison.OrdinalIgnoreCase))
+            {
+                return "local";
+            }
+        }
+        catch
+        {
+            // Best-effort only.
+        }
+    }
+
+    if (environment.IsStaging())
+    {
+        return "staging";
+    }
+
+    if (environment.IsProduction())
+    {
+        return "production";
+    }
+
+    return "unknown";
+}
 
 // Map health checks
 app.MapHealthChecks("/health");

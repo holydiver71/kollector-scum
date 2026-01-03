@@ -1,0 +1,12 @@
+**/bin/
+**/obj/
+**/.vs/
+**/.vscode/
+**/*.user
+**/*.suo
+**/*.cache
+**/*.log
+
+# Tests / tooling
+KollectorScum.Tests/
+test-results/

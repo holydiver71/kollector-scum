@@ -1,4 +1,5 @@
 import React from 'react';
+import DbConnectionStatus from './DbConnectionStatus';
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
@@ -33,6 +34,7 @@ const Footer: React.FC = () => {
             >
               API Status
             </a>
+            <DbConnectionStatus />
             <a 
               href="/swagger" 
               target="_blank"

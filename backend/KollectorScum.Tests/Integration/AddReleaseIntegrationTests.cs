@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -10,10 +11,13 @@ using KollectorScum.Api.DTOs;
 using KollectorScum.Api.Interfaces;
 using KollectorScum.Api.Models;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Moq;
 using Xunit;
 
@@ -23,17 +27,44 @@ namespace KollectorScum.Tests.Integration
     /// Integration tests for the add-release related endpoints.
     /// Tests the complete flow from frontend form submission to database storage.
     /// </summary>
-    public class AddReleaseIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
+    public class AddReleaseIntegrationTests : IClassFixture<WebApplicationFactory<Program>>, IDisposable
     {
         private readonly WebApplicationFactory<Program> _factory;
         private readonly JsonSerializerOptions _jsonOptions;
+        private readonly SqliteConnection _connection;
+
+        private static readonly Guid TestUserId = Guid.Parse("12337b39-c346-449c-b269-33b2e820d74f");
 
         public AddReleaseIntegrationTests(WebApplicationFactory<Program> factory)
         {
+            _connection = new SqliteConnection("DataSource=:memory:");
+            _connection.Open();
+
             _factory = factory.WithWebHostBuilder(builder =>
             {
+                builder.UseEnvironment("Test");
                 builder.ConfigureTestServices(services =>
                 {
+                    // Replace the app's database with an in-memory database for integration tests.
+                    // This keeps tests self-contained and avoids relying on external Postgres state/migrations.
+                    var descriptorsToRemove = services
+                        .Where(d =>
+                            d.ServiceType == typeof(KollectorScumDbContext) ||
+                            d.ServiceType == typeof(DbContextOptions<KollectorScumDbContext>) ||
+                            (d.ServiceType.IsGenericType &&
+                             (d.ServiceType.GetGenericTypeDefinition() == typeof(IConfigureOptions<>) ||
+                              d.ServiceType.GetGenericTypeDefinition() == typeof(IPostConfigureOptions<>)) &&
+                             d.ServiceType.GetGenericArguments()[0] == typeof(DbContextOptions<KollectorScumDbContext>)))
+                        .ToList();
+
+                    foreach (var descriptor in descriptorsToRemove)
+                    {
+                        services.Remove(descriptor);
+                    }
+
+                    services.AddDbContext<KollectorScumDbContext>(options =>
+                        options.UseSqlite(_connection));
+
                     services.AddAuthentication(options =>
                     {
                         options.DefaultAuthenticateScheme = "Test";
@@ -43,11 +74,53 @@ namespace KollectorScum.Tests.Integration
                 });
             });
 
+            SeedDatabase();
+
             // Use camelCase to match frontend and backend JSON configuration
             _jsonOptions = new JsonSerializerOptions
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             };
+        }
+
+        public void Dispose()
+        {
+            _factory.Dispose();
+            _connection.Dispose();
+        }
+
+        private void SeedDatabase()
+        {
+            using var scope = _factory.Services.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<KollectorScumDbContext>();
+            dbContext.Database.EnsureCreated();
+
+            if (!dbContext.ApplicationUsers.Any(u => u.Id == TestUserId))
+            {
+                dbContext.ApplicationUsers.Add(new ApplicationUser
+                {
+                    Id = TestUserId,
+                    GoogleSub = "test-google-sub",
+                    Email = "testuser@example.com",
+                    DisplayName = "TestUser",
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                    IsAdmin = false
+                });
+            }
+
+            // Several tests reference ArtistIds = [1]. Seed a predictable artist record.
+            if (!dbContext.Artists.Any(a => a.Id == 1))
+            {
+                dbContext.Artists.Add(new Artist
+                {
+                    Id = 1,
+                    UserId = TestUserId,
+                    Name = "Seed Artist"
+                });
+            }
+
+            dbContext.SaveChanges();
         }
 
         #region Discogs Integration Tests
@@ -106,7 +179,11 @@ namespace KollectorScum.Tests.Integration
             var response = await client.PostAsJsonAsync("/api/musicreleases", createDto, _jsonOptions);
 
             // Assert
-            Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+            if (response.StatusCode != HttpStatusCode.Created)
+            {
+                var responseBody = await response.Content.ReadAsStringAsync();
+                Assert.Fail($"Expected Created but got {response.StatusCode}. Response: {responseBody}");
+            }
             var result = await response.Content.ReadFromJsonAsync<CreateMusicReleaseResponseDto>(_jsonOptions);
             Assert.NotNull(result);
             Assert.NotNull(result.Release);

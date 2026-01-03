@@ -2,6 +2,25 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+## Environment Variables
+This frontend reads configuration from environment variables.
+
+Required for Google Sign-In:
+- `NEXT_PUBLIC_GOOGLE_CLIENT_ID`
+
+Required for API calls:
+- `NEXT_PUBLIC_API_BASE_URL` (e.g. `http://localhost:5072`)
+
+Local dev options:
+- One-off (recommended to test quickly):
+	- `NEXT_PUBLIC_GOOGLE_CLIENT_ID="<your-google-client-id>" NEXT_PUBLIC_API_BASE_URL="http://localhost:5072" npm run dev`
+- Persisted (recommended for daily use):
+	- Create `frontend/.env.local` (gitignored) with:
+		- `NEXT_PUBLIC_GOOGLE_CLIENT_ID="<your-google-client-id>"`
+		- `NEXT_PUBLIC_API_BASE_URL="http://localhost:5072"`
+
+After changing any `NEXT_PUBLIC_*` values, restart `npm run dev`.
+
 First, run the development server:
 
 ```bash
