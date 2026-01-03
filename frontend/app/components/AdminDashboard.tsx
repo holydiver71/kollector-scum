@@ -52,8 +52,8 @@ export default function AdminDashboard() {
       setNewEmail('');
       setSuccessMessage(`Invitation sent to ${newEmail}`);
       await loadData();
-    } catch (err: any) {
-      const message = err?.message || 'Failed to create invitation';
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to create invitation';
       setError(message);
     }
   };
@@ -85,8 +85,8 @@ export default function AdminDashboard() {
       await revokeUserAccess(userId);
       setSuccessMessage(`Access revoked for ${email}`);
       await loadData();
-    } catch (err: any) {
-      const message = err?.message || 'Failed to revoke access';
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to revoke access';
       setError(message);
     }
   };
