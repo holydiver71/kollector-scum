@@ -58,4 +58,9 @@ describe('Footer Component', () => {
     const footer = container.querySelector('footer');
     expect(footer).toHaveClass('bg-gray-50', 'border-t');
   });
+
+  it('renders the DB connection status indicator', () => {
+    render(<Footer />);
+    expect(screen.getByTestId('db-connection-status')).toBeInTheDocument();
+  });
 });
