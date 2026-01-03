@@ -95,6 +95,12 @@ export async function fetchJson<T = unknown>(path: string, options: FetchJsonOpt
       err.url = url;
       throw err;
     }
+
+    // If caller asked to swallow errors (useful for non-critical widgets),
+    // return null instead of throwing on network/CORS failures.
+    if (options.swallowErrors) {
+      return null as unknown as T;
+    }
     if (e instanceof Error) throw e;
     const err: ApiError = new Error(`Unknown fetch error for ${url}`);
     err.url = url;

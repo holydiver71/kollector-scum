@@ -120,6 +120,16 @@ export function GoogleSignIn({ onSignIn, className }: GoogleSignInProps) {
         onSignIn(authResponse.profile);
       }
     } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+
+      // Network/CORS/API-down errors are common during local dev.
+      // Treat them as expected and avoid console.error noise.
+      if (err instanceof TypeError && message.includes('Failed to fetch')) {
+        console.warn('Authentication failed (API unreachable).');
+        setError('Cannot reach the API. Is the backend running at NEXT_PUBLIC_API_BASE_URL?');
+        return;
+      }
+
       console.error('Authentication failed:', err);
       setError('Failed to sign in with Google');
     } finally {
