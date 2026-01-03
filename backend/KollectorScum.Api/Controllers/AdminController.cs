@@ -99,7 +99,7 @@ namespace KollectorScum.Api.Controllers
             var userId = GetUserIdFromClaims();
             var invitation = new UserInvitation
             {
-                Email = request.Email.ToLower(),
+                Email = request.Email.Trim().ToLower(),
                 CreatedByUserId = userId!.Value,
                 CreatedAt = DateTime.UtcNow
             };
