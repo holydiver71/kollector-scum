@@ -88,6 +88,11 @@ namespace KollectorScum.Api.Data
         public DbSet<Models.UserProfile> UserProfiles { get; set; }
 
         /// <summary>
+        /// Gets or sets the UserInvitations DbSet
+        /// </summary>
+        public DbSet<Models.UserInvitation> UserInvitations { get; set; }
+
+        /// <summary>
         /// Configure the database model and relationships
         /// </summary>
         /// <param name="modelBuilder">The model builder</param>
@@ -312,6 +317,16 @@ namespace KollectorScum.Api.Data
                 .WithMany()
                 .HasForeignKey(up => up.SelectedKollectionId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            // Configure UserInvitation relationships
+            modelBuilder.Entity<Models.UserInvitation>()
+                .HasIndex(ui => ui.Email)
+                .IsUnique()
+                .HasDatabaseName("IX_UserInvitations_Email");
+
+            modelBuilder.Entity<Models.UserInvitation>()
+                .HasIndex(ui => ui.CreatedAt)
+                .HasDatabaseName("IX_UserInvitations_CreatedAt");
         }
     }
 }

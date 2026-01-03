@@ -15,6 +15,7 @@ namespace KollectorScum.Api.Controllers
         private readonly IGoogleTokenValidator _googleTokenValidator;
         private readonly IUserRepository _userRepository;
         private readonly IUserProfileRepository _userProfileRepository;
+        private readonly IUserInvitationRepository _userInvitationRepository;
         private readonly ITokenService _tokenService;
         private readonly IConfiguration _configuration;
         private readonly IHostEnvironment _env;
@@ -24,6 +25,7 @@ namespace KollectorScum.Api.Controllers
             IGoogleTokenValidator googleTokenValidator,
             IUserRepository userRepository,
             IUserProfileRepository userProfileRepository,
+            IUserInvitationRepository userInvitationRepository,
             ITokenService tokenService,
             IConfiguration configuration,
             IHostEnvironment env,
@@ -32,6 +34,7 @@ namespace KollectorScum.Api.Controllers
             _googleTokenValidator = googleTokenValidator;
             _userRepository = userRepository;
             _userProfileRepository = userProfileRepository;
+            _userInvitationRepository = userInvitationRepository;
             _tokenService = tokenService;
             _configuration = configuration;
             _env = env;
@@ -47,6 +50,7 @@ namespace KollectorScum.Api.Controllers
         [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<ActionResult<AuthResponse>> GoogleAuth([FromBody] GoogleAuthRequest request)
         {
             try
@@ -54,50 +58,66 @@ namespace KollectorScum.Api.Controllers
                 // Validate the Google ID token
                 var (googleSub, email, displayName) = await _googleTokenValidator.ValidateTokenAsync(request.IdToken);
 
-                // Find or create user
-                var user = await _userRepository.FindByGoogleSubAsync(googleSub);
-                if (user == null)
+                // Check if user already exists
+                var existingUser = await _userRepository.FindByGoogleSubAsync(googleSub);
+                
+                // If user doesn't exist, check if they're invited
+                if (existingUser == null)
                 {
-                    _logger.LogInformation("Creating new user for Google sub {GoogleSub}", googleSub);
-                    user = new ApplicationUser
+                    // Check if email is invited
+                    var invitation = await _userInvitationRepository.FindByEmailAsync(email);
+                    if (invitation == null)
+                    {
+                        _logger.LogWarning("Access denied for uninvited user: {Email}", email);
+                        return StatusCode(StatusCodes.Status403Forbidden, new { message = "Access is by invitation only. Please contact the administrator for access." });
+                    }
+
+                    // Create new user
+                    _logger.LogInformation("Creating new user for invited email {Email}", email);
+                    existingUser = new ApplicationUser
                     {
                         Id = Guid.NewGuid(),
                         GoogleSub = googleSub,
                         Email = email,
                         DisplayName = displayName
                     };
-                    user = await _userRepository.CreateAsync(user);
+                    existingUser = await _userRepository.CreateAsync(existingUser);
 
                     // Create a default user profile
                     var profile = new UserProfile
                     {
-                        UserId = user.Id,
+                        UserId = existingUser.Id,
                         SelectedKollectionId = null
                     };
                     await _userProfileRepository.CreateAsync(profile);
+
+                    // Mark invitation as used
+                    invitation.IsUsed = true;
+                    invitation.UsedAt = DateTime.UtcNow;
+                    await _userInvitationRepository.UpdateAsync(invitation);
                 }
                 else
                 {
                     // Update user info if changed
-                    if (user.Email != email || user.DisplayName != displayName)
+                    if (existingUser.Email != email || existingUser.DisplayName != displayName)
                     {
-                        user.Email = email;
-                        user.DisplayName = displayName;
-                        await _userRepository.UpdateAsync(user);
+                        existingUser.Email = email;
+                        existingUser.DisplayName = displayName;
+                        await _userRepository.UpdateAsync(existingUser);
                     }
                 }
 
                 // Generate JWT token
-                var token = _tokenService.GenerateToken(user);
+                var token = _tokenService.GenerateToken(existingUser);
 
                 // Get user profile
-                var userProfile = await _userProfileRepository.GetByUserIdAsync(user.Id);
+                var userProfile = await _userProfileRepository.GetByUserIdAsync(existingUser.Id);
 
                 var profileDto = new UserProfileDto
                 {
-                    UserId = user.Id,
-                    Email = user.Email,
-                    DisplayName = user.DisplayName,
+                    UserId = existingUser.Id,
+                    Email = existingUser.Email,
+                    DisplayName = existingUser.DisplayName,
                     SelectedKollectionId = userProfile?.SelectedKollectionId
                 };
 
