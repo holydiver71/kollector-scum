@@ -118,7 +118,8 @@ namespace KollectorScum.Api.Controllers
                     UserId = existingUser.Id,
                     Email = existingUser.Email,
                     DisplayName = existingUser.DisplayName,
-                    SelectedKollectionId = userProfile?.SelectedKollectionId
+                    SelectedKollectionId = userProfile?.SelectedKollectionId,
+                    IsAdmin = existingUser.IsAdmin
                 };
 
                 return Ok(new AuthResponse
