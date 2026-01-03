@@ -122,6 +122,13 @@ export function GoogleSignIn({ onSignIn, className }: GoogleSignInProps) {
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
 
+      // Check for 403 Forbidden (invitation required)
+      if (message.includes('403') || message.includes('invitation')) {
+        console.warn('Access denied (invitation required).');
+        setError('Access is by invitation only. Please contact the administrator for access.');
+        return;
+      }
+
       // Network/CORS/API-down errors are common during local dev.
       // Treat them as expected and avoid console.error noise.
       if (err instanceof TypeError && message.includes('Failed to fetch')) {
@@ -154,6 +161,14 @@ export function GoogleSignIn({ onSignIn, className }: GoogleSignInProps) {
         <span className="text-sm font-medium text-white">
           {profile.displayName || profile.email}
         </span>
+        {profile.isAdmin && (
+          <a
+            href="/admin"
+            className="text-sm text-purple-300 hover:text-purple-200 underline"
+          >
+            Admin
+          </a>
+        )}
         <button
           onClick={handleSignOut}
           className="text-sm text-blue-300 hover:text-blue-200 underline"
