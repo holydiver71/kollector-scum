@@ -44,6 +44,16 @@ export async function createInvitation(email: string): Promise<UserInvitation> {
 export async function deleteInvitation(id: number): Promise<void> {
   await fetchJson(`/api/admin/invitations/${id}`, {
     method: 'DELETE',
+    parse: false, // DELETE returns 204 No Content, no JSON body to parse
+  });
+}
+
+/**
+ * Activates (re-enables) a previously used invitation (admin only)
+ */
+export async function activateInvitation(id: number): Promise<UserInvitation> {
+  return fetchJson<UserInvitation>(`/api/admin/invitations/${id}/activate`, {
+    method: 'POST',
   });
 }
 
@@ -60,5 +70,6 @@ export async function getUsers(): Promise<UserAccess[]> {
 export async function revokeUserAccess(userId: string): Promise<void> {
   await fetchJson(`/api/admin/users/${userId}`, {
     method: 'DELETE',
+    parse: false, // DELETE returns 204 No Content, no JSON body to parse
   });
 }

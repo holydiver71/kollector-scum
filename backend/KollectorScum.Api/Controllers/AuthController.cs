@@ -72,6 +72,15 @@ namespace KollectorScum.Api.Controllers
                         return StatusCode(StatusCodes.Status403Forbidden, new { message = "Access is by invitation only. Please contact the administrator for access." });
                     }
 
+                    // Also check if user was previously registered but then deactivated
+                    // (their account was deleted but they're trying to sign in again)
+                    var userByEmail = await _userRepository.FindByEmailAsync(email);
+                    if (userByEmail == null && invitation.IsUsed)
+                    {
+                        _logger.LogWarning("Access denied for deactivated user: {Email}", email);
+                        return StatusCode(StatusCodes.Status403Forbidden, new { message = "Your access has been deactivated. Please contact the administrator." });
+                    }
+
                     // Create new user
                     _logger.LogInformation("Creating new user for invited email {Email}", email);
                     existingUser = new ApplicationUser

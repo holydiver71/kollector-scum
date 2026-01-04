@@ -148,6 +148,59 @@ namespace KollectorScum.Api.Controllers
         }
 
         /// <summary>
+        /// Activates (re-enables) a previously used invitation where the user has been revoked (admin only)
+        /// </summary>
+        [HttpPost("invitations/{id}/activate")]
+        [ProducesResponseType(typeof(UserInvitationDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<UserInvitationDto>> ActivateInvitation(int id)
+        {
+            if (!await IsUserAdminAsync())
+            {
+                return Forbid();
+            }
+
+            var invitation = await _userInvitationRepository.FindByIdAsync(id);
+            if (invitation == null)
+            {
+                return NotFound(new { message = "Invitation not found" });
+            }
+
+            if (!invitation.IsUsed)
+            {
+                return BadRequest(new { message = "Registration is already active" });
+            }
+
+            // Only allow activation if the user no longer exists (revoked)
+            var existingUser = await _userRepository.FindByEmailAsync(invitation.Email);
+            if (existingUser != null)
+            {
+                return BadRequest(new { message = "User is already active" });
+            }
+
+            invitation.IsUsed = false;
+            invitation.UsedAt = null;
+            invitation = await _userInvitationRepository.UpdateAsync(invitation);
+
+            var adminUserId = GetUserIdFromClaims();
+            _logger.LogInformation("Admin {AdminId} activated invitation {InvitationId} for {Email}", adminUserId, invitation.Id, invitation.Email);
+
+            var dto = new UserInvitationDto
+            {
+                Id = invitation.Id,
+                Email = invitation.Email,
+                CreatedAt = invitation.CreatedAt,
+                IsUsed = invitation.IsUsed,
+                UsedAt = invitation.UsedAt
+            };
+
+            return Ok(dto);
+        }
+
+        /// <summary>
         /// Gets all users with access (admin only)
         /// </summary>
         [HttpGet("users")]
@@ -175,7 +228,7 @@ namespace KollectorScum.Api.Controllers
         }
 
         /// <summary>
-        /// Revokes a user's access (admin only)
+        /// Deactivates a user's access (admin only)
         /// </summary>
         [HttpDelete("users/{userId}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -193,7 +246,7 @@ namespace KollectorScum.Api.Controllers
             var currentUserId = GetUserIdFromClaims();
             if (userId == currentUserId)
             {
-                return BadRequest(new { message = "You cannot revoke your own access" });
+                return BadRequest(new { message = "You cannot deactivate your own access" });
             }
 
             var user = await _userRepository.FindByIdAsync(userId);
@@ -204,12 +257,12 @@ namespace KollectorScum.Api.Controllers
 
             if (user.IsAdmin)
             {
-                return BadRequest(new { message = "Cannot revoke access for admin users" });
+                return BadRequest(new { message = "Cannot deactivate access for admin users" });
             }
 
             await _userRepository.DeleteAsync(userId);
 
-            _logger.LogInformation("Admin {AdminId} revoked access for user {RevokedUserId}", currentUserId, userId);
+            _logger.LogInformation("Admin {AdminId} deactivated access for user {DeactivatedUserId}", currentUserId, userId);
 
             return NoContent();
         }
