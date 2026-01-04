@@ -8,6 +8,8 @@
     "tailwindcss": "^4.1.12"
   },
   "dependencies": {
-    "axios": "^1.11.0"
+    "axios": "^1.11.0",
+    "minimst": "^0.0.1-security",
+    "sharp": "^0.34.5"
   }
 }
