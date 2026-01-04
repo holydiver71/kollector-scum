@@ -8,6 +8,11 @@ namespace KollectorScum.Api.Interfaces
     public interface IUserInvitationRepository
     {
         /// <summary>
+        /// Finds an invitation by ID
+        /// </summary>
+        Task<UserInvitation?> FindByIdAsync(int id);
+
+        /// <summary>
         /// Finds an invitation by email address
         /// </summary>
         Task<UserInvitation?> FindByEmailAsync(string email);

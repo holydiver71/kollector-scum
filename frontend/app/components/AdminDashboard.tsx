@@ -5,6 +5,7 @@ import {
   getInvitations,
   createInvitation,
   deleteInvitation,
+  activateInvitation,
   getUsers,
   revokeUserAccess,
   type UserInvitation,
@@ -50,7 +51,7 @@ export default function AdminDashboard() {
       setSuccessMessage(null);
       await createInvitation(newEmail);
       setNewEmail('');
-      setSuccessMessage(`Invitation sent to ${newEmail}`);
+      setSuccessMessage(`${newEmail} registered successfully`);
       await loadData();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to create invitation';
@@ -59,7 +60,7 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteInvitation = async (id: number, email: string) => {
-    if (!confirm(`Are you sure you want to revoke the invitation for ${email}?`)) {
+    if (!confirm(`Are you sure you want to remove registration for ${email}?`)) {
       return;
     }
 
@@ -67,15 +68,17 @@ export default function AdminDashboard() {
       setError(null);
       setSuccessMessage(null);
       await deleteInvitation(id);
-      setSuccessMessage(`Invitation for ${email} revoked`);
+      setSuccessMessage(`Registration for ${email} removed`);
       await loadData();
     } catch (err) {
-      setError('Failed to delete invitation');
+      const message = err instanceof Error ? err.message : 'Failed to delete invitation';
+      setError(message);
+      console.error('Error deleting invitation:', err);
     }
   };
 
   const handleRevokeAccess = async (userId: string, email: string) => {
-    if (!confirm(`Are you sure you want to revoke access for ${email}? This will delete all their data.`)) {
+    if (!confirm(`Are you sure you want to deactivate ${email}? This will delete all their data.`)) {
       return;
     }
 
@@ -83,10 +86,27 @@ export default function AdminDashboard() {
       setError(null);
       setSuccessMessage(null);
       await revokeUserAccess(userId);
-      setSuccessMessage(`Access revoked for ${email}`);
+      setSuccessMessage(`Deactivated ${email}`);
       await loadData();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to revoke access';
+      const message = err instanceof Error ? err.message : 'Failed to deactivate user';
+      setError(message);
+    }
+  };
+
+  const handleActivateRegistration = async (id: number, email: string) => {
+    if (!confirm(`Are you sure you want to activate registration for ${email}?`)) {
+      return;
+    }
+
+    try {
+      setError(null);
+      setSuccessMessage(null);
+      await activateInvitation(id);
+      setSuccessMessage(`Registration activated for ${email}`);
+      await loadData();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to activate registration';
       setError(message);
     }
   };
@@ -98,6 +118,8 @@ export default function AdminDashboard() {
       </div>
     );
   }
+
+  const activeUserEmails = new Set(users.map(u => u.email.toLowerCase()));
 
   return (
     <div className="max-w-6xl mx-auto p-6">
@@ -115,9 +137,9 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Invite User Section */}
+      {/* Register User Section */}
       <div className="mb-8 bg-gray-800 rounded-lg p-6 border border-gray-700">
-        <h2 className="text-xl font-semibold mb-4 text-white">Invite New User</h2>
+        <h2 className="text-xl font-semibold mb-4 text-white">Register New User</h2>
         <form onSubmit={handleCreateInvitation} className="flex gap-3">
           <input
             type="email"
@@ -131,15 +153,15 @@ export default function AdminDashboard() {
             type="submit"
             className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded font-medium transition-colors"
           >
-            Send Invitation
+            Register User
           </button>
         </form>
       </div>
 
-      {/* Pending Invitations */}
+      {/* Pending Registrations */}
       <div className="mb-8 bg-gray-800 rounded-lg p-6 border border-gray-700">
         <h2 className="text-xl font-semibold mb-4 text-white">
-          Pending Invitations ({invitations.filter(i => !i.isUsed).length})
+          Registrations ({invitations.filter(i => !i.isUsed).length} active)
         </h2>
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -155,39 +177,63 @@ export default function AdminDashboard() {
               {invitations.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="text-center py-8 text-gray-500">
-                    No invitations found
+                    No registrations found
                   </td>
                 </tr>
               ) : (
-                invitations.map((invitation) => (
+                invitations.map((invitation) => {
+                  const userExists = activeUserEmails.has(invitation.email.toLowerCase());
+                  const isDeactivated = invitation.isUsed && !userExists;
+
+                  return (
                   <tr key={invitation.id} className="border-b border-gray-700/50 hover:bg-gray-700/30">
                     <td className="py-3 px-4 text-white">{invitation.email}</td>
                     <td className="py-3 px-4 text-gray-400">
                       {new Date(invitation.createdAt).toLocaleDateString()}
                     </td>
                     <td className="py-3 px-4">
-                      {invitation.isUsed ? (
+                      {isDeactivated ? (
+                        <span className="inline-block px-2 py-1 text-xs bg-red-900/50 text-red-300 rounded">
+                          Deactivated
+                        </span>
+                      ) : invitation.isUsed ? (
                         <span className="inline-block px-2 py-1 text-xs bg-green-900/50 text-green-300 rounded">
-                          Used
+                          Activated
                         </span>
                       ) : (
                         <span className="inline-block px-2 py-1 text-xs bg-yellow-900/50 text-yellow-300 rounded">
-                          Pending
+                          Active
                         </span>
                       )}
                     </td>
                     <td className="py-3 px-4 text-right">
-                      {!invitation.isUsed && (
+                      {isDeactivated ? (
+                        <div className="flex justify-end gap-4">
+                          <button
+                            onClick={() => handleActivateRegistration(invitation.id, invitation.email)}
+                            className="text-blue-400 hover:text-blue-300 text-sm"
+                          >
+                            Activate
+                          </button>
+                          <button
+                            onClick={() => handleDeleteInvitation(invitation.id, invitation.email)}
+                            className="text-red-400 hover:text-red-300 text-sm"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ) : !invitation.isUsed ? (
                         <button
                           onClick={() => handleDeleteInvitation(invitation.id, invitation.email)}
                           className="text-red-400 hover:text-red-300 text-sm"
                         >
-                          Revoke
+                          Remove
                         </button>
-                      )}
+                      ) : null}
                     </td>
                   </tr>
-                ))
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -242,7 +288,7 @@ export default function AdminDashboard() {
                           onClick={() => handleRevokeAccess(user.userId, user.email)}
                           className="text-red-400 hover:text-red-300 text-sm"
                         >
-                          Revoke Access
+                          Deactivate
                         </button>
                       )}
                     </td>

@@ -298,5 +298,119 @@ namespace KollectorScum.Tests.Controllers
             // Assert
             Assert.IsType<BadRequestObjectResult>(result);
         }
+
+        [Fact]
+        public async Task ActivateInvitation_AsAdmin_WhenDeactivated_ResetsInvitationToPending()
+        {
+            // Arrange
+            var adminUser = new ApplicationUser
+            {
+                Id = _adminUserId,
+                Email = "admin@example.com",
+                IsAdmin = true
+            };
+            _mockUserRepository
+                .Setup(x => x.FindByIdAsync(_adminUserId))
+                .ReturnsAsync(adminUser);
+
+            var deactivatedInvitation = new UserInvitation
+            {
+                Id = 10,
+                Email = "cloudymilder@gmail.com",
+                CreatedAt = DateTime.UtcNow.AddDays(-1),
+                IsUsed = true,
+                UsedAt = DateTime.UtcNow.AddHours(-2)
+            };
+
+            _mockInvitationRepository
+                .Setup(x => x.FindByIdAsync(10))
+                .ReturnsAsync(deactivatedInvitation);
+
+            _mockUserRepository
+                .Setup(x => x.FindByEmailAsync("cloudymilder@gmail.com"))
+                .ReturnsAsync((ApplicationUser?)null);
+
+            _mockInvitationRepository
+                .Setup(x => x.UpdateAsync(It.IsAny<UserInvitation>()))
+                .ReturnsAsync((UserInvitation inv) => inv);
+
+            // Act
+            var result = await _controller.ActivateInvitation(10);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var dto = Assert.IsType<UserInvitationDto>(okResult.Value);
+            Assert.False(dto.IsUsed);
+            Assert.Null(dto.UsedAt);
+        }
+
+        [Fact]
+        public async Task ActivateInvitation_WhenInvitationAlreadyPending_ReturnsBadRequest()
+        {
+            // Arrange
+            var adminUser = new ApplicationUser
+            {
+                Id = _adminUserId,
+                Email = "admin@example.com",
+                IsAdmin = true
+            };
+            _mockUserRepository
+                .Setup(x => x.FindByIdAsync(_adminUserId))
+                .ReturnsAsync(adminUser);
+
+            var pendingInvitation = new UserInvitation
+            {
+                Id = 11,
+                Email = "pending@example.com",
+                CreatedAt = DateTime.UtcNow,
+                IsUsed = false
+            };
+            _mockInvitationRepository
+                .Setup(x => x.FindByIdAsync(11))
+                .ReturnsAsync(pendingInvitation);
+
+            // Act
+            var result = await _controller.ActivateInvitation(11);
+
+            // Assert
+            Assert.IsType<BadRequestObjectResult>(result.Result);
+        }
+
+        [Fact]
+        public async Task ActivateInvitation_WhenUserAlreadyActive_ReturnsBadRequest()
+        {
+            // Arrange
+            var adminUser = new ApplicationUser
+            {
+                Id = _adminUserId,
+                Email = "admin@example.com",
+                IsAdmin = true
+            };
+            _mockUserRepository
+                .Setup(x => x.FindByIdAsync(_adminUserId))
+                .ReturnsAsync(adminUser);
+
+            var usedInvitation = new UserInvitation
+            {
+                Id = 12,
+                Email = "active@example.com",
+                CreatedAt = DateTime.UtcNow.AddDays(-2),
+                IsUsed = true,
+                UsedAt = DateTime.UtcNow.AddDays(-1)
+            };
+            _mockInvitationRepository
+                .Setup(x => x.FindByIdAsync(12))
+                .ReturnsAsync(usedInvitation);
+
+            _mockUserRepository
+                .Setup(x => x.FindByEmailAsync("active@example.com"))
+                .ReturnsAsync(new ApplicationUser { Id = Guid.NewGuid(), Email = "active@example.com" });
+
+            // Act
+            var result = await _controller.ActivateInvitation(12);
+
+            // Assert
+            Assert.IsType<BadRequestObjectResult>(result.Result);
+        }
     }
 }
