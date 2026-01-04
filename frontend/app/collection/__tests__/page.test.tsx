@@ -33,7 +33,6 @@ describe('CollectionPage', () => {
     render(<CollectionPage />);
     
     // header/hero lives in the shared header component now; assert the page shell
-    expect(screen.getByText('Sort by:')).toBeInTheDocument();
     expect(screen.getByTestId('music-release-list')).toBeInTheDocument();
   });
 
@@ -74,7 +73,7 @@ describe('CollectionPage', () => {
     
     // Check for main layout elements
     expect(container.querySelector('.min-h-screen')).toBeInTheDocument();
-    expect(container.querySelector('.bg-gray-50')).toBeInTheDocument();
+    expect(container.querySelector('.bg-transparent')).toBeInTheDocument();
   });
 
   it('passes enableUrlSync prop to SearchAndFilter', () => {

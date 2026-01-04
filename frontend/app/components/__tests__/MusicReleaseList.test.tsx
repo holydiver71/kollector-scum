@@ -1,10 +1,10 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MusicReleaseList, MusicReleaseCard } from '../MusicReleaseList';
-import * as api from '../../lib/api';
 
-// Mock the api module
+// Mock the api module before importing the components so their imports use the mock
 jest.mock('../../lib/api');
+import * as api from '../../lib/api';
+import { MusicReleaseList, MusicReleaseCard } from '../MusicReleaseList';
 
 // Mock Next.js Link component
 jest.mock('next/link', () => {
@@ -106,7 +106,7 @@ describe('MusicReleaseList Component', () => {
   });
 
   it('fetches and displays music releases', async () => {
-    (api.fetchJson as jest.Mock).mockResolvedValueOnce(mockPagedResult);
+    (api.fetchJson as jest.Mock).mockResolvedValue(mockPagedResult);
 
     render(<MusicReleaseList />);
 
@@ -118,7 +118,7 @@ describe('MusicReleaseList Component', () => {
   });
 
   it('applies filters to API request', async () => {
-    (api.fetchJson as jest.Mock).mockResolvedValueOnce(mockPagedResult);
+    (api.fetchJson as jest.Mock).mockResolvedValue(mockPagedResult);
 
     const filters = {
       search: 'metallica',
@@ -140,7 +140,7 @@ describe('MusicReleaseList Component', () => {
   });
 
   it('renders music release cards', async () => {
-    (api.fetchJson as jest.Mock).mockResolvedValueOnce(mockPagedResult);
+    (api.fetchJson as jest.Mock).mockResolvedValue(mockPagedResult);
 
     render(<MusicReleaseList />);
 
@@ -160,7 +160,7 @@ describe('MusicReleaseList Component', () => {
       }],
     };
 
-    (api.fetchJson as jest.Mock).mockResolvedValueOnce(multiArtistResult);
+    (api.fetchJson as jest.Mock).mockResolvedValue(multiArtistResult);
 
     render(<MusicReleaseList />);
 

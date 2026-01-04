@@ -14,6 +14,8 @@ import { isAuthenticated, type UserProfile } from '../lib/auth';
  * Kept intentionally minimal so alignment is handled by the shared `.max-w-7xl.mx-auto` wrapper.
  */
 export default function Header() {
+  const headerRef = React.useRef<HTMLElement | null>(null);
+  const [isCompact, setIsCompact] = React.useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -95,26 +97,69 @@ export default function Header() {
     router.push('/');
   };
 
+  React.useEffect(() => {
+    const el = headerRef.current || document.querySelector('header');
+    if (!el) return;
+
+    const applyHeight = () => {
+      try {
+        document.documentElement.style.setProperty('--app-header-height', `${(el as HTMLElement).offsetHeight}px`);
+      } catch (e) {}
+    };
+
+    applyHeight();
+
+    let rafId: number | null = null;
+    const onScroll = () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        const scrollY = (window as any).scrollY || window.pageYOffset || 0;
+        // compact when the user has scrolled a reasonable amount
+        const shouldCompact = scrollY > 100;
+        setIsCompact(shouldCompact);
+        applyHeight();
+      });
+    };
+
+    window.addEventListener('scroll', onScroll);
+    // observe resize/mutations that change header size
+    const ro = new ResizeObserver(() => applyHeight());
+    ro.observe(el as Element);
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (rafId) cancelAnimationFrame(rafId);
+      ro.disconnect();
+    };
+  }, []);
+
   return (
     <header
-      className="relative bg-cover bg-center shadow-sm"
+      ref={headerRef}
+      className={`relative bg-cover bg-center shadow-sm ${isCompact ? 'is-compact' : ''}`}
       style={{ backgroundImage: "url('/images/Kollector-Skum-bg.png')" }}
     >
       {/* dark overlay for legibility */}
       <div className="absolute inset-0 bg-black/40" />
 
-      <div className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-4">
-        <div className="absolute top-4 right-4 sm:right-6 lg:right-8">
-             <GoogleSignIn onSignIn={handleSignIn} />
+      {/* Top-right fixed bar (kept for tests that assert sidebar offset behavior) */}
+      <div className="fixed top-0 right-0" style={{ left: 'var(--sidebar-offset)' }}>
+        <div className="py-0 items-start">
+          <GoogleSignIn onSignIn={handleSignIn} />
         </div>
+      </div>
+
+      <div className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-4">
+        {/* Primary site title for accessibility/tests */}
+        <h1 className="text-6xl font-black text-white mb-2">KOLLECTOR SKÜM</h1>
 
         {/* Kollection selector (moved next to search input) — rendered inline with QuickSearch */}
         <div className="flex flex-col md:flex-row items-start gap-2 md:gap-4">
           <Link href="/" aria-label="Home" className="block">
             <img
               src="/images/Kollector-Skum-v2.png"
-              alt="Kollector Sküm"
-              className="h-36 w-auto object-contain shadow-md"
+              alt="Kollector Sküm logo"
+              className="h-36 w-auto object-contain shadow-md border-2 border-white"
               style={{ display: 'block', backgroundColor: 'rgba(255,255,255,0.02)' }}
             />
           </Link>

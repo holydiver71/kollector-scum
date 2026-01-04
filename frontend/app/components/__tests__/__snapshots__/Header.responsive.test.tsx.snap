@@ -3,208 +3,92 @@
 exports[`Header — responsive behavior & filters navigation renders QuickSearch container and wrapper classes: header-mobile 1`] = `
 <DocumentFragment>
   <header
-    class="header-with-bg shadow-2xl "
-    style="width: 375px;"
+    class="relative bg-cover bg-center shadow-sm "
+    style="background-image: url("/images/Kollector-Skum-bg.png"); width: 375px;"
   >
     <div
-      class="header-overlay"
+      class="absolute inset-0 bg-black/40"
+    />
+    <div
+      class="fixed top-0 right-0"
+      style="left: var(--sidebar-offset);"
     >
       <div
-        class="fixed top-0 right-0 z-10"
-        style="left: var(--sidebar-offset);"
+        class="py-0 items-start"
       >
         <div
-          class="w-full px-6 py-0 flex items-start justify-between"
+          class="text-sm text-gray-500"
         >
-          <div
-            class="flex items-center gap-4"
-          >
-            <img
-              alt="Kollector Sküm logo"
-              class="object-contain transition-all duration-200 border-2 border-white"
-              src="/images/Kollector-Skum-logo2.png"
-              style="max-width: 40%;"
-            />
-            <div>
-              <h1
-                class="font-black text-white drop-shadow-lg transition-all duration-200 text-4xl"
-              >
-                Music Collection
-              </h1>
-              <p
-                class="text-white/90 mt-2 font-bold drop-shadow-md transition-opacity duration-200 "
-              >
-                42 releases in your collection
-              </p>
-            </div>
-          </div>
-          <a
-            class="text-white px-6 py-3 rounded-lg font-bold transition-all hover:shadow-2xl flex items-center gap-2 shadow-lg bg-[#D93611] hover:bg-[#B82E0E]"
-            href="/add"
-          >
-            <svg
-              aria-hidden="true"
-              class="lucide lucide-plus"
-              fill="none"
-              height="20"
-              stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              viewBox="0 0 24 24"
-              width="20"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M5 12h14"
-              />
-              <path
-                d="M12 5v14"
-              />
-            </svg>
-            <span>
-              Add Release
-            </span>
-          </a>
+          Loading...
         </div>
       </div>
-      <div
-        class="max-w-7xl mx-auto px-6 py-6 pt-[7.5rem] lg:pt-[12rem]"
+    </div>
+    <div
+      class="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-4"
+    >
+      <h1
+        class="text-6xl font-black text-white mb-2"
       >
-        <div
-          class="flex flex-wrap gap-3"
+        KOLLECTOR SKÜM
+      </h1>
+      <div
+        class="flex flex-col md:flex-row items-start gap-2 md:gap-4"
+      >
+        <a
+          aria-label="Home"
+          class="block"
+          href="/"
         >
-          <div
-            class="search-bar flex-1 min-w-0 sm:min-w-[300px] relative"
-            style="margin-left: 12px; max-width: 160px;"
+          <img
+            alt="Kollector Sküm logo"
+            class="h-36 w-auto object-contain shadow-md border-2 border-white"
+            src="/images/Kollector-Skum-v2.png"
+            style="display: block; background-color: rgba(255, 255, 255, 0.02);"
+          />
+        </a>
+        <div
+          class="flex flex-col flex-1 min-w-0"
+        >
+          <p
+            class="text-[1.3125rem] text-white/90 font-semibold mt-2 md:mt-8"
           >
-            <form
-              class="relative"
-            >
-              <div
-                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-              >
-                <svg
-                  class="h-5 w-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                  />
-                </svg>
-              </div>
-              <input
-                autocomplete="off"
-                class="block w-full pl-10 pr-12 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/75 focus:bg-white"
-                placeholder="Search releases, artists, albums..."
-                type="text"
-                value=""
-              />
-              <button
-                class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
-                type="submit"
-              >
-                <svg
-                  class="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    d="M13 7l5 5m0 0l-5 5m5-5H6"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                  />
-                </svg>
-              </button>
-            </form>
-          </div>
+            Organise and discover your music library
+          </p>
           <div
-            class="flex gap-2 flex-wrap"
+            class="mt-1 w-full flex items-center gap-2"
           >
-            <button
-              aria-pressed="false"
-              class="px-4 py-2 rounded-lg border-2 transition-all font-bold flex items-center gap-2 shadow-md text-white bg-[#8C240D] border-[#8C240D] hover:opacity-90"
+            <div
+              class="flex-1 min-w-0"
             >
-              <svg
-                class="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+              <form
+                class="relative"
               >
-                <path
-                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
+                <div
+                  class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                >
+                  <svg
+                    class="h-5 w-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                    />
+                  </svg>
+                </div>
+                <input
+                  autocomplete="off"
+                  class="block w-full pl-10 pr-10 py-2 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:border-white bg-white/5 focus:bg-white/10 text-white placeholder-gray-400 transition-all"
+                  placeholder="Search releases, artists, albums..."
+                  type="text"
+                  value=""
                 />
-              </svg>
-              <span
-                class=""
-              >
-                Filters
-              </span>
-            </button>
-            <button
-              class="px-4 py-2 rounded-lg border-2 border-[#8C240D] transition-all font-bold text-white flex items-center gap-2 shadow-md bg-[#8C240D] hover:opacity-90"
-            >
-              <svg
-                class="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                />
-              </svg>
-              <span>
-                Sort
-              </span>
-            </button>
-            <button
-              class="px-4 py-2 rounded-lg border-2 border-[#8C240D] transition-all font-bold text-white shadow-md bg-[#8C240D] hover:opacity-90"
-            >
-              <svg
-                class="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                />
-              </svg>
-            </button>
-            <button
-              class="px-4 py-2 rounded-lg border-2 border-[#8C240D] transition-all font-bold text-white shadow-md bg-[#8C240D] hover:opacity-90"
-            >
-              <svg
-                class="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  d="M4 6h16M4 10h16M4 14h16M4 18h16"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                />
-              </svg>
-            </button>
+              </form>
+            </div>
           </div>
         </div>
       </div>
@@ -216,208 +100,92 @@ exports[`Header — responsive behavior & filters navigation renders QuickSearch
 exports[`Header — responsive behavior & filters navigation renders QuickSearch container and wrapper classes: header-tablet 1`] = `
 <DocumentFragment>
   <header
-    class="header-with-bg shadow-2xl "
-    style="width: 1024px;"
+    class="relative bg-cover bg-center shadow-sm "
+    style="background-image: url("/images/Kollector-Skum-bg.png"); width: 1024px;"
   >
     <div
-      class="header-overlay"
+      class="absolute inset-0 bg-black/40"
+    />
+    <div
+      class="fixed top-0 right-0"
+      style="left: var(--sidebar-offset);"
     >
       <div
-        class="fixed top-0 right-0 z-10"
-        style="left: var(--sidebar-offset);"
+        class="py-0 items-start"
       >
         <div
-          class="w-full px-6 py-0 flex items-start justify-between"
+          class="text-sm text-gray-500"
         >
-          <div
-            class="flex items-center gap-4"
-          >
-            <img
-              alt="Kollector Sküm logo"
-              class="object-contain transition-all duration-200 border-2 border-white"
-              src="/images/Kollector-Skum-logo2.png"
-              style="max-width: 40%;"
-            />
-            <div>
-              <h1
-                class="font-black text-white drop-shadow-lg transition-all duration-200 text-4xl"
-              >
-                Music Collection
-              </h1>
-              <p
-                class="text-white/90 mt-2 font-bold drop-shadow-md transition-opacity duration-200 "
-              >
-                42 releases in your collection
-              </p>
-            </div>
-          </div>
-          <a
-            class="text-white px-6 py-3 rounded-lg font-bold transition-all hover:shadow-2xl flex items-center gap-2 shadow-lg bg-[#D93611] hover:bg-[#B82E0E]"
-            href="/add"
-          >
-            <svg
-              aria-hidden="true"
-              class="lucide lucide-plus"
-              fill="none"
-              height="20"
-              stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              viewBox="0 0 24 24"
-              width="20"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M5 12h14"
-              />
-              <path
-                d="M12 5v14"
-              />
-            </svg>
-            <span>
-              Add Release
-            </span>
-          </a>
+          Loading...
         </div>
       </div>
-      <div
-        class="max-w-7xl mx-auto px-6 py-6 pt-[7.5rem] lg:pt-[12rem]"
+    </div>
+    <div
+      class="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-4"
+    >
+      <h1
+        class="text-6xl font-black text-white mb-2"
       >
-        <div
-          class="flex flex-wrap gap-3"
+        KOLLECTOR SKÜM
+      </h1>
+      <div
+        class="flex flex-col md:flex-row items-start gap-2 md:gap-4"
+      >
+        <a
+          aria-label="Home"
+          class="block"
+          href="/"
         >
-          <div
-            class="search-bar flex-1 min-w-0 sm:min-w-[300px] relative"
-            style="margin-left: 12px; max-width: 160px;"
+          <img
+            alt="Kollector Sküm logo"
+            class="h-36 w-auto object-contain shadow-md border-2 border-white"
+            src="/images/Kollector-Skum-v2.png"
+            style="display: block; background-color: rgba(255, 255, 255, 0.02);"
+          />
+        </a>
+        <div
+          class="flex flex-col flex-1 min-w-0"
+        >
+          <p
+            class="text-[1.3125rem] text-white/90 font-semibold mt-2 md:mt-8"
           >
-            <form
-              class="relative"
-            >
-              <div
-                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-              >
-                <svg
-                  class="h-5 w-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                  />
-                </svg>
-              </div>
-              <input
-                autocomplete="off"
-                class="block w-full pl-10 pr-12 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/75 focus:bg-white"
-                placeholder="Search releases, artists, albums..."
-                type="text"
-                value=""
-              />
-              <button
-                class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
-                type="submit"
-              >
-                <svg
-                  class="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    d="M13 7l5 5m0 0l-5 5m5-5H6"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                  />
-                </svg>
-              </button>
-            </form>
-          </div>
+            Organise and discover your music library
+          </p>
           <div
-            class="flex gap-2 flex-wrap"
+            class="mt-1 w-full flex items-center gap-2"
           >
-            <button
-              aria-pressed="false"
-              class="px-4 py-2 rounded-lg border-2 transition-all font-bold flex items-center gap-2 shadow-md text-white bg-[#8C240D] border-[#8C240D] hover:opacity-90"
+            <div
+              class="flex-1 min-w-0"
             >
-              <svg
-                class="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+              <form
+                class="relative"
               >
-                <path
-                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
+                <div
+                  class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                >
+                  <svg
+                    class="h-5 w-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                    />
+                  </svg>
+                </div>
+                <input
+                  autocomplete="off"
+                  class="block w-full pl-10 pr-10 py-2 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:border-white bg-white/5 focus:bg-white/10 text-white placeholder-gray-400 transition-all"
+                  placeholder="Search releases, artists, albums..."
+                  type="text"
+                  value=""
                 />
-              </svg>
-              <span
-                class=""
-              >
-                Filters
-              </span>
-            </button>
-            <button
-              class="px-4 py-2 rounded-lg border-2 border-[#8C240D] transition-all font-bold text-white flex items-center gap-2 shadow-md bg-[#8C240D] hover:opacity-90"
-            >
-              <svg
-                class="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                />
-              </svg>
-              <span>
-                Sort
-              </span>
-            </button>
-            <button
-              class="px-4 py-2 rounded-lg border-2 border-[#8C240D] transition-all font-bold text-white shadow-md bg-[#8C240D] hover:opacity-90"
-            >
-              <svg
-                class="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                />
-              </svg>
-            </button>
-            <button
-              class="px-4 py-2 rounded-lg border-2 border-[#8C240D] transition-all font-bold text-white shadow-md bg-[#8C240D] hover:opacity-90"
-            >
-              <svg
-                class="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  d="M4 6h16M4 10h16M4 14h16M4 18h16"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                />
-              </svg>
-            </button>
+              </form>
+            </div>
           </div>
         </div>
       </div>

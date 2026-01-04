@@ -3,19 +3,22 @@
 exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobile, tablet, desktop) for visual regression: searchandfilter-desktop 1`] = `
 <DocumentFragment>
   <div
-    class="modern-filter-panel bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-xl border border-slate-700/50 p-4 mb-4 sm:p-6 text-white shadow-2xl backdrop-blur-xl bg-opacity-90"
-    style="width: 1280px;"
+    class="relative bg-cover bg-center rounded-lg border border-white/10 p-4 mb-4 sm:p-6 text-white overflow-visible"
+    style="background-image: url("/images/Kollector-Skum-bg.png"); width: 1280px;"
   >
     <div
-      class="space-y-4"
+      class="absolute inset-0 bg-black/70"
+    />
+    <div
+      class="relative z-10 space-y-4"
     >
       <div>
         <label
-          class="block text-sm font-bold text-slate-200 mb-2 flex items-center gap-2"
+          class="block text-sm font-bold text-gray-200 mb-2 flex items-center gap-2"
           for="search"
         >
           <svg
-            class="h-4 w-4 text-blue-400"
+            class="h-4 w-4 text-white"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -36,7 +39,7 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
           >
             <svg
-              class="h-5 w-5 text-slate-400"
+              class="h-5 w-5 text-gray-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -51,7 +54,7 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
           </div>
           <input
             autocomplete="off"
-            class="block w-full pl-10 pr-3 py-3 bg-slate-800/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white placeholder-slate-400 transition-all duration-200 hover:bg-slate-800/70"
+            class="block w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:border-white text-white placeholder-gray-400 transition-all duration-200 hover:bg-white/10"
             id="search"
             placeholder="Search by title, artist, or label..."
             type="text"
@@ -67,32 +70,19 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
           class="flex items-center justify-between mb-3"
         >
           <h3
-            class="text-sm font-semibold text-slate-200 flex items-center gap-2"
+            class="text-sm font-semibold text-gray-200"
           >
-            <svg
-              class="w-4 h-4 text-blue-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-              />
-            </svg>
             Filters
           </h3>
           <button
             aria-label="Close filters"
-            class="inline-flex items-center justify-center p-1.5 rounded-lg hover:bg-slate-700/50 transition-colors"
+            class="inline-flex items-center justify-center p-1.5 rounded-lg hover:bg-white/10 transition-colors"
             title="Close filters"
             type="button"
           >
             <svg
               aria-hidden="true"
-              class="lucide lucide-x w-4 h-4 text-slate-300"
+              class="lucide lucide-x w-4 h-4 text-gray-300"
               fill="none"
               height="24"
               stroke="currentColor"
@@ -116,13 +106,13 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
           class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
         >
           <div
-            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-blue-500/30 hover:shadow-lg hover:shadow-blue-500/10"
+            class="group bg-white/5 rounded-lg border border-white/10 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white hover:shadow-lg hover:shadow-white/10"
           >
             <label
-              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
+              class="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2"
             >
               <svg
-                class="w-4 h-4 text-blue-400"
+                class="w-4 h-4 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -152,13 +142,13 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             </select>
           </div>
           <div
-            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/10"
+            class="group bg-white/5 rounded-lg border border-white/10 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white hover:shadow-lg hover:shadow-white/10"
           >
             <label
-              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
+              class="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2"
             >
               <svg
-                class="w-4 h-4 text-purple-400"
+                class="w-4 h-4 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -188,19 +178,31 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             </select>
           </div>
           <div
-            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-green-500/30 hover:shadow-lg hover:shadow-green-500/10"
+            class="group bg-white/5 rounded-lg border border-white/10 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white hover:shadow-lg hover:shadow-white/10"
           >
             <label
-              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
+              class="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2"
             >
               <svg
-                class="w-4 h-4 text-green-400"
+                class="w-4 h-4 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
               >
                 <path
-                  d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                  d="M3 21h18"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+                <path
+                  d="M3 16h5v5M8 16V9l4 2 4-2v7h3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+                <path
+                  d="M6 7V3h2v4"
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
@@ -224,13 +226,13 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             </select>
           </div>
           <div
-            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-yellow-500/30 hover:shadow-lg hover:shadow-yellow-500/10"
+            class="group bg-white/5 rounded-lg border border-white/10 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white hover:shadow-lg hover:shadow-white/10"
           >
             <label
-              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
+              class="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2"
             >
               <svg
-                class="w-4 h-4 text-yellow-400"
+                class="w-4 h-4 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -260,13 +262,13 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             </select>
           </div>
           <div
-            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-pink-500/30 hover:shadow-lg hover:shadow-pink-500/10"
+            class="group bg-white/5 rounded-lg border border-white/10 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white hover:shadow-lg hover:shadow-white/10"
           >
             <label
-              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
+              class="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2"
             >
               <svg
-                class="w-4 h-4 text-pink-400"
+                class="w-4 h-4 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -306,13 +308,13 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             </select>
           </div>
           <div
-            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-red-500/30 hover:shadow-lg hover:shadow-red-500/10"
+            class="group bg-white/5 rounded-lg border border-white/10 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white hover:shadow-lg hover:shadow-white/10"
           >
             <label
-              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
+              class="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2"
             >
               <svg
-                class="w-4 h-4 text-red-400"
+                class="w-4 h-4 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -335,13 +337,13 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             </div>
           </div>
           <div
-            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-cyan-500/30 hover:shadow-lg hover:shadow-cyan-500/10"
+            class="group bg-white/5 rounded-lg border border-white/10 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white hover:shadow-lg hover:shadow-white/10"
           >
             <label
-              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
+              class="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2"
             >
               <svg
-                class="w-4 h-4 text-cyan-400"
+                class="w-4 h-4 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -356,8 +358,8 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
               From Year
             </label>
             <input
-              class="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-white placeholder-slate-400 transition-all"
-              max="2025"
+              class="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:border-white text-white placeholder-gray-400 transition-all"
+              max="2026"
               min="1900"
               placeholder="e.g., 1970"
               type="number"
@@ -365,13 +367,13 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             />
           </div>
           <div
-            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-cyan-500/30 hover:shadow-lg hover:shadow-cyan-500/10"
+            class="group bg-white/5 rounded-lg border border-white/10 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white hover:shadow-lg hover:shadow-white/10"
           >
             <label
-              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
+              class="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2"
             >
               <svg
-                class="w-4 h-4 text-cyan-400"
+                class="w-4 h-4 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -386,8 +388,8 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
               To Year
             </label>
             <input
-              class="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-white placeholder-slate-400 transition-all"
-              max="2025"
+              class="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:border-white text-white placeholder-gray-400 transition-all"
+              max="2026"
               min="1900"
               placeholder="e.g., 2024"
               type="number"
@@ -404,19 +406,22 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
 exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobile, tablet, desktop) for visual regression: searchandfilter-mobile 1`] = `
 <DocumentFragment>
   <div
-    class="modern-filter-panel bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-xl border border-slate-700/50 p-4 mb-4 sm:p-6 text-white shadow-2xl backdrop-blur-xl bg-opacity-90"
-    style="width: 375px;"
+    class="relative bg-cover bg-center rounded-lg border border-white/10 p-4 mb-4 sm:p-6 text-white overflow-visible"
+    style="background-image: url("/images/Kollector-Skum-bg.png"); width: 375px;"
   >
     <div
-      class="space-y-4"
+      class="absolute inset-0 bg-black/70"
+    />
+    <div
+      class="relative z-10 space-y-4"
     >
       <div>
         <label
-          class="block text-sm font-bold text-slate-200 mb-2 flex items-center gap-2"
+          class="block text-sm font-bold text-gray-200 mb-2 flex items-center gap-2"
           for="search"
         >
           <svg
-            class="h-4 w-4 text-blue-400"
+            class="h-4 w-4 text-white"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -437,7 +442,7 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
           >
             <svg
-              class="h-5 w-5 text-slate-400"
+              class="h-5 w-5 text-gray-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -452,7 +457,7 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
           </div>
           <input
             autocomplete="off"
-            class="block w-full pl-10 pr-3 py-3 bg-slate-800/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white placeholder-slate-400 transition-all duration-200 hover:bg-slate-800/70"
+            class="block w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:border-white text-white placeholder-gray-400 transition-all duration-200 hover:bg-white/10"
             id="search"
             placeholder="Search by title, artist, or label..."
             type="text"
@@ -468,32 +473,19 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
           class="flex items-center justify-between mb-3"
         >
           <h3
-            class="text-sm font-semibold text-slate-200 flex items-center gap-2"
+            class="text-sm font-semibold text-gray-200"
           >
-            <svg
-              class="w-4 h-4 text-blue-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-              />
-            </svg>
             Filters
           </h3>
           <button
             aria-label="Close filters"
-            class="inline-flex items-center justify-center p-1.5 rounded-lg hover:bg-slate-700/50 transition-colors"
+            class="inline-flex items-center justify-center p-1.5 rounded-lg hover:bg-white/10 transition-colors"
             title="Close filters"
             type="button"
           >
             <svg
               aria-hidden="true"
-              class="lucide lucide-x w-4 h-4 text-slate-300"
+              class="lucide lucide-x w-4 h-4 text-gray-300"
               fill="none"
               height="24"
               stroke="currentColor"
@@ -517,13 +509,13 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
           class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
         >
           <div
-            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-blue-500/30 hover:shadow-lg hover:shadow-blue-500/10"
+            class="group bg-white/5 rounded-lg border border-white/10 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white hover:shadow-lg hover:shadow-white/10"
           >
             <label
-              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
+              class="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2"
             >
               <svg
-                class="w-4 h-4 text-blue-400"
+                class="w-4 h-4 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -553,13 +545,13 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             </select>
           </div>
           <div
-            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/10"
+            class="group bg-white/5 rounded-lg border border-white/10 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white hover:shadow-lg hover:shadow-white/10"
           >
             <label
-              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
+              class="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2"
             >
               <svg
-                class="w-4 h-4 text-purple-400"
+                class="w-4 h-4 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -589,19 +581,31 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             </select>
           </div>
           <div
-            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-green-500/30 hover:shadow-lg hover:shadow-green-500/10"
+            class="group bg-white/5 rounded-lg border border-white/10 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white hover:shadow-lg hover:shadow-white/10"
           >
             <label
-              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
+              class="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2"
             >
               <svg
-                class="w-4 h-4 text-green-400"
+                class="w-4 h-4 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
               >
                 <path
-                  d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                  d="M3 21h18"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+                <path
+                  d="M3 16h5v5M8 16V9l4 2 4-2v7h3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+                <path
+                  d="M6 7V3h2v4"
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
@@ -625,13 +629,13 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             </select>
           </div>
           <div
-            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-yellow-500/30 hover:shadow-lg hover:shadow-yellow-500/10"
+            class="group bg-white/5 rounded-lg border border-white/10 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white hover:shadow-lg hover:shadow-white/10"
           >
             <label
-              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
+              class="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2"
             >
               <svg
-                class="w-4 h-4 text-yellow-400"
+                class="w-4 h-4 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -661,13 +665,13 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             </select>
           </div>
           <div
-            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-pink-500/30 hover:shadow-lg hover:shadow-pink-500/10"
+            class="group bg-white/5 rounded-lg border border-white/10 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white hover:shadow-lg hover:shadow-white/10"
           >
             <label
-              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
+              class="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2"
             >
               <svg
-                class="w-4 h-4 text-pink-400"
+                class="w-4 h-4 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -707,13 +711,13 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             </select>
           </div>
           <div
-            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-red-500/30 hover:shadow-lg hover:shadow-red-500/10"
+            class="group bg-white/5 rounded-lg border border-white/10 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white hover:shadow-lg hover:shadow-white/10"
           >
             <label
-              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
+              class="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2"
             >
               <svg
-                class="w-4 h-4 text-red-400"
+                class="w-4 h-4 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -736,13 +740,13 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             </div>
           </div>
           <div
-            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-cyan-500/30 hover:shadow-lg hover:shadow-cyan-500/10"
+            class="group bg-white/5 rounded-lg border border-white/10 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white hover:shadow-lg hover:shadow-white/10"
           >
             <label
-              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
+              class="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2"
             >
               <svg
-                class="w-4 h-4 text-cyan-400"
+                class="w-4 h-4 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -757,8 +761,8 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
               From Year
             </label>
             <input
-              class="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-white placeholder-slate-400 transition-all"
-              max="2025"
+              class="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:border-white text-white placeholder-gray-400 transition-all"
+              max="2026"
               min="1900"
               placeholder="e.g., 1970"
               type="number"
@@ -766,13 +770,13 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             />
           </div>
           <div
-            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-cyan-500/30 hover:shadow-lg hover:shadow-cyan-500/10"
+            class="group bg-white/5 rounded-lg border border-white/10 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white hover:shadow-lg hover:shadow-white/10"
           >
             <label
-              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
+              class="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2"
             >
               <svg
-                class="w-4 h-4 text-cyan-400"
+                class="w-4 h-4 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -787,8 +791,8 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
               To Year
             </label>
             <input
-              class="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-white placeholder-slate-400 transition-all"
-              max="2025"
+              class="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:border-white text-white placeholder-gray-400 transition-all"
+              max="2026"
               min="1900"
               placeholder="e.g., 2024"
               type="number"
@@ -805,19 +809,22 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
 exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobile, tablet, desktop) for visual regression: searchandfilter-tablet 1`] = `
 <DocumentFragment>
   <div
-    class="modern-filter-panel bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-xl border border-slate-700/50 p-4 mb-4 sm:p-6 text-white shadow-2xl backdrop-blur-xl bg-opacity-90"
-    style="width: 768px;"
+    class="relative bg-cover bg-center rounded-lg border border-white/10 p-4 mb-4 sm:p-6 text-white overflow-visible"
+    style="background-image: url("/images/Kollector-Skum-bg.png"); width: 768px;"
   >
     <div
-      class="space-y-4"
+      class="absolute inset-0 bg-black/70"
+    />
+    <div
+      class="relative z-10 space-y-4"
     >
       <div>
         <label
-          class="block text-sm font-bold text-slate-200 mb-2 flex items-center gap-2"
+          class="block text-sm font-bold text-gray-200 mb-2 flex items-center gap-2"
           for="search"
         >
           <svg
-            class="h-4 w-4 text-blue-400"
+            class="h-4 w-4 text-white"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -838,7 +845,7 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
           >
             <svg
-              class="h-5 w-5 text-slate-400"
+              class="h-5 w-5 text-gray-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -853,7 +860,7 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
           </div>
           <input
             autocomplete="off"
-            class="block w-full pl-10 pr-3 py-3 bg-slate-800/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white placeholder-slate-400 transition-all duration-200 hover:bg-slate-800/70"
+            class="block w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:border-white text-white placeholder-gray-400 transition-all duration-200 hover:bg-white/10"
             id="search"
             placeholder="Search by title, artist, or label..."
             type="text"
@@ -869,32 +876,19 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
           class="flex items-center justify-between mb-3"
         >
           <h3
-            class="text-sm font-semibold text-slate-200 flex items-center gap-2"
+            class="text-sm font-semibold text-gray-200"
           >
-            <svg
-              class="w-4 h-4 text-blue-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-              />
-            </svg>
             Filters
           </h3>
           <button
             aria-label="Close filters"
-            class="inline-flex items-center justify-center p-1.5 rounded-lg hover:bg-slate-700/50 transition-colors"
+            class="inline-flex items-center justify-center p-1.5 rounded-lg hover:bg-white/10 transition-colors"
             title="Close filters"
             type="button"
           >
             <svg
               aria-hidden="true"
-              class="lucide lucide-x w-4 h-4 text-slate-300"
+              class="lucide lucide-x w-4 h-4 text-gray-300"
               fill="none"
               height="24"
               stroke="currentColor"
@@ -918,13 +912,13 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
           class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
         >
           <div
-            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-blue-500/30 hover:shadow-lg hover:shadow-blue-500/10"
+            class="group bg-white/5 rounded-lg border border-white/10 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white hover:shadow-lg hover:shadow-white/10"
           >
             <label
-              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
+              class="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2"
             >
               <svg
-                class="w-4 h-4 text-blue-400"
+                class="w-4 h-4 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -954,13 +948,13 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             </select>
           </div>
           <div
-            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/10"
+            class="group bg-white/5 rounded-lg border border-white/10 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white hover:shadow-lg hover:shadow-white/10"
           >
             <label
-              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
+              class="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2"
             >
               <svg
-                class="w-4 h-4 text-purple-400"
+                class="w-4 h-4 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -990,19 +984,31 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             </select>
           </div>
           <div
-            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-green-500/30 hover:shadow-lg hover:shadow-green-500/10"
+            class="group bg-white/5 rounded-lg border border-white/10 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white hover:shadow-lg hover:shadow-white/10"
           >
             <label
-              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
+              class="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2"
             >
               <svg
-                class="w-4 h-4 text-green-400"
+                class="w-4 h-4 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
               >
                 <path
-                  d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                  d="M3 21h18"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+                <path
+                  d="M3 16h5v5M8 16V9l4 2 4-2v7h3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                />
+                <path
+                  d="M6 7V3h2v4"
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
@@ -1026,13 +1032,13 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             </select>
           </div>
           <div
-            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-yellow-500/30 hover:shadow-lg hover:shadow-yellow-500/10"
+            class="group bg-white/5 rounded-lg border border-white/10 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white hover:shadow-lg hover:shadow-white/10"
           >
             <label
-              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
+              class="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2"
             >
               <svg
-                class="w-4 h-4 text-yellow-400"
+                class="w-4 h-4 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -1062,13 +1068,13 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             </select>
           </div>
           <div
-            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-pink-500/30 hover:shadow-lg hover:shadow-pink-500/10"
+            class="group bg-white/5 rounded-lg border border-white/10 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white hover:shadow-lg hover:shadow-white/10"
           >
             <label
-              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
+              class="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2"
             >
               <svg
-                class="w-4 h-4 text-pink-400"
+                class="w-4 h-4 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -1108,13 +1114,13 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             </select>
           </div>
           <div
-            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-red-500/30 hover:shadow-lg hover:shadow-red-500/10"
+            class="group bg-white/5 rounded-lg border border-white/10 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white hover:shadow-lg hover:shadow-white/10"
           >
             <label
-              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
+              class="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2"
             >
               <svg
-                class="w-4 h-4 text-red-400"
+                class="w-4 h-4 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -1137,13 +1143,13 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             </div>
           </div>
           <div
-            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-cyan-500/30 hover:shadow-lg hover:shadow-cyan-500/10"
+            class="group bg-white/5 rounded-lg border border-white/10 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white hover:shadow-lg hover:shadow-white/10"
           >
             <label
-              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
+              class="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2"
             >
               <svg
-                class="w-4 h-4 text-cyan-400"
+                class="w-4 h-4 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -1158,8 +1164,8 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
               From Year
             </label>
             <input
-              class="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-white placeholder-slate-400 transition-all"
-              max="2025"
+              class="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:border-white text-white placeholder-gray-400 transition-all"
+              max="2026"
               min="1900"
               placeholder="e.g., 1970"
               type="number"
@@ -1167,13 +1173,13 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
             />
           </div>
           <div
-            class="group bg-slate-800/40 rounded-lg border border-slate-700/50 p-4 transition-all duration-200 hover:bg-slate-800/60 hover:border-cyan-500/30 hover:shadow-lg hover:shadow-cyan-500/10"
+            class="group bg-white/5 rounded-lg border border-white/10 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white hover:shadow-lg hover:shadow-white/10"
           >
             <label
-              class="block text-sm font-medium text-slate-300 mb-2 flex items-center gap-2"
+              class="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2"
             >
               <svg
-                class="w-4 h-4 text-cyan-400"
+                class="w-4 h-4 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -1188,8 +1194,8 @@ exports[`SearchAndFilter — responsive checks renders a compact snapshot (mobil
               To Year
             </label>
             <input
-              class="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 text-white placeholder-slate-400 transition-all"
-              max="2025"
+              class="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:border-white text-white placeholder-gray-400 transition-all"
+              max="2026"
               min="1900"
               placeholder="e.g., 2024"
               type="number"
