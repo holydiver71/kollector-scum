@@ -356,8 +356,424 @@ If the diagnosis shows a different owner UUID, rerun the reassignment using that
 ---
 
 ## 7) Supabase Storage
-Create identical buckets in both environments (e.g. `cover-art`).
-Store only image metadata in DB, not blobs.
+
+**Goal:** Replace local file storage (`wwwroot/cover-art/`) with cloud storage for scalability and multi-instance support. Store files in Supabase Storage buckets, keep only metadata (file paths/URLs) in the database.
+
+**Why Supabase Storage?**
+- Integrated with existing Supabase projects (same dashboard)
+- S3-compatible API (easy migration path if needed)
+- Free tier: 1GB storage
+- Built-in CDN for fast image delivery
+- Per-environment isolation (staging/production buckets)
+
+### 7.1 Create Storage Buckets
+
+**Create buckets in BOTH Supabase projects** (staging + production):
+
+1. **Sign in to Supabase** ([https://supabase.com](https://supabase.com))
+
+2. **Staging setup**:
+   - Select your `kollector-scum-staging` project
+   - Navigate to **Storage** (left sidebar)
+   - Click **New bucket**
+   - Bucket name: `cover-art`
+   - Public bucket: **Yes** *(allows unauthenticated reads for cover art images)*
+   - File size limit: Default (50MB) or reduce to 5MB *(cover art is typically < 500KB)*
+   - Allowed MIME types: `image/jpeg`, `image/png`, `image/webp` *(optional; enforces image-only uploads)*
+   - Click **Create bucket**
+
+3. **Production setup**:
+   - Switch to your `kollector-scum-prod` project
+   - Repeat the same steps above
+   - Bucket name: `cover-art`
+   - Public bucket: **Yes**
+   - File size limit: 5-50MB
+   - Allowed MIME types: `image/jpeg`, `image/png`, `image/webp`
+   - Click **Create bucket**
+
+**Result:** Both environments now have a `cover-art` bucket for storing release cover images.
+
+### 7.2 Get Storage Configuration
+
+You'll need these values to configure your backend API:
+
+1. In each Supabase project:
+   - Go to **Project Settings → API**
+   - Copy the following values:
+
+**Staging:**
+- **Project URL** (e.g., `https://abcdefgh.supabase.co`) → `SUPABASE_URL` or `Supabase__Url`
+- **Project API keys → `anon` `public`** → `SUPABASE_ANON_KEY` or `Supabase__AnonKey`
+
+**Production:**
+- Same process, save the production values separately
+
+**Storage endpoint structure:**
+- Bucket URL: `https://{project-ref}.supabase.co/storage/v1/object/public/cover-art/{filename}`
+- Upload endpoint: `https://{project-ref}.supabase.co/storage/v1/object/cover-art/{filename}`
+
+### 7.3 Backend Implementation (Phase 1: Upload Support)
+
+**Add Supabase Storage SDK**:
+
+```bash
+cd backend/KollectorScum.Api
+dotnet add package Supabase.Storage
+```
+
+**Create storage service interface**:
+
+Create `backend/KollectorScum.Api/Services/IStorageService.cs`:
+
+```csharp
+namespace KollectorScum.Api.Services;
+
+public interface IStorageService
+{
+    /// <summary>
+    /// Upload a file to storage and return the public URL
+    /// </summary>
+    Task<string> UploadFileAsync(string bucketName, string fileName, Stream fileStream, string contentType);
+    
+    /// <summary>
+    /// Delete a file from storage
+    /// </summary>
+    Task DeleteFileAsync(string bucketName, string fileName);
+    
+    /// <summary>
+    /// Get the public URL for a file
+    /// </summary>
+    string GetPublicUrl(string bucketName, string fileName);
+}
+```
+
+**Implement Supabase storage service**:
+
+Create `backend/KollectorScum.Api/Services/SupabaseStorageService.cs`:
+
+```csharp
+using Supabase.Storage;
+
+namespace KollectorScum.Api.Services;
+
+public class SupabaseStorageService : IStorageService
+{
+    private readonly string _supabaseUrl;
+    private readonly string _supabaseKey;
+    private readonly ILogger<SupabaseStorageService> _logger;
+
+    public SupabaseStorageService(IConfiguration configuration, ILogger<SupabaseStorageService> logger)
+    {
+        _supabaseUrl = configuration["Supabase:Url"] 
+            ?? throw new InvalidOperationException("Supabase:Url not configured");
+        _supabaseKey = configuration["Supabase:AnonKey"] 
+            ?? throw new InvalidOperationException("Supabase:AnonKey not configured");
+        _logger = logger;
+    }
+
+    public async Task<string> UploadFileAsync(string bucketName, string fileName, Stream fileStream, string contentType)
+    {
+        try
+        {
+            var client = new SupabaseStorageClient(_supabaseUrl, _supabaseKey);
+            var bucket = client.From(bucketName);
+            
+            // Generate unique filename to avoid collisions
+            var uniqueFileName = $"{Guid.NewGuid()}_{fileName}";
+            
+            await bucket.Upload(
+                fileStream,
+                uniqueFileName,
+                new Supabase.Storage.FileOptions { ContentType = contentType }
+            );
+
+            return GetPublicUrl(bucketName, uniqueFileName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to upload file {FileName} to bucket {BucketName}", fileName, bucketName);
+            throw;
+        }
+    }
+
+    public async Task DeleteFileAsync(string bucketName, string fileName)
+    {
+        try
+        {
+            var client = new SupabaseStorageClient(_supabaseUrl, _supabaseKey);
+            var bucket = client.From(bucketName);
+            
+            await bucket.Remove(fileName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete file {FileName} from bucket {BucketName}", fileName, bucketName);
+            throw;
+        }
+    }
+
+    public string GetPublicUrl(string bucketName, string fileName)
+    {
+        return $"{_supabaseUrl}/storage/v1/object/public/{bucketName}/{fileName}";
+    }
+}
+```
+
+**Register the service** in `Program.cs`:
+
+```csharp
+// Add Supabase Storage
+builder.Services.AddScoped<IStorageService, SupabaseStorageService>();
+```
+
+**Update environment configuration**:
+
+Add to `backend/KollectorScum.Api/appsettings.json`:
+
+```json
+{
+  "Supabase": {
+    "Url": "",
+    "AnonKey": ""
+  }
+}
+```
+
+Add to `backend/KollectorScum.Api/appsettings.Development.json`:
+
+```json
+{
+  "Supabase": {
+    "Url": "http://localhost:54321",
+    "AnonKey": "local-dev-key"
+  }
+}
+```
+
+*(Optional: For local dev, you can run Supabase locally via Docker, or skip storage in dev and use file system)*
+
+### 7.4 Update Release Controller for Cloud Storage
+
+**Modify the cover art upload logic** in `backend/KollectorScum.Api/Controllers/ReleasesController.cs`:
+
+Before (file system):
+```csharp
+var filePath = Path.Combine(uploadsFolder, fileName);
+using var stream = new FileStream(filePath, FileMode.Create);
+await file.CopyToAsync(stream);
+coverArtUrl = $"/cover-art/{fileName}";
+```
+
+After (Supabase Storage):
+```csharp
+using var stream = file.OpenReadStream();
+coverArtUrl = await _storageService.UploadFileAsync("cover-art", fileName, stream, file.ContentType);
+```
+
+**Add storage service to controller constructor**:
+
+```csharp
+private readonly IStorageService _storageService;
+
+public ReleasesController(
+    CollectionContext context,
+    ILogger<ReleasesController> logger,
+    IStorageService storageService)
+{
+    _context = context;
+    _logger = logger;
+    _storageService = storageService;
+}
+```
+
+**Update delete endpoint to remove files**:
+
+In the `DELETE` endpoint, before deleting the release:
+
+```csharp
+// Delete cover art from storage if it exists
+if (!string.IsNullOrEmpty(release.CoverArtUrl))
+{
+    var fileName = release.CoverArtUrl.Split('/').Last();
+    await _storageService.DeleteFileAsync("cover-art", fileName);
+}
+```
+
+### 7.5 Configure Environment Variables
+
+**Local development** (`backend/KollectorScum.Api/appsettings.Development.json`):
+- Option 1: Use local file system (skip Supabase config)
+- Option 2: Point to staging Supabase (share staging bucket during dev)
+
+**Staging** (Render service environment variables):
+```
+Supabase__Url=https://YOUR-STAGING-PROJECT-REF.supabase.co
+Supabase__AnonKey=YOUR-STAGING-ANON-KEY
+```
+
+**Production** (Render service environment variables):
+```
+Supabase__Url=https://YOUR-PROD-PROJECT-REF.supabase.co
+Supabase__AnonKey=YOUR-PROD-ANON-KEY
+```
+
+### 7.6 Migration Strategy (Existing Cover Art)
+
+If you already have cover art files stored locally in `wwwroot/cover-art/`, you need to migrate them:
+
+**Option A: Manual migration script** (recommended for small collections):
+
+Create `backend/scripts/migrate-cover-art-to-supabase.sh`:
+
+```bash
+#!/bin/bash
+# Migrate local cover art files to Supabase Storage
+
+set -e
+
+BUCKET_NAME="cover-art"
+LOCAL_DIR="backend/KollectorScum.Api/wwwroot/cover-art"
+
+# Requires supabase CLI: https://supabase.com/docs/guides/cli
+# Installation: npm install -g supabase
+
+for file in "$LOCAL_DIR"/*; do
+    if [ -f "$file" ]; then
+        filename=$(basename "$file")
+        echo "Uploading $filename..."
+        supabase storage upload "$BUCKET_NAME/$filename" "$file" --project-ref YOUR-PROJECT-REF
+    fi
+done
+
+echo "Migration complete!"
+```
+
+**Option B: Let files naturally migrate on edit**:
+- Leave existing URLs in the database pointing to local files
+- Update the controller to handle both local (`/cover-art/...`) and remote (`https://...`) URLs
+- When a user edits a release and uploads new cover art, it goes to Supabase
+- Old files remain on the server until manually cleaned up
+
+**Option C: Programmatic migration**:
+
+Create a one-time migration endpoint (dev/staging only):
+
+```csharp
+[HttpPost("migrate-storage")]
+[Authorize(Roles = "Admin")]
+public async Task<IActionResult> MigrateToCloudStorage()
+{
+    var releases = await _context.Releases
+        .Where(r => !string.IsNullOrEmpty(r.CoverArtUrl) && r.CoverArtUrl.StartsWith("/cover-art/"))
+        .ToListAsync();
+
+    foreach (var release in releases)
+    {
+        var localPath = Path.Combine("wwwroot", release.CoverArtUrl.TrimStart('/'));
+        
+        if (System.IO.File.Exists(localPath))
+        {
+            using var stream = System.IO.File.OpenRead(localPath);
+            var fileName = Path.GetFileName(localPath);
+            
+            var newUrl = await _storageService.UploadFileAsync("cover-art", fileName, stream, "image/jpeg");
+            release.CoverArtUrl = newUrl;
+        }
+    }
+
+    await _context.SaveChangesAsync();
+    return Ok(new { MigratedCount = releases.Count });
+}
+```
+
+### 7.7 Update Dockerfile
+
+Ensure the Dockerfile doesn't need to persist `wwwroot/cover-art/` as a volume:
+
+**Before** (file system storage):
+```dockerfile
+# May need volume mounting for persistence
+VOLUME ["/app/wwwroot/cover-art"]
+```
+
+**After** (cloud storage):
+```dockerfile
+# No volume needed; cover art is in Supabase
+# Keep wwwroot for other static files if needed
+```
+
+### 7.8 Testing Checklist
+
+**Local/Dev Testing**:
+- [ ] Start API with Supabase config pointing to staging
+- [ ] Upload a new release with cover art
+- [ ] Verify image appears in Supabase dashboard → Storage → `cover-art` bucket
+- [ ] Verify image is publicly accessible via returned URL
+- [ ] Edit release and upload new cover art (verify old image is deleted)
+- [ ] Delete release (verify cover art is deleted from bucket)
+
+**Staging Testing**:
+- [ ] Deploy API to Render staging
+- [ ] Verify Supabase storage environment variables are set
+- [ ] Test upload via staging frontend
+- [ ] Verify images load in browser
+- [ ] Check Supabase dashboard for uploaded files
+
+**Production Testing** (after staging validation):
+- [ ] Deploy to production
+- [ ] Migrate existing cover art (if applicable)
+- [ ] Test upload/delete operations
+- [ ] Monitor storage usage in Supabase dashboard
+
+### 7.9 Monitoring and Maintenance
+
+**Storage limits (Supabase free tier)**:
+- 1GB total storage
+- Monitor usage: Supabase dashboard → Storage → Usage
+
+**Image optimization recommendations**:
+- Resize images on upload (max 800x800px for cover art)
+- Convert to WebP format for better compression
+- Validate file size before upload (< 500KB recommended)
+
+**Cleanup strategy**:
+- Implement orphaned file cleanup (files not referenced in DB)
+- Schedule periodic bucket audits
+- Consider TTL/expiration policies for temporary uploads
+
+### 7.10 Rollback Plan
+
+If Supabase Storage has issues:
+
+1. **Revert backend code**:
+   - Comment out `IStorageService` usage
+   - Restore file system storage logic
+   - Redeploy API
+
+2. **Database URLs**:
+   - Old releases keep Supabase URLs (will break)
+   - New releases use local file system
+   - Manual script to update URLs if needed
+
+3. **Keep both systems running temporarily**:
+   - Add fallback logic to check both locations
+   - Gradually migrate back if needed
+
+### 7.11 Optional Enhancements
+
+**Image transformations**:
+- Use Supabase image transformations (resize, crop, format conversion)
+- Example: `{supabase-url}/storage/v1/render/image/public/cover-art/{filename}?width=400&height=400`
+
+**Signed URLs for private content**:
+- If cover art should be user-specific (multi-tenant isolation)
+- Generate signed URLs with expiration
+- Use service role key (keep secret) for URL signing
+
+**CDN caching**:
+- Supabase Storage includes CDN by default
+- Set appropriate cache headers
+- Consider CloudFlare in front for additional caching
 
 ---
 
