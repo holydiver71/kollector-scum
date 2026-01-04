@@ -57,7 +57,8 @@ namespace KollectorScum.Api.Controllers
                 UserId = user.Id,
                 Email = user.Email,
                 DisplayName = user.DisplayName,
-                SelectedKollectionId = profile?.SelectedKollectionId
+                SelectedKollectionId = profile?.SelectedKollectionId,
+                IsAdmin = user.IsAdmin
             });
         }
 
@@ -121,7 +122,8 @@ namespace KollectorScum.Api.Controllers
                 UserId = user.Id,
                 Email = user.Email,
                 DisplayName = user.DisplayName,
-                SelectedKollectionId = profile.SelectedKollectionId
+                SelectedKollectionId = profile.SelectedKollectionId,
+                IsAdmin = user.IsAdmin
             });
         }
 

@@ -68,6 +68,15 @@ export async function fetchJson<T = unknown>(path: string, options: FetchJsonOpt
           body = await res.text();
         }
       } catch { /* ignore */ }
+
+      // Handle 401 Unauthorized (revoked user, expired token, invalid token):
+      // clear auth state and notify listeners. Navigation decisions belong to the UI layer.
+      if (res.status === 401 && typeof window !== 'undefined') {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user_profile');
+        window.dispatchEvent(new Event('authChanged'));
+      }
+      
       // If caller asked to swallow errors (useful for non-critical widgets),
       // return null instead of throwing so the UI can render fallback content.
       if (options.swallowErrors) {
