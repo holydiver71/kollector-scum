@@ -290,6 +290,9 @@ app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Add middleware to validate users still exist (after authentication, before authorization)
+app.UseValidateUser();
+
 // Map controllers
 app.MapControllers();
 
