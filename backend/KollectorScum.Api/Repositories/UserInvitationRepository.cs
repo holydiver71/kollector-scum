@@ -18,6 +18,12 @@ namespace KollectorScum.Api.Repositories
         }
 
         /// <inheritdoc />
+        public async Task<UserInvitation?> FindByIdAsync(int id)
+        {
+            return await _context.UserInvitations.FindAsync(id);
+        }
+
+        /// <inheritdoc />
         public async Task<UserInvitation?> FindByEmailAsync(string email)
         {
             return await _context.UserInvitations
