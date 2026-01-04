@@ -40,11 +40,6 @@
 - Google Cloud Console (OAuth)
 
 ### Local tools
-- Git
-- Docker
-- .NET SDK (EF Core migrations)
-- Node.js
-- VS Code (or similar)
 
 ---
 
@@ -124,10 +119,10 @@ Local build:
 
 Local run:
 - Development smoke test (boots without production-only config):
-	- `docker run --rm -e PORT=8080 -e ASPNETCORE_ENVIRONMENT=Development -e "ConnectionStrings__DefaultConnection=Host=localhost;Database=kollector_scum;Username=postgres;Password=postgres" -p 8080:8080 kollector-scum-api`
-- Staging/Production style run (you must provide real values):
-	- `docker run --rm -e PORT=8080 -e ASPNETCORE_ENVIRONMENT=Production -e "ConnectionStrings__DefaultConnection=<real connection string>" -e "Frontend__Origins=<https://your-frontend-domain>" -e "Jwt__Key=<32+ char random secret>" -p 8080:8080 kollector-scum-api`
-- Health check: `curl http://localhost:8080/health`
+    - `docker run --rm -e PORT=8080 -e ASPNETCORE_ENVIRONMENT=Development -e "ConnectionStrings__DefaultConnection=Host=localhost;Database=kollector_scum;Username=postgres;Password=postgres" -p 8080:8080 kollector-scum-api`
+    - Staging/Production style run (you must provide real values):
+    - `docker run --rm -e PORT=8080 -e ASPNETCORE_ENVIRONMENT=Production -e "ConnectionStrings__DefaultConnection=<real connection string>" -e "Frontend__Origins=<https://your-frontend-domain>" -e "Jwt__Key=<32+ char random secret>" -p 8080:8080 kollector-scum-api`
+    - Health check: `curl http://localhost:8080/health`
 
 Notes:
 - The API serves static files (cover art) via `wwwroot/`. Ensure `wwwroot/` exists in the published output (this repo includes an empty `wwwroot` folder so container startup doesn’t warn).
@@ -149,18 +144,16 @@ Use it as:
 
 ### 6.2 Apply EF Core migrations (staging first)
 This repo includes a design-time EF Core factory so you can run migrations without booting the full API host.
-
 One-time (ensure script is executable):
 - `chmod +x backend/scripts/apply-ef-migrations.sh`
 
 ### 6.2.1 Store staging + production DB secrets locally
 Use a local secrets file at the repo root (this repo already gitignores `.env`).
-
 1. Create your secrets file:
-	- `cp .env.example .env`
+    - `cp .env.example .env`
 2. Edit `.env` and set:
-	- `KOLLECTOR_STAGING_DB_URL` (Supabase URL including the real password)
-	- `KOLLECTOR_PROD_DB_URL` (Supabase URL including the real password)
+    - `KOLLECTOR_STAGING_DB_URL` (Supabase URL including the real password)
+    - `KOLLECTOR_PROD_DB_URL` (Supabase URL including the real password)
 
 Optional (URL-encode usernames/passwords in-place):
 - `chmod +x backend/scripts/encode-db-urls-env.sh`
@@ -179,8 +172,8 @@ Common production pitfall (pooler username):
 Troubleshooting: Supabase host is IPv6-only
 - Some Supabase `db.<ref>.supabase.co` hosts may resolve only to IPv6 (no `A` record). If your ISP/network cannot route IPv6, local migrations will fail.
 - Fix options (pick one):
-	- Use Supabase **Connection pooling** → **Session** connection string (often uses a `*.pooler.supabase.com` hostname which may have IPv4).
-	- Run migrations from an IPv6-capable environment (e.g., GitHub Actions, Render shell, a different network).
+    - Use Supabase **Connection pooling** → **Session** connection string (often uses a `*.pooler.supabase.com` hostname which may have IPv4).
+    - Run migrations from an IPv6-capable environment (e.g., GitHub Actions, Render shell, a different network).
 
 Staging:
 - `backend/scripts/apply-ef-migrations.sh --staging`
@@ -212,7 +205,6 @@ The backend chooses its database based on `ConnectionStrings:DefaultConnection` 
 #### 6.3.2 Switch backend DB while running locally
 Local DB (default dev):
 - Run with `ASPNETCORE_ENVIRONMENT=Development` and keep `ConnectionStrings:DefaultConnection` in `appsettings.Development.json` pointing to localhost.
-
 Copy/paste (local DB):
 - `cd backend/KollectorScum.Api && dotnet run`
 
@@ -221,12 +213,11 @@ Recommended (scripted):
 
 Staging DB (run API locally, connect to staging Supabase):
 - Set environment variables when starting the API:
-	- `ASPNETCORE_ENVIRONMENT=Development`
-	- `ConnectionStrings__DefaultConnection=<staging connection string>`
+    - `ASPNETCORE_ENVIRONMENT=Development`
+    - `ConnectionStrings__DefaultConnection=<staging connection string>`
 
 Copy/paste (staging DB):
 - `cd backend/KollectorScum.Api && ASPNETCORE_ENVIRONMENT=Development ConnectionStrings__DefaultConnection="<staging-connection-string>" dotnet run`
-
 Recommended (scripted, reads repo-root `.env`):
 - `backend/scripts/run-api-local.sh --staging`
 
@@ -235,258 +226,12 @@ Production DB (run API locally, connect to prod Supabase — use with care):
 
 Copy/paste (prod DB — use with care):
 - `cd backend/KollectorScum.Api && ASPNETCORE_ENVIRONMENT=Development ConnectionStrings__DefaultConnection="<prod-connection-string>" dotnet run`
-
 Recommended (scripted, reads repo-root `.env` — use with care):
 - `backend/scripts/run-api-local.sh --production`
 
-#### 6.3.2.1 How to use `backend/scripts/run-api-local.sh`
-This helper script starts the API locally while selecting the database target.
-
-Common usage:
-- Local DB (default dev DB from `appsettings.Development.json`):
-	- `backend/scripts/run-api-local.sh --local`
-- Staging DB (reads `.env` → `KOLLECTOR_STAGING_DB_URL`):
-	- `backend/scripts/run-api-local.sh --staging`
-- Production DB (reads `.env` → `KOLLECTOR_PROD_DB_URL`, use with care):
-	- `backend/scripts/run-api-local.sh --production`
-
-Optional flags:
-- Run on a different port:
-	- `backend/scripts/run-api-local.sh --staging --port 8081`
-- Override ASP.NET environment (defaults to `Development`):
-	- `backend/scripts/run-api-local.sh --staging --environment Development`
-
-Output:
-- The script prints the listening URL + mode, but never prints the DB connection string.
-
-Tip: keep staging/prod URLs in the repo-root `.env` (gitignored) and use `backend/scripts/apply-ef-migrations.sh` for migrations.
-For running the API, you can export the chosen `ConnectionStrings__DefaultConnection` from your secret manager or shell.
-
-#### 6.3.3 Switch what the frontend talks to
-The frontend does not connect to Postgres directly; it calls the API.
-Switching “environment” in the frontend is typically just changing:
-- `NEXT_PUBLIC_API_BASE_URL` to either:
-	- local API (e.g. `http://localhost:5072`) for local dev
-	- staging API URL (Render staging service) for staging
-	- production API URL (Render production service) for production
-
-Copy/paste (frontend -> local API):
-- `cd frontend && NEXT_PUBLIC_API_BASE_URL=http://localhost:5072 npm run dev`
-
-Copy/paste (frontend -> staging API):
-- `cd frontend && NEXT_PUBLIC_API_BASE_URL=https://<your-staging-api-host> npm run dev`
-
-Copy/paste (frontend -> production API):
-- `cd frontend && NEXT_PUBLIC_API_BASE_URL=https://<your-production-api-host> npm run dev`
-
-If your backend runs in `Development`, CORS defaults to `AllowAnyOrigin()`.
-In `Staging`/`Production`, you must set `Frontend__Origin` or `Frontend__Origins` so CORS is explicitly configured.
-
-### 6.4 Populate staging with local/dev data (optional)
-If you want staging to contain the same data as your local/dev database, you can copy **data-only** from your dev DB into staging.
-
-Pre-req:
-- Apply EF migrations to staging first (schema must exist).
-
-WARNING:
-- This truncates all data in staging `public` schema (except `__EFMigrationsHistory`) before importing.
-
-One-time:
-- `chmod +x backend/scripts/copy-dev-db-to-staging.sh`
-
-Run:
-- `backend/scripts/copy-dev-db-to-staging.sh --yes`
-
-Overrides (if needed):
-- `backend/scripts/copy-dev-db-to-staging.sh --yes --source "<local connection string or postgresql:// URL>"`
-- `backend/scripts/copy-dev-db-to-staging.sh --yes --staging "<staging postgresql:// URL>"`
-
-Defaults:
-- Source DB: `backend/KollectorScum.Api/appsettings.Development.json` → `ConnectionStrings:DefaultConnection`
-- Staging DB: repo-root `.env` → `KOLLECTOR_STAGING_DB_URL`
-
-### 6.5 If you can’t see data after copy (multi-tenant ownership)
-The API is multi-tenant: most data is scoped by `UserId` from your JWT. If you copied data from dev/local into staging, that data may be owned by the seeded “admin” user (from the multi-tenant migration) rather than your Google user. In that case, signing in as your Google account will show an empty collection even though the tables contain rows.
-
-Fix (staging only): reassign ownership from the seeded admin user to your user.
-
-Pre-reqs:
-- You must sign in once (creates your `ApplicationUsers` row in staging).
-- Repo-root `.env` must contain `KOLLECTOR_STAGING_DB_URL`.
-
-Run:
-- `backend/scripts/assign-staging-data-to-user.sh --email <your-google-email> --yes`
-
-### 6.6 Production: apply migrations + populate with your user data
-
-This section folds in lessons from staging so production setup is smoother.
-
-#### 6.6.1 Apply migrations to production
-- Ensure repo-root `.env` has `KOLLECTOR_PROD_DB_URL`.
-- Run:
-	- `backend/scripts/apply-ef-migrations.sh --production`
-
-#### 6.6.2 Populate production from staging (bootstrap only)
-
-DANGER: this wipes production data before importing.
-
-Recommended approach (copy staging → production, data-only):
-
-1. Ensure staging has exactly the data you want in production.
-2. Run:
-	- `chmod +x backend/scripts/copy-staging-db-to-production.sh`
-	- `backend/scripts/copy-staging-db-to-production.sh --yes-i-understand-this-will-delete-production-data`
-
-Why copy from staging instead of local/dev?
-- Staging is already “prod-like” (same schema/migrations, same Supabase features).
-- Avoids surprises from local-only seed data.
-
-#### 6.6.3 Ensure the data is owned by your production user
-
-Lesson from staging: copied rows may be owned by the *empty GUID* (`00000000-0000-0000-0000-000000000000`) or by the seeded admin user, so your Google login won’t see any data until ownership is reassigned.
-
-1. Sign in once via the production frontend (creates your `ApplicationUsers` row).
-2. Diagnose ownership:
-	- `backend/scripts/assign-db-data-to-user.sh --production --email <your-google-email> --diagnose`
-3. Reassign from the empty GUID (most common after raw data copy):
-	- `backend/scripts/assign-db-data-to-user.sh --production --email <your-google-email> --yes --from-user-id 00000000-0000-0000-0000-000000000000`
-
-If the diagnosis shows a different owner UUID, rerun the reassignment using that value.
-
----
-
-### 7. Storage Strategy: Amazon S3
-
-- **Bucket Structure**: A single Amazon S3 bucket will be used to store all user-generated content, primarily cover images for releases.
-- **User-Specific Segmentation**: To ensure data isolation and security, images will be organized into user-specific folders within the bucket. The folder structure will be based on the user's unique identifier (e.g., `s3://kollektor-scum-covers/{user_id}/`).
-- **Access Control**:
-  - **IAM Policies**: Strict IAM policies will be implemented to control access to the S3 bucket. The backend API will have programmatic access to read and write objects.
-  - **Pre-signed URLs**: For client-side uploads and downloads, the backend will generate pre-signed URLs. This approach enhances security by providing time-limited, temporary access to specific objects without exposing credentials.
-- **Data Management**:
-  - **Lifecycle Policies**: S3 Lifecycle policies will be configured to automatically transition older, less-frequently accessed images to more cost-effective storage classes (e.g., S3 Standard-IA) and eventually archive or delete them.
-  - **Versioning**: Object versioning will be enabled to protect against accidental deletions or overwrites.
-
-### 7.1 Create Storage Buckets
-
-**Create buckets in BOTH Supabase projects** (staging + production):
-
-1. **Sign in to Supabase** ([https://supabase.com](https://supabase.com))
-
-2. **Staging setup**:
-   - Select your `kollector-scum-staging` project
-   - Navigate to **Storage** (left sidebar)
-   - Click **New bucket**
-   - Bucket name: `cover-art`
-   - Public bucket: **Yes** *(allows unauthenticated reads for cover art images)*
-   - File size limit: Default (50MB) or reduce to 5MB *(cover art is typically < 500KB)*
-   - Allowed MIME types: `image/jpeg`, `image/png`, `image/webp` *(optional; enforces image-only uploads)*
-   - Click **Create bucket**
-
-3. **Production setup**:
-   - Switch to your `kollector-scum-prod` project
-   - Repeat the same steps above
-   - Bucket name: `cover-art`
-   - Public bucket: **Yes**
-   - File size limit: 5-50MB
-   - Allowed MIME types: `image/jpeg`, `image/png`, `image/webp`
-   - Click **Create bucket**
-
-**Result:** Both environments now have a `cover-art` bucket for storing release cover images.
-
-### 7.2 Get Storage Configuration
-
-You'll need these values to configure your backend API:
-
-1. In each Supabase project:
-   - Go to **Project Settings → API**
-   - Copy the following values:
-
-**Staging:**
-- **Project URL** (e.g., `https://abcdefgh.supabase.co`) → `SUPABASE_URL` or `Supabase__Url`
-- **Project API keys → `anon` `public`** → `SUPABASE_ANON_KEY` or `Supabase__AnonKey`
-
-**Production:**
-- Same process, save the production values separately
-
-**Storage endpoint structure:**
-- Bucket URL: `https://{project-ref}.supabase.co/storage/v1/object/public/cover-art/{filename}`
-- Upload endpoint: `https://{project-ref}.supabase.co/storage/v1/object/cover-art/{filename}`
-
-### 7.3 Backend Implementation (Phase 1: Multi-Tenant Upload Support)
-
-**Add Supabase Storage SDK**:
-
-```bash
-cd backend/KollectorScum.Api
-dotnet add package Supabase.Storage
-```
-
-**Create storage service interface for multi-tenancy**:
-
-The interface must be updated to handle user-specific paths.
-
-Create `backend/KollectorScum.Api/Services/IStorageService.cs`:
+## 7) Multi-tenant storage & uploads
 
 ```csharp
-namespace KollectorScum.Api.Services;
-
-public interface IStorageService
-{
-    /// <summary>
-    /// Upload a file to a user-specific folder and return the public URL.
-    /// </summary>
-    Task<string> UploadFileAsync(string bucketName, string userId, string fileName, Stream fileStream, string contentType);
-    
-    /// <summary>
-    /// Delete a file from a user-specific folder.
-    /// </summary>
-    Task DeleteFileAsync(string bucketName, string userId, string fileName);
-    
-    /// <summary>
-    /// Get the public URL for a file in a user-specific folder.
-    /// </summary>
-    string GetPublicUrl(string bucketName, string userId, string fileName);
-}
-```
-
-**Implement Supabase storage service with multi-tenancy**:
-
-The implementation will now construct paths using the `userId`.
-
-Create `backend/KollectorScum.Api/Services/SupabaseStorageService.cs`:
-
-```csharp
-using Supabase.Storage;
-using System.Security.Claims;
-
-namespace KollectorScum.Api.Services;
-
-public class SupabaseStorageService : IStorageService
-{
-    private readonly string _supabaseUrl;
-    private readonly string _supabaseKey;
-    private readonly ILogger<SupabaseStorageService> _logger;
-
-    public SupabaseStorageService(IConfiguration configuration, ILogger<SupabaseStorageService> logger)
-    {
-        _supabaseUrl = configuration["Supabase:Url"] 
-            ?? throw new InvalidOperationException("Supabase:Url not configured");
-        _supabaseKey = configuration["Supabase:AnonKey"] 
-            ?? throw new InvalidOperationException("Supabase:AnonKey not configured");
-        _logger = logger;
-    }
-
-    public async Task<string> UploadFileAsync(string bucketName, string userId, string fileName, Stream fileStream, string contentType)
-    {
-        try
-        {
-            var client = new SupabaseStorageClient(_supabaseUrl, _supabaseKey);
-            var bucket = client.From(bucketName);
-            
-            var uniqueFileName = $"{Guid.NewGuid()}_{Path.GetFileName(fileName)}";
-            var objectPath = $"{userId}/{uniqueFileName}";
-            
-            await bucket.Upload(
                 fileStream,
                 objectPath,
                 new Supabase.Storage.FileOptions { ContentType = contentType, Upsert = false }
@@ -796,6 +541,101 @@ If Supabase Storage has issues:
 - Supabase Storage includes CDN by default
 - Set appropriate cache headers
 - Consider CloudFlare in front for additional caching
+
+### 7.12 Local / Console Actions (what you must run locally)
+
+Follow these exact local/console steps when you implement the Cloudflare R2 storage plan so nothing is missed. Run the commands from the repository root unless otherwise noted.
+
+- 1) Install the AWS S3 SDK for the backend (required to talk to R2):
+
+```bash
+cd backend/KollectorScum.Api
+dotnet add package AWSSDK.S3
+```
+
+- 2) Create the storage service file (IStorageService implementation):
+    - Create `backend/KollectorScum.Api/Services/CloudflareR2StorageService.cs` and paste the example implementation from Section 7.3.
+
+- 3) Register the service in `Program.cs`:
+
+```csharp
+// Add Cloudflare R2 storage
+builder.Services.AddScoped<IStorageService, CloudflareR2StorageService>();
+```
+
+- 4) Add required environment variables to your local `.env` (gitignored) and to your hosting provider (Render/GitHub Actions):
+
+```
+R2__AccountId=your-cloudflare-account-id
+R2__Endpoint=https://<account_id>.r2.cloudflarestorage.com
+R2__AccessKeyId=R2_ACCESS_KEY_ID
+R2__SecretAccessKey=R2_SECRET
+R2__BucketName=cover-art
+R2__PublicBaseUrl=https://images.example.com   # optional Worker/custom domain
+```
+
+- 5) Provision Cloudflare R2 resources (Console):
+    - Create R2 bucket(s) in Cloudflare: `cover-art-staging` and `cover-art-prod` (or single bucket with prefixes).
+    - Generate an R2 Access Key (Access Key ID + Secret) and save them.
+    - (Optional) Set up a Worker or custom domain for friendly image URLs.
+
+- 6) Build and test the API locally with R2 configured:
+
+```bash
+cd backend/KollectorScum.Api
+dotnet build
+ASPNETCORE_ENVIRONMENT=Development R2__Endpoint="https://<account>.r2.cloudflarestorage.com" R2__AccessKeyId="..." R2__SecretAccessKey="..." dotnet run
+```
+
+- 7) Create and test the migration endpoint (dev/staging only):
+    - Implement the `migrate-storage` admin endpoint described in Section 7.6 (use `IStorageService` implementation).
+    - Run the endpoint locally or in staging to migrate existing local `wwwroot/cover-art` files to R2.
+
+- 8) Image processing and backup (recommended before destructive passes):
+    - Ensure you have a backup of originals (you indicated you have backups). If not, create one now:
+
+```bash
+cp -a /home/andy/music-images /home/andy/music-images-backup-$(date +%Y%m%d)
+```
+
+    - Install Node script deps (if not already):
+
+```bash
+npm install --prefix backend/scripts sharp minimist
+```
+
+    - Run simulation to estimate savings (non-destructive):
+
+```bash
+node backend/scripts/resize-cover-images.js --path /home/andy/music-images/covers --max 1600 --simulate
+```
+
+    - If satisfied, run the real pass (this overwrites originals in-place):
+
+```bash
+node backend/scripts/resize-cover-images.js --path /home/andy/music-images/covers --max 1600
+```
+
+- 9) Push code and deploy to staging:
+    - Commit the new `.cs` file and `Program.cs` changes.
+    - Push to `dev` to trigger staging CI/CD (Cloudflare Pages + Render staging).
+    - In your hosting provider (Render/GitHub Actions), add `R2__*` env vars using the values from Cloudflare.
+
+- 10) Staging verification checklist:
+    - [ ] Upload a cover image via the staging frontend and verify it appears in R2.
+    - [ ] Confirm the returned URL serves the image (via Worker/custom domain or R2 endpoint).
+    - [ ] Edit/delete release and verify object deletion in R2.
+
+- 11) Production rollout:
+    - Run EF migrations for production (if needed).
+    - Deploy the backend to production with production `R2__*` env vars set.
+    - Run the migration endpoint in production if you migrated staging data to prod.
+
+- 12) Post-deploy monitoring and cleanup:
+    - Monitor R2 usage in Cloudflare dashboard.
+    - Implement orphan cleanup and lifecycle rules as needed.
+
+These steps explicitly cover the local and console actions the plan assumes; follow them in order and ask for help at any step if you want me to create the files or run the commands here.
 
 ---
 
