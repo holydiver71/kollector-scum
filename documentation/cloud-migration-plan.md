@@ -355,16 +355,16 @@ If the diagnosis shows a different owner UUID, rerun the reassignment using that
 
 ---
 
-## 7) Supabase Storage
+### 7. Storage Strategy: Amazon S3
 
-**Goal:** Replace local file storage (`wwwroot/cover-art/`) with cloud storage for scalability and multi-instance support. Store files in Supabase Storage buckets, keep only metadata (file paths/URLs) in the database.
-
-**Why Supabase Storage?**
-- Integrated with existing Supabase projects (same dashboard)
-- S3-compatible API (easy migration path if needed)
-- Free tier: 1GB storage
-- Built-in CDN for fast image delivery
-- Per-environment isolation (staging/production buckets)
+- **Bucket Structure**: A single Amazon S3 bucket will be used to store all user-generated content, primarily cover images for releases.
+- **User-Specific Segmentation**: To ensure data isolation and security, images will be organized into user-specific folders within the bucket. The folder structure will be based on the user's unique identifier (e.g., `s3://kollektor-scum-covers/{user_id}/`).
+- **Access Control**:
+  - **IAM Policies**: Strict IAM policies will be implemented to control access to the S3 bucket. The backend API will have programmatic access to read and write objects.
+  - **Pre-signed URLs**: For client-side uploads and downloads, the backend will generate pre-signed URLs. This approach enhances security by providing time-limited, temporary access to specific objects without exposing credentials.
+- **Data Management**:
+  - **Lifecycle Policies**: S3 Lifecycle policies will be configured to automatically transition older, less-frequently accessed images to more cost-effective storage classes (e.g., S3 Standard-IA) and eventually archive or delete them.
+  - **Versioning**: Object versioning will be enabled to protect against accidental deletions or overwrites.
 
 ### 7.1 Create Storage Buckets
 
@@ -412,7 +412,7 @@ You'll need these values to configure your backend API:
 - Bucket URL: `https://{project-ref}.supabase.co/storage/v1/object/public/cover-art/{filename}`
 - Upload endpoint: `https://{project-ref}.supabase.co/storage/v1/object/cover-art/{filename}`
 
-### 7.3 Backend Implementation (Phase 1: Upload Support)
+### 7.3 Backend Implementation (Phase 1: Multi-Tenant Upload Support)
 
 **Add Supabase Storage SDK**:
 
@@ -421,7 +421,9 @@ cd backend/KollectorScum.Api
 dotnet add package Supabase.Storage
 ```
 
-**Create storage service interface**:
+**Create storage service interface for multi-tenancy**:
+
+The interface must be updated to handle user-specific paths.
 
 Create `backend/KollectorScum.Api/Services/IStorageService.cs`:
 
@@ -431,28 +433,31 @@ namespace KollectorScum.Api.Services;
 public interface IStorageService
 {
     /// <summary>
-    /// Upload a file to storage and return the public URL
+    /// Upload a file to a user-specific folder and return the public URL.
     /// </summary>
-    Task<string> UploadFileAsync(string bucketName, string fileName, Stream fileStream, string contentType);
+    Task<string> UploadFileAsync(string bucketName, string userId, string fileName, Stream fileStream, string contentType);
     
     /// <summary>
-    /// Delete a file from storage
+    /// Delete a file from a user-specific folder.
     /// </summary>
-    Task DeleteFileAsync(string bucketName, string fileName);
+    Task DeleteFileAsync(string bucketName, string userId, string fileName);
     
     /// <summary>
-    /// Get the public URL for a file
+    /// Get the public URL for a file in a user-specific folder.
     /// </summary>
-    string GetPublicUrl(string bucketName, string fileName);
+    string GetPublicUrl(string bucketName, string userId, string fileName);
 }
 ```
 
-**Implement Supabase storage service**:
+**Implement Supabase storage service with multi-tenancy**:
+
+The implementation will now construct paths using the `userId`.
 
 Create `backend/KollectorScum.Api/Services/SupabaseStorageService.cs`:
 
 ```csharp
 using Supabase.Storage;
+using System.Security.Claims;
 
 namespace KollectorScum.Api.Services;
 
@@ -471,50 +476,53 @@ public class SupabaseStorageService : IStorageService
         _logger = logger;
     }
 
-    public async Task<string> UploadFileAsync(string bucketName, string fileName, Stream fileStream, string contentType)
+    public async Task<string> UploadFileAsync(string bucketName, string userId, string fileName, Stream fileStream, string contentType)
     {
         try
         {
             var client = new SupabaseStorageClient(_supabaseUrl, _supabaseKey);
             var bucket = client.From(bucketName);
             
-            // Generate unique filename to avoid collisions
-            var uniqueFileName = $"{Guid.NewGuid()}_{fileName}";
+            var uniqueFileName = $"{Guid.NewGuid()}_{Path.GetFileName(fileName)}";
+            var objectPath = $"{userId}/{uniqueFileName}";
             
             await bucket.Upload(
                 fileStream,
-                uniqueFileName,
-                new Supabase.Storage.FileOptions { ContentType = contentType }
+                objectPath,
+                new Supabase.Storage.FileOptions { ContentType = contentType, Upsert = false }
             );
 
-            return GetPublicUrl(bucketName, uniqueFileName);
+            return GetPublicUrl(bucketName, userId, uniqueFileName);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to upload file {FileName} to bucket {BucketName}", fileName, bucketName);
+            _logger.LogError(ex, "Failed to upload file {FileName} for user {UserId}", fileName, userId);
             throw;
         }
     }
 
-    public async Task DeleteFileAsync(string bucketName, string fileName)
+    public async Task DeleteFileAsync(string bucketName, string userId, string fileName)
     {
         try
         {
             var client = new SupabaseStorageClient(_supabaseUrl, _supabaseKey);
             var bucket = client.From(bucketName);
             
-            await bucket.Remove(fileName);
+            var objectPath = $"{userId}/{Path.GetFileName(fileName)}";
+            
+            await bucket.Remove(new List<string> { objectPath });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to delete file {FileName} from bucket {BucketName}", fileName, bucketName);
+            _logger.LogError(ex, "Failed to delete file {FileName} for user {UserId}", fileName, userId);
             throw;
         }
     }
 
-    public string GetPublicUrl(string bucketName, string fileName)
+    public string GetPublicUrl(string bucketName, string userId, string fileName)
     {
-        return $"{_supabaseUrl}/storage/v1/object/public/{bucketName}/{fileName}";
+        var objectPath = $"{userId}/{Path.GetFileName(fileName)}";
+        return $"{_supabaseUrl}/storage/v1/object/public/{bucketName}/{objectPath}";
     }
 }
 ```
@@ -554,7 +562,7 @@ Add to `backend/KollectorScum.Api/appsettings.Development.json`:
 
 ### 7.4 Update Release Controller for Cloud Storage
 
-**Modify the cover art upload logic** in `backend/KollectorScum.Api/Controllers/ReleasesController.cs`:
+**Modify the cover art upload logic** in `backend/KollectorScum.Api/Controllers/ReleasesController.cs` to be user-aware.
 
 Before (file system):
 ```csharp
@@ -564,10 +572,16 @@ await file.CopyToAsync(stream);
 coverArtUrl = $"/cover-art/{fileName}";
 ```
 
-After (Supabase Storage):
+After (Multi-Tenant Supabase Storage):
 ```csharp
+var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+if (string.IsNullOrEmpty(userId))
+{
+    return Unauthorized("User ID not found in token.");
+}
+
 using var stream = file.OpenReadStream();
-coverArtUrl = await _storageService.UploadFileAsync("cover-art", fileName, stream, file.ContentType);
+coverArtUrl = await _storageService.UploadFileAsync("cover-art", userId, fileName, stream, file.ContentType);
 ```
 
 **Add storage service to controller constructor**:
@@ -586,16 +600,22 @@ public ReleasesController(
 }
 ```
 
-**Update delete endpoint to remove files**:
+**Update delete endpoint to remove files from user's folder**:
 
 In the `DELETE` endpoint, before deleting the release:
 
 ```csharp
+var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+if (string.IsNullOrEmpty(userId))
+{
+    return Unauthorized("User ID not found in token.");
+}
+
 // Delete cover art from storage if it exists
 if (!string.IsNullOrEmpty(release.CoverArtUrl))
 {
     var fileName = release.CoverArtUrl.Split('/').Last();
-    await _storageService.DeleteFileAsync("cover-art", fileName);
+    await _storageService.DeleteFileAsync("cover-art", userId, fileName);
 }
 ```
 
@@ -619,72 +639,74 @@ Supabase__AnonKey=YOUR-PROD-ANON-KEY
 
 ### 7.6 Migration Strategy (Existing Cover Art)
 
-If you already have cover art files stored locally in `wwwroot/cover-art/`, you need to migrate them:
+With the move to multi-tenant storage, migrating existing cover art requires associating each image with its owner. The old migration strategies are no longer suitable.
 
-**Option A: Manual migration script** (recommended for small collections):
+**Recommended Approach: Programmatic Migration Endpoint**
 
-Create `backend/scripts/migrate-cover-art-to-supabase.sh`:
+The safest and most reliable method is to create a one-time, admin-only API endpoint that programmatically migrates the files. This ensures each image is uploaded to the correct user's folder in the cloud.
 
-```bash
-#!/bin/bash
-# Migrate local cover art files to Supabase Storage
+**Update the migration endpoint** (dev/staging only):
 
-set -e
-
-BUCKET_NAME="cover-art"
-LOCAL_DIR="backend/KollectorScum.Api/wwwroot/cover-art"
-
-# Requires supabase CLI: https://supabase.com/docs/guides/cli
-# Installation: npm install -g supabase
-
-for file in "$LOCAL_DIR"/*; do
-    if [ -f "$file" ]; then
-        filename=$(basename "$file")
-        echo "Uploading $filename..."
-        supabase storage upload "$BUCKET_NAME/$filename" "$file" --project-ref YOUR-PROJECT-REF
-    fi
-done
-
-echo "Migration complete!"
-```
-
-**Option B: Let files naturally migrate on edit**:
-- Leave existing URLs in the database pointing to local files
-- Update the controller to handle both local (`/cover-art/...`) and remote (`https://...`) URLs
-- When a user edits a release and uploads new cover art, it goes to Supabase
-- Old files remain on the server until manually cleaned up
-
-**Option C: Programmatic migration**:
-
-Create a one-time migration endpoint (dev/staging only):
+The logic must be updated to fetch the `UserId` for each release and pass it to the storage service.
 
 ```csharp
 [HttpPost("migrate-storage")]
 [Authorize(Roles = "Admin")]
 public async Task<IActionResult> MigrateToCloudStorage()
 {
-    var releases = await _context.Releases
+    var releasesToMigrate = await _context.Releases
         .Where(r => !string.IsNullOrEmpty(r.CoverArtUrl) && r.CoverArtUrl.StartsWith("/cover-art/"))
         .ToListAsync();
 
-    foreach (var release in releases)
+    if (!releasesToMigrate.Any())
     {
+        return Ok(new { Message = "No local images to migrate." });
+    }
+
+    var migratedCount = 0;
+    foreach (var release in releasesToMigrate)
+    {
+        // The UserId is required to place the file in the correct user folder.
+        if (release.UserId == Guid.Empty)
+        {
+            _logger.LogWarning("Skipping release {ReleaseId} due to missing UserId.", release.Id);
+            continue;
+        }
+
         var localPath = Path.Combine("wwwroot", release.CoverArtUrl.TrimStart('/'));
         
         if (System.IO.File.Exists(localPath))
         {
-            using var stream = System.IO.File.OpenRead(localPath);
-            var fileName = Path.GetFileName(localPath);
-            
-            var newUrl = await _storageService.UploadFileAsync("cover-art", fileName, stream, "image/jpeg");
-            release.CoverArtUrl = newUrl;
+            try
+            {
+                using var stream = System.IO.File.OpenRead(localPath);
+                var fileName = Path.GetFileName(localPath);
+                
+                // Call the multi-tenant upload method
+                var newUrl = await _storageService.UploadFileAsync(
+                    "cover-art", 
+                    release.UserId.ToString(), 
+                    fileName, 
+                    stream, 
+                    "image/jpeg" // Or determine dynamically
+                );
+                
+                release.CoverArtUrl = newUrl;
+                migratedCount++;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to migrate cover art for release {ReleaseId}", release.Id);
+            }
         }
     }
 
     await _context.SaveChangesAsync();
-    return Ok(new { MigratedCount = releases.Count });
+    return Ok(new { MigratedCount = migratedCount, TotalConsidered = releasesToMigrate.Count });
 }
 ```
+
+This updated endpoint correctly handles the multi-tenant requirements, making it the definitive method for migrating your existing images. After running this migration, all cover art will be served from the cloud, and the local `wwwroot/cover-art` directory will no longer be needed.
 
 ### 7.7 Update Dockerfile
 
