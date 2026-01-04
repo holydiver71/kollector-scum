@@ -44,6 +44,7 @@ export interface UserProfile {
   email: string;
   displayName?: string;
   selectedKollectionId?: number;
+  isAdmin: boolean;
 }
 
 /**
