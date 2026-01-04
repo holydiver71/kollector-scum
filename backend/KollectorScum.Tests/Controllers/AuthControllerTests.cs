@@ -18,6 +18,7 @@ namespace KollectorScum.Tests.Controllers
         private readonly Mock<IGoogleTokenValidator> _mockGoogleTokenValidator;
         private readonly Mock<IUserRepository> _mockUserRepository;
         private readonly Mock<IUserProfileRepository> _mockUserProfileRepository;
+        private readonly Mock<IUserInvitationRepository> _mockInvitationRepository;
         private readonly Mock<ITokenService> _mockTokenService;
         private readonly Mock<IConfiguration> _mockConfiguration;
         private readonly Mock<IHostEnvironment> _mockEnvironment;
@@ -29,6 +30,7 @@ namespace KollectorScum.Tests.Controllers
             _mockGoogleTokenValidator = new Mock<IGoogleTokenValidator>();
             _mockUserRepository = new Mock<IUserRepository>();
             _mockUserProfileRepository = new Mock<IUserProfileRepository>();
+            _mockInvitationRepository = new Mock<IUserInvitationRepository>();
             _mockTokenService = new Mock<ITokenService>();
             _mockConfiguration = new Mock<IConfiguration>();
             _mockEnvironment = new Mock<IHostEnvironment>();
@@ -38,6 +40,7 @@ namespace KollectorScum.Tests.Controllers
                 _mockGoogleTokenValidator.Object,
                 _mockUserRepository.Object,
                 _mockUserProfileRepository.Object,
+                _mockInvitationRepository.Object,
                 _mockTokenService.Object,
                 _mockConfiguration.Object,
                 _mockEnvironment.Object,
@@ -63,6 +66,17 @@ namespace KollectorScum.Tests.Controllers
                 .Setup(x => x.FindByGoogleSubAsync(googleSub))
                 .ReturnsAsync((ApplicationUser?)null);
 
+            var invitation = new UserInvitation
+            {
+                Id = 1,
+                Email = email,
+                CreatedAt = DateTime.UtcNow,
+                IsUsed = false
+            };
+            _mockInvitationRepository
+                .Setup(x => x.FindByEmailAsync(email))
+                .ReturnsAsync(invitation);
+
             _mockUserRepository
                 .Setup(x => x.CreateAsync(It.IsAny<ApplicationUser>()))
                 .ReturnsAsync((ApplicationUser user) => user);
@@ -70,6 +84,10 @@ namespace KollectorScum.Tests.Controllers
             _mockUserProfileRepository
                 .Setup(x => x.CreateAsync(It.IsAny<UserProfile>()))
                 .ReturnsAsync((UserProfile profile) => profile);
+
+            _mockInvitationRepository
+                .Setup(x => x.UpdateAsync(It.IsAny<UserInvitation>()))
+                .ReturnsAsync((UserInvitation inv) => inv);
 
             _mockTokenService
                 .Setup(x => x.GenerateToken(It.IsAny<ApplicationUser>()))
@@ -87,6 +105,7 @@ namespace KollectorScum.Tests.Controllers
 
             _mockUserRepository.Verify(x => x.CreateAsync(It.IsAny<ApplicationUser>()), Times.Once);
             _mockUserProfileRepository.Verify(x => x.CreateAsync(It.IsAny<UserProfile>()), Times.Once);
+            _mockInvitationRepository.Verify(x => x.UpdateAsync(It.Is<UserInvitation>(i => i.IsUsed)), Times.Once);
         }
 
         [Fact]
@@ -160,6 +179,35 @@ namespace KollectorScum.Tests.Controllers
             // Assert
             var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result.Result);
             Assert.NotNull(unauthorizedResult.Value);
+        }
+
+        [Fact]
+        public async Task GoogleAuth_WithUninvitedUser_ReturnsForbidden()
+        {
+            // Arrange
+            var request = new GoogleAuthRequest { IdToken = "valid-token" };
+            var googleSub = "google-sub-123";
+            var email = "uninvited@example.com";
+            var displayName = "Uninvited User";
+
+            _mockGoogleTokenValidator
+                .Setup(x => x.ValidateTokenAsync(request.IdToken))
+                .ReturnsAsync((googleSub, email, displayName));
+
+            _mockUserRepository
+                .Setup(x => x.FindByGoogleSubAsync(googleSub))
+                .ReturnsAsync((ApplicationUser?)null);
+
+            _mockInvitationRepository
+                .Setup(x => x.FindByEmailAsync(email))
+                .ReturnsAsync((UserInvitation?)null);
+
+            // Act
+            var result = await _controller.GoogleAuth(request);
+
+            // Assert
+            var forbidResult = Assert.IsType<ObjectResult>(result.Result);
+            Assert.Equal(403, forbidResult.StatusCode);
         }
     }
 }

@@ -7,7 +7,7 @@ import { WelcomeScreen } from "./components/WelcomeScreen";
 import { useCollection } from "./contexts/CollectionContext";
 
 import { getHealth, getPagedCount, ApiError } from "./lib/api";
-import { isAuthenticated, clearAuthToken } from "./lib/auth";
+import { isAuthenticated, clearAuthToken, getUserProfile } from "./lib/auth";
 
 // Data contracts
 interface HealthData { status: string; timestamp: string; service: string; version: string; }
@@ -25,9 +25,10 @@ export default function Dashboard() {
   useEffect(() => {
     const checkAuthAndFetch = async () => {
       const authenticated = isAuthenticated();
-      setIsLoggedIn(authenticated);
-
+      // Do not immediately treat a token as a valid session.
+      // First validate it against the backend to avoid flashing the dashboard for revoked users.
       if (!authenticated) {
+        setIsLoggedIn(false);
         setLoading(false);
         return;
       }
@@ -35,6 +36,16 @@ export default function Dashboard() {
       try {
         setLoading(true);
         setError(null);
+
+        const profile = await getUserProfile();
+        if (!profile) {
+          setIsLoggedIn(false);
+          setLoading(false);
+          return;
+        }
+
+        setIsLoggedIn(true);
+
         const healthJson = await getHealth();
         setHealth(healthJson);
 
