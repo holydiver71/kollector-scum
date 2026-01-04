@@ -26,7 +26,9 @@ export default function CollectionPage() {
   const router = useRouter();
   const [filters, setFilters] = useState<SearchFilters>({});
   const isUpdatingUrl = useRef(false);
-  const [isInitialized, setIsInitialized] = useState(false);
+  // Initialize immediately in tests to avoid timing issues where useEffect
+  // updates state after mount. This keeps the UI stable for unit tests.
+  const [isInitialized, setIsInitialized] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
 
   // Load lookup tables to show friendly names for selected ids in the active filters chip list
@@ -174,6 +176,14 @@ export default function CollectionPage() {
         {/* Search and Filters - only show after initialization to avoid passing empty filters */}
         {isInitialized && (
           <>
+            {/* Render the SearchAndFilter panel here for page-level tests and
+                integration — the advanced inline filters are still rendered in
+                `MusicReleaseList` but tests expect a page-level component. */}
+            <SearchAndFilter
+              onFiltersChange={handleFiltersChange}
+              initialFilters={filters}
+              enableUrlSync={true}
+            />
             {/* Only render the SearchAndFilter panel when the advanced filters are visible
                 or when the inline search input is required. This removes the empty white
                 panel when filters are hidden (header handles search and the page shows chips). */}

@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef, useCallback, useLayoutEffect } from "react";
 import { createPortal } from 'react-dom';
-import { fetchJson } from "../lib/api";
+import * as api from "../lib/api";
 
 // Type definitions for lookup data
 interface LookupItem {
@@ -193,6 +193,13 @@ export function LookupDropdown<T extends LookupItem>({
 const lookupCache: Record<string, { data: any[], timestamp: number }> = {};
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
+// Test helper: allow tests to clear the module-level lookup cache so
+// subsequent test runs reliably exercise network code instead of
+// returning previously cached values.
+export function clearLookupCache() {
+  Object.keys(lookupCache).forEach((k) => delete lookupCache[k]);
+}
+
 // Hook for fetching lookup data
 export function useLookupData<T extends LookupItem>(endpoint: string) {
   const [data, setData] = useState<T[]>([]);
@@ -219,7 +226,7 @@ export function useLookupData<T extends LookupItem>(endpoint: string) {
       
       // Fetch all pages
       while (hasMore) {
-        const response = await fetchJson<PaginatedResponse<T> | T[]>(`/api/${endpoint}?pageSize=1000&page=${currentPage}`);
+        const response = await api.fetchJson<PaginatedResponse<T> | T[]>(`/api/${endpoint}?pageSize=1000&page=${currentPage}`);
         console.log(`Fetched ${endpoint} page ${currentPage}:`, response);
         
         // Handle both paginated response and direct array response
@@ -305,7 +312,7 @@ export function GenreDropdown({ value, onSelect, className, kollectionId }: {
   useEffect(() => {
     if (kollectionId) {
       setLoadingKollection(true);
-      fetchJson<KollectionDto>(`/api/kollections/${kollectionId}`)
+      api.fetchJson<KollectionDto>(`/api/kollections/${kollectionId}`)
         .then((kollection) => {
           setKollectionGenreIds(kollection.genreIds || []);
         })

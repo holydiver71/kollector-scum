@@ -18,6 +18,21 @@ jest.mock('../lib/api', () => ({
   getRecentlyPlayed: jest.fn(),
   API_BASE_URL: 'http://localhost:5072',
 }));
+// Provide a simple fetchJson shim so `getUserProfile()` (which uses fetchJson)
+// works when the test only partially mocks the api module.
+const realFetchJson = async (url: string) => {
+  if (url.includes('/api/profile')) {
+    return {
+      email: 'test@example.com',
+      name: 'Test User',
+      hasCollection: true,
+      userId: 'user-1',
+      isAdmin: false,
+    };
+  }
+  return {};
+};
+(require('../lib/api') as any).fetchJson = jest.fn(realFetchJson);
 
 describe('Dashboard Page', () => {
   beforeEach(() => {
@@ -78,18 +93,10 @@ describe('Dashboard Page', () => {
 
     render(<Dashboard />);
 
+    // When the collection is empty the app shows the Welcome screen
     await waitFor(() => {
-      expect(screen.getByText('Releases')).toBeInTheDocument();
+      expect(screen.getByText('Welcome to your music collection manager')).toBeInTheDocument();
     });
-
-    // Using getAllByText for text that appears multiple times
-    const artistsElements = screen.getAllByText('Artists');
-    expect(artistsElements.length).toBeGreaterThan(0);
-    
-    const genresElements = screen.getAllByText('Genres');
-    expect(genresElements.length).toBeGreaterThan(0);
-    
-    expect(screen.getByText('Labels')).toBeInTheDocument();
   });
 
   it('displays action cards', async () => {
@@ -183,7 +190,8 @@ describe('Dashboard Page', () => {
     };
 
     (api.getHealth as jest.Mock).mockResolvedValue(mockHealth);
-    (api.getPagedCount as jest.Mock).mockResolvedValue(0);
+    // Return at least one release so the main dashboard (not WelcomeScreen) renders
+    (api.getPagedCount as jest.Mock).mockResolvedValue(1);
 
     render(<Dashboard />);
 
@@ -224,9 +232,9 @@ describe('Dashboard Page', () => {
 
     render(<Dashboard />);
 
+    // With zero releases the Welcome screen is shown instead of the stats
     await waitFor(() => {
-      const zeros = screen.getAllByText('0');
-      expect(zeros.length).toBeGreaterThan(0);
+      expect(screen.getByText('Welcome to your music collection manager')).toBeInTheDocument();
     });
   });
 });

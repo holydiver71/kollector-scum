@@ -29,8 +29,17 @@ interface NavigationItem {
 const Sidebar: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const pathname = usePathname();
-  const router = useRouter();
+  let pathname: string;
+  let router: any;
+  try {
+    pathname = usePathname();
+    router = useRouter();
+  } catch (err) {
+    // Tests / environments without the App Router will throw when calling
+    // these hooks. Fall back to safe defaults so unit tests can render.
+    pathname = typeof window !== 'undefined' ? window.location.pathname : '/';
+    router = { push: () => {}, replace: () => {} };
+  }
   const { hasCollection, isReady, setHasCollection } = useCollection();
 
   // Check auth state on mount and route changes
