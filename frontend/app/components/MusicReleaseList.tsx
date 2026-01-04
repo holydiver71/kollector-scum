@@ -173,9 +173,15 @@ export const MusicReleaseCard = React.memo(function MusicReleaseCard({ release }
           </Link>
         </h3>
         
-        <p className="text-xs text-gray-600 truncate mb-1" title={release.artistNames?.join(", ")}>
-          {release.artistNames?.join(", ")}
-        </p>
+        <p className="text-xs text-gray-600 truncate mb-1" title={release.artistNames?.join(", ")}>{
+          release.artistNames?.join(", ")
+        }</p>
+
+        {release.genreNames && release.genreNames.length > 0 && (
+          <p className="text-xs text-gray-500 truncate mb-1" title={release.genreNames.join(", ")}>
+            {release.genreNames.join(", ")}
+          </p>
+        )}
 
         <div className="flex items-center gap-1 text-[10px] text-gray-500 truncate mb-2">
           {release.labelName && <span title={release.labelName}>{release.labelName}</span>}

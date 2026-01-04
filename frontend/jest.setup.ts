@@ -7,14 +7,94 @@ import '@testing-library/jest-dom'
 if (typeof globalThis.fetch === 'undefined') {
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore - Jest test environment global
-	globalThis.fetch = jest.fn(() =>
-		Promise.resolve({
+	globalThis.fetch = jest.fn((input: any) => {
+		const url = typeof input === 'string' ? input : input?.url ?? '';
+		// Return a sensible default profile for components that validate
+		// authentication during mount. Individual tests can override this
+		// mock when they need specific behavior.
+		if (url.includes('/api/profile')) {
+			return Promise.resolve({
+				ok: true,
+				json: async () => ({
+					email: 'test@example.com',
+					name: 'Test User',
+					hasCollection: true,
+				}),
+				headers: { get: () => 'application/json' },
+			});
+		}
+
+		return Promise.resolve({
 			ok: true,
 			json: async () => ({}),
 			headers: { get: () => 'application/json' },
-		})
-	);
+		});
+	});
 }
+
+// Mock Next App Router navigation hooks used by components. This prevents the
+// "invariant expected app router to be mounted" errors in Jest where the
+// Next app router isn't available. Tests can override these mocks if needed.
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+jest.mock('next/navigation', () => ({
+	useRouter: () => ({
+		push: jest.fn(),
+		replace: jest.fn(),
+		back: jest.fn(),
+		refresh: jest.fn(),
+		prefetch: jest.fn().mockResolvedValue(undefined),
+	}),
+	usePathname: () => '/',
+	useSearchParams: () => new URLSearchParams(),
+	useParams: () => ({}),
+}));
+
+// Polyfill ResizeObserver for the Jest/jsdom environment used by tests.
+// Many components measure layout using ResizeObserver; provide a minimal
+// no-op implementation so tests can run without the real browser API.
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+global.ResizeObserver = global.ResizeObserver || class {
+	cb: any;
+	constructor(cb: any) { this.cb = cb; }
+	observe() { /* no-op */ }
+	unobserve() { /* no-op */ }
+	disconnect() { /* no-op */ }
+};
+
+// Ensure tests run with an authenticated user by default so components that
+// depend on `isAuthenticated()` render the authenticated UI. Individual tests
+// can clear this value if they need an unauthenticated scenario.
+try {
+	// Ensure we set the auth token using the jsdom `window.localStorage` when
+	// running under Jest. Accessing the top-level `localStorage` may be
+	// undefined in some environments, so prefer `window` or `globalThis`.
+	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+	// @ts-ignore
+	if (typeof window !== 'undefined' && window.localStorage) {
+		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+		// @ts-ignore
+		window.localStorage.setItem('auth_token', 'test-token');
+	} else if (typeof globalThis !== 'undefined' && (globalThis as any).localStorage) {
+		(globalThis as any).localStorage.setItem('auth_token', 'test-token');
+	}
+} catch (e) {}
+
+// Debug: confirm localStorage token presence when running tests
+try {
+	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+	// @ts-ignore
+	if (typeof window !== 'undefined' && window.localStorage) {
+		// eslint-disable-next-line no-console
+		console.log('[jest.setup] auth_token =', window.localStorage.getItem('auth_token'));
+	}
+} catch (e) {}
+
+// NOTE: Previously we reset the module registry before each test to avoid
+// cross-test leakage. That interferes with test-level `jest.mock`/`doMock`
+// registrations in some suites (Header.responsive). Removing the global
+// reset keeps per-test mocks reliable while tests remain isolated.
 
 // Quiet noisy React testing warnings that we intentionally accept for some
 // components that perform background async work during mount in tests.

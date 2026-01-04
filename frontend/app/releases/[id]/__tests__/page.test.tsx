@@ -216,10 +216,10 @@ describe('ReleaseDetailPage', () => {
     render(<ReleaseDetailPage />);
     
     await waitFor(() => {
-      expect(screen.getByText('Back')).toBeInTheDocument();
+      expect(screen.getByText(/Back to Collection/i)).toBeInTheDocument();
     });
     
-    const backButton = screen.getByText('Back');
+    const backButton = screen.getByText(/Back to Collection/i);
     backButton.click();
     
     expect(mockBack).toHaveBeenCalled();
