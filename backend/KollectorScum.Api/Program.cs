@@ -143,7 +143,17 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserContext, UserContext>();
 
 // Register storage service
-builder.Services.AddScoped<IStorageService, LocalFileSystemStorageService>();
+var r2EndpointConfig = builder.Configuration["R2:Endpoint"] ?? builder.Configuration["R2__Endpoint"];
+if (!string.IsNullOrWhiteSpace(r2EndpointConfig))
+{
+    // Use Cloudflare R2 (S3-compatible) when configured for staging/production
+    builder.Services.AddScoped<IStorageService, CloudflareR2StorageService>();
+}
+else
+{
+    // Fallback to local filesystem for development and tests
+    builder.Services.AddScoped<IStorageService, LocalFileSystemStorageService>();
+}
 
 // Register KollectorScumDbContext with PostgreSQL
 // NOTE: Do not suppress EF warnings or apply migrations automatically in production.
