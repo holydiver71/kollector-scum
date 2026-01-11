@@ -151,6 +151,32 @@ case "$MODE" in
     fi
     export ConnectionStrings__DefaultConnection="$(postgres_url_to_npgsql "$RAW_URL")"
     export Database__Target="staging"
+    # Optional: load Cloudflare R2 credentials from .env so staging can use R2 storage
+    # Prefer already-exported env vars; fall back to values in $ENV_FILE if present
+    if [[ -z "${R2__Endpoint:-}" ]]; then
+      R2__Endpoint_VAL="$(read_dotenv_value "R2__Endpoint" "$ENV_FILE" 2>/dev/null || true)"
+      if [[ -n "$R2__Endpoint_VAL" ]]; then
+        export R2__Endpoint="$R2__Endpoint_VAL"
+      fi
+    fi
+    if [[ -z "${R2__AccessKeyId:-}" ]]; then
+      R2__AccessKeyId_VAL="$(read_dotenv_value "R2__AccessKeyId" "$ENV_FILE" 2>/dev/null || true)"
+      if [[ -n "$R2__AccessKeyId_VAL" ]]; then
+        export R2__AccessKeyId="$R2__AccessKeyId_VAL"
+      fi
+    fi
+    if [[ -z "${R2__SecretAccessKey:-}" ]]; then
+      R2__SecretAccessKey_VAL="$(read_dotenv_value "R2__SecretAccessKey" "$ENV_FILE" 2>/dev/null || true)"
+      if [[ -n "$R2__SecretAccessKey_VAL" ]]; then
+        export R2__SecretAccessKey="$R2__SecretAccessKey_VAL"
+      fi
+    fi
+    if [[ -z "${R2__BucketName:-}" ]]; then
+      R2__BucketName_VAL="$(read_dotenv_value "R2__BucketName" "$ENV_FILE" 2>/dev/null || true)"
+      if [[ -n "$R2__BucketName_VAL" ]]; then
+        export R2__BucketName="$R2__BucketName_VAL"
+      fi
+    fi
     ;;
   --production|--prod)
     if [[ ! -f "$ENV_FILE" ]]; then
@@ -163,6 +189,31 @@ case "$MODE" in
     fi
     export ConnectionStrings__DefaultConnection="$(postgres_url_to_npgsql "$RAW_URL")"
     export Database__Target="production"
+    # Optional: load Cloudflare R2 credentials from .env so production can use R2 storage
+    if [[ -z "${R2__Endpoint:-}" ]]; then
+      R2__Endpoint_VAL="$(read_dotenv_value "R2__Endpoint" "$ENV_FILE" 2>/dev/null || true)"
+      if [[ -n "$R2__Endpoint_VAL" ]]; then
+        export R2__Endpoint="$R2__Endpoint_VAL"
+      fi
+    fi
+    if [[ -z "${R2__AccessKeyId:-}" ]]; then
+      R2__AccessKeyId_VAL="$(read_dotenv_value "R2__AccessKeyId" "$ENV_FILE" 2>/dev/null || true)"
+      if [[ -n "$R2__AccessKeyId_VAL" ]]; then
+        export R2__AccessKeyId="$R2__AccessKeyId_VAL"
+      fi
+    fi
+    if [[ -z "${R2__SecretAccessKey:-}" ]]; then
+      R2__SecretAccessKey_VAL="$(read_dotenv_value "R2__SecretAccessKey" "$ENV_FILE" 2>/dev/null || true)"
+      if [[ -n "$R2__SecretAccessKey_VAL" ]]; then
+        export R2__SecretAccessKey="$R2__SecretAccessKey_VAL"
+      fi
+    fi
+    if [[ -z "${R2__BucketName:-}" ]]; then
+      R2__BucketName_VAL="$(read_dotenv_value "R2__BucketName" "$ENV_FILE" 2>/dev/null || true)"
+      if [[ -n "$R2__BucketName_VAL" ]]; then
+        export R2__BucketName="$R2__BucketName_VAL"
+      fi
+    fi
     ;;
   *)
     echo "Unknown mode: $MODE" >&2
