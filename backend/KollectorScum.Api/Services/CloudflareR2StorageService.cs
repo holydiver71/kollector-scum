@@ -105,10 +105,12 @@ namespace KollectorScum.Api.Services
 
             if (!string.IsNullOrWhiteSpace(_publicBaseUrl))
             {
-                return $"{_publicBaseUrl.TrimEnd('/')}/{bucketName}/{objectPath}";
+                // Expose a stable public URL that does NOT embed the internal bucket name.
+                // This decouples public paths from bucket naming and makes renames/routing easier.
+                return $"{_publicBaseUrl.TrimEnd('/')}/{objectPath}";
             }
 
-            // Fallback to ServiceURL style: https://{account}.r2.cloudflarestorage.com/{bucket}/{object}
+            // Fallback to ServiceURL style (includes bucket name) when no explicit public base URL is configured.
             var serviceUrl = (_s3Client.Config.ServiceURL ?? string.Empty).TrimEnd('/');
             return $"{serviceUrl}/{bucketName}/{objectPath}";
         }
