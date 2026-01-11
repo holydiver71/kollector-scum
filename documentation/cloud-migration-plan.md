@@ -453,6 +453,8 @@ public async Task<IActionResult> MigrateToCloudStorage()
 
 This updated endpoint correctly handles the multi-tenant requirements, making it the definitive method for migrating your existing images. After running this migration, all cover art will be served from the cloud, and the local `wwwroot/cover-art` directory will no longer be needed.
 
+Note on validity: the guidance and checklist above (everything before **7.6.1**) remain valid — the migration endpoint approach and multi-tenant-storage recommendations still apply. The main operational change is that your staging environment will no longer use the local file system or Supabase storage for staging-only testing; instead, staging will use a Cloudflare R2 bucket (`cover-art-staging`) while production will use the chosen cloud provider (Supabase or R2, see below).
+
 #### 7.6.1 Local multi-tenant migration (local-only)
 
 If you want to move to a multi-tenant layout on the local filesystem first (safe and reversible), follow this checklist. Each task is a discrete step you can tick off as you complete it.
@@ -469,10 +471,69 @@ If you want to move to a multi-tenant layout on the local filesystem first (safe
     - [x] Verifies the copied file exists and is readable, then updates `release.CoverArtUrl` to `/cover-art/{userId}/{filename}`.
 - [x] Backup `wwwroot/cover-art` before running the migration (e.g. `cp -a wwwroot/cover-art wwwroot/cover-art-backup-$(date +%Y%m%d)`).
 - [x] Run the migration endpoint in `Development` and verify images load at `/cover-art/{userId}/{filename}` in the frontend. ✅ 2,359 images migrated successfully!
-- [ ] Add unit/integration tests for `LocalFileSystemStorageService` and the migration endpoint (verify path-safety, allowed extensions, and failure paths).
+- [x] Add unit/integration tests for `LocalFileSystemStorageService` and the migration endpoint (verify path-safety, allowed extensions, and failure paths). ✅ 38 tests created covering path safety, extension validation, file size limits, and migration scenarios.
 - [ ] (Optional) After verification, run a cleanup job to remove orphaned files not referenced by the DB and optionally delete the original flat files.
 
 Notes: prefer copy-first behavior, validate content-types and sizes, and keep database backups before mass updates. This local-first approach makes later migration to cloud storage straightforward because every file will already be segmented by `userId`.
+
+### 7.6.2 Staging: switch to Cloudflare R2 (`cover-art-staging`)
+
+Now that local storage is multi-tenant, switch the staging environment to use your Cloudflare R2 bucket `cover-art-staging`. This gives staging a production-like object store while keeping the repo and API changes minimal.
+
+- [ ] Create or reuse the Cloudflare R2 bucket `cover-art-staging`.
+- [ ] Provision an R2 access key (Access Key ID + Secret) scoped for the bucket.
+- [ ] Add the following environment variables to your Render staging service (or equivalent):
+
+```
+R2__AccountId=<your-account-id>
+R2__Endpoint=https://<account_id>.r2.cloudflarestorage.com
+R2__AccessKeyId=<R2_ACCESS_KEY_ID>
+R2__SecretAccessKey=<R2_SECRET>
+R2__BucketName=cover-art-staging
+R2__PublicBaseUrl=https://<optional-worker-or-custom-domain>
+```
+
+- [ ] Update `Program.cs` in staging to register the Cloudflare R2 storage service (or set an environment switch so the R2 implementation is used in staging). Example: `builder.Services.AddScoped<IStorageService, CloudflareR2StorageService>();`.
+- [ ] Deploy staging and run the migration endpoint in staging (admin-only) to migrate existing local `wwwroot/cover-art/{userId}/{filename}` items into the `cover-art-staging` bucket. Use the programmatic migration endpoint described in **7.6**; it will place objects under `{userId}/{filename}`.
+- [ ] Verify uploads, public URLs, and deletion behavior in the Cloudflare dashboard and via the staging frontend.
+
+Notes: Using R2 for staging decouples your staging object store from Supabase limits and lets you test your R2-specific URL behavior (Workers/custom domains) before production.
+
+### 7.6.3 Production: Supabase + Cloudflare R2 considerations
+
+Decide whether production will store cover art in Supabase Storage or Cloudflare R2 (or both via a migration strategy). Add the following steps to the production rollout plan:
+
+- Provision a Supabase production project `kollector-scum-prod` with a `cover-art` bucket if you plan to use Supabase for production.
+- Alternatively (or additionally), provision a Cloudflare R2 bucket `cover-art-prod` and R2 credentials if you prefer R2 for production.
+- For Supabase production, add these env vars to your production service:
+
+```
+Supabase__Url=https://<prod-ref>.supabase.co
+Supabase__AnonKey=<prod-anon-key>
+```
+
+- For Cloudflare R2 production, add these env vars to your production service (Render/GHA/etc):
+
+```
+R2__AccountId=<your-account-id>
+R2__Endpoint=https://<account_id>.r2.cloudflarestorage.com
+R2__AccessKeyId=<R2_ACCESS_KEY_ID>
+R2__SecretAccessKey=<R2_SECRET>
+R2__BucketName=cover-art-prod
+R2__PublicBaseUrl=https://<optional-worker-or-custom-domain>
+```
+
+- If you change storage provider between staging and production (for example, staging uses R2 and production uses Supabase), implement a fallback resolution strategy in your API for read operations, or include a one-time migration step to move objects between providers. The migration endpoint described earlier can be adapted to upload from one provider to another by streaming the object and re-uploading to the target provider under the same `{userId}/{filename}` path.
+
+- Run the production migration (admin-only) only after carefully validating staging and backing up the DB and original files.
+
+Testing and monitoring:
+- Verify object accessibility, edit/delete flows, and CDN/Worker routing for production.
+- Monitor storage usage and request costs (R2 vs Supabase pricing differences).
+
+Decision checklist:
+- Choose `Supabase` if you want integrated DB + storage in one managed product and are comfortable with the free tier limits.
+- Choose `Cloudflare R2` if you need a cheaper/object-store-focused solution with Worker/custom-domain flexibility.
 
 ### 7.7 Update Dockerfile
 
