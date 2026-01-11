@@ -49,11 +49,16 @@ namespace KollectorScum.Api.Services
 
             try
             {
+                // Buffer into memory so the SDK can determine content length and avoid chunked signing
+                using var ms = new MemoryStream();
+                await fileStream.CopyToAsync(ms);
+                ms.Position = 0;
+
                 var putRequest = new PutObjectRequest
                 {
                     BucketName = bucketName ?? _bucketName,
                     Key = key,
-                    InputStream = fileStream,
+                    InputStream = ms,
                     ContentType = contentType
                 };
 

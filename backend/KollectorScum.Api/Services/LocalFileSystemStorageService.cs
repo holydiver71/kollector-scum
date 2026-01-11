@@ -35,27 +35,40 @@ namespace KollectorScum.Api.Services
                     throw new ArgumentException("User ID cannot be empty", nameof(userId));
                 if (string.IsNullOrWhiteSpace(fileName))
                     throw new ArgumentException("File name cannot be empty", nameof(fileName));
-                if (fileStream == null || !fileStream.CanRead)
+                if (fileStream == null)
+                    throw new ArgumentNullException(nameof(fileStream));
+
+                if (!fileStream.CanRead)
                     throw new ArgumentException("File stream must be readable", nameof(fileStream));
+
+                // Empty stream is invalid
+                if (fileStream.Length == 0)
+                    throw new ArgumentException("File stream is empty", nameof(fileStream));
 
                 // Sanitize filename (security: prevent directory traversal)
                 var sanitizedFileName = Path.GetFileName(fileName);
                 if (string.IsNullOrWhiteSpace(sanitizedFileName))
                     throw new ArgumentException("Invalid file name after sanitization", nameof(fileName));
 
-                // Validate file extension
+                // Determine extension. If content type indicates an image, normalize to .jpg
                 var extension = Path.GetExtension(sanitizedFileName).ToLowerInvariant();
-                if (!AllowedExtensions.Contains(extension))
+                if (!string.IsNullOrWhiteSpace(contentType) && contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
                 {
-                    throw new InvalidOperationException(
-                        $"File extension '{extension}' is not allowed. Allowed extensions: {string.Join(", ", AllowedExtensions)}");
+                    extension = ".jpg"; // normalize stored images to .jpg for consistency
+                }
+
+                // If extension still missing or not allowed, reject
+                if (string.IsNullOrWhiteSpace(extension) || !AllowedExtensions.Contains(extension))
+                {
+                    throw new ArgumentException(
+                        $"File extension '{extension}' is not allowed. Allowed extensions: {string.Join(", ", AllowedExtensions)}", nameof(fileName));
                 }
 
                 // Check file size
                 if (fileStream.Length > MaxFileSize)
                 {
-                    throw new InvalidOperationException(
-                        $"File size {fileStream.Length} bytes exceeds maximum allowed size of {MaxFileSize} bytes");
+                    throw new ArgumentException(
+                        $"File size {fileStream.Length} bytes exceeds maximum allowed size of {MaxFileSize} bytes", nameof(fileStream));
                 }
 
                 // Create unique filename to avoid collisions
