@@ -23,6 +23,12 @@ const nextConfig: NextConfig = {
         hostname: 'localhost',
         pathname: '/api/images/**',
       },
+      {
+        // Allow multi-tenant cover art storage (local filesystem)
+        protocol: 'http',
+        hostname: 'localhost',
+        pathname: '/cover-art/**',
+      },
     ],
   },
 };
