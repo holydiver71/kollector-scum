@@ -323,11 +323,11 @@ namespace KollectorScum.Api.Controllers
         /// This endpoint copies files from wwwroot/cover-art/{filename} to wwwroot/cover-art/{userId}/{filename}
         /// Only processes releases that have flat-path URLs and valid UserIds
         /// </summary>
-        [HttpPost("migrate-local-storage")]
+        [HttpPost("migrate-local-storage/{releaseId?}")]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public async Task<ActionResult> MigrateLocalStorage()
+        public async Task<ActionResult> MigrateLocalStorage(int? releaseId = null)
         {
             if (!await IsUserAdminAsync())
             {
@@ -337,11 +337,26 @@ namespace KollectorScum.Api.Controllers
             var currentUserId = GetUserIdFromClaims();
             _logger.LogInformation("Admin {AdminId} initiated local storage migration", currentUserId);
 
-            // Find all releases with Images JSON field (they contain just filenames that need migration)
-            // The Images field contains JSON like: {"CoverFront":"filename.jpg","CoverBack":null,"Thumbnail":"..."}
-            var releasesToMigrate = await _context.MusicReleases
-                .Where(r => r.Images != null && r.Images.Contains("CoverFront"))
-                .ToListAsync();
+            List<Models.MusicRelease> releasesToMigrate;
+
+            if (releaseId.HasValue)
+            {
+                var single = await _context.MusicReleases.FindAsync(releaseId.Value);
+                if (single == null)
+                {
+                    return NotFound(new { Message = "Release not found", ReleaseId = releaseId.Value });
+                }
+
+                releasesToMigrate = new List<Models.MusicRelease> { single };
+            }
+            else
+            {
+                // Find all releases with Images JSON field (they contain just filenames that need migration)
+                // The Images field contains JSON like: {"CoverFront":"filename.jpg","CoverBack":null,"Thumbnail":"..."}
+                releasesToMigrate = await _context.MusicReleases
+                    .Where(r => r.Images != null && r.Images.Contains("CoverFront"))
+                    .ToListAsync();
+            }
 
             if (!releasesToMigrate.Any())
             {

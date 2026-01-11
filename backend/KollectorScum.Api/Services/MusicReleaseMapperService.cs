@@ -3,6 +3,8 @@ using KollectorScum.Api.Interfaces;
 using KollectorScum.Api.Models;
 using KollectorScum.Api.Models.ValueObjects;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
+using System.IO;
 using System.Text.Json;
 
 namespace KollectorScum.Api.Services
@@ -16,17 +18,56 @@ namespace KollectorScum.Api.Services
         private readonly IRepository<Genre> _genreRepository;
         private readonly IRepository<Store> _storeRepository;
         private readonly ILogger<MusicReleaseMapperService> _logger;
+        private readonly IStorageService _storageService;
+        private readonly IConfiguration _configuration;
 
         public MusicReleaseMapperService(
             IRepository<Artist> artistRepository,
             IRepository<Genre> genreRepository,
             IRepository<Store> storeRepository,
-            ILogger<MusicReleaseMapperService> logger)
+            ILogger<MusicReleaseMapperService> logger,
+            IStorageService storageService,
+            IConfiguration configuration)
         {
             _artistRepository = artistRepository;
             _genreRepository = genreRepository;
             _storeRepository = storeRepository;
             _logger = logger;
+            // Tests and some callers may not provide storage/config during unit construction.
+            // Provide safe fallbacks in that case so the mapper remains usable in tests.
+            _storageService = storageService ?? new NoopStorageService();
+            _configuration = configuration ?? new ConfigurationBuilder().AddInMemoryCollection().Build();
+        }
+
+        // Backwards-compatible constructor for tests/older callers that don't provide storage/config
+        public MusicReleaseMapperService(
+            IRepository<Artist> artistRepository,
+            IRepository<Genre> genreRepository,
+            IRepository<Store> storeRepository,
+            ILogger<MusicReleaseMapperService> logger)
+            : this(artistRepository, genreRepository, storeRepository, logger, null, null)
+        {
+        }
+
+        // Lightweight fallback used when DI doesn't provide a storage implementation (tests/local)
+        private class NoopStorageService : IStorageService
+        {
+            public Task<string> UploadFileAsync(string bucketName, string userId, string fileName, Stream fileStream, string contentType)
+            {
+                var safe = Path.GetFileName(fileName);
+                    return Task.FromResult(safe);
+            }
+
+            public Task DeleteFileAsync(string bucketName, string userId, string fileName)
+            {
+                return Task.CompletedTask;
+            }
+
+            public string GetPublicUrl(string bucketName, string userId, string fileName)
+            {
+                var safe = Path.GetFileName(fileName);
+                    return safe;
+            }
         }
 
         public MusicReleaseSummaryDto MapToSummaryDto(MusicRelease musicRelease)
@@ -73,6 +114,9 @@ namespace KollectorScum.Api.Services
                 _logger.LogWarning(ex, "Failed to deserialize Images JSON for release {Id}", musicRelease.Id);
                 images = null;
             }
+
+            // Resolve image URLs (convert local/relative filenames to public URLs when storage is configured)
+            images = ResolveImageUrls(images, musicRelease.UserId);
 
             return new MusicReleaseSummaryDto
             {
@@ -139,6 +183,9 @@ namespace KollectorScum.Api.Services
                 }
             }
 
+            var images = await SafeDeserializeImageAsync(musicRelease.Images);
+            images = ResolveImageUrls(images, musicRelease.UserId);
+
             return new MusicReleaseDto
             {
                 Id = musicRelease.Id,
@@ -156,7 +203,7 @@ namespace KollectorScum.Api.Services
                 Packaging = musicRelease.Packaging != null ? new PackagingDto { Id = musicRelease.Packaging.Id, Name = musicRelease.Packaging.Name } : null,
                 Upc = musicRelease.Upc,
                 PurchaseInfo = await ResolvePurchaseInfoAsync(musicRelease.PurchaseInfo),
-                Images = await SafeDeserializeImageAsync(musicRelease.Images),
+                Images = images,
                 Links = await SafeDeserializeLinksAsync(musicRelease.Links),
                 Media = await ResolveMediaArtistsAsync(musicRelease.Media),
                 DateAdded = musicRelease.DateAdded,
@@ -266,6 +313,44 @@ namespace KollectorScum.Api.Services
             {
                 _logger.LogWarning(ex, "Failed to deserialize Links JSON for release: {Json}", linksJson);
                 return null;
+            }
+        }
+
+        private MusicReleaseImageDto? ResolveImageUrls(MusicReleaseImageDto? images, Guid userId)
+        {
+            if (images == null) return null;
+            images.CoverFront = ResolveImageUrl(images.CoverFront, userId);
+            images.CoverBack = ResolveImageUrl(images.CoverBack, userId);
+            images.Thumbnail = ResolveImageUrl(images.Thumbnail, userId);
+            return images;
+        }
+
+        private string? ResolveImageUrl(string? imageValue, Guid userId)
+        {
+            if (string.IsNullOrWhiteSpace(imageValue)) return null;
+            var trimmed = imageValue.Trim();
+            if (trimmed.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || trimmed.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                return trimmed;
+
+            // If value is a path like /cover-art/{userId}/{filename} or just a filename, use the last segment as filename
+            var fileName = trimmed.Contains('/') ? trimmed.Split('/').Last() : trimmed;
+
+            // Only resolve to a storage public URL when R2/storage is configured; otherwise return the raw value.
+            var r2Endpoint = _configuration["R2:Endpoint"] ?? _configuration["R2__Endpoint"];
+            if (string.IsNullOrWhiteSpace(r2Endpoint))
+            {
+                return trimmed;
+            }
+
+            var bucket = _configuration["R2:BucketName"] ?? _configuration["R2__BucketName"] ?? "cover-art";
+            try
+            {
+                return _storageService.GetPublicUrl(bucket, userId.ToString(), fileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to resolve image URL for {ImageValue}", imageValue);
+                return trimmed;
             }
         }
 
