@@ -1,7 +1,8 @@
 // Centralized API helper for frontend
 // Provides: configurable base URL, timeout handling, unified error formatting
 
-const DEFAULT_TIMEOUT_MS = 8000;
+// Increase default timeout to tolerate slow local/staging responses
+const DEFAULT_TIMEOUT_MS = Number(process.env.NEXT_PUBLIC_API_TIMEOUT_MS) || 20000;
 
 // Derive base URL priority:
 // 1. Explicit env var NEXT_PUBLIC_API_BASE_URL (e.g. http://localhost:5072)

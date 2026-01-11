@@ -16,9 +16,11 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
       {
+        // Allow local backend image proxy on any port (dev/test). Using protocol 'http' here
+        // to match local API URLs (e.g. http://localhost:8080/api/images/...). Omitting
+        // `port` lets Next accept any localhost port.
         protocol: 'http',
         hostname: 'localhost',
-        port: '5072',
         pathname: '/api/images/**',
       },
     ],
