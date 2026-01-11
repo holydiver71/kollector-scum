@@ -26,11 +26,28 @@ namespace KollectorScum.Api.Services
                 throw new InvalidOperationException("Google ClientId is not configured");
             }
 
+            // Allow configuring additional accepted audiences (comma-separated) for local/dev tokens
+            var allowedAudiencesRaw = _configuration["Google:AllowedAudiences"] ?? _configuration["Google__AllowedAudiences"];
+            string[] audiences;
+            if (!string.IsNullOrWhiteSpace(allowedAudiencesRaw))
+            {
+                audiences = allowedAudiencesRaw.Split(',').Select(s => s.Trim()).Where(s => !string.IsNullOrEmpty(s)).ToArray();
+                // Ensure the configured clientId is always accepted
+                if (!audiences.Contains(clientId))
+                {
+                    audiences = audiences.Append(clientId).ToArray();
+                }
+            }
+            else
+            {
+                audiences = new[] { clientId };
+            }
+
             try
             {
                 var settings = new GoogleJsonWebSignature.ValidationSettings
                 {
-                    Audience = new[] { clientId }
+                    Audience = audiences
                 };
 
                 var payload = await GoogleJsonWebSignature.ValidateAsync(idToken, settings);
