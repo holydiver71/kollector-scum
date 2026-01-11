@@ -81,12 +81,12 @@ jobs:
         working-directory: frontend
         env:
           NEXT_PUBLIC_API_BASE_URL: http://localhost:5072
-          NEXT_PUBLIC_GOOGLE_CLIENT_ID: dummy
+          NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.Google__ClientId }}
         run: npm run test -- --ci
 
       - name: Build
         working-directory: frontend
         env:
           NEXT_PUBLIC_API_BASE_URL: http://localhost:5072
-          NEXT_PUBLIC_GOOGLE_CLIENT_ID: dummy
+          NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.Google__ClientId }}
         run: npm run build
