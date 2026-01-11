@@ -1,29 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import { GoogleLogin, CredentialResponse } from "@react-oauth/google";
 import { exchangeGoogleIdToken, signOut, isAuthenticated, getUserProfile, type UserProfile } from "../lib/auth";
-
-// Google Identity Services types
-declare global {
-  interface Window {
-    google?: {
-      accounts: {
-        id: {
-          initialize: (config: {
-            client_id: string;
-            callback: (response: { credential: string }) => void;
-          }) => void;
-          renderButton: (element: HTMLElement, config: {
-            theme?: string;
-            size?: string;
-            text?: string;
-          }) => void;
-          prompt: () => void;
-        };
-      };
-    };
-  }
-}
 
 interface GoogleSignInProps {
   onSignIn?: (profile: UserProfile) => void;
@@ -36,11 +15,15 @@ export function GoogleSignIn({ onSignIn, className }: GoogleSignInProps) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check if user is already authenticated
     const checkAuth = async () => {
       if (isAuthenticated()) {
-        const userProfile = await getUserProfile();
-        setProfile(userProfile);
+        try {
+          const userProfile = await getUserProfile();
+          setProfile(userProfile);
+        } catch (e) {
+          console.error("Failed to get user profile", e);
+          signOut(); // Clear invalid token
+        }
       }
       setLoading(false);
     };
@@ -48,111 +31,52 @@ export function GoogleSignIn({ onSignIn, className }: GoogleSignInProps) {
     checkAuth();
   }, []);
 
-  useEffect(() => {
-    // Load Google Identity Services script
-    if (!profile && typeof window !== 'undefined') {
-      const initialize = () => {
-        // Small delay to ensure DOM is ready and script is fully processed
-        setTimeout(() => {
-          initializeGoogle();
-        }, 100);
-      };
-
-      if (window.google) {
-        initialize();
-        return;
-      }
-
-      const script = document.createElement('script');
-      script.src = 'https://accounts.google.com/gsi/client';
-      script.async = true;
-      script.defer = true;
-      document.body.appendChild(script);
-
-      script.onload = initialize;
-
-      return () => {
-        // Only remove if script is still in the DOM
-        if (script.parentNode) {
-          document.body.removeChild(script);
-        }
-      };
-    }
-  }, [profile]);
-
-  const initializeGoogle = () => {
-    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-    
-    if (!clientId) {
-      console.error('Google Client ID is not configured');
-      setError('Google Sign-In is not configured');
+  const handleSuccess = async (credentialResponse: CredentialResponse) => {
+    console.log('[GoogleSignIn] onSuccess credentialResponse:', credentialResponse);
+    if (!credentialResponse || !credentialResponse.credential) {
+      setError("Login failed: No credential returned.");
+      console.warn('[GoogleSignIn] No credential in response', credentialResponse);
       return;
     }
 
-    if (!window.google) {
-      console.error('Google Identity Services failed to load');
-      return;
-    }
-
-    window.google.accounts.id.initialize({
-      client_id: clientId,
-      callback: handleCredentialResponse,
-    });
-
-    const buttonDiv = document.getElementById('google-signin-button');
-    if (buttonDiv) {
-      window.google.accounts.id.renderButton(buttonDiv, {
-        theme: 'outline',
-        size: 'large',
-        text: 'signin_with',
-      });
-    }
-  };
-
-  const handleCredentialResponse = async (response: { credential: string }) => {
     try {
       setLoading(true);
       setError(null);
-      const authResponse = await exchangeGoogleIdToken(response.credential);
+      const authResponse = await exchangeGoogleIdToken(credentialResponse.credential);
       setProfile(authResponse.profile);
       
       if (onSignIn) {
         onSignIn(authResponse.profile);
       }
     } catch (err) {
+      console.error('[GoogleSignIn] exchangeGoogleIdToken error:', err);
       const message = err instanceof Error ? err.message : String(err);
-
-      // Check for 403 Forbidden (invitation required)
       if (message.includes('403') || message.includes('invitation')) {
-        console.warn('Access denied (invitation required).');
-        setError('Access is by invitation only. Please contact the administrator for access.');
-        return;
+        setError('Access is by invitation only.');
+      } else if (err instanceof TypeError && message.includes('Failed to fetch')) {
+        setError('Cannot reach the API. Is the backend running?');
+      } else {
+        setError('Failed to sign in.');
       }
-
-      // Network/CORS/API-down errors are common during local dev.
-      // Treat them as expected and avoid console.error noise.
-      if (err instanceof TypeError && message.includes('Failed to fetch')) {
-        console.warn('Authentication failed (API unreachable).');
-        setError('Cannot reach the API. Is the backend running at NEXT_PUBLIC_API_BASE_URL?');
-        return;
-      }
-
       console.error('Authentication failed:', err);
-      setError('Failed to sign in with Google');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleError = () => {
+    setError("Google Sign-In failed. Please try again.");
+    console.error('[GoogleSignIn] Google Sign-In failed (GoogleLogin onError)');
+  };
+
   const handleSignOut = () => {
-    setProfile(null);
     signOut();
-    // Redirect to home page which handles the logged-out state
+    setProfile(null);
     window.location.href = '/';
   };
 
-  if (loading && !profile) {
-    return <div className="text-sm text-gray-500">Loading...</div>;
+  if (loading) {
+    return <div className="text-sm text-white/80">Loading...</div>;
   }
 
   if (profile) {
@@ -182,9 +106,15 @@ export function GoogleSignIn({ onSignIn, className }: GoogleSignInProps) {
   return (
     <div className={className}>
       {error && (
-        <div className="text-sm text-red-600 mb-2">{error}</div>
+        <div className="text-sm text-red-400 bg-red-900/50 border border-red-600 px-3 py-2 rounded-md mb-2">{error}</div>
       )}
-      <div id="google-signin-button"></div>
+      <GoogleLogin
+        onSuccess={handleSuccess}
+        onError={handleError}
+        theme="outline"
+        size="large"
+        text="signin_with"
+      />
     </div>
   );
 }

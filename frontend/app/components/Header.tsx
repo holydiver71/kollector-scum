@@ -142,27 +142,24 @@ export default function Header() {
       {/* dark overlay for legibility */}
       <div className="absolute inset-0 bg-black/40" />
 
-      {/* Top-right fixed bar (kept for tests that assert sidebar offset behavior) */}
-      <div className="fixed top-0 right-0" style={{ left: 'var(--sidebar-offset)' }}>
-        <div className="py-0 items-start">
-          <GoogleSignIn onSignIn={handleSignIn} />
-        </div>
+      {/* Sign-in control positioned inside the header (top-right) */}
+      <div className="absolute top-4 right-4 z-20">
+        <GoogleSignIn onSignIn={handleSignIn} />
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-4">
-        {/* Primary site title for accessibility/tests */}
-        <h1 className="text-6xl font-black text-white mb-2">KOLLECTOR SKÜM</h1>
+        {/* Primary site title removed - header uses logo for branding */}
 
         {/* Kollection selector (moved next to search input) — rendered inline with QuickSearch */}
         <div className="flex flex-col md:flex-row items-start gap-2 md:gap-4">
-          <Link href="/" aria-label="Home" className="block">
-            <img
-              src="/images/Kollector-Skum-v2.png"
-              alt="Kollector Sküm logo"
-              className="h-36 w-auto object-contain shadow-md border-2 border-white"
-              style={{ display: 'block', backgroundColor: 'rgba(255,255,255,0.02)' }}
-            />
-          </Link>
+            <Link href="/" aria-label="Home" className="block">
+              <img
+                src="/images/Kollector-Skum-v2.png"
+                alt="Kollector Sküm logo"
+                className="h-36 w-auto object-contain"
+                style={{ display: 'block' }}
+              />
+            </Link>
           <div className="flex flex-col flex-1 min-w-0">
             <p className="text-[1.3125rem] text-white/90 font-semibold mt-2 md:mt-8">
               Organise and discover your music library

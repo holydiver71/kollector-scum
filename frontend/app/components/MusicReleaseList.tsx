@@ -399,12 +399,31 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
 
       console.log('API URL:', `/api/musicreleases?${params}`);
 
-      const response: PagedResult<MusicRelease> = await fetchJson(`/api/musicreleases?${params}`);
-      
-      setReleases(response.items);
-      setCurrentPage(response.page);
-      setTotalPages(response.totalPages);
-      setTotalCount(response.totalCount);
+      // Retry once on transient failures (network, timeouts)
+      let attempts = 0;
+      const maxAttempts = 2;
+      let lastErr: unknown = null;
+      let response: PagedResult<MusicRelease> | null = null;
+
+      while (attempts < maxAttempts) {
+        attempts += 1;
+        try {
+          response = await fetchJson(`/api/musicreleases?${params}`);
+          lastErr = null;
+          break;
+        } catch (e) {
+          lastErr = e;
+          console.warn(`fetchReleases attempt ${attempts} failed`, e);
+          if (attempts < maxAttempts) await new Promise(r => setTimeout(r, 600 * attempts));
+        }
+      }
+
+      if (!response && lastErr) throw lastErr;
+
+      setReleases((response as PagedResult<MusicRelease>).items);
+      setCurrentPage((response as PagedResult<MusicRelease>).page);
+      setTotalPages((response as PagedResult<MusicRelease>).totalPages);
+      setTotalCount((response as PagedResult<MusicRelease>).totalCount);
     } catch (err) {
       console.error('Error fetching releases:', err);
       
