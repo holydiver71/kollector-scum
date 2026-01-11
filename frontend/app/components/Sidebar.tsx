@@ -18,7 +18,7 @@ import {
   FolderOpen
 } from 'lucide-react';
 import { Shuffle } from 'lucide-react';
-import { getRandomReleaseId } from '../lib/api';
+import { getRandomReleaseId, fetchJson } from '../lib/api';
 
 interface NavigationItem {
   name: string;
@@ -63,15 +63,8 @@ const Sidebar: React.FC = () => {
     const checkCollection = async () => {
       if (isLoggedIn && hasCollection === null) {
         try {
-          const response = await fetch('/api/musicreleases?Pagination.PageNumber=1&Pagination.PageSize=1', {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            },
-          });
-          if (response.ok) {
-            const data = await response.json();
-            setHasCollection(data.totalCount > 0);
-          }
+          const data = await fetchJson<{ totalCount: number }>('/api/musicreleases?Pagination.PageNumber=1&Pagination.PageSize=1');
+          setHasCollection(data.totalCount > 0);
         } catch (err) {
           console.error('Failed to check collection status:', err);
           // Assume collection exists on error to avoid blocking UI
