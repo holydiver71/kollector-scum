@@ -29,6 +29,12 @@ const nextConfig: NextConfig = {
         hostname: 'localhost',
         pathname: '/cover-art/**',
       },
+      {
+        // Allow Cloudflare Worker domains used as image proxy/public gateway
+        protocol: 'https',
+        hostname: '*.workers.dev',
+        pathname: '/**',
+      },
     ],
   },
 };
