@@ -3,22 +3,30 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using KollectorScum.Api.Controllers;
+using KollectorScum.Api.Data;
 using KollectorScum.Api.DTOs;
 using KollectorScum.Api.Interfaces;
 using KollectorScum.Api.Models;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
 namespace KollectorScum.Tests.Controllers
 {
-    public class AdminControllerTests
+    public class AdminControllerTests : IDisposable
     {
         private readonly Mock<IUserRepository> _mockUserRepository;
         private readonly Mock<IUserInvitationRepository> _mockInvitationRepository;
         private readonly Mock<ILogger<AdminController>> _mockLogger;
+        private readonly Mock<IStorageService> _mockStorageService;
+        private readonly Mock<IWebHostEnvironment> _mockEnvironment;
+        private readonly Mock<IConfiguration> _mockConfiguration;
+        private readonly KollectorScumDbContext _context;
         private readonly AdminController _controller;
         private readonly Guid _adminUserId = Guid.NewGuid();
 
@@ -27,11 +35,24 @@ namespace KollectorScum.Tests.Controllers
             _mockUserRepository = new Mock<IUserRepository>();
             _mockInvitationRepository = new Mock<IUserInvitationRepository>();
             _mockLogger = new Mock<ILogger<AdminController>>();
+            _mockStorageService = new Mock<IStorageService>();
+            _mockEnvironment = new Mock<IWebHostEnvironment>();
+            _mockConfiguration = new Mock<IConfiguration>();
+
+            // Create in-memory database
+            var options = new DbContextOptionsBuilder<KollectorScumDbContext>()
+                .UseInMemoryDatabase(databaseName: $"TestDb_{Guid.NewGuid()}")
+                .Options;
+            _context = new KollectorScumDbContext(options);
 
             _controller = new AdminController(
                 _mockUserRepository.Object,
                 _mockInvitationRepository.Object,
-                _mockLogger.Object
+                _mockLogger.Object,
+                _context,
+                _mockStorageService.Object,
+                _mockEnvironment.Object,
+                _mockConfiguration.Object
             );
 
             // Set up authenticated admin user
@@ -45,6 +66,12 @@ namespace KollectorScum.Tests.Controllers
             {
                 HttpContext = new DefaultHttpContext { User = claimsPrincipal }
             };
+        }
+
+        public void Dispose()
+        {
+            _context.Database.EnsureDeleted();
+            _context.Dispose();
         }
 
         [Fact]
