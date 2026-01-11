@@ -62,7 +62,12 @@ export const MusicReleaseCard = React.memo(function MusicReleaseCard({ release }
       if (release.coverImageUrl.startsWith('http://') || release.coverImageUrl.startsWith('https://')) {
         return release.coverImageUrl;
       }
-      // Otherwise, serve images through the backend API - use full backend URL
+      // If it starts with /cover-art/, it's already a full path (multi-tenant storage)
+      if (release.coverImageUrl.startsWith('/cover-art/')) {
+        const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5072';
+        return `${apiBaseUrl}${release.coverImageUrl}`;
+      }
+      // Otherwise, serve images through the backend API with /api/images/
       const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5072';
       return `${apiBaseUrl}/api/images/${release.coverImageUrl}`;
     }

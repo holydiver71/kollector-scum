@@ -453,6 +453,27 @@ public async Task<IActionResult> MigrateToCloudStorage()
 
 This updated endpoint correctly handles the multi-tenant requirements, making it the definitive method for migrating your existing images. After running this migration, all cover art will be served from the cloud, and the local `wwwroot/cover-art` directory will no longer be needed.
 
+#### 7.6.1 Local multi-tenant migration (local-only)
+
+If you want to move to a multi-tenant layout on the local filesystem first (safe and reversible), follow this checklist. Each task is a discrete step you can tick off as you complete it.
+
+- [x] Add `IStorageService` interface (`backend/KollectorScum.Api/Services/IStorageService.cs`) with methods `UploadFileAsync`, `DeleteFileAsync`, and `GetPublicUrl`.
+- [x] Implement `LocalFileSystemStorageService` (`backend/KollectorScum.Api/Services/LocalFileSystemStorageService.cs`) that stores files under `wwwroot/cover-art/{userId}/{filename}` and returns URLs like `/cover-art/{userId}/{filename}`.
+- [x] Ensure `LocalFileSystemStorageService` sanitizes filenames via `Path.GetFileName` and restricts allowed extensions (jpg, jpeg, png, webp).
+- [x] Register the local storage service in `Program.cs` (scoped `IStorageService`).
+- [x] Update `ReleasesController` to use `IStorageService` for upload and delete operations, and to return per-user URLs.
+- [x] Add an admin-only migration endpoint (example: `POST /releases/migrate-local-storage`) that:
+    - [x] Finds releases where `CoverArtUrl` points to the old flat path (e.g. `/cover-art/{filename}`).
+    - [x] Skips and logs releases missing `UserId` (do not guess owners).
+    - [x] Copies files from `wwwroot/cover-art/{filename}` to `wwwroot/cover-art/{userId}/{filename}` using the storage service (copy first; do not delete originals yet).
+    - [x] Verifies the copied file exists and is readable, then updates `release.CoverArtUrl` to `/cover-art/{userId}/{filename}`.
+- [x] Backup `wwwroot/cover-art` before running the migration (e.g. `cp -a wwwroot/cover-art wwwroot/cover-art-backup-$(date +%Y%m%d)`).
+- [x] Run the migration endpoint in `Development` and verify images load at `/cover-art/{userId}/{filename}` in the frontend. ✅ 2,359 images migrated successfully!
+- [ ] Add unit/integration tests for `LocalFileSystemStorageService` and the migration endpoint (verify path-safety, allowed extensions, and failure paths).
+- [ ] (Optional) After verification, run a cleanup job to remove orphaned files not referenced by the DB and optionally delete the original flat files.
+
+Notes: prefer copy-first behavior, validate content-types and sizes, and keep database backups before mass updates. This local-first approach makes later migration to cloud storage straightforward because every file will already be segmented by `userId`.
+
 ### 7.7 Update Dockerfile
 
 Ensure the Dockerfile doesn't need to persist `wwwroot/cover-art/` as a volume:

@@ -25,7 +25,13 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
       return imagePath;
     }
     
-    // Otherwise, treat it as a relative path and construct the full URL
+    // If it starts with /cover-art/, it's already a full path (multi-tenant storage)
+    if (imagePath.startsWith('/cover-art/')) {
+      const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5072';
+      return `${apiBaseUrl}${imagePath}`;
+    }
+    
+    // Otherwise, treat it as a relative path and construct the full URL with /api/images/
     const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5072';
     return `${apiBaseUrl}/api/images/${imagePath}`;
   };

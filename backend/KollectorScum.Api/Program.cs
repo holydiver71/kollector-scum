@@ -142,6 +142,9 @@ builder.Services.AddHttpContextAccessor();
 // Register user context service
 builder.Services.AddScoped<IUserContext, UserContext>();
 
+// Register storage service
+builder.Services.AddScoped<IStorageService, LocalFileSystemStorageService>();
+
 // Register KollectorScumDbContext with PostgreSQL
 // NOTE: Do not suppress EF warnings or apply migrations automatically in production.
 // Migrations should be applied as part of deployment (CI/CD) using `dotnet ef database update`
