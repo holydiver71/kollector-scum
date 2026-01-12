@@ -35,6 +35,12 @@ const nextConfig: NextConfig = {
         hostname: '*.workers.dev',
         pathname: '/**',
       },
+      {
+        // Allow Cloudflare R2 storage domains (cover art storage)
+        protocol: 'https',
+        hostname: '*.r2.cloudflarestorage.com',
+        pathname: '/**',
+      },
     ],
   },
 };
