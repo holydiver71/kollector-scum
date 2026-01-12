@@ -2,21 +2,25 @@
 
 kollector-scrum is a music collection web app used to catalogue a user's music collection.
 
-## Technology Stack
-- Backend: C# .NET 8 Web API
-- Frontend: Next.js 14 with TypeScript
-- Database: PostgreSQL with Entity Framework Core
-- Unit Testing: xUnit with Moq
-- E2E Testing: Playwright
-- Architecture: Clean Architecture (SOLID)
+## Getting Started
 
-## Project Structure
-- `/backend` - C# .NET 8 Web API
-- `/frontend` - Next.js 14 with TypeScript
-- `/tests` - xUnit and Playwright tests
+See the full Getting Started guide in [documentation/Getting Started.md](documentation/Getting%20Started.md).
+# or: ./backend/scripts/run-api-local.sh --local
+```
 
-## Development Plan
-See `musiccollectorplan2.md` for the full phased plan and guidelines.
+- Install and run frontend:
 
-## History
-This is a music collection app born of an obsession to manage my music collection my way. I'm an old fashioned software engineer, out of the game for 10+ years and figuring out how to develop a modern web application using AI (github co-pilot is my friend here) while learning the basic of the technologies listed above. Wish me luck...
+```bash
+cd frontend
+npm ci
+npm run dev
+```
+
+Or from the repo root:
+
+```bash
+npm --prefix frontend ci
+npm --prefix frontend run dev
+```
+
+Security note: do not commit your real `.env`. Use GitHub Secrets for CI and only export secrets to local files temporarily.

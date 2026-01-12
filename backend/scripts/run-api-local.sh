@@ -177,6 +177,12 @@ case "$MODE" in
         export R2__BucketName="$R2__BucketName_VAL"
       fi
     fi
+    if [[ -z "${R2__PublicBaseUrl:-}" ]]; then
+      R2__PublicBaseUrl_VAL="$(read_dotenv_value "R2__PublicBaseUrl" "$ENV_FILE" 2>/dev/null || true)"
+      if [[ -n "$R2__PublicBaseUrl_VAL" ]]; then
+        export R2__PublicBaseUrl="$R2__PublicBaseUrl_VAL"
+      fi
+    fi
     ;;
   --production|--prod)
     if [[ ! -f "$ENV_FILE" ]]; then
@@ -212,6 +218,12 @@ case "$MODE" in
       R2__BucketName_VAL="$(read_dotenv_value "R2__BucketName" "$ENV_FILE" 2>/dev/null || true)"
       if [[ -n "$R2__BucketName_VAL" ]]; then
         export R2__BucketName="$R2__BucketName_VAL"
+      fi
+    fi
+    if [[ -z "${R2__PublicBaseUrl:-}" ]]; then
+      R2__PublicBaseUrl_VAL="$(read_dotenv_value "R2__PublicBaseUrl" "$ENV_FILE" 2>/dev/null || true)"
+      if [[ -n "$R2__PublicBaseUrl_VAL" ]]; then
+        export R2__PublicBaseUrl="$R2__PublicBaseUrl_VAL"
       fi
     fi
     ;;
