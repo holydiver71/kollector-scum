@@ -114,6 +114,23 @@ namespace KollectorScum.Api.Data
                 .HasDatabaseName("IX_MusicReleases_ReleaseYear");
 
             modelBuilder.Entity<Models.MusicRelease>()
+                .HasIndex(mr => mr.DateAdded)
+                .HasDatabaseName("IX_MusicReleases_DateAdded");
+
+            modelBuilder.Entity<Models.MusicRelease>()
+                .HasIndex(mr => mr.OrigReleaseYear)
+                .HasDatabaseName("IX_MusicReleases_OrigReleaseYear");
+
+            // Composite indexes for common query patterns
+            modelBuilder.Entity<Models.MusicRelease>()
+                .HasIndex(mr => new { mr.UserId, mr.DateAdded })
+                .HasDatabaseName("IX_MusicReleases_UserId_DateAdded");
+
+            modelBuilder.Entity<Models.MusicRelease>()
+                .HasIndex(mr => new { mr.UserId, mr.Title })
+                .HasDatabaseName("IX_MusicReleases_UserId_Title");
+
+            modelBuilder.Entity<Models.MusicRelease>()
                 .HasIndex(mr => mr.LabelId)
                 .HasDatabaseName("IX_MusicReleases_LabelId");
 
