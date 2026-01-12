@@ -49,6 +49,13 @@ builder.Services.AddControllers()
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
+// Add response caching for improved performance
+builder.Services.AddResponseCaching(options =>
+{
+    options.MaximumBodySize = 1024 * 1024 * 10; // 10MB cache size
+    options.UseCaseSensitivePaths = false;
+});
+
 builder.Services.AddHealthChecks();
 
 // Configure CORS for frontend integration
@@ -295,6 +302,9 @@ if (app.Environment.IsDevelopment())
 
 // Add CORS for frontend integration
 app.UseCors("FrontendCorsPolicy");
+
+// Enable response caching
+app.UseResponseCaching();
 
 // Enable static files for serving cover art
 app.UseStaticFiles();
