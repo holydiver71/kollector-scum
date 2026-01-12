@@ -88,3 +88,4 @@ const Skeleton: React.FC<SkeletonProps> = ({ className = "", lines = 1 }) => {
 };
 
 export { LoadingSpinner, LoadingState, Skeleton };
+export { VinylSpinner, VinylLoadingOverlay } from './VinylSpinner';

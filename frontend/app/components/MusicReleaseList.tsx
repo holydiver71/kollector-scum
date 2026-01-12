@@ -6,6 +6,7 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { fetchJson, createNowPlaying, ApiError } from "../lib/api";
 import { clearAuthToken } from "../lib/auth";
 import { LoadingSpinner, Skeleton } from "./LoadingComponents";
+import { VinylSpinner } from "./VinylSpinner";
 import { Play, Check, User, Clock, Calendar, Disc3, ChevronLeft, ChevronRight, Eye, List } from "lucide-react";
 
 import SortPanel from "./SortPanel";
@@ -117,6 +118,8 @@ export const MusicReleaseCard = React.memo(function MusicReleaseCard({ release }
             onError={() => setImageError(true)}
             onLoad={() => setImageError(false)}
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
+            loading="lazy"
+            quality={75}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-400">
@@ -493,17 +496,11 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
 
   if (loading && releases.length === 0) {
     return (
-      <div className="space-y-4">
-        {[...Array(5)].map((_, i) => (
-          <div key={i} className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="flex items-start gap-4">
-              <div className="w-16 h-16 bg-gray-200 rounded-md animate-pulse" />
-              <div className="flex-grow space-y-2">
-                <Skeleton lines={3} />
-              </div>
-            </div>
-          </div>
-        ))}
+      <div className="min-h-screen flex items-start justify-center pt-8">
+        <VinylSpinner 
+          size="large" 
+          message="Loading your collection..." 
+        />
       </div>
     );
   }
@@ -544,7 +541,8 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
 
   return (
     <div>
-      {/* Results Header */}
+      {/* Results Header - hidden during initial load */}
+      {!loading && (
       <div className={`flex items-center justify-between ${(searchParams?.get('showSort') === 'true' || searchParams?.get('showAdvanced') === 'true') ? 'mb-1' : 'mb-6'}`}>
         <div className="text-sm text-white">
           Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalCount)} of {totalCount} releases
@@ -630,8 +628,9 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
           {/* loading spinner is shown in the middle segment to avoid layout shift */}
         </div>
       </div>
+      )}
 
-      {searchParams?.get('showSort') === 'true' && (
+      {!loading && searchParams?.get('showSort') === 'true' && (
         <div className="w-full mt-0 mb-6">
           <SortPanel
             filters={filters}
