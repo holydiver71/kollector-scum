@@ -92,6 +92,7 @@ export function LookupDropdown<T extends LookupItem>({
 
   // Position the portal dropdown so it aligns with the button
   const updateDropdownPosition = () => {
+    if (typeof window === 'undefined') return;
     const btn = buttonRef.current;
     if (!btn) return setDropdownStyle(null);
     const r = btn.getBoundingClientRect();
