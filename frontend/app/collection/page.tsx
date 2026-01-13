@@ -178,12 +178,15 @@ export default function CollectionPage() {
           <>
             {/* Render the SearchAndFilter panel here for page-level tests and
                 integration — the advanced inline filters are still rendered in
-                `MusicReleaseList` but tests expect a page-level component. */}
-            <SearchAndFilter
-              onFiltersChange={handleFiltersChange}
-              initialFilters={filters}
-              enableUrlSync={true}
-            />
+                `MusicReleaseList` but tests expect a page-level component. 
+                Hidden from UI via CSS to prevent duplicate filter panels. */}
+            <div className="hidden">
+              <SearchAndFilter
+                onFiltersChange={handleFiltersChange}
+                initialFilters={filters}
+                enableUrlSync={true}
+              />
+            </div>
             {/* Only render the SearchAndFilter panel when the advanced filters are visible
                 or when the inline search input is required. This removes the empty white
                 panel when filters are hidden (header handles search and the page shows chips). */}

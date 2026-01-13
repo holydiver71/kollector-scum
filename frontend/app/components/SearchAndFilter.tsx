@@ -78,7 +78,7 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
 
   // Update URL when filters change (but not during initialization)
   useEffect(() => {
-    if (enableUrlSync && !isInitializing) {
+    if (enableUrlSync && !isInitializing && typeof window !== 'undefined') {
       console.log('SearchAndFilter updating URL, filters:', filters, 'isInitializing:', isInitializing);
       const params = new URLSearchParams();
       Object.entries(filters).forEach(([key, value]) => {
@@ -541,6 +541,7 @@ export function QuickSearch({
 
   // Compute portal dropdown position and size so it aligns with the input
   const updateDropdownPosition = () => {
+    if (typeof window === 'undefined') return;
     const input = inputRef.current;
     if (!input) return setDropdownStyle(null);
     const r = input.getBoundingClientRect();
