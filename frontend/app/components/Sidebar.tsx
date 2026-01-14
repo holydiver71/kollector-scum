@@ -63,8 +63,18 @@ const Sidebar: React.FC = () => {
     const checkCollection = async () => {
       if (isLoggedIn && hasCollection === null) {
         try {
-          const data = await fetchJson<{ totalCount: number }>('/api/musicreleases?Pagination.PageNumber=1&Pagination.PageSize=1');
-          setHasCollection(data.totalCount > 0);
+          // Request may return 401 if token is invalid; swallow non-OK responses
+          // so auth handling can proceed without a noisy console error.
+          const data = await fetchJson<{ totalCount: number }>(
+            '/api/musicreleases?Pagination.PageNumber=1&Pagination.PageSize=1',
+            { swallowErrors: true }
+          );
+
+          if (data) {
+            setHasCollection(data.totalCount > 0);
+          }
+          // If data is null (e.g. 401), `fetchJson` already cleared auth and
+          // dispatched `authChanged`; we'll let the auth listener update state.
         } catch (err) {
           console.error('Failed to check collection status:', err);
           // Assume collection exists on error to avoid blocking UI
