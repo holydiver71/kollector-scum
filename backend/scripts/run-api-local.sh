@@ -7,7 +7,7 @@ ENV_FILE="$ROOT_DIR/.env"
 
 usage() {
   cat >&2 <<'EOF'
-Run the backend locally, pointing at local/staging/production DB.
+Run the backend locally, pointing at local/staging/production DB and R2 storage.
 
 Usage:
   backend/scripts/run-api-local.sh --local
@@ -19,10 +19,11 @@ Options:
   --environment <name>   ASPNETCORE_ENVIRONMENT (default Development)
 
 Notes:
-  - --staging uses .env: KOLLECTOR_STAGING_DB_URL
-  - --production uses .env: KOLLECTOR_PROD_DB_URL
+  - --staging uses .env: KOLLECTOR_STAGING_DB_URL + R2_STAGING__* variables
+  - --production uses .env: KOLLECTOR_PROD_DB_URL + R2_PROD__* variables
   - Converts postgresql:// URLs into an Npgsql key/value connection string.
   - Does NOT print the connection string.
+  - R2 credentials are automatically loaded and mapped to R2__* environment variables.
 EOF
 }
 
@@ -151,38 +152,18 @@ case "$MODE" in
     fi
     export ConnectionStrings__DefaultConnection="$(postgres_url_to_npgsql "$RAW_URL")"
     export Database__Target="staging"
-    # Optional: load Cloudflare R2 credentials from .env so staging can use R2 storage
-    # Prefer already-exported env vars; fall back to values in $ENV_FILE if present
-    if [[ -z "${R2__Endpoint:-}" ]]; then
-      R2__Endpoint_VAL="$(read_dotenv_value "R2__Endpoint" "$ENV_FILE" 2>/dev/null || true)"
-      if [[ -n "$R2__Endpoint_VAL" ]]; then
-        export R2__Endpoint="$R2__Endpoint_VAL"
+    
+    # Load Cloudflare R2 credentials for staging (R2_STAGING__* → R2__*)
+    for key in AccountId Endpoint AccessKeyId SecretAccessKey BucketName PublicBaseUrl; do
+      staging_key="R2_STAGING__${key}"
+      target_key="R2__${key}"
+      if [[ -z "${!target_key:-}" ]]; then
+        val="$(read_dotenv_value "$staging_key" "$ENV_FILE" 2>/dev/null || true)"
+        if [[ -n "$val" ]]; then
+          export "${target_key}=${val}"
+        fi
       fi
-    fi
-    if [[ -z "${R2__AccessKeyId:-}" ]]; then
-      R2__AccessKeyId_VAL="$(read_dotenv_value "R2__AccessKeyId" "$ENV_FILE" 2>/dev/null || true)"
-      if [[ -n "$R2__AccessKeyId_VAL" ]]; then
-        export R2__AccessKeyId="$R2__AccessKeyId_VAL"
-      fi
-    fi
-    if [[ -z "${R2__SecretAccessKey:-}" ]]; then
-      R2__SecretAccessKey_VAL="$(read_dotenv_value "R2__SecretAccessKey" "$ENV_FILE" 2>/dev/null || true)"
-      if [[ -n "$R2__SecretAccessKey_VAL" ]]; then
-        export R2__SecretAccessKey="$R2__SecretAccessKey_VAL"
-      fi
-    fi
-    if [[ -z "${R2__BucketName:-}" ]]; then
-      R2__BucketName_VAL="$(read_dotenv_value "R2__BucketName" "$ENV_FILE" 2>/dev/null || true)"
-      if [[ -n "$R2__BucketName_VAL" ]]; then
-        export R2__BucketName="$R2__BucketName_VAL"
-      fi
-    fi
-    if [[ -z "${R2__PublicBaseUrl:-}" ]]; then
-      R2__PublicBaseUrl_VAL="$(read_dotenv_value "R2__PublicBaseUrl" "$ENV_FILE" 2>/dev/null || true)"
-      if [[ -n "$R2__PublicBaseUrl_VAL" ]]; then
-        export R2__PublicBaseUrl="$R2__PublicBaseUrl_VAL"
-      fi
-    fi
+    done
     ;;
   --production|--prod)
     if [[ ! -f "$ENV_FILE" ]]; then
@@ -195,37 +176,18 @@ case "$MODE" in
     fi
     export ConnectionStrings__DefaultConnection="$(postgres_url_to_npgsql "$RAW_URL")"
     export Database__Target="production"
-    # Optional: load Cloudflare R2 credentials from .env so production can use R2 storage
-    if [[ -z "${R2__Endpoint:-}" ]]; then
-      R2__Endpoint_VAL="$(read_dotenv_value "R2__Endpoint" "$ENV_FILE" 2>/dev/null || true)"
-      if [[ -n "$R2__Endpoint_VAL" ]]; then
-        export R2__Endpoint="$R2__Endpoint_VAL"
+    
+    # Load Cloudflare R2 credentials for production (R2_PROD__* → R2__*)
+    for key in AccountId Endpoint AccessKeyId SecretAccessKey BucketName PublicBaseUrl; do
+      prod_key="R2_PROD__${key}"
+      target_key="R2__${key}"
+      if [[ -z "${!target_key:-}" ]]; then
+        val="$(read_dotenv_value "$prod_key" "$ENV_FILE" 2>/dev/null || true)"
+        if [[ -n "$val" ]]; then
+          export "${target_key}=${val}"
+        fi
       fi
-    fi
-    if [[ -z "${R2__AccessKeyId:-}" ]]; then
-      R2__AccessKeyId_VAL="$(read_dotenv_value "R2__AccessKeyId" "$ENV_FILE" 2>/dev/null || true)"
-      if [[ -n "$R2__AccessKeyId_VAL" ]]; then
-        export R2__AccessKeyId="$R2__AccessKeyId_VAL"
-      fi
-    fi
-    if [[ -z "${R2__SecretAccessKey:-}" ]]; then
-      R2__SecretAccessKey_VAL="$(read_dotenv_value "R2__SecretAccessKey" "$ENV_FILE" 2>/dev/null || true)"
-      if [[ -n "$R2__SecretAccessKey_VAL" ]]; then
-        export R2__SecretAccessKey="$R2__SecretAccessKey_VAL"
-      fi
-    fi
-    if [[ -z "${R2__BucketName:-}" ]]; then
-      R2__BucketName_VAL="$(read_dotenv_value "R2__BucketName" "$ENV_FILE" 2>/dev/null || true)"
-      if [[ -n "$R2__BucketName_VAL" ]]; then
-        export R2__BucketName="$R2__BucketName_VAL"
-      fi
-    fi
-    if [[ -z "${R2__PublicBaseUrl:-}" ]]; then
-      R2__PublicBaseUrl_VAL="$(read_dotenv_value "R2__PublicBaseUrl" "$ENV_FILE" 2>/dev/null || true)"
-      if [[ -n "$R2__PublicBaseUrl_VAL" ]]; then
-        export R2__PublicBaseUrl="$R2__PublicBaseUrl_VAL"
-      fi
-    fi
+    done
     ;;
   *)
     echo "Unknown mode: $MODE" >&2

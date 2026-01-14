@@ -188,13 +188,57 @@ Notes:
 - Keep staging and production as separate Supabase projects to reduce blast radius.
 - Store the connection strings as secrets (GitHub Actions / Render / local secret manager), never in git.
 
-### 6.3 Local vs staging vs production (switching databases)
+### 6.3 Initial production data migration (one-time setup)
+
+For your initial production launch, you'll need to migrate your existing collection data from local/staging to production. This is a **one-time operation** - after this, staging and production maintain separate data.
+
+**📖 Detailed walkthrough:** See [section-6.3-production-setup.md](./section-6.3-production-setup.md) for complete step-by-step instructions.
+
+**Quick summary:**
+
+**Option 1: pg_dump/pg_restore (Recommended for initial migration)**
+
+Export from staging:
+```bash
+pg_dump "$KOLLECTOR_STAGING_DB_URL" \
+  --data-only \
+  --no-owner \
+  --no-privileges \
+  --exclude-table-data=__EFMigrationsHistory \
+  -f staging_data.sql
+```
+
+Import to production (after schema migrations applied):
+```bash
+psql "$KOLLECTOR_PROD_DB_URL" -f staging_data.sql
+```
+
+**Option 2: Supabase dashboard export/import**
+1. Go to staging Supabase project → Database → Backups
+2. Create a manual backup or download existing backup
+3. Go to production Supabase project → Database → Backups  
+4. Import the backup (note: this will include schema, adjust if schema already exists)
+
+**Option 3: Application-level data seeder (for controlled, selective migration)**
+- Create a one-time data migration endpoint in your API
+- Read from staging DB connection
+- Write to production DB connection
+- Allows filtering/transforming data during migration
+
+**Important notes:**
+- Run production schema migrations (`apply-ef-migrations.sh --production`) **before** importing data
+- Backup staging database before export
+- Test the import on a **non-production copy** of the database first
+- Verify user IDs, timestamps, and foreign key relationships after import
+- After migration, staging and production evolve independently (no ongoing sync)
+
+### 6.4 Local vs staging vs production (switching databases)
 You do NOT have to keep using a local database once staging exists, but it’s usually best for day-to-day development:
 - Local DB: fast iteration, easy resets/seed data, no shared state.
 - Staging DB: integration testing in a “prod-like” environment (networking, auth, hosting config).
 - Production DB: avoid using for dev/testing; treat as read-only except controlled migrations/releases.
 
-#### 6.3.1 What controls which DB the API uses?
+#### 6.4.1 What controls which DB the API uses?
 The backend chooses its database based on `ConnectionStrings:DefaultConnection` (highest priority wins):
 1. Environment variable: `ConnectionStrings__DefaultConnection`
 2. `appsettings.{Environment}.json` (e.g. `appsettings.Development.json`)
@@ -202,7 +246,7 @@ The backend chooses its database based on `ConnectionStrings:DefaultConnection` 
 
 `ASPNETCORE_ENVIRONMENT` selects which `appsettings.{Environment}.json` is loaded (e.g. `Development`, `Staging`, `Production`).
 
-#### 6.3.2 Switch backend DB while running locally
+#### 6.4.2 Switch backend DB while running locally
 Local DB (default dev):
 - Run with `ASPNETCORE_ENVIRONMENT=Development` and keep `ConnectionStrings:DefaultConnection` in `appsettings.Development.json` pointing to localhost.
 Copy/paste (local DB):
@@ -476,13 +520,13 @@ If you want to move to a multi-tenant layout on the local filesystem first (safe
 
 Notes: prefer copy-first behavior, validate content-types and sizes, and keep database backups before mass updates. This local-first approach makes later migration to cloud storage straightforward because every file will already be segmented by `userId`.
 
-### 7.6.2 Staging: switch to Cloudflare R2 (`cover-art-staging`)
+### 7.6.2 Staging: switch to Cloudflare R2 (`cover-art-staging`) ✅
 
 Now that local storage is multi-tenant, switch the staging environment to use your Cloudflare R2 bucket `cover-art-staging`. This gives staging a production-like object store while keeping the repo and API changes minimal.
 
-- [ ] Create or reuse the Cloudflare R2 bucket `cover-art-staging`.
-- [ ] Provision an R2 access key (Access Key ID + Secret) scoped for the bucket.
-- [ ] Add the following environment variables to your Render staging service (or equivalent):
+- [x] Create or reuse the Cloudflare R2 bucket `cover-art-staging`.
+- [x] Provision an R2 access key (Access Key ID + Secret) scoped for the bucket.
+- [x] Add the following environment variables to your Render staging service (or equivalent):
 
 ```
 R2__AccountId=<your-account-id>
@@ -493,47 +537,73 @@ R2__BucketName=cover-art-staging
 R2__PublicBaseUrl=https://<optional-worker-or-custom-domain>
 ```
 
-- [ ] Update `Program.cs` in staging to register the Cloudflare R2 storage service (or set an environment switch so the R2 implementation is used in staging). Example: `builder.Services.AddScoped<IStorageService, CloudflareR2StorageService>();`.
-- [ ] Deploy staging and run the migration endpoint in staging (admin-only) to migrate existing local `wwwroot/cover-art/{userId}/{filename}` items into the `cover-art-staging` bucket. Use the programmatic migration endpoint described in **7.6**; it will place objects under `{userId}/{filename}`.
-- [ ] Verify uploads, public URLs, and deletion behavior in the Cloudflare dashboard and via the staging frontend.
+- [x] Update `Program.cs` in staging to register the Cloudflare R2 storage service (or set an environment switch so the R2 implementation is used in staging). Example: `builder.Services.AddScoped<IStorageService, CloudflareR2StorageService>();`.
+- [x] Deploy staging and run the migration endpoint in staging (admin-only) to migrate existing local `wwwroot/cover-art/{userId}/{filename}` items into the `cover-art-staging` bucket. Use the programmatic migration endpoint described in **7.6**; it will place objects under `{userId}/{filename}`.
+- [x] Verify uploads, public URLs, and deletion behavior in the Cloudflare dashboard and via the staging frontend.
 
 Notes: Using R2 for staging decouples your staging object store from Supabase limits and lets you test your R2-specific URL behavior (Workers/custom domains) before production.
 
-### 7.6.3 Production: Supabase + Cloudflare R2 considerations
+### 7.6.3 Production: Cloudflare R2 rollout
 
-Decide whether production will store cover art in Supabase Storage or Cloudflare R2 (or both via a migration strategy). Add the following steps to the production rollout plan:
+With staging successfully running on Cloudflare R2, production follows the same pattern using the `cover-art-prod` bucket.
 
-- Provision a Supabase production project `kollector-scum-prod` with a `cover-art` bucket if you plan to use Supabase for production.
-- Alternatively (or additionally), provision a Cloudflare R2 bucket `cover-art-prod` and R2 credentials if you prefer R2 for production.
-- For Supabase production, add these env vars to your production service:
+**Prerequisites:**
+- Staging R2 implementation validated (upload, download, delete operations working)
+- Production database migrations applied
+- Production Supabase database ready and tested
 
-```
-Supabase__Url=https://<prod-ref>.supabase.co
-Supabase__AnonKey=<prod-anon-key>
-```
+**Production R2 setup:**
 
-- For Cloudflare R2 production, add these env vars to your production service (Render/GHA/etc):
+- [ ] **IMPORTANT: Complete database migration (Section 6.3) BEFORE setting up R2 storage.** This ensures UserIds match between staging and production, allowing you to copy R2 images directly.
+- [ ] Create the Cloudflare R2 bucket `cover-art-prod` (or reuse if already created during staging setup).
+- [ ] Provision production R2 access credentials (Access Key ID + Secret). **Use separate credentials from staging** for security isolation.
+- [ ] Add the following environment variables to your Render production service:
 
 ```
 R2__AccountId=<your-account-id>
 R2__Endpoint=https://<account_id>.r2.cloudflarestorage.com
-R2__AccessKeyId=<R2_ACCESS_KEY_ID>
-R2__SecretAccessKey=<R2_SECRET>
+R2__AccessKeyId=<R2_PROD_ACCESS_KEY_ID>
+R2__SecretAccessKey=<R2_PROD_SECRET>
 R2__BucketName=cover-art-prod
-R2__PublicBaseUrl=https://<optional-worker-or-custom-domain>
+R2__PublicBaseUrl=https://<production-worker-or-custom-domain>
 ```
 
-- If you change storage provider between staging and production (for example, staging uses R2 and production uses Supabase), implement a fallback resolution strategy in your API for read operations, or include a one-time migration step to move objects between providers. The migration endpoint described earlier can be adapted to upload from one provider to another by streaming the object and re-uploading to the target provider under the same `{userId}/{filename}` path.
+- [ ] Update `Program.cs` production configuration to use `CloudflareR2StorageService` (should already be set if using environment-based registration from staging).
+- [ ] Deploy to production (merge `dev` → `main` to trigger auto-deploy, or manually deploy from `main`).
+- [ ] Verify production API health endpoint returns 200 OK.
+- [ ] **Option A (Recommended)**: Copy staging R2 bucket contents to production R2 bucket. Since you migrated the database (which preserves UserIds), the R2 folder structure `{userId}/{filename}` will match between environments. Use Cloudflare R2 dashboard, rclone, or AWS CLI to copy objects from `cover-art-staging` to `cover-art-prod`.
+- [ ] **Option B**: Run the migration endpoint in production (admin-only, **after DB and API backup**) to migrate existing cover art from local storage to `cover-art-prod`. This re-uploads images from the API server. Only needed if you didn't copy from staging R2.
+- [ ] Verify a small subset of images load correctly before completing the full migration.
+- [ ] Test the full upload/edit/delete cycle via the production frontend.
+- [ ] Verify objects appear in the Cloudflare R2 dashboard under `cover-art-prod`.
+- [ ] Set up Cloudflare Worker or custom domain for production image URLs (optional but recommended for friendly URLs and CDN caching).
 
-- Run the production migration (admin-only) only after carefully validating staging and backing up the DB and original files.
+**Pre-migration safety checklist:**
+- [ ] Backup production database before migration.
+- [ ] Backup `wwwroot/cover-art/` directory (if still present on production host).
+- [ ] Test the migration endpoint on a **non-production copy** of the database first (or run in dry-run mode if implemented).
+- [ ] Have a rollback plan (documented below).
 
-Testing and monitoring:
-- Verify object accessibility, edit/delete flows, and CDN/Worker routing for production.
-- Monitor storage usage and request costs (R2 vs Supabase pricing differences).
+**Post-migration verification:**
+- [ ] Spot-check 10-20 random releases and verify cover art loads correctly.
+- [ ] Monitor R2 usage and request metrics in Cloudflare dashboard.
+- [ ] Check production logs for storage-related errors or warnings.
+- [ ] Verify user-uploaded images (new uploads post-migration) work correctly.
 
-Decision checklist:
-- Choose `Supabase` if you want integrated DB + storage in one managed product and are comfortable with the free tier limits.
-- Choose `Cloudflare R2` if you need a cheaper/object-store-focused solution with Worker/custom-domain flexibility.
+**Rollback plan:**
+If R2 has issues in production:
+1. Revert the `Program.cs` registration to use `LocalFileSystemStorageService` (or a hotfix branch with filesystem code).
+2. Redeploy API from `main` or a hotfix branch.
+3. Restore database backup if cover art URLs were updated and need reverting.
+4. Investigate R2 issues in staging before attempting production deployment again.
+
+**Cost monitoring:**
+- Cloudflare R2 offers 10GB storage free, then $0.015/GB/month.
+- Class A operations (writes): 1M free/month, then $4.50 per million.
+- Class B operations (reads): 10M free/month, then $0.36 per million.
+- Egress: free (this is R2's main advantage over S3).
+
+For <20 users, production should stay within free tier limits unless users upload thousands of high-res images monthly.
 
 ### 7.7 Update Dockerfile
 
@@ -709,9 +779,11 @@ node backend/scripts/resize-cover-images.js --path /home/andy/music-images/cover
     - [ ] Edit/delete release and verify object deletion in R2.
 
 - 11) Production rollout:
+    - **Migrate database data** from staging to production (see Section 6.3 - one-time operation).
     - Run EF migrations for production (if needed).
     - Deploy the backend to production with production `R2__*` env vars set.
-    - Run the migration endpoint in production if you migrated staging data to prod.
+    - Run the storage migration endpoint in production (admin-only) to upload cover art images to R2 `cover-art-prod`.
+    - Verify production database contains expected data and images load correctly.
 
 - 12) Post-deploy monitoring and cleanup:
     - Monitor R2 usage in Cloudflare dashboard.
@@ -764,11 +836,22 @@ Add both staging and production domains to:
 ---
 
 ## 12) Release Checklist
+**Initial production setup (one-time):**
 1. Push changes to `dev`
 2. Verify staging works
 3. Apply EF Core migrations to staging (if needed)
+4. **Migrate database data from staging → production** (Section 6.3)
+5. Merge `dev` → `main`
+6. Apply EF Core migrations to production (if needed)
+7. **Migrate cover art images to production R2** (Section 7.6.3)
+8. Smoke test production
+
+**Subsequent releases:**
+1. Push changes to `dev`
+2. Verify staging works
+3. Apply EF Core migrations to staging (if schema changed)
 4. Merge `dev` → `main`
-5. Apply EF Core migrations to production (if needed)
+5. Apply EF Core migrations to production (if schema changed)
 6. Smoke test production
 
 ---
