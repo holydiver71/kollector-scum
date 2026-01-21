@@ -1,6 +1,5 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
-import { fireEvent } from '@testing-library/react';
 import Dashboard from '../page';
 import * as api from '../lib/api';
 

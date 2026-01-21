@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 
 // Mock the api module before importing the components so their imports use the mock
 jest.mock('../../lib/api');
