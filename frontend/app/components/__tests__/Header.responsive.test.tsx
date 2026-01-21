@@ -1,6 +1,5 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import Header from '../Header';
 
 // NOTE: `jest.setup.ts` performs a global `jest.resetModules()` before each
 // test. To ensure our per-test `doMock` registrations are applied correctly
@@ -41,7 +40,7 @@ describe('Header — responsive behavior & filters navigation', () => {
 
     const HeaderComp = require('../Header').default;
 
-    const { container, asFragment } = render(<HeaderComp />);
+    const { container } = render(<HeaderComp />);
 
     // Ensure the QuickSearch input is present and responsive container exists
     const input = screen.getByPlaceholderText(/Search releases, artists, albums.../i);

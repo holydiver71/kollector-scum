@@ -1,4 +1,5 @@
 // Learn more: https://github.com/testing-library/jest-dom
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import '@testing-library/jest-dom'
 
 // Provide a harmless global fetch mock for tests that render components which
@@ -144,3 +145,42 @@ console.error = (...args: any[]) => {
 	}
 	_origConsoleError(...args);
 };
+
+// Provide lightweight default mocks for the app API helpers so components
+// that call `fetchJson` or `getKollections` during mount do not throw
+// TypeError in the Jest environment. Individual tests can override these
+// by using `jest.mock(...)` or providing more specific implementations.
+// Best-effort patching using dynamic `import()` so ESLint's
+// `no-require-imports` rule is satisfied while keeping behavior similar
+// to the previous synchronous `require()` approach. We run the async IIFE
+// immediately but tolerate failures silently (this is only a test helper).
+;(async () => {
+	try {
+		const apiLib = await import('./app/lib/api');
+		if (apiLib) {
+			// Only set mocks if functions are missing or not callable
+			if (typeof (apiLib as any).fetchJson !== 'function') {
+				(apiLib as any).fetchJson = jest.fn((..._args: any[]) => Promise.resolve({}));
+			}
+			if (typeof (apiLib as any).getKollections !== 'function') {
+				(apiLib as any).getKollections = jest.fn(() => Promise.resolve({ items: [] }));
+			}
+		}
+	} catch (e) {
+		// ignore - best-effort for the test environment
+	}
+
+	try {
+		const appApi = await import('./app/api');
+		if (appApi) {
+			if (typeof (appApi as any).fetchJson !== 'function') {
+				(appApi as any).fetchJson = jest.fn((..._args: any[]) => Promise.resolve({}));
+			}
+			if (typeof (appApi as any).getKollections !== 'function') {
+				(appApi as any).getKollections = jest.fn(() => Promise.resolve({ items: [] }));
+			}
+		}
+	} catch (e) {
+		// ignore - best-effort
+	}
+})();

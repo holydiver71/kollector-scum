@@ -118,8 +118,8 @@ describe('Navigation Component', () => {
     render(<Navigation />);
     
     // Check for description text if visible
-    const text = screen.queryByText(/collection overview/i) || 
-                 screen.queryByText(/browse your music/i);
+    const _text = screen.queryByText(/collection overview/i) || 
+           screen.queryByText(/browse your music/i);
     // Descriptions might be hidden on mobile, so we just check rendering works
     expect(screen.getByText('Dashboard')).toBeInTheDocument();
   });

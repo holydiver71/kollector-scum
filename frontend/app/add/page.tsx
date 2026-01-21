@@ -7,7 +7,7 @@ import DiscogsSearch from "../components/DiscogsSearch";
 import DiscogsSearchResults from "../components/DiscogsSearchResults";
 import DiscogsReleasePreview from "../components/DiscogsReleasePreview";
 import type { DiscogsSearchResult, DiscogsRelease } from "../lib/discogs-types";
-import { fetchJson, API_BASE_URL } from "../lib/api";
+import { fetchJson } from "../lib/api";
 import type { MusicReleaseDto } from "../lib/types";
 
 type Tab = "manual" | "discogs";
@@ -99,7 +99,11 @@ export default function AddReleasePage() {
   };
 
   // Map Discogs release data to form DTO
-  const mapDiscogsToFormData = (release: DiscogsRelease): Partial<CreateMusicReleaseDto> => {
+  type _DiscogsFormData = Partial<CreateMusicReleaseDto> & {
+    _meta?: { sourceImageUrl?: string | null; sourceThumbnailUrl?: string | null };
+  };
+
+  const mapDiscogsToFormData = (release: DiscogsRelease): _DiscogsFormData => {
     // Map artists
     const artistNames = release.artists?.map(a => a.name) || [];
     
@@ -171,7 +175,8 @@ export default function AddReleasePage() {
       media,
       links: release.uri ? [{ url: release.uri, type: "Discogs", description: "" }] : [],
       _meta: { sourceImageUrl, sourceThumbnailUrl }, // Store metadata separately
-    } as any; // Type assertion to allow _meta
+      _meta: { sourceImageUrl, sourceThumbnailUrl },
+    } as _DiscogsFormData;
   };
   
   // Helper function to parse duration string (e.g., "3:45" -> 225 seconds)
@@ -300,11 +305,11 @@ export default function AddReleasePage() {
   const handleAddToCollection = async (release: DiscogsRelease) => {
     // Add directly to collection without showing edit form
     const formData = mapDiscogsToFormData(release);
-    const sourceImageUrl = (formData as any)._meta?.sourceImageUrl;
-    const sourceThumbnailUrl = (formData as any)._meta?.sourceThumbnailUrl;
+    const sourceImageUrl = formData._meta?.sourceImageUrl;
+    const sourceThumbnailUrl = formData._meta?.sourceThumbnailUrl;
     
     // Remove metadata before sending
-    delete (formData as any)._meta;
+    delete formData._meta;
     
     // Convert year strings to ISO DateTime format for the backend
     const cleanedData = {
@@ -398,8 +403,8 @@ export default function AddReleasePage() {
 
   const handleEditManually = (release: DiscogsRelease) => {
     const formData = mapDiscogsToFormData(release);
-    const sourceImageUrl = (formData as any)._meta?.sourceImageUrl;
-    const sourceThumbnailUrl = (formData as any)._meta?.sourceThumbnailUrl;
+    const sourceImageUrl = formData._meta?.sourceImageUrl;
+    const sourceThumbnailUrl = formData._meta?.sourceThumbnailUrl;
     
     // Store the image URLs for later download
     setDiscogsImageUrls({ 
@@ -408,7 +413,7 @@ export default function AddReleasePage() {
     });
     
     // Remove metadata before setting form data
-    delete (formData as any)._meta;
+    delete formData._meta;
     
     setDiscogsFormData(formData);
     setActiveTab("manual");

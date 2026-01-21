@@ -1,5 +1,4 @@
 import React from 'react';
-import { render } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
 // Mock child components used by layout to control complexity

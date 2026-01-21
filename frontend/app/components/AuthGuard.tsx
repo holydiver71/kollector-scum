@@ -70,7 +70,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       window.removeEventListener('authChanged', handleAuthChanged);
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, [pathname, router, isLandingPage]);
+  }, [pathname, router, isLandingPage, isTestEnv]);
 
   // Landing page - always show
   if (isLandingPage) {
