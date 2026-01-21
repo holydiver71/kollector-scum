@@ -401,7 +401,7 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
       let attempts = 0;
       const maxAttempts = 2;
       let lastErr: unknown = null;
-      let response: PagedResult<MusicRelease> | null = null;
+      let response: PagedResult<MusicRelease> | MusicRelease[] | null = null;
 
       while (attempts < maxAttempts) {
         attempts += 1;
