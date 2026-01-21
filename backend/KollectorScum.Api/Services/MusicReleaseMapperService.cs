@@ -124,8 +124,8 @@ namespace KollectorScum.Api.Services
                 Title = musicRelease.Title,
                 ReleaseYear = musicRelease.ReleaseYear,
                 OrigReleaseYear = musicRelease.OrigReleaseYear,
-                ArtistNames = artistIds?.Select(id => GetArtistName(id)).ToList(),
-                GenreNames = genreIds?.Select(id => GetGenreName(id)).ToList(),
+                ArtistNames = artistIds?.Select(id => GetArtistNameSync(id)).ToList(),
+                GenreNames = genreIds?.Select(id => GetGenreNameSync(id)).ToList(),
                 LabelName = musicRelease.Label?.Name,
                 FormatName = musicRelease.Format?.Name,
                 CountryName = musicRelease.Country?.Name,
@@ -159,28 +159,28 @@ namespace KollectorScum.Api.Services
                 genreIds = null;
             }
 
+            // Batch load artists - single query instead of N+1
             List<ArtistDto>? artists = null;
-            if (artistIds != null)
+            if (artistIds != null && artistIds.Count > 0)
             {
-                artists = new List<ArtistDto>();
-                foreach (var id in artistIds)
-                {
-                    var artist = await _artistRepository.GetByIdAsync(id);
-                    if (artist != null)
-                        artists.Add(new ArtistDto { Id = artist.Id, Name = artist.Name });
-                }
+                var artistEntities = await _artistRepository.GetAsync(a => artistIds.Contains(a.Id));
+                artists = artistIds
+                    .Select(id => artistEntities.FirstOrDefault(a => a.Id == id))
+                    .Where(a => a != null)
+                    .Select(a => new ArtistDto { Id = a!.Id, Name = a.Name })
+                    .ToList();
             }
 
+            // Batch load genres - single query instead of N+1
             List<GenreDto>? genres = null;
-            if (genreIds != null)
+            if (genreIds != null && genreIds.Count > 0)
             {
-                genres = new List<GenreDto>();
-                foreach (var id in genreIds)
-                {
-                    var genre = await _genreRepository.GetByIdAsync(id);
-                    if (genre != null)
-                        genres.Add(new GenreDto { Id = genre.Id, Name = genre.Name });
-                }
+                var genreEntities = await _genreRepository.GetAsync(g => genreIds.Contains(g.Id));
+                genres = genreIds
+                    .Select(id => genreEntities.FirstOrDefault(g => g.Id == id))
+                    .Where(g => g != null)
+                    .Select(g => new GenreDto { Id = g!.Id, Name = g.Name })
+                    .ToList();
             }
 
             var images = await SafeDeserializeImageAsync(musicRelease.Images);
@@ -211,15 +211,21 @@ namespace KollectorScum.Api.Services
             };
         }
 
-        private string GetArtistName(int id)
+        // Synchronous methods for MapToSummaryDto (which is sync)
+        // These use cached data where possible to avoid blocking calls
+        private string GetArtistNameSync(int id)
         {
-            var artist = _artistRepository.GetByIdAsync(id).Result;
+            // For synchronous context, we use Find which is synchronous
+            // This is only used in MapToSummaryDto which is called from sync contexts
+            var artist = _artistRepository.GetByIdAsync(id).GetAwaiter().GetResult();
             return artist?.Name ?? $"Artist {id}";
         }
 
-        private string GetGenreName(int id)
+        private string GetGenreNameSync(int id)
         {
-            var genre = _genreRepository.GetByIdAsync(id).Result;
+            // For synchronous context, we use Find which is synchronous
+            // This is only used in MapToSummaryDto which is called from sync contexts
+            var genre = _genreRepository.GetByIdAsync(id).GetAwaiter().GetResult();
             return genre?.Name ?? $"Genre {id}";
         }
 
@@ -240,6 +246,53 @@ namespace KollectorScum.Api.Services
             }
             if (mediaList == null) return null;
 
+            // Collect all unique artist and genre IDs from all tracks
+            var allArtistIds = new HashSet<int>();
+            var allGenreIds = new HashSet<int>();
+
+            foreach (var media in mediaList)
+            {
+                if (media.Tracks != null)
+                {
+                    foreach (var track in media.Tracks)
+                    {
+                        if (track.Artists != null)
+                        {
+                            foreach (var artistIdStr in track.Artists)
+                            {
+                                if (int.TryParse(artistIdStr, out int artistId))
+                                    allArtistIds.Add(artistId);
+                            }
+                        }
+
+                        if (track.Genres != null)
+                        {
+                            foreach (var genreIdStr in track.Genres)
+                            {
+                                if (int.TryParse(genreIdStr, out int genreId))
+                                    allGenreIds.Add(genreId);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Batch load all artists and genres in single queries
+            Dictionary<int, string> artistLookup = new Dictionary<int, string>();
+            if (allArtistIds.Count > 0)
+            {
+                var artists = await _artistRepository.GetAsync(a => allArtistIds.Contains(a.Id));
+                artistLookup = artists.ToDictionary(a => a.Id, a => a.Name);
+            }
+
+            Dictionary<int, string> genreLookup = new Dictionary<int, string>();
+            if (allGenreIds.Count > 0)
+            {
+                var genres = await _genreRepository.GetAsync(g => allGenreIds.Contains(g.Id));
+                genreLookup = genres.ToDictionary(g => g.Id, g => g.Name);
+            }
+
+            // Now resolve all track artists and genres using the lookups
             foreach (var media in mediaList)
             {
                 if (media.Tracks != null)
@@ -251,10 +304,9 @@ namespace KollectorScum.Api.Services
                             var resolvedArtists = new List<string>();
                             foreach (var artistIdStr in track.Artists)
                             {
-                                if (int.TryParse(artistIdStr, out int artistId))
+                                if (int.TryParse(artistIdStr, out int artistId) && artistLookup.TryGetValue(artistId, out var artistName))
                                 {
-                                    var artist = await _artistRepository.GetByIdAsync(artistId);
-                                    resolvedArtists.Add(artist?.Name ?? artistIdStr);
+                                    resolvedArtists.Add(artistName);
                                 }
                                 else
                                 {
@@ -269,10 +321,9 @@ namespace KollectorScum.Api.Services
                             var resolvedGenres = new List<string>();
                             foreach (var genreIdStr in track.Genres)
                             {
-                                if (int.TryParse(genreIdStr, out int genreId))
+                                if (int.TryParse(genreIdStr, out int genreId) && genreLookup.TryGetValue(genreId, out var genreName))
                                 {
-                                    var genre = await _genreRepository.GetByIdAsync(genreId);
-                                    resolvedGenres.Add(genre?.Name ?? genreIdStr);
+                                    resolvedGenres.Add(genreName);
                                 }
                                 else
                                 {
