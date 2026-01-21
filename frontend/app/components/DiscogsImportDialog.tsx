@@ -32,6 +32,19 @@ export function DiscogsImportDialog({
   const dialogRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const handleClose = useCallback(() => {
+    if (!isImporting) {
+      // If import was successful, trigger the success callback
+      if (result?.success) {
+        onSuccess();
+      }
+      setUsername("");
+      setResult(null);
+      setError(null);
+      onClose();
+    }
+  }, [isImporting, result, onSuccess, onClose]);
+
   // Focus username input when dialog opens
   useEffect(() => {
     if (isOpen && inputRef.current && !isImporting && !result) {
@@ -58,19 +71,6 @@ export function DiscogsImportDialog({
       document.body.style.overflow = "";
     };
   }, [isOpen, isImporting, handleClose]);
-
-  const handleClose = useCallback(() => {
-    if (!isImporting) {
-      // If import was successful, trigger the success callback
-      if (result?.success) {
-        onSuccess();
-      }
-      setUsername("");
-      setResult(null);
-      setError(null);
-      onClose();
-    }
-  }, [isImporting, result, onSuccess, onClose]);
 
   const handleImport = async () => {
     if (!username.trim()) {
