@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { X, Plus, Check } from "lucide-react";
 import { getLists, addReleaseToList, createList, getListsForRelease, type ListSummaryDto } from "../lib/api";
@@ -22,11 +22,28 @@ export function AddToListDialog({ releaseId, releaseTitle, isOpen, onClose }: Ad
   const [addingToList, setAddingToList] = useState<number | null>(null);
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null);
 
+  const loadLists = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const [allLists, releaseListsData] = await Promise.all([
+        getLists(),
+        getListsForRelease(releaseId),
+      ]);
+      setLists(allLists);
+      setReleaseLists(releaseListsData.map(l => l.id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load lists");
+    } finally {
+      setLoading(false);
+    }
+  }, [releaseId]);
+
   useEffect(() => {
     if (isOpen) {
       loadLists();
     }
-  }, [isOpen, releaseId]);
+  }, [isOpen, releaseId, loadLists]);
 
   // Create a container element on mount for the portal so the modal is rendered
   // at the document body level and is not affected by transformed ancestors.
@@ -43,23 +60,7 @@ export function AddToListDialog({ releaseId, releaseTitle, isOpen, onClose }: Ad
       setPortalContainer(null);
     };
   }, []);
-
-  const loadLists = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const [allLists, releaseListsData] = await Promise.all([
-        getLists(),
-        getListsForRelease(releaseId),
-      ]);
-      setLists(allLists);
-      setReleaseLists(releaseListsData.map(l => l.id));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load lists");
-    } finally {
-      setLoading(false);
-    }
-  };
+ 
 
   const handleAddToList = async (listId: number) => {
     try {

@@ -82,7 +82,7 @@ export default function Header() {
     try {
       if (kollectionId === 'all') localStorage.removeItem('kollectionId');
       else localStorage.setItem('kollectionId', kollectionId);
-    } catch (e) {
+    } catch {
       // ignore storage errors (e.g., SSR or strict privacy)
     }
   };
@@ -102,7 +102,7 @@ export default function Header() {
     const applyHeight = () => {
       try {
         document.documentElement.style.setProperty('--app-header-height', `${(el as HTMLElement).offsetHeight}px`);
-      } catch (e) {}
+      } catch {}
     };
 
     applyHeight();
@@ -111,7 +111,7 @@ export default function Header() {
     const onScroll = () => {
       if (rafId) cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(() => {
-        const scrollY = (window as any).scrollY || window.pageYOffset || 0;
+        const scrollY = typeof window.scrollY === 'number' ? window.scrollY : (window.pageYOffset ?? 0);
         // compact when the user has scrolled a reasonable amount
         const shouldCompact = scrollY > 100;
         setIsCompact(shouldCompact);

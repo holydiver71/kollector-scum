@@ -191,7 +191,7 @@ export function LookupDropdown<T extends LookupItem>({
   );
 }
 
-const lookupCache: Record<string, { data: any[], timestamp: number }> = {};
+const lookupCache: Record<string, { data: unknown[]; timestamp: number }> = {};
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 // Test helper: allow tests to clear the module-level lookup cache so

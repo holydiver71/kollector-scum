@@ -253,7 +253,7 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
 
       const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
       router.replace(newUrl, { scroll: false });
-    } catch (e) {
+    } catch {
       // ignore
     }
     // run when search params / path / router or default values change
@@ -266,16 +266,6 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
   }, [searchParams]);
 
   // order matches the SortPanel button order (left-to-right)
-  const sortOptions: { sortBy: string; sortOrder: string }[] = [
-    { sortBy: 'title', sortOrder: 'asc' },
-    { sortBy: 'title', sortOrder: 'desc' },
-    { sortBy: 'artist', sortOrder: 'asc' },
-    { sortBy: 'artist', sortOrder: 'desc' },
-    { sortBy: 'dateadded', sortOrder: 'desc' },
-    { sortBy: 'dateadded', sortOrder: 'asc' },
-    { sortBy: 'origreleaseyear', sortOrder: 'desc' },
-    { sortBy: 'origreleaseyear', sortOrder: 'asc' },
-  ];
 
   const getSortLabel = (sortBy?: string, sortOrder?: string) => {
     const order = sortOrder === 'asc' ? 'asc' : 'desc';
@@ -374,7 +364,7 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
       if (newSort.sortOrder) params.set('sortOrder', newSort.sortOrder);
       const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
       router.replace(newUrl, { scroll: false });
-    } catch (e) {
+    } catch {
       // ignore
     }
   };
@@ -416,22 +406,35 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
       while (attempts < maxAttempts) {
         attempts += 1;
         try {
-          response = await fetchJson(`/api/musicreleases?${params}`);
+          response = await fetchJson<PagedResult<MusicRelease> | MusicRelease[]>(`/api/musicreleases?${params}`);
           lastErr = null;
           break;
-        } catch (e) {
-          lastErr = e;
-          console.warn(`fetchReleases attempt ${attempts} failed`, e);
+        } catch (err) {
+          lastErr = err;
+          console.warn(`fetchReleases attempt ${attempts} failed`, err);
           if (attempts < maxAttempts) await new Promise(r => setTimeout(r, 600 * attempts));
         }
       }
 
       if (!response && lastErr) throw lastErr;
 
-      setReleases((response as PagedResult<MusicRelease>).items);
-      setCurrentPage((response as PagedResult<MusicRelease>).page);
-      setTotalPages((response as PagedResult<MusicRelease>).totalPages);
-      setTotalCount((response as PagedResult<MusicRelease>).totalCount);
+      if (Array.isArray(response)) {
+        setReleases(response);
+        setCurrentPage(1);
+        setTotalPages(1);
+        setTotalCount(response.length);
+      } else if (response && typeof response === 'object') {
+        const resp = response as PagedResult<MusicRelease>;
+        setReleases(resp.items || []);
+        setCurrentPage(resp.page || 1);
+        setTotalPages(resp.totalPages || 0);
+        setTotalCount(resp.totalCount || 0);
+      } else {
+        setReleases([]);
+        setCurrentPage(1);
+        setTotalPages(0);
+        setTotalCount(0);
+      }
     } catch (err) {
       console.error('Error fetching releases:', err);
       
@@ -446,21 +449,22 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
       // Try to surface server status/details if available (ApiError shape from fetchJson)
       let message = 'Failed to load releases';
       try {
-        const anyErr = err as any;
+        const anyErr = err as unknown;
         if (anyErr && typeof anyErr === 'object') {
-          if (anyErr.message) message = anyErr.message;
-          if (anyErr.status) message += ` (status: ${anyErr.status})`;
-          if (anyErr.details) {
+          const errObj = anyErr as Record<string, unknown>;
+          if (typeof errObj.message === 'string') message = errObj.message;
+          if (typeof errObj.status === 'number') message += ` (status: ${errObj.status})`;
+          if (errObj.details) {
             try {
-              const d = typeof anyErr.details === 'string' ? anyErr.details : JSON.stringify(anyErr.details);
+              const d = typeof errObj.details === 'string' ? errObj.details : JSON.stringify(errObj.details);
               message += ` - ${d}`;
             } catch { /* ignore stringify errors */ }
           }
-          if (anyErr.url) message += ` [url: ${anyErr.url}]`;
+          if (typeof errObj.url === 'string') message += ` [url: ${errObj.url}]`;
         } else if (err instanceof Error) {
           message = err.message;
         }
-      } catch (e) {
+      } catch {
         // fallback
         message = (err instanceof Error) ? err.message : 'Failed to load releases';
       }
@@ -564,9 +568,9 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
                   }
                   const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
                   router.replace(newUrl, { scroll: false });
-                } catch (e) {
-                  // ignore
-                }
+                } catch {
+                      // ignore
+                    }
               }}
               aria-label="Filters"
               title="Filters"
@@ -642,7 +646,7 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
                 params.delete('showSort');
                 const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
                 router.replace(newUrl, { scroll: false });
-              } catch (e) {
+              } catch {
                 // ignore
               }
             }}
@@ -656,13 +660,13 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
             onFiltersChange={(newFilters) => {
               try {
                 const params = new URLSearchParams(searchParams ? searchParams.toString() : '');
-                Object.entries(newFilters as any).forEach(([k, v]) => {
-                  if (v !== undefined && v !== null && v !== '') params.set(k, (v as any).toString());
+                Object.entries(newFilters as Record<string, unknown>).forEach(([k, v]) => {
+                  if (v !== undefined && v !== null && v !== '') params.set(k, String(v));
                   else params.delete(k);
                 });
                 const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
                 router.replace(newUrl, { scroll: false });
-              } catch (e) {
+              } catch {
                 // ignore
               }
             }}
@@ -677,7 +681,7 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
                 if (open) params.set('showAdvanced', 'true'); else params.delete('showAdvanced');
                 const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
                 router.replace(newUrl, { scroll: false });
-              } catch (e) {
+              } catch {
                 // ignore
               }
             }}
