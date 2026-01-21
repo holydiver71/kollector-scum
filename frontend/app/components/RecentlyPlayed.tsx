@@ -1,6 +1,7 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, memo, useMemo } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { getRecentlyPlayed, RecentlyPlayedItemDto, API_BASE_URL } from "../lib/api";
 
 /**
@@ -66,7 +67,7 @@ interface RecentlyPlayedProps {
   maxItems?: number;
 }
 
-export function RecentlyPlayed({ maxItems = 24 }: RecentlyPlayedProps) {
+function RecentlyPlayedComponent({ maxItems = 24 }: RecentlyPlayedProps) {
   const [items, setItems] = useState<RecentlyPlayedItemDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -88,6 +89,25 @@ export function RecentlyPlayed({ maxItems = 24 }: RecentlyPlayedProps) {
 
     fetchRecentlyPlayed();
   }, [maxItems]);
+
+  // Group items by relative date and determine which ones show date headings
+  // Only the first item for each relative date period should show the date heading
+  // Memoize to prevent recalculation on every render
+  const itemsWithDateInfo = useMemo(() => {
+    let lastRelativeDateString = "";
+    return items.map((item) => {
+      const playedDate = new Date(item.playedAt);
+      const relativeDate = formatRelativeDate(playedDate);
+      const showDate = relativeDate !== lastRelativeDateString;
+      lastRelativeDateString = relativeDate;
+      
+      return {
+        ...item,
+        showDate,
+        relativeDate,
+      };
+    });
+  }, [items]);
 
   if (loading) {
     return (
@@ -137,22 +157,6 @@ export function RecentlyPlayed({ maxItems = 24 }: RecentlyPlayedProps) {
     );
   }
 
-  // Group items by relative date and determine which ones show date headings
-  // Only the first item for each relative date period should show the date heading
-  let lastRelativeDateString = "";
-  const itemsWithDateInfo = items.map((item) => {
-    const playedDate = new Date(item.playedAt);
-    const relativeDate = formatRelativeDate(playedDate);
-    const showDate = relativeDate !== lastRelativeDateString;
-    lastRelativeDateString = relativeDate;
-    
-    return {
-      ...item,
-      showDate,
-      relativeDate,
-    };
-  });
-
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-8 shadow-sm">
       <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
@@ -182,13 +186,13 @@ export function RecentlyPlayed({ maxItems = 24 }: RecentlyPlayedProps) {
                 minute: '2-digit'
               })}`}
             >
-              <img
+              <Image
                 src={getImageUrl(item.coverFront)}
                 alt="Album cover"
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.src = "/placeholder-album.svg";
-                }}
+                fill
+                sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 16vw"
+                className="object-cover"
+                loading="lazy"
               />
               {/* Play count badge - only shown if played more than once */}
               {item.playCount > 1 && (
@@ -203,3 +207,6 @@ export function RecentlyPlayed({ maxItems = 24 }: RecentlyPlayedProps) {
     </div>
   );
 }
+
+// Export memoized component to prevent unnecessary re-renders
+export const RecentlyPlayed = memo(RecentlyPlayedComponent);
