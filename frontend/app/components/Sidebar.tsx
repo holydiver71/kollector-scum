@@ -33,16 +33,8 @@ const Sidebar: React.FC = () => {
   const _pathname = usePathname();
   // Call hooks unconditionally at top level to satisfy React Hooks rules.
   const router = useRouter();
-  // Safely default to a noop router when tests partially mock navigation.
-  const safeRouter = router ?? {
-    push: () => {},
-    replace: () => {},
-    back: () => {},
-    refresh: () => {},
-    prefetch: async () => undefined,
-  };
   const pathname: string = _pathname ?? (typeof window !== 'undefined' ? window.location.pathname : '/');
-  const { hasCollection, isReady, setHasCollection } = useCollection();
+  const { hasCollection, setHasCollection } = useCollection();
 
   // Check auth state on mount and route changes
   useEffect(() => {
@@ -123,14 +115,13 @@ const Sidebar: React.FC = () => {
     return pathname.startsWith(href);
   };
 
+  const cssVar = isExpanded ? '240px' : '64px';
+  const inlineStyle = ({ ['--sidebar-offset']: cssVar } as unknown) as React.CSSProperties;
+
   return (
     <aside
       // reflect the current sidebar offset as a CSS variable used by Header
-      style={{
-        // keep a stable CSS variable for header offset - used by Header
-        // when collapsed -> 64px, when expanded -> 240px
-        ['--sidebar-offset' as any]: isExpanded ? '240px' : '64px',
-      }}
+      style={inlineStyle}
       className={`sidebar ${isExpanded ? 'sidebar-expanded' : 'sidebar-collapsed'} bg-gray-900 text-white flex flex-col shadow-2xl z-50 transition-all duration-300 ease-in-out`}
     >
       {/* Toggle Button */}

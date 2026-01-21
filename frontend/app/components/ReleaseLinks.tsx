@@ -15,44 +15,8 @@ export function ReleaseLinks({ links }: ReleaseLinksProps) {
     return null;
   }
 
-  const getIconForLinkType = (type?: string, url?: string) => {
-    // Try to use provided type, or infer from URL
-    const effectiveType = type || inferTypeFromUrl(url);
-    
-    if (!effectiveType) return '🔗';
-    
-    const lowerType = effectiveType.toLowerCase();
-    
-    switch (lowerType) {
-      case 'spotify':
-        return '🎵';
-      case 'discogs':
-        return '💽';
-      case 'musicbrainz':
-        return '🎼';
-      case 'youtube':
-        return '📺';
-      case 'bandcamp':
-        return '🎧';
-      case 'soundcloud':
-        return '☁️';
-      case 'apple':
-      case 'itunes':
-        return '🍎';
-      case 'amazon':
-        return '📦';
-      case 'lastfm':
-      case 'last.fm':
-        return '📻';
-      case 'allmusic':
-        return '🎵';
-      case 'rateyourmusic':
-      case 'rym':
-        return '⭐';
-      default:
-        return '🔗';
-    }
-  };
+  // `getIconForLinkType` previously returned emoji icons for known services.
+  // It was unused; remove to silence lint warnings. Keep helper `formatLinkType` for labels.
 
   const inferTypeFromUrl = (url?: string): string | undefined => {
     if (!url) return undefined;
