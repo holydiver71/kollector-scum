@@ -164,8 +164,9 @@ namespace KollectorScum.Api.Services
             if (artistIds != null && artistIds.Count > 0)
             {
                 var artistEntities = await _artistRepository.GetAsync(a => artistIds.Contains(a.Id));
+                var artistDict = artistEntities.ToDictionary(a => a.Id, a => a);
                 artists = artistIds
-                    .Select(id => artistEntities.FirstOrDefault(a => a.Id == id))
+                    .Select(id => artistDict.TryGetValue(id, out var artist) ? artist : null)
                     .Where(a => a != null)
                     .Select(a => new ArtistDto { Id = a!.Id, Name = a.Name })
                     .ToList();
@@ -176,8 +177,9 @@ namespace KollectorScum.Api.Services
             if (genreIds != null && genreIds.Count > 0)
             {
                 var genreEntities = await _genreRepository.GetAsync(g => genreIds.Contains(g.Id));
+                var genreDict = genreEntities.ToDictionary(g => g.Id, g => g);
                 genres = genreIds
-                    .Select(id => genreEntities.FirstOrDefault(g => g.Id == id))
+                    .Select(id => genreDict.TryGetValue(id, out var genre) ? genre : null)
                     .Where(g => g != null)
                     .Select(g => new GenreDto { Id = g!.Id, Name = g.Name })
                     .ToList();
@@ -212,19 +214,17 @@ namespace KollectorScum.Api.Services
         }
 
         // Synchronous methods for MapToSummaryDto (which is sync)
-        // These use cached data where possible to avoid blocking calls
+        // Uses GetAwaiter().GetResult() which is the recommended pattern for sync-over-async
         private string GetArtistNameSync(int id)
         {
-            // For synchronous context, we use Find which is synchronous
-            // This is only used in MapToSummaryDto which is called from sync contexts
+            // This is only used in MapToSummaryDto which is called from synchronous contexts
             var artist = _artistRepository.GetByIdAsync(id).GetAwaiter().GetResult();
             return artist?.Name ?? $"Artist {id}";
         }
 
         private string GetGenreNameSync(int id)
         {
-            // For synchronous context, we use Find which is synchronous
-            // This is only used in MapToSummaryDto which is called from sync contexts
+            // This is only used in MapToSummaryDto which is called from synchronous contexts
             var genre = _genreRepository.GetByIdAsync(id).GetAwaiter().GetResult();
             return genre?.Name ?? $"Genre {id}";
         }
