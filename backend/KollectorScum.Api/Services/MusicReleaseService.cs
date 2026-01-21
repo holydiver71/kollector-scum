@@ -56,9 +56,9 @@ namespace KollectorScum.Api.Services
                 labelId.HasValue || countryId.HasValue || formatId.HasValue || live.HasValue ||
                 yearFrom.HasValue || yearTo.HasValue)
             {
-                var searchLower = !string.IsNullOrEmpty(search) ? search.ToLower() : null;
+                var searchLower = !string.IsNullOrEmpty(search) ? search.ToLower() : string.Empty;
 
-                string? artistExact = null, artistStart = null, artistMiddle = null, artistEnd = null;
+                string artistExact = string.Empty, artistStart = string.Empty, artistMiddle = string.Empty, artistEnd = string.Empty;
                 if (artistId.HasValue)
                 {
                     var id = artistId.Value.ToString();
@@ -68,7 +68,7 @@ namespace KollectorScum.Api.Services
                     artistEnd = "," + id + "]";
                 }
 
-                string? genreExact = null, genreStart = null, genreMiddle = null, genreEnd = null;
+                string genreExact = string.Empty, genreStart = string.Empty, genreMiddle = string.Empty, genreEnd = string.Empty;
                 if (genreId.HasValue)
                 {
                     var id = genreId.Value.ToString();
@@ -100,8 +100,8 @@ namespace KollectorScum.Api.Services
                     (!countryId.HasValue || mr.CountryId == countryId.Value) &&
                     (!formatId.HasValue || mr.FormatId == formatId.Value) &&
                     (!live.HasValue || mr.Live == live.Value) &&
-                    (!yearFrom.HasValue || (mr.ReleaseYear.HasValue && mr.ReleaseYear.Value >= startDt.Value)) &&
-                    (!yearTo.HasValue || (mr.ReleaseYear.HasValue && mr.ReleaseYear.Value <= endDt.Value));
+                    (!yearFrom.HasValue || (mr.ReleaseYear.HasValue && startDt.HasValue && mr.ReleaseYear.Value >= startDt.Value)) &&
+                    (!yearTo.HasValue || (mr.ReleaseYear.HasValue && endDt.HasValue && mr.ReleaseYear.Value <= endDt.Value));
             }
 
             var pagedResult = await _musicReleaseRepository.GetPagedAsync(

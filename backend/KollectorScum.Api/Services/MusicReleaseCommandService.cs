@@ -202,7 +202,7 @@ namespace KollectorScum.Api.Services
 
                         // Check if store exists (case-insensitive)
                         var existingStores = await _unitOfWork.Stores.GetAsync(
-                            filter: s => s.UserId == userId.Value && s.Name.ToLower() == storeName.ToLower());
+                            filter: s => s.UserId == (userId ?? Guid.Empty) && s.Name.ToLower() == storeName.ToLower());
                         var existingStore = existingStores.FirstOrDefault();
 
                         if (existingStore != null)
@@ -214,7 +214,7 @@ namespace KollectorScum.Api.Services
                         else
                         {
                             // Create new store
-                            var newStore = new Store { Name = storeName, UserId = userId.Value };
+                            var newStore = new Store { Name = storeName, UserId = (userId ?? Guid.Empty) };
                             await _unitOfWork.Stores.AddAsync(newStore);
                             await _unitOfWork.SaveChangesAsync(); // Save to get the ID
                             updateDto.PurchaseInfo.StoreId = newStore.Id;

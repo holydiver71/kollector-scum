@@ -56,17 +56,18 @@ namespace KollectorScum.Api.Controllers
         [ProducesResponseType(typeof(PagedResult<MusicReleaseSummaryDto>), 200)]
         [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "*" })]
         public async Task<ActionResult<PagedResult<MusicReleaseSummaryDto>>> GetMusicReleases(
-            [FromQuery] MusicReleaseQueryParameters parameters)
+            [FromQuery] MusicReleaseQueryParameters? parameters)
         {
             try
             {
-                // Validate year range to avoid server-side exceptions when invalid ranges provided
-                if (parameters?.YearFrom.HasValue == true && parameters?.YearTo.HasValue == true && parameters.YearFrom > parameters.YearTo)
+                // Ensure we have a non-null parameters instance and validate year range
+                var safeParameters = parameters ?? new MusicReleaseQueryParameters();
+                if (safeParameters.YearFrom.HasValue && safeParameters.YearTo.HasValue && safeParameters.YearFrom > safeParameters.YearTo)
                 {
-                    _logger.LogWarning("Invalid year range: YearFrom {YearFrom} > YearTo {YearTo}", parameters.YearFrom, parameters.YearTo);
+                    _logger.LogWarning("Invalid year range: YearFrom {YearFrom} > YearTo {YearTo}", safeParameters.YearFrom, safeParameters.YearTo);
                     return BadRequest("Invalid year range: 'YearFrom' cannot be greater than 'YearTo'.");
                 }
-                var result = await _queryService.GetMusicReleasesAsync(parameters);
+                var result = await _queryService.GetMusicReleasesAsync(safeParameters);
                 return Ok(result);
             }
             catch (Exception ex)
