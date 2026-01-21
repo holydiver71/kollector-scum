@@ -4,7 +4,7 @@ import Navigation from '../Navigation';
 
 // Mock Next.js modules
 jest.mock('next/link', () => {
-  // eslint-disable-next-line react/display-name
+   
   return ({ children, href }: { children: React.ReactNode; href: string }) => (
     <a href={href}>{children}</a>
   );

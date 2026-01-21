@@ -31,26 +31,16 @@ const Sidebar: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   // Hooks must be called unconditionally at the top level.
   const _pathname = usePathname();
-  // Some tests partially mock 'next/navigation' and may not provide `useRouter`.
-  // Guard so calling `useRouter()` won't throw during tests; provide a noop
-  // router implementation when the hook is missing.
-  let router: any;
-  try {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    router = typeof useRouter === 'function' ? useRouter() : null;
-  } catch (e) {
-    router = null;
-  }
-  if (!router) {
-    router = {
-      push: () => {},
-      replace: () => {},
-      back: () => {},
-      refresh: () => {},
-      prefetch: async () => undefined,
-    };
-  }
+  // Call hooks unconditionally at top level to satisfy React Hooks rules.
+  const router = useRouter();
+  // Safely default to a noop router when tests partially mock navigation.
+  const safeRouter = router ?? {
+    push: () => {},
+    replace: () => {},
+    back: () => {},
+    refresh: () => {},
+    prefetch: async () => undefined,
+  };
   const pathname: string = _pathname ?? (typeof window !== 'undefined' ? window.location.pathname : '/');
   const { hasCollection, isReady, setHasCollection } = useCollection();
 
