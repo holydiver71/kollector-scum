@@ -1,3 +1,10 @@
+# Default wrangler.toml - use wrangler.staging.toml or wrangler.prod.toml for environment-specific configs.
+#
+# Deploy staging:  cd worker && wrangler deploy --config wrangler.staging.toml
+# Deploy prod:     cd worker && wrangler deploy --config wrangler.prod.toml
+#
+# This file defaults to production for backwards compatibility with existing deploys.
+
 name = "kollector-images"
 main = "./index.js"
 compatibility_date = "2026-01-01"
@@ -5,5 +12,5 @@ account_id = "1c96409b15483aeb26499da3e9a1cb2b"
 workers_dev = true
 
 r2_buckets = [
-  { binding = "COVERS", bucket_name = "cover-art-staging" }
+  { binding = "COVERS", bucket_name = "cover-art-prod" }
 ]
