@@ -7,6 +7,7 @@ using KollectorScum.Api.Models;
 using KollectorScum.Api.Models.ValueObjects;
 using KollectorScum.Api.DTOs;
 using System.Text.Json;
+using System.Linq.Expressions;
 
 namespace KollectorScum.Tests.Services
 {
@@ -321,8 +322,12 @@ namespace KollectorScum.Tests.Services
                 LastModified = DateTime.UtcNow
             };
 
-            _mockArtistRepo.Setup(r => r.GetByIdAsync(1))
-                .ReturnsAsync(new Artist { Id = 1, Name = "Track Artist" });
+            // Mock batch loading for artists
+            _mockArtistRepo.Setup(r => r.GetAsync(
+                It.IsAny<Expression<Func<Artist, bool>>>(),
+                It.IsAny<Func<IQueryable<Artist>, IOrderedQueryable<Artist>>>(),
+                It.IsAny<string>()))
+                .ReturnsAsync(new List<Artist> { new Artist { Id = 1, Name = "Track Artist" } });
 
             // Act
             var result = await _service.MapToFullDtoAsync(musicRelease);
@@ -369,10 +374,16 @@ namespace KollectorScum.Tests.Services
                 LastModified = DateTime.UtcNow
             };
 
-            _mockGenreRepo.Setup(r => r.GetByIdAsync(1))
-                .ReturnsAsync(new Genre { Id = 1, Name = "Rock" });
-            _mockGenreRepo.Setup(r => r.GetByIdAsync(2))
-                .ReturnsAsync(new Genre { Id = 2, Name = "Pop" });
+            // Mock batch loading for genres
+            _mockGenreRepo.Setup(r => r.GetAsync(
+                It.IsAny<Expression<Func<Genre, bool>>>(),
+                It.IsAny<Func<IQueryable<Genre>, IOrderedQueryable<Genre>>>(),
+                It.IsAny<string>()))
+                .ReturnsAsync(new List<Genre> 
+                { 
+                    new Genre { Id = 1, Name = "Rock" },
+                    new Genre { Id = 2, Name = "Pop" }
+                });
 
             // Act
             var result = await _service.MapToFullDtoAsync(musicRelease);
