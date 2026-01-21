@@ -102,7 +102,7 @@ try {
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore
 	if (typeof window !== 'undefined' && window.localStorage) {
-		// eslint-disable-next-line no-console
+		 
 		console.log('[jest.setup] auth_token =', window.localStorage.getItem('auth_token'));
 	}
 } catch (e) {}
@@ -117,7 +117,7 @@ beforeEach(() => {
 			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 			// @ts-ignore
 			window.localStorage.setItem('auth_token', 'test-token');
-			// eslint-disable-next-line no-console
+			 
 			console.log('[jest.setup.beforeEach] auth_token =', window.localStorage.getItem('auth_token'));
 		}
 	} catch (e) {}

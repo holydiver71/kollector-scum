@@ -8,7 +8,7 @@ import { MusicReleaseList, MusicReleaseCard } from '../MusicReleaseList';
 
 // Mock Next.js Link component
 jest.mock('next/link', () => {
-  // eslint-disable-next-line react/display-name
+   
   return ({ children, href }: { children: React.ReactNode; href: string }) => (
     <a href={href}>{children}</a>
   );
