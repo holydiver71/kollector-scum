@@ -29,17 +29,29 @@ interface NavigationItem {
 const Sidebar: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  let pathname: string;
+  // Hooks must be called unconditionally at the top level.
+  const _pathname = usePathname();
+  // Some tests partially mock 'next/navigation' and may not provide `useRouter`.
+  // Guard so calling `useRouter()` won't throw during tests; provide a noop
+  // router implementation when the hook is missing.
   let router: any;
   try {
-    pathname = usePathname();
-    router = useRouter();
-  } catch (err) {
-    // Tests / environments without the App Router will throw when calling
-    // these hooks. Fall back to safe defaults so unit tests can render.
-    pathname = typeof window !== 'undefined' ? window.location.pathname : '/';
-    router = { push: () => {}, replace: () => {} };
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    router = typeof useRouter === 'function' ? useRouter() : null;
+  } catch (e) {
+    router = null;
   }
+  if (!router) {
+    router = {
+      push: () => {},
+      replace: () => {},
+      back: () => {},
+      refresh: () => {},
+      prefetch: async () => undefined,
+    };
+  }
+  const pathname: string = _pathname ?? (typeof window !== 'undefined' ? window.location.pathname : '/');
   const { hasCollection, isReady, setHasCollection } = useCollection();
 
   // Check auth state on mount and route changes
