@@ -107,7 +107,8 @@ export default function Dashboard() {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('authChanged', handleAuthChange);
     };
-  }, [setHasCollection]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleDismissWelcome = () => {
     setShowWelcome(false);
