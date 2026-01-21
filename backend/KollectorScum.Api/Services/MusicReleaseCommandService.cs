@@ -90,12 +90,22 @@ namespace KollectorScum.Api.Services
                     return Result<CreateMusicReleaseResponseDto>.Failure("User must be authenticated to create a release", ErrorType.ValidationError);
                 }
 
+                DateTime? NormalizeToUtc(DateTime? dt)
+                {
+                    if (!dt.HasValue) return null;
+                    var d = dt.Value;
+                    if (d.Kind == DateTimeKind.Utc) return d;
+                    if (d.Kind == DateTimeKind.Local) return d.ToUniversalTime();
+                    // Unspecified: assume input is UTC-equivalent timestamp; mark as UTC
+                    return DateTime.SpecifyKind(d, DateTimeKind.Utc);
+                }
+
                 var musicRelease = new MusicRelease
                 {
                     UserId = userId.Value,
                     Title = createDto.Title,
-                    ReleaseYear = createDto.ReleaseYear,
-                    OrigReleaseYear = createDto.OrigReleaseYear,
+                    ReleaseYear = NormalizeToUtc(createDto.ReleaseYear),
+                    OrigReleaseYear = NormalizeToUtc(createDto.OrigReleaseYear),
                     Artists = resolvedArtistIds != null ? JsonSerializer.Serialize(resolvedArtistIds) : null,
                     Genres = resolvedGenreIds != null ? JsonSerializer.Serialize(resolvedGenreIds) : null,
                     Live = createDto.Live,
@@ -120,7 +130,7 @@ namespace KollectorScum.Api.Services
                     {
                         StoreID = createDto.PurchaseInfo.StoreId,
                         Price = createDto.PurchaseInfo.Price,
-                        Date = createDto.PurchaseInfo.PurchaseDate,
+                        Date = NormalizeToUtc(createDto.PurchaseInfo.PurchaseDate),
                         Notes = createDto.PurchaseInfo.Notes
                     };
                     musicRelease.PurchaseInfo = JsonSerializer.Serialize(purchaseInfoValueObject);
@@ -213,10 +223,19 @@ namespace KollectorScum.Api.Services
                     }
                 }
 
+                DateTime? NormalizeToUtc(DateTime? dt)
+                {
+                    if (!dt.HasValue) return null;
+                    var d = dt.Value;
+                    if (d.Kind == DateTimeKind.Utc) return d;
+                    if (d.Kind == DateTimeKind.Local) return d.ToUniversalTime();
+                    return DateTime.SpecifyKind(d, DateTimeKind.Utc);
+                }
+
                 // Update properties
                 existingMusicRelease.Title = updateDto.Title;
-                existingMusicRelease.ReleaseYear = updateDto.ReleaseYear;
-                existingMusicRelease.OrigReleaseYear = updateDto.OrigReleaseYear;
+                existingMusicRelease.ReleaseYear = NormalizeToUtc(updateDto.ReleaseYear);
+                existingMusicRelease.OrigReleaseYear = NormalizeToUtc(updateDto.OrigReleaseYear);
                 existingMusicRelease.Artists = updateDto.ArtistIds != null ? JsonSerializer.Serialize(updateDto.ArtistIds) : null;
                 existingMusicRelease.Genres = updateDto.GenreIds != null ? JsonSerializer.Serialize(updateDto.GenreIds) : null;
                 existingMusicRelease.Live = updateDto.Live;
@@ -237,7 +256,7 @@ namespace KollectorScum.Api.Services
                     {
                         StoreID = updateDto.PurchaseInfo.StoreId,
                         Price = updateDto.PurchaseInfo.Price,
-                        Date = updateDto.PurchaseInfo.PurchaseDate,
+                        Date = NormalizeToUtc(updateDto.PurchaseInfo.PurchaseDate),
                         Notes = updateDto.PurchaseInfo.Notes
                     };
                     var serialized = JsonSerializer.Serialize(purchaseInfoValueObject);
