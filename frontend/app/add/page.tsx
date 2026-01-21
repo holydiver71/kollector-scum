@@ -8,8 +8,22 @@ import DiscogsSearchResults from "../components/DiscogsSearchResults";
 import DiscogsReleasePreview from "../components/DiscogsReleasePreview";
 import type { DiscogsSearchResult, DiscogsRelease } from "../lib/discogs-types";
 import { fetchJson, API_BASE_URL } from "../lib/api";
+import type { MusicReleaseDto } from "../lib/types";
 
 type Tab = "manual" | "discogs";
+
+interface CreateMusicReleaseResponseDto {
+  release: MusicReleaseDto;
+  created?: {
+    artists?: { id: number; name: string }[];
+    labels?: { id: number; name: string }[];
+    genres?: { id: number; name: string }[];
+    countries?: { id: number; name: string }[];
+    formats?: { id: number; name: string }[];
+    packagings?: { id: number; name: string }[];
+    stores?: { id: number; name: string }[];
+  };
+}
 
 interface LookupItem {
   id: number;
@@ -197,7 +211,7 @@ export default function AddReleasePage() {
       const coverPromise = (async () => {
         try {
           const filename = extractFilenameFromUrl(discogsFormData.images!.coverFront!);
-          const imgResponse = await fetch(`${API_BASE_URL}/api/images/download`, {
+          const imgResult = await fetchJson<{ filename: string }>('/api/images/download', {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -206,10 +220,10 @@ export default function AddReleasePage() {
               url: discogsImageUrls.cover,
               filename: filename,
             }),
+            swallowErrors: true // Don't crash if image download fails
           });
           
-          if (imgResponse.ok) {
-            const imgResult = await imgResponse.json();
+          if (imgResult) {
             console.log("Cover image downloaded successfully:", imgResult.filename);
           }
         } catch (imgError) {
@@ -224,7 +238,7 @@ export default function AddReleasePage() {
       const thumbnailPromise = (async () => {
         try {
           const filename = extractFilenameFromUrl(discogsFormData.images!.thumbnail!);
-          const imgResponse = await fetch(`${API_BASE_URL}/api/images/download`, {
+          const imgResult = await fetchJson<{ filename: string }>('/api/images/download', {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -233,10 +247,10 @@ export default function AddReleasePage() {
               url: discogsImageUrls.thumbnail,
               filename: filename,
             }),
+            swallowErrors: true // Don't crash if image download fails
           });
           
-          if (imgResponse.ok) {
-            const imgResult = await imgResponse.json();
+          if (imgResult) {
             console.log("Thumbnail image downloaded successfully:", imgResult.filename);
           }
         } catch (imgError) {
@@ -310,29 +324,13 @@ export default function AddReleasePage() {
     };
     
     try {
-      const response = await fetch(`${API_BASE_URL}/api/musicreleases`, {
+      const result = await fetchJson<CreateMusicReleaseResponseDto>('/api/musicreleases', {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(cleanedData),
       });
-
-      if (!response.ok) {
-        let errorMessage = `Failed to add release (${response.status})`;
-        try {
-          const errorData = await response.text();
-          if (errorData) {
-            errorMessage = errorData;
-          }
-        } catch {
-          // Ignore parse error
-        }
-        alert(`Error: ${errorMessage}`);
-        return;
-      }
-
-      const result = await response.json();
       
       // Download images in parallel if we have source URLs
       const downloadPromises: Promise<void>[] = [];
@@ -342,7 +340,8 @@ export default function AddReleasePage() {
         const coverPromise = (async () => {
           try {
             const filename = extractFilenameFromUrl(cleanedData.images!.coverFront!);
-            const imgResponse = await fetch(`${API_BASE_URL}/api/images/download`, {
+            // Use fetchJson to include auth token
+            await fetchJson('/api/images/download', {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -351,12 +350,9 @@ export default function AddReleasePage() {
                 url: sourceImageUrl,
                 filename: filename,
               }),
+              swallowErrors: true, // Don't fail the whole operation if image download fails
             });
-            
-            if (imgResponse.ok) {
-              const imgResult = await imgResponse.json();
-              console.log("Cover image downloaded successfully:", imgResult.filename);
-            }
+            console.log("Cover image downloaded successfully:", filename);
           } catch (imgError) {
             console.error("Failed to download cover image:", imgError);
           }
@@ -369,7 +365,8 @@ export default function AddReleasePage() {
         const thumbnailPromise = (async () => {
           try {
             const filename = extractFilenameFromUrl(cleanedData.images!.thumbnail!);
-            const imgResponse = await fetch(`${API_BASE_URL}/api/images/download`, {
+            // Use fetchJson to include auth token
+            await fetchJson('/api/images/download', {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -378,12 +375,9 @@ export default function AddReleasePage() {
                 url: sourceThumbnailUrl,
                 filename: filename,
               }),
+              swallowErrors: true, // Don't fail the whole operation if image download fails
             });
-            
-            if (imgResponse.ok) {
-              const imgResult = await imgResponse.json();
-              console.log("Thumbnail image downloaded successfully:", imgResult.filename);
-            }
+            console.log("Thumbnail image downloaded successfully:", filename);
           } catch (imgError) {
             console.error("Failed to download thumbnail image:", imgError);
           }

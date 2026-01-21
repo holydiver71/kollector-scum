@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using KollectorScum.Api.Interfaces;
 
 namespace KollectorScum.Api.Controllers
 {
@@ -10,12 +11,22 @@ namespace KollectorScum.Api.Controllers
     public class ImagesController : ControllerBase
     {
         private readonly string _imagesPath;
+        private readonly string? _r2PublicBaseUrl;
+        private readonly string _bucketName;
         private readonly ILogger<ImagesController> _logger;
+        private readonly IStorageService _storageService;
+        private readonly IUserContext _userContext;
 
-        public ImagesController(IConfiguration configuration, ILogger<ImagesController> logger)
+        public ImagesController(IConfiguration configuration, ILogger<ImagesController> logger, IStorageService storageService, IUserContext userContext)
         {
             _imagesPath = configuration["ImagesPath"] ?? "/home/andy/music-images";
+            // Support both configuration key formats: the env provider maps '__' to ':'
+            // so try the colon form first and fall back to the literal double-underscore form.
+            _r2PublicBaseUrl = configuration["R2:PublicBaseUrl"] ?? configuration["R2__PublicBaseUrl"];
+            _bucketName = configuration["R2:BucketName"] ?? configuration["R2__BucketName"] ?? "cover-art";
             _logger = logger;
+            _storageService = storageService;
+            _userContext = userContext;
         }
 
         /// <summary>
@@ -44,9 +55,35 @@ namespace KollectorScum.Api.Controllers
                     return BadRequest("Invalid image path");
                 }
 
-                // Build full file path - handle different image types
+                // If the image path looks like a stored R2 path (e.g. "/cover-art/..."),
+                // and an R2 public base URL is configured, redirect the client to R2
+                if (!string.IsNullOrWhiteSpace(_r2PublicBaseUrl) &&
+                    (imagePath.StartsWith($"{_bucketName}/", StringComparison.OrdinalIgnoreCase) || 
+                     imagePath.StartsWith($"/{_bucketName}/", StringComparison.OrdinalIgnoreCase) ||
+                     imagePath.StartsWith("cover-art/", StringComparison.OrdinalIgnoreCase) || 
+                     imagePath.StartsWith("/cover-art/", StringComparison.OrdinalIgnoreCase)))
+                {
+                    var relative = imagePath.TrimStart('/');
+
+                    // If the path starts with the bucket name, strip it to ensure we don't duplicate it 
+                    // in the redirect URL (assuming the worker/public URL is mapped to the bucket root).
+                    if (relative.StartsWith($"{_bucketName}/", StringComparison.OrdinalIgnoreCase))
+                    {
+                        relative = relative.Substring(_bucketName.Length).TrimStart('/');
+                    }
+                    else if (relative.StartsWith("cover-art/", StringComparison.OrdinalIgnoreCase))
+                    {
+                         // Fallback for legacy paths or default bucket name
+                        relative = relative.Substring("cover-art".Length).TrimStart('/');
+                    }
+
+                    var r2Url = _r2PublicBaseUrl.TrimEnd('/') + "/" + relative;
+                    _logger.LogDebug("Redirecting image request to R2: {R2Url}", r2Url);
+                    return Redirect(r2Url);
+                }
+
+                // Build full file path - handle different image types (local fallback)
                 string fullPath;
-                
                 // If path already includes a directory (covers/, artists/, etc.), use as-is
                 if (imagePath.Contains("/"))
                 {
@@ -104,6 +141,8 @@ namespace KollectorScum.Api.Controllers
             {
                 ImagesPath = _imagesPath,
                 DirectoryExists = exists,
+                R2PublicBaseUrl = _r2PublicBaseUrl,
+                UsesR2 = !string.IsNullOrWhiteSpace(_r2PublicBaseUrl),
                 Status = exists ? "OK" : "Images directory not found"
             };
 
@@ -193,20 +232,50 @@ namespace KollectorScum.Api.Controllers
                 // Download the image
                 using var httpClient = new HttpClient();
                 httpClient.DefaultRequestHeaders.Add("User-Agent", "KollectorScum/1.0");
-                
-                var imageBytes = await httpClient.GetByteArrayAsync(request.Url);
-                
-                // Save to file
-                await System.IO.File.WriteAllBytesAsync(fullPath, imageBytes);
-                
-                _logger.LogInformation("Downloaded image: {Url} -> {Filename} ({Size} bytes)", 
-                    request.Url, finalFilename, imageBytes.Length);
 
-                return Ok(new { 
-                    Message = "Image downloaded successfully", 
-                    Filename = finalFilename,
+                var response = await httpClient.GetAsync(request.Url);
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("Failed to download image from {Url}: {StatusCode}", request.Url, response.StatusCode);
+                    return StatusCode(500, $"Failed to download image: {response.StatusCode}");
+                }
+
+                var imageBytes = await response.Content.ReadAsByteArrayAsync();
+                var contentType = response.Content.Headers.ContentType?.MediaType ?? "application/octet-stream";
+
+                // Use provided filename if available (sanitized), otherwise generate GUID
+                string uniqueFileName;
+                if (!string.IsNullOrWhiteSpace(request.Filename)) 
+                {
+                    // Basic sanitization
+                    var cleanName = Path.GetFileName(request.Filename);
+                    uniqueFileName = cleanName; 
+                }
+                else 
+                {
+                    var fileExt = Path.GetExtension(originalFilename);
+                    if (string.IsNullOrWhiteSpace(fileExt)) fileExt = ".jpg";
+                    uniqueFileName = $"{Guid.NewGuid()}{fileExt}";
+                }
+
+                // Determine user id for multi-tenant storage; fall back to Guid.Empty if not authenticated
+                var userId = _userContext.GetActingUserId() ?? Guid.Empty;
+
+                _logger.LogInformation("Attempting to upload image. Bucket: {Bucket}, User: {User}, File: {File}", 
+                    _bucketName, userId, uniqueFileName);
+
+                // Upload to configured storage (R2 or local filesystem implementation)
+                using var ms = new MemoryStream(imageBytes);
+                var publicUrl = await _storageService.UploadFileAsync(_bucketName, userId.ToString(), uniqueFileName, ms, contentType);
+
+                _logger.LogInformation("Downloaded and stored image: {Url} -> {StoredFile} (User: {UserId}, Size: {Size})", request.Url, uniqueFileName, userId, imageBytes.Length);
+
+                return Ok(new {
+                    Message = "Image downloaded and stored successfully",
+                    Filename = uniqueFileName,
                     OriginalFilename = originalFilename,
-                    Size = imageBytes.Length 
+                    Size = imageBytes.Length,
+                    PublicUrl = publicUrl
                 });
             }
             catch (HttpRequestException ex)
