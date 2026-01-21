@@ -105,6 +105,13 @@ jobs:
       - name: Make migration script executable
         run: chmod +x backend/scripts/apply-ef-migrations.sh
 
+      - name: Create .env from secrets
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "Creating .env from secrets (staging/prod DB URLs)"
+          echo "KOLLECTOR_STAGING_DB_URL=\"${{ secrets.KOLLECTOR_STAGING_DB_URL }}\"" > .env
+          echo "KOLLECTOR_PROD_DB_URL=\"${{ secrets.KOLLECTOR_PROD_DB_URL }}\"" >> .env
+
       - name: Run migrations
         env:
           KOLLECTOR_STAGING_DB_URL: ${{ secrets.KOLLECTOR_STAGING_DB_URL }}
