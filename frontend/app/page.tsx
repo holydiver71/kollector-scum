@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { LoadingSpinner, Skeleton } from "./components/LoadingComponents";
 import { RecentlyPlayed } from "./components/RecentlyPlayed";
@@ -37,7 +37,17 @@ export default function Dashboard() {
         setLoading(true);
         setError(null);
 
-        const profile = await getUserProfile();
+        // Parallelize all API calls for faster loading
+        // Profile validation is still required but we can fetch health and stats concurrently
+        const [profile, healthJson, totalReleases, totalArtists, totalGenres, totalLabels] = await Promise.all([
+          getUserProfile(),
+          getHealth(),
+          getPagedCount('/api/musicreleases'),
+          getPagedCount('/api/artists'),
+          getPagedCount('/api/genres'),
+          getPagedCount('/api/labels')
+        ]);
+
         if (!profile) {
           setIsLoggedIn(false);
           setLoading(false);
@@ -45,17 +55,7 @@ export default function Dashboard() {
         }
 
         setIsLoggedIn(true);
-
-        const healthJson = await getHealth();
         setHealth(healthJson);
-
-        const [totalReleases, totalArtists, totalGenres, totalLabels] = await Promise.all([
-          getPagedCount('/api/musicreleases'),
-          getPagedCount('/api/artists'),
-          getPagedCount('/api/genres'),
-          getPagedCount('/api/labels')
-        ]);
-
         setStats({ totalReleases, totalArtists, totalGenres, totalLabels });
         
         // Update collection context and show welcome screen for empty collections
@@ -158,14 +158,16 @@ export default function Dashboard() {
     return <WelcomeScreen onDismiss={handleDismissWelcome} onStartFresh={handleStartFresh} />;
   }
 
-  const statCards = [
+  // Memoize stat cards to prevent unnecessary recalculations
+  const statCards = useMemo(() => [
     { key: "releases", label: "Releases", value: stats?.totalReleases || 0, color: "blue", icon: "🎵" },
     { key: "artists", label: "Artists", value: stats?.totalArtists || 0, color: "green", icon: "👤" },
     { key: "genres", label: "Genres", value: stats?.totalGenres || 0, color: "purple", icon: "🏷️" },
     { key: "labels", label: "Labels", value: stats?.totalLabels || 0, color: "orange", icon: "🏢" }
-  ];
+  ], [stats]);
 
-  const actions = [
+  // Memoize actions array (static content)
+  const actions = useMemo(() => [
     { title: "Browse Collection", href: "/collection", desc: "Explore your music library", icon: "📻", color: "gray" },
     { title: "Search Music", href: "/search", desc: "Find specific releases", icon: "🔍", color: "blue" },
     { title: "Ask a Question", href: "/query", desc: "Natural language queries", icon: "🔮", color: "purple" },
@@ -173,7 +175,7 @@ export default function Dashboard() {
     { title: "Add Release", href: "/add", desc: "Add new music to collection", icon: "➕", color: "green" },
     { title: "Genres", href: "/genres", desc: "Browse by genre", icon: "⚡", color: "purple" },
     { title: "Artists", href: "/artists", desc: "Browse artists", icon: "👤", color: "indigo" }
-  ];
+  ], []);
 
   return (
     <div className="min-h-screen bg-gray-50">
