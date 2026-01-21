@@ -193,9 +193,6 @@ function RecentlyPlayedComponent({ maxItems = 24 }: RecentlyPlayedProps) {
                 sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 16vw"
                 className="object-cover"
                 loading="lazy"
-                onError={(e) => {
-                  e.currentTarget.src = "/placeholder-album.svg";
-                }}
               />
               {/* Play count badge - only shown if played more than once */}
               {item.playCount > 1 && (
