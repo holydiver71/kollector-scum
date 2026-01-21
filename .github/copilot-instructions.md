@@ -2,6 +2,7 @@
 - Each phase should result in a working, testable application
 - All code should be committed to GitHub at the end of each task, each new phase a new branch.
 - Follow SOLID principles throughout development
+- Follow a TDD approach
 - Maintain high code coverage with meaningful tests
 - Code coverage of tests should exceed 80%.
 - Regular code reviews and refactoring sessions
