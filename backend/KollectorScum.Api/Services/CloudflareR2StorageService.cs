@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Amazon.Runtime;
@@ -12,6 +14,7 @@ namespace KollectorScum.Api.Services
 {
     public class CloudflareR2StorageService : IStorageService
     {
+        private static readonly HttpClient HttpClient = new HttpClient();
         private readonly IAmazonS3 _s3Client;
         private readonly string _bucketName;
         private readonly string? _publicBaseUrl;
@@ -35,12 +38,16 @@ namespace KollectorScum.Api.Services
             var s3Config = new AmazonS3Config
             {
                 ServiceURL = endpoint,
-                ForcePathStyle = true
+                ForcePathStyle = true,
+                // Cloudflare R2 recommends using the special "auto" region
+                // for signature calculation when talking to the S3-compatible API.
+                AuthenticationRegion = "auto"
             };
 
             var credentials = new BasicAWSCredentials(accessKey, secret);
             _s3Client = new AmazonS3Client(credentials, s3Config);
         }
+
 
         public async Task<string> UploadFileAsync(string bucketName, string userId, string fileName, Stream fileStream, string contentType)
         {
@@ -49,25 +56,36 @@ namespace KollectorScum.Api.Services
 
             try
             {
-                // Buffer into memory so the SDK can determine content length and avoid chunked signing
-                using var ms = new MemoryStream();
-                await fileStream.CopyToAsync(ms);
-                ms.Position = 0;
+                var effectiveBucket = bucketName ?? _bucketName;
+                _logger.LogInformation("Uploading file to R2. Bucket: {Bucket}, Key: {Key}, Content-Length: {Length}", 
+                    effectiveBucket, key, fileStream.Length);
 
+                // Use PutObjectAsync directly.
                 var putRequest = new PutObjectRequest
                 {
-                    BucketName = bucketName ?? _bucketName,
+                    BucketName = effectiveBucket,
                     Key = key,
-                    InputStream = ms,
-                    ContentType = contentType
+                    InputStream = fileStream,
+                    ContentType = contentType,
+                    DisablePayloadSigning = true // Required for R2 to avoid STREAMING-AWS4-HMAC-SHA256-PAYLOAD
                 };
 
-                // Make the object public by default; buckets can be configured differently if desired
-                putRequest.CannedACL = S3CannedACL.PublicRead;
+                // Ensure we don't close the stream (good practice if stream is reused, though here it's disposed by caller)
+                putRequest.AutoCloseStream = false;
 
-                await _s3Client.PutObjectAsync(putRequest);
+                var response = await _s3Client.PutObjectAsync(putRequest);
+                
+                _logger.LogInformation("R2 Upload Response: Status={Status}, RequestId={RequestId}", 
+                    response.HttpStatusCode, response.ResponseMetadata?.RequestId);
 
-                return GetPublicUrl(bucketName ?? _bucketName, userId, safeFileName);
+                if (response.HttpStatusCode != System.Net.HttpStatusCode.OK && 
+                    response.HttpStatusCode != System.Net.HttpStatusCode.Created && 
+                    response.HttpStatusCode != System.Net.HttpStatusCode.Accepted)
+                {
+                     _logger.LogWarning("Unexpected R2 status code: {StatusCode}", response.HttpStatusCode);
+                }
+                
+                return GetPublicUrl(effectiveBucket, userId, safeFileName);
             }
             catch (Exception ex)
             {
@@ -75,6 +93,7 @@ namespace KollectorScum.Api.Services
                 throw;
             }
         }
+
 
         public async Task DeleteFileAsync(string bucketName, string userId, string fileName)
         {

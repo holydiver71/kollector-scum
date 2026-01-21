@@ -337,7 +337,10 @@ namespace KollectorScum.Api.Services
 
             // Only resolve to a storage public URL when R2/storage is configured; otherwise return the raw value.
             var r2Endpoint = _configuration["R2:Endpoint"] ?? _configuration["R2__Endpoint"];
-            if (string.IsNullOrWhiteSpace(r2Endpoint))
+            var r2AccountId = _configuration["R2:AccountId"] ?? _configuration["R2__AccountId"];
+            var r2PublicBaseUrl = _configuration["R2:PublicBaseUrl"] ?? _configuration["R2__PublicBaseUrl"];
+
+            if (string.IsNullOrWhiteSpace(r2Endpoint) && string.IsNullOrWhiteSpace(r2AccountId) && string.IsNullOrWhiteSpace(r2PublicBaseUrl))
             {
                 return trimmed;
             }

@@ -21,6 +21,7 @@ namespace KollectorScum.Api.Services
         private readonly ILogger<MusicReleaseCommandService> _logger;
         private readonly IConfiguration _configuration;
         private readonly IUserContext _userContext;
+        private readonly IStorageService _storageService;
 
         public MusicReleaseCommandService(
             IRepository<MusicRelease> musicReleaseRepository,
@@ -30,7 +31,8 @@ namespace KollectorScum.Api.Services
             IMusicReleaseValidator validator,
             ILogger<MusicReleaseCommandService> logger,
             IConfiguration configuration,
-            IUserContext userContext)
+            IUserContext userContext,
+            IStorageService storageService)
         {
             _musicReleaseRepository = musicReleaseRepository ?? throw new ArgumentNullException(nameof(musicReleaseRepository));
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
@@ -40,6 +42,7 @@ namespace KollectorScum.Api.Services
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _userContext = userContext ?? throw new ArgumentNullException(nameof(userContext));
+            _storageService = storageService ?? throw new ArgumentNullException(nameof(storageService));
         }
 
         public async Task<Result<CreateMusicReleaseResponseDto>> CreateMusicReleaseAsync(CreateMusicReleaseDto createDto)
@@ -323,6 +326,7 @@ namespace KollectorScum.Api.Services
                 var imagesPath = _configuration["ImagesPath"] ?? "/home/andy/music-images";
                 var coversPath = Path.Combine(imagesPath, "covers");
                 var thumbnailsPath = Path.Combine(imagesPath, "thumbnails");
+                var bucketName = _configuration["R2:BucketName"] ?? _configuration["R2__BucketName"] ?? "cover-art-staging";
 
                 // Parse the Images JSON
                 var imageData = JsonSerializer.Deserialize<MusicReleaseImageDto>(musicRelease.Images);
@@ -335,33 +339,63 @@ namespace KollectorScum.Api.Services
                 // Delete front cover
                 if (!string.IsNullOrWhiteSpace(imageData.CoverFront))
                 {
-                    var filename = ExtractFilenameFromUrl(imageData.CoverFront);
-                    var fullPath = Path.Combine(coversPath, filename);
-                    DeleteImageFile(fullPath, "front cover");
+                    await DeleteImageAsync(imageData.CoverFront, coversPath, bucketName, musicRelease.UserId, "front cover");
                 }
 
                 // Delete back cover
                 if (!string.IsNullOrWhiteSpace(imageData.CoverBack))
                 {
-                    var filename = ExtractFilenameFromUrl(imageData.CoverBack);
-                    var fullPath = Path.Combine(coversPath, filename);
-                    DeleteImageFile(fullPath, "back cover");
+                    await DeleteImageAsync(imageData.CoverBack, coversPath, bucketName, musicRelease.UserId, "back cover");
                 }
 
                 // Delete thumbnail (stored in separate thumbnails folder)
                 if (!string.IsNullOrWhiteSpace(imageData.Thumbnail))
                 {
-                    var filename = ExtractFilenameFromUrl(imageData.Thumbnail);
-                    var fullPath = Path.Combine(thumbnailsPath, filename);
-                    DeleteImageFile(fullPath, "thumbnail");
+                    await DeleteImageAsync(imageData.Thumbnail, thumbnailsPath, bucketName, musicRelease.UserId, "thumbnail");
                 }
-
-                await Task.CompletedTask; // Make method async-compatible
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error parsing or deleting image files for release: {Id}", musicRelease.Id);
                 // Don't fail the entire delete operation if image deletion fails
+            }
+        }
+
+        /// <summary>
+        /// Deletes an image from R2 storage or local filesystem
+        /// </summary>
+        private async Task DeleteImageAsync(string imageUrl, string localFolderPath, string bucketName, Guid userId, string imageType)
+        {
+            try
+            {
+                // Check if it's an R2/HTTPS URL
+                if (imageUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Extract filename from URL
+                    var filename = ExtractFilenameFromUrl(imageUrl);
+                    
+                    // Try to delete from R2
+                    try
+                    {
+                        await _storageService.DeleteFileAsync(bucketName, userId.ToString(), filename);
+                        _logger.LogInformation("Deleted {ImageType} from R2: {Bucket}/{UserId}/{Filename}", imageType, bucketName, userId, filename);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Failed to delete {ImageType} from R2: {Filename}", imageType, filename);
+                    }
+                }
+                else
+                {
+                    // Local filesystem deletion (fallback for old releases)
+                    var filename = ExtractFilenameFromUrl(imageUrl);
+                    var fullPath = Path.Combine(localFolderPath, filename);
+                    DeleteImageFile(fullPath, imageType);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error deleting {ImageType}: {Url}", imageType, imageUrl);
             }
         }
 
