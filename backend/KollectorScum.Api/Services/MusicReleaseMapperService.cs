@@ -26,8 +26,8 @@ namespace KollectorScum.Api.Services
             IRepository<Genre> genreRepository,
             IRepository<Store> storeRepository,
             ILogger<MusicReleaseMapperService> logger,
-            IStorageService storageService,
-            IConfiguration configuration)
+            IStorageService? storageService,
+            IConfiguration? configuration)
         {
             _artistRepository = artistRepository;
             _genreRepository = genreRepository;
@@ -288,31 +288,33 @@ namespace KollectorScum.Api.Services
             return mediaList;
         }
 
-        private async Task<MusicReleaseImageDto?> SafeDeserializeImageAsync(string? imagesJson)
+        private Task<MusicReleaseImageDto?> SafeDeserializeImageAsync(string? imagesJson)
         {
-            if (string.IsNullOrEmpty(imagesJson)) return null;
+            if (string.IsNullOrEmpty(imagesJson)) return Task.FromResult<MusicReleaseImageDto?>(null);
             try
             {
-                return JsonSerializer.Deserialize<MusicReleaseImageDto>(imagesJson);
+                var dto = JsonSerializer.Deserialize<MusicReleaseImageDto>(imagesJson);
+                return Task.FromResult(dto);
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Failed to deserialize Images JSON for release: {Json}", imagesJson);
-                return null;
+                return Task.FromResult<MusicReleaseImageDto?>(null);
             }
         }
 
-        private async Task<List<MusicReleaseLinkDto>?> SafeDeserializeLinksAsync(string? linksJson)
+        private Task<List<MusicReleaseLinkDto>?> SafeDeserializeLinksAsync(string? linksJson)
         {
-            if (string.IsNullOrEmpty(linksJson)) return null;
+            if (string.IsNullOrEmpty(linksJson)) return Task.FromResult<List<MusicReleaseLinkDto>?>(null);
             try
             {
-                return JsonSerializer.Deserialize<List<MusicReleaseLinkDto>>(linksJson);
+                var list = JsonSerializer.Deserialize<List<MusicReleaseLinkDto>>(linksJson);
+                return Task.FromResult(list);
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Failed to deserialize Links JSON for release: {Json}", linksJson);
-                return null;
+                return Task.FromResult<List<MusicReleaseLinkDto>?>(null);
             }
         }
 
