@@ -153,15 +153,38 @@ case "$MODE" in
     export ConnectionStrings__DefaultConnection="$(postgres_url_to_npgsql "$RAW_URL")"
     export Database__Target="staging"
     
-    # Load Cloudflare R2 credentials for staging (R2_STAGING__* → R2__*)
+    # Load Discogs credentials
+    if discogs_token="$(read_dotenv_value "Discogs__Token" "$ENV_FILE" 2>/dev/null || true)"; then
+      if [[ -n "$discogs_token" ]]; then
+        export Discogs__Token="$discogs_token"
+      fi
+    fi
+    
+    # Load Google OAuth credentials
+    if google_client_id="$(read_dotenv_value "Google__ClientId" "$ENV_FILE" 2>/dev/null || true)"; then
+      if [[ -n "$google_client_id" ]]; then
+        export Google__ClientId="$google_client_id"
+      fi
+    fi
+    if google_client_secret="$(read_dotenv_value "Google__ClientSecret" "$ENV_FILE" 2>/dev/null || true)"; then
+      if [[ -n "$google_client_secret" ]]; then
+        export Google__ClientSecret="$google_client_secret"
+      fi
+    fi
+    
+    # Load Cloudflare R2 credentials for staging. Try mode-specific keys first
+    # (R2_STAGING__*), then fall back to generic R2__* keys in the .env file.
     for key in AccountId Endpoint AccessKeyId SecretAccessKey BucketName PublicBaseUrl; do
-      staging_key="R2_STAGING__${key}"
-      target_key="R2__${key}"
-      if [[ -z "${!target_key:-}" ]]; then
-        val="$(read_dotenv_value "$staging_key" "$ENV_FILE" 2>/dev/null || true)"
-        if [[ -n "$val" ]]; then
-          export "${target_key}=${val}"
-        fi
+      r2_env_key="R2__${key}"
+      dot_key="R2_STAGING__${key}"
+
+      val="$(read_dotenv_value "$dot_key" "$ENV_FILE" 2>/dev/null || true)"
+      if [[ -z "$val" ]]; then
+        val="$(read_dotenv_value "$r2_env_key" "$ENV_FILE" 2>/dev/null || true)"
+      fi
+
+      if [[ -n "$val" ]]; then
+        export "${r2_env_key}=${val}"
       fi
     done
     ;;
@@ -177,15 +200,38 @@ case "$MODE" in
     export ConnectionStrings__DefaultConnection="$(postgres_url_to_npgsql "$RAW_URL")"
     export Database__Target="production"
     
-    # Load Cloudflare R2 credentials for production (R2_PROD__* → R2__*)
+    # Load Discogs credentials
+    if discogs_token="$(read_dotenv_value "Discogs__Token" "$ENV_FILE" 2>/dev/null || true)"; then
+      if [[ -n "$discogs_token" ]]; then
+        export Discogs__Token="$discogs_token"
+      fi
+    fi
+    
+    # Load Google OAuth credentials
+    if google_client_id="$(read_dotenv_value "Google__ClientId" "$ENV_FILE" 2>/dev/null || true)"; then
+      if [[ -n "$google_client_id" ]]; then
+        export Google__ClientId="$google_client_id"
+      fi
+    fi
+    if google_client_secret="$(read_dotenv_value "Google__ClientSecret" "$ENV_FILE" 2>/dev/null || true)"; then
+      if [[ -n "$google_client_secret" ]]; then
+        export Google__ClientSecret="$google_client_secret"
+      fi
+    fi
+    
+    # Load Cloudflare R2 credentials for production. Try mode-specific keys first
+    # (R2_PROD__*), then fall back to generic R2__* keys in the .env file.
     for key in AccountId Endpoint AccessKeyId SecretAccessKey BucketName PublicBaseUrl; do
-      prod_key="R2_PROD__${key}"
-      target_key="R2__${key}"
-      if [[ -z "${!target_key:-}" ]]; then
-        val="$(read_dotenv_value "$prod_key" "$ENV_FILE" 2>/dev/null || true)"
-        if [[ -n "$val" ]]; then
-          export "${target_key}=${val}"
-        fi
+      r2_env_key="R2__${key}"
+      dot_key="R2_PROD__${key}"
+
+      val="$(read_dotenv_value "$dot_key" "$ENV_FILE" 2>/dev/null || true)"
+      if [[ -z "$val" ]]; then
+        val="$(read_dotenv_value "$r2_env_key" "$ENV_FILE" 2>/dev/null || true)"
+      fi
+
+      if [[ -n "$val" ]]; then
+        export "${r2_env_key}=${val}"
       fi
     done
     ;;

@@ -25,6 +25,7 @@ namespace KollectorScum.Tests.Services
         private readonly Mock<ILogger<MusicReleaseCommandService>> _mockLogger;
         private readonly Mock<IConfiguration> _mockConfiguration;
         private readonly Mock<IUserContext> _mockUserContext;
+        private readonly Mock<IStorageService> _mockStorageService;
         private readonly MusicReleaseCommandService _service;
         private readonly string _testImagesPath;
 
@@ -38,6 +39,7 @@ namespace KollectorScum.Tests.Services
             _mockLogger = new Mock<ILogger<MusicReleaseCommandService>>();
             _mockConfiguration = new Mock<IConfiguration>();
             _mockUserContext = new Mock<IUserContext>();
+            _mockStorageService = new Mock<IStorageService>();
             defaultUserId = Guid.Parse("12337b39-c346-449c-b269-33b2e820d74f");
             _mockUserContext.Setup(u => u.GetActingUserId()).Returns(defaultUserId);
             _mockUserContext.Setup(u => u.GetUserId()).Returns(defaultUserId);
@@ -59,7 +61,8 @@ namespace KollectorScum.Tests.Services
                 _mockValidator.Object,
                 _mockLogger.Object,
                 _mockConfiguration.Object,
-                _mockUserContext.Object
+                _mockUserContext.Object,
+                _mockStorageService.Object
             );
         }
 

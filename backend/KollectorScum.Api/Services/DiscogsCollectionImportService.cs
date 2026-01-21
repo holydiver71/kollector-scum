@@ -18,8 +18,8 @@ namespace KollectorScum.Api.Services
         private readonly ILogger<DiscogsCollectionImportService> _logger;
         private readonly IConfiguration _configuration;
         private readonly HttpClient _httpClient;
-        private readonly string _imagesPath;
-        private readonly string _coverArtPath;
+        private readonly IStorageService _storageService;
+        private readonly string _bucketName;
 
         // Cache for lookups created during import to avoid duplicates
         private Dictionary<string, int> _artistCache = new();
@@ -39,20 +39,18 @@ namespace KollectorScum.Api.Services
             IUnitOfWork unitOfWork,
             ILogger<DiscogsCollectionImportService> logger,
             IConfiguration configuration,
-            HttpClient httpClient)
+            HttpClient httpClient,
+            IStorageService storageService)
         {
             _discogsService = discogsService ?? throw new ArgumentNullException(nameof(discogsService));
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+            _storageService = storageService ?? throw new ArgumentNullException(nameof(storageService));
             
-            // Use ImagesPath (same as ImagesController) instead of CoverArtPath
-            _imagesPath = _configuration["ImagesPath"] ?? "/home/andy/music-images";
-            _coverArtPath = Path.Combine(_imagesPath, "covers");
-            
-            // Ensure cover art directory exists
-            Directory.CreateDirectory(_coverArtPath);
+            // Get bucket name from configuration
+            _bucketName = _configuration["R2:BucketName"] ?? _configuration["R2__BucketName"] ?? "cover-art-staging";
         }
 
         /// <summary>
@@ -258,11 +256,11 @@ namespace KollectorScum.Api.Services
                 var artistIds = await GetOrCreateArtistsAsync(basicInfo.Artists, userId);
                 var genreIds = await GetOrCreateGenresAsync(basicInfo.Genres, basicInfo.Styles, userId);
 
-                // Download cover art
+                // Download cover art and upload to R2
                 string? coverImageFilename = null;
                 if (!string.IsNullOrEmpty(basicInfo.CoverImage))
                 {
-                    coverImageFilename = await DownloadCoverArtAsync(basicInfo.CoverImage, basicInfo);
+                    coverImageFilename = await DownloadCoverArtAsync(basicInfo.CoverImage, basicInfo, userId);
                 }
 
                 // Extract notes
@@ -616,7 +614,7 @@ namespace KollectorScum.Api.Services
             return genreIds;
         }
 
-        private async Task<string?> DownloadCoverArtAsync(string imageUrl, DiscogsBasicInfoDto basicInfo)
+        private async Task<string?> DownloadCoverArtAsync(string imageUrl, DiscogsBasicInfoDto basicInfo, Guid userId)
         {
             try
             {
@@ -626,24 +624,23 @@ namespace KollectorScum.Api.Services
                 var year = basicInfo.Year?.ToString() ?? "Unknown";
                 
                 var filename = SanitizeFilename($"{artist}-{title}-{year}.jpg");
-                var filePath = Path.Combine(_coverArtPath, filename);
 
-                // Skip if already exists
-                if (File.Exists(filePath))
-                {
-                    _logger.LogDebug("Cover art already exists: {Filename}", filename);
-                    return filename;
-                }
-
-                // Download image
+                // Download image from Discogs
                 _logger.LogDebug("Downloading cover art from: {Url}", imageUrl);
                 var response = await _httpClient.GetAsync(imageUrl);
                 
                 if (response.IsSuccessStatusCode)
                 {
                     var imageBytes = await response.Content.ReadAsByteArrayAsync();
-                    await File.WriteAllBytesAsync(filePath, imageBytes);
-                    _logger.LogDebug("Saved cover art: {Filename}", filename);
+                    var contentType = response.Content.Headers.ContentType?.MediaType ?? "image/jpeg";
+                    
+                    // Upload to R2 storage
+                    using var ms = new MemoryStream(imageBytes);
+                    var publicUrl = await _storageService.UploadFileAsync(_bucketName, userId.ToString(), filename, ms, contentType);
+                    
+                    _logger.LogDebug("Uploaded cover art to R2: {Filename} -> {Url}", filename, publicUrl);
+                    
+                    // Return just the filename - the mapper will resolve the full URL
                     return filename;
                 }
                 else
@@ -655,7 +652,7 @@ namespace KollectorScum.Api.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error downloading cover art from {Url}", imageUrl);
+                _logger.LogError(ex, "Error downloading/uploading cover art from {Url}", imageUrl);
                 return null;
             }
         }

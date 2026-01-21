@@ -18,6 +18,25 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
 
+// Load .env file from the root of the repo (one level up from backend/Api -> backend -> root)
+// Assuming PWD is where the .sln or project usually is, or we find it relative to current dir.
+var root = Directory.GetCurrentDirectory();
+var dotenv = Path.Combine(root, "../../.env");
+if (!File.Exists(dotenv))
+{
+    // Try one level up if we are in backend/
+    dotenv = Path.Combine(root, "../.env");
+}
+if (File.Exists(dotenv))
+{
+    DotNetEnv.Env.Load(dotenv);
+    Console.WriteLine($"Loaded environment variables from {dotenv}");
+} else {
+    // try default loading which looks in current dir
+     DotNetEnv.Env.Load();
+}
+
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Many hosting platforms (e.g., Render) set a PORT environment variable that the app must bind to.

@@ -1,0 +1,1 @@
+{"message":"Image downloaded and stored successfully","filename":"3aa24252-d348-45eb-91ed-d9685218c5c9.png","originalFilename":"test-sample.png","size":8090,"publicUrl":"https://kollector-images.1c96409b15483aeb26499da3e9a1cb2b.workers.dev/00000000-0000-0000-0000-000000000000/3aa24252-d348-45eb-91ed-d9685218c5c9.png"}
