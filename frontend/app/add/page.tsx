@@ -175,7 +175,6 @@ export default function AddReleasePage() {
       media,
       links: release.uri ? [{ url: release.uri, type: "Discogs", description: "" }] : [],
       _meta: { sourceImageUrl, sourceThumbnailUrl }, // Store metadata separately
-      _meta: { sourceImageUrl, sourceThumbnailUrl },
     } as _DiscogsFormData;
   };
   
