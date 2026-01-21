@@ -254,7 +254,7 @@ namespace KollectorScum.Tests.Services
         public async Task MapToFullDtoAsync_WithMedia_MapsMediaTracks()
         {
             // Arrange
-            var media = new List<MusicReleaseMediaDto>
+            var mediaInput = new List<MusicReleaseMediaDto>
             {
                 new MusicReleaseMediaDto
                 {
@@ -271,7 +271,7 @@ namespace KollectorScum.Tests.Services
                 Id = 1,
                 Title = "Test Album",
                 ReleaseYear = new DateTime(2020, 1, 1),
-                Media = JsonSerializer.Serialize(media),
+                Media = JsonSerializer.Serialize(mediaInput),
                 DateAdded = DateTime.UtcNow,
                 LastModified = DateTime.UtcNow
             };
@@ -282,19 +282,21 @@ namespace KollectorScum.Tests.Services
             // Assert
             Assert.NotNull(result);
             Assert.NotNull(result.Media);
-            Assert.Single(result.Media);
-            Assert.Equal("CD 1", result.Media[0].Name);
-            Assert.NotNull(result.Media[0].Tracks);
-            Assert.Single(result.Media[0].Tracks);
-            Assert.Equal("Track 1", result.Media[0].Tracks[0].Title);
-            Assert.Equal(180, result.Media[0].Tracks[0].LengthSecs);
+            var media = result.Media!;
+            Assert.Single(media);
+            Assert.Equal("CD 1", media[0].Name);
+            Assert.NotNull(media[0].Tracks);
+            var tracks = media[0].Tracks!;
+            Assert.Single(tracks);
+            Assert.Equal("Track 1", tracks[0].Title);
+            Assert.Equal(180, tracks[0].LengthSecs);
         }
 
         [Fact]
         public async Task MapToFullDtoAsync_WithMediaArtists_ResolvesArtistNames()
         {
             // Arrange
-            var media = new List<MusicReleaseMediaDto>
+            var mediaInput = new List<MusicReleaseMediaDto>
             {
                 new MusicReleaseMediaDto
                 {
@@ -316,7 +318,7 @@ namespace KollectorScum.Tests.Services
                 Id = 1,
                 Title = "Test Album",
                 ReleaseYear = new DateTime(2020, 1, 1),
-                Media = JsonSerializer.Serialize(media),
+                Media = JsonSerializer.Serialize(mediaInput),
                 DateAdded = DateTime.UtcNow,
                 LastModified = DateTime.UtcNow
             };
@@ -330,19 +332,22 @@ namespace KollectorScum.Tests.Services
             // Assert
             Assert.NotNull(result);
             Assert.NotNull(result.Media);
-            Assert.Single(result.Media);
-            Assert.NotNull(result.Media[0].Tracks);
-            Assert.Single(result.Media[0].Tracks);
-            Assert.NotNull(result.Media[0].Tracks[0].Artists);
-            Assert.Single(result.Media[0].Tracks[0].Artists);
-            Assert.Equal("Track Artist", result.Media[0].Tracks[0].Artists[0]);
+            var media = result.Media!;
+            Assert.Single(media);
+            Assert.NotNull(media[0].Tracks);
+            var tracks = media[0].Tracks!;
+            Assert.Single(tracks);
+            Assert.NotNull(tracks[0].Artists);
+            var artists = tracks[0].Artists!;
+            Assert.Single(artists);
+            Assert.Equal("Track Artist", artists[0]);
         }
 
         [Fact]
         public async Task MapToFullDtoAsync_WithMediaGenres_ResolvesGenreNames()
         {
             // Arrange
-            var media = new List<MusicReleaseMediaDto>
+            var mediaInput = new List<MusicReleaseMediaDto>
             {
                 new MusicReleaseMediaDto
                 {
@@ -364,7 +369,7 @@ namespace KollectorScum.Tests.Services
                 Id = 1,
                 Title = "Test Album",
                 ReleaseYear = new DateTime(2020, 1, 1),
-                Media = JsonSerializer.Serialize(media),
+                Media = JsonSerializer.Serialize(mediaInput),
                 DateAdded = DateTime.UtcNow,
                 LastModified = DateTime.UtcNow
             };
@@ -380,13 +385,16 @@ namespace KollectorScum.Tests.Services
             // Assert
             Assert.NotNull(result);
             Assert.NotNull(result.Media);
-            Assert.Single(result.Media);
-            Assert.NotNull(result.Media[0].Tracks);
-            Assert.Single(result.Media[0].Tracks);
-            Assert.NotNull(result.Media[0].Tracks[0].Genres);
-            Assert.Equal(2, result.Media[0].Tracks[0].Genres.Count);
-            Assert.Contains("Rock", result.Media[0].Tracks[0].Genres);
-            Assert.Contains("Pop", result.Media[0].Tracks[0].Genres);
+            var media = result.Media!;
+            Assert.Single(media);
+            Assert.NotNull(media[0].Tracks);
+            var tracks = media[0].Tracks!;
+            Assert.Single(tracks);
+            Assert.NotNull(tracks[0].Genres);
+            var genres = tracks[0].Genres!;
+            Assert.Equal(2, genres.Count);
+            Assert.Contains("Rock", genres);
+            Assert.Contains("Pop", genres);
         }
 
         [Fact]
