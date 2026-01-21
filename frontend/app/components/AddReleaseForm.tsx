@@ -263,6 +263,10 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
       if (formData.purchaseInfo.price < 0) {
         errors.price = "Price cannot be negative";
       }
+      // Require currency when price is provided
+      if (!formData.purchaseInfo.currency || !formData.purchaseInfo.currency.trim()) {
+        errors.currency = "Currency is required when price is specified";
+      }
     }
 
     // Validate tracks
@@ -317,6 +321,42 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
           purchaseDate: formData.purchaseInfo.purchaseDate && formData.purchaseInfo.purchaseDate.trim() !== '' 
             ? formData.purchaseInfo.purchaseDate 
             : undefined,
+        } : undefined,
+        // Normalize images: if user left full public URLs in the image fields, strip to filename
+        images: formData.images ? {
+          coverFront: (() => {
+            const v = formData.images?.coverFront;
+            if (!v) return undefined;
+            try {
+              const u = new URL(v);
+              const parts = u.pathname.split('/').filter(Boolean);
+              return parts.length ? parts[parts.length - 1] : v;
+            } catch {
+              return v.includes('/') ? v.split('/').pop() : v;
+            }
+          })(),
+          coverBack: (() => {
+            const v = formData.images?.coverBack;
+            if (!v) return undefined;
+            try {
+              const u = new URL(v);
+              const parts = u.pathname.split('/').filter(Boolean);
+              return parts.length ? parts[parts.length - 1] : v;
+            } catch {
+              return v.includes('/') ? v.split('/').pop() : v;
+            }
+          })(),
+          thumbnail: (() => {
+            const v = formData.images?.thumbnail;
+            if (!v) return undefined;
+            try {
+              const u = new URL(v);
+              const parts = u.pathname.split('/').filter(Boolean);
+              return parts.length ? parts[parts.length - 1] : v;
+            } catch {
+              return v.includes('/') ? v.split('/').pop() : v;
+            }
+          })(),
         } : undefined,
       };
       
