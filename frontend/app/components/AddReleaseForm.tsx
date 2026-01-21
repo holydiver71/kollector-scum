@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { fetchJson, updateRelease } from "../lib/api";
-import ComboBox, { ComboBoxItem } from "./ComboBox";
-import TrackListEditor, { Media } from "./TrackListEditor";
+import ComboBox from "./ComboBox";
+import TrackListEditor from "./TrackListEditor";
 
 // Lookup data interfaces
 interface LookupItem {

@@ -21,9 +21,7 @@ export default function Header() {
   const pathname = usePathname();
   const normalizedPath = pathname && pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
   const isMusicCollection = normalizedPath === '/collection';
-  const [headerQuery, setHeaderQuery] = React.useState('');
-  const filtersOpen = normalizedPath === '/collection' && (searchParams?.get('showAdvanced') === 'true');
-  const sortsOpen = normalizedPath === '/collection' && (searchParams?.get('showSort') === 'true');
+  const [/* headerQuery removed - unused */, setHeaderQuery] = React.useState('');
   const [kollections, setKollections] = React.useState<KollectionDto[]>([]);
   const [loadingKollections, setLoadingKollections] = React.useState(true);
 

@@ -5,9 +5,9 @@ import Image from "next/image";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { fetchJson, createNowPlaying, ApiError } from "../lib/api";
 import { clearAuthToken } from "../lib/auth";
-import { LoadingSpinner, Skeleton } from "./LoadingComponents";
+import { LoadingSpinner } from "./LoadingComponents";
 import { VinylSpinner } from "./VinylSpinner";
-import { Play, Check, User, Clock, Calendar, Disc3, ChevronLeft, ChevronRight, Eye, List } from "lucide-react";
+import { Play, Check, User, Clock, Calendar, Disc3, Eye, List } from "lucide-react";
 
 import SortPanel from "./SortPanel";
 import { AddToListDialog } from "./AddToListDialog";
