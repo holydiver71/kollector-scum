@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { EditReleaseButton } from '../EditReleaseButton';
 import { useRouter } from 'next/navigation';
 
