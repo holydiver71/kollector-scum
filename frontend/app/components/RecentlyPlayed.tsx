@@ -90,6 +90,25 @@ function RecentlyPlayedComponent({ maxItems = 24 }: RecentlyPlayedProps) {
     fetchRecentlyPlayed();
   }, [maxItems]);
 
+  // Group items by relative date and determine which ones show date headings
+  // Only the first item for each relative date period should show the date heading
+  // Memoize to prevent recalculation on every render
+  const itemsWithDateInfo = useMemo(() => {
+    let lastRelativeDateString = "";
+    return items.map((item) => {
+      const playedDate = new Date(item.playedAt);
+      const relativeDate = formatRelativeDate(playedDate);
+      const showDate = relativeDate !== lastRelativeDateString;
+      lastRelativeDateString = relativeDate;
+      
+      return {
+        ...item,
+        showDate,
+        relativeDate,
+      };
+    });
+  }, [items]);
+
   if (loading) {
     return (
       <div className="bg-white rounded-lg border border-gray-200 p-8 shadow-sm">
@@ -137,25 +156,6 @@ function RecentlyPlayedComponent({ maxItems = 24 }: RecentlyPlayedProps) {
       </div>
     );
   }
-
-  // Group items by relative date and determine which ones show date headings
-  // Only the first item for each relative date period should show the date heading
-  // Memoize to prevent recalculation on every render
-  const itemsWithDateInfo = useMemo(() => {
-    let lastRelativeDateString = "";
-    return items.map((item) => {
-      const playedDate = new Date(item.playedAt);
-      const relativeDate = formatRelativeDate(playedDate);
-      const showDate = relativeDate !== lastRelativeDateString;
-      lastRelativeDateString = relativeDate;
-      
-      return {
-        ...item,
-        showDate,
-        relativeDate,
-      };
-    });
-  }, [items]);
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-8 shadow-sm">
