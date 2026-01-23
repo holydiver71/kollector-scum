@@ -2,7 +2,8 @@
 // Provides: configurable base URL, timeout handling, unified error formatting
 
 // Increase default timeout to tolerate slow local/staging responses
-const DEFAULT_TIMEOUT_MS = Number(process.env.NEXT_PUBLIC_API_TIMEOUT_MS) || 20000;
+// Raised to 30s to reduce transient client-side timeouts against slower endpoints.
+const DEFAULT_TIMEOUT_MS = Number(process.env.NEXT_PUBLIC_API_TIMEOUT_MS) || 30000;
 
 // Derive base URL priority:
 // 1. Explicit env var NEXT_PUBLIC_API_BASE_URL (e.g. http://localhost:5072)
@@ -100,17 +101,20 @@ export async function fetchJson<T = unknown>(path: string, options: FetchJsonOpt
     }
   } catch (e: unknown) {
     clearTimeout(id);
+
+    // If caller asked to swallow errors (useful for non-critical widgets),
+    // return null instead of throwing on network/CORS failures or timeouts.
+    if (options.swallowErrors) {
+      return null as unknown as T;
+    }
+
+    // Handle abort/timeouts explicitly when not swallowing errors
     if (e && typeof e === 'object' && 'name' in e && e.name === 'AbortError') {
       const err: ApiError = new Error(`Request timeout after ${timeoutMs}ms: ${url}`);
       err.url = url;
       throw err;
     }
 
-    // If caller asked to swallow errors (useful for non-critical widgets),
-    // return null instead of throwing on network/CORS failures.
-    if (options.swallowErrors) {
-      return null as unknown as T;
-    }
     if (e instanceof Error) throw e;
     const err: ApiError = new Error(`Unknown fetch error for ${url}`);
     err.url = url;
@@ -343,6 +347,9 @@ export async function getRecentlyPlayed(limit: number = 24): Promise<RecentlyPla
   // If the recently-played endpoint is temporarily failing (500), treat it as
   // non-fatal for the UI and return an empty list so the widget can show a
   // friendly message rather than crash the app overlay.
+  // NOTE: This endpoint can be slow in some environments. Callers should use
+  // `{ swallowErrors: true }` so timeouts/network errors are treated as
+  // non-fatal and the UI can render fallback content.
   const result = await fetchJson<RecentlyPlayedItemDto[]>(`/api/NowPlaying/recent?limit=${limit}`, { swallowErrors: true });
   return result || [];
 }

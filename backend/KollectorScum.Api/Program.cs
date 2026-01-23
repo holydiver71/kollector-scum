@@ -21,19 +21,38 @@ using Microsoft.IdentityModel.Tokens;
 // Load .env file from the root of the repo (one level up from backend/Api -> backend -> root)
 // Assuming PWD is where the .sln or project usually is, or we find it relative to current dir.
 var root = Directory.GetCurrentDirectory();
-var dotenv = Path.Combine(root, "../../.env");
-if (!File.Exists(dotenv))
+// Determine runtime environment (ASPNETCORE_ENVIRONMENT or DOTNET_ENVIRONMENT)
+var runtimeEnv = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ??
+                 Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ??
+                 "Production";
+
+// Only load local .env files when NOT running in Production or Staging. This
+// avoids accidentally overwriting platform-provided secrets (e.g., Render
+// environment variables) with repository .env placeholders.
+if (!string.Equals(runtimeEnv, "Production", StringComparison.OrdinalIgnoreCase) &&
+    !string.Equals(runtimeEnv, "Staging", StringComparison.OrdinalIgnoreCase))
 {
-    // Try one level up if we are in backend/
-    dotenv = Path.Combine(root, "../.env");
+    var dotenv = Path.Combine(root, "../../.env");
+    if (!File.Exists(dotenv))
+    {
+        // Try one level up if we are in backend/
+        dotenv = Path.Combine(root, "../.env");
+    }
+
+    if (File.Exists(dotenv))
+    {
+        DotNetEnv.Env.Load(dotenv);
+        Console.WriteLine($"Loaded environment variables from {dotenv}");
+    }
+    else
+    {
+        // try default loading which looks in current dir
+        DotNetEnv.Env.Load();
+    }
 }
-if (File.Exists(dotenv))
+else
 {
-    DotNetEnv.Env.Load(dotenv);
-    Console.WriteLine($"Loaded environment variables from {dotenv}");
-} else {
-    // try default loading which looks in current dir
-     DotNetEnv.Env.Load();
+    Console.WriteLine($"Skipping .env load in {runtimeEnv} environment to preserve platform secrets.");
 }
 
 
@@ -298,6 +317,10 @@ builder.Services.AddSwaggerGen(c =>
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
+
+// Reduce noisy EF Core SQL command logs (they run at Information level by default)
+// Keep warnings/errors visible but suppress routine executed command output.
+builder.Logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", Microsoft.Extensions.Logging.LogLevel.Warning);
 
 var app = builder.Build();
 

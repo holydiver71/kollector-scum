@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -31,7 +31,7 @@ interface SearchAndFilterProps {
 
 export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync = false, showSearchInput = true, openAdvanced, onAdvancedToggle, kollectionId, compact = false }: SearchAndFilterProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const _searchParams = useSearchParams();
   const [filters, setFilters] = useState<SearchFilters>(initialFilters || {});
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
@@ -42,7 +42,7 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
   const [isInitializing, setIsInitializing] = useState(true);
   const [yearValidationError, setYearValidationError] = useState<string | null>(null);
 
-  const normalizedInitialFilters = initialFilters || {};
+  const normalizedInitialFilters = useMemo(() => initialFilters || {}, [initialFilters]);
 
   // Sync local state when initialFilters prop changes
   // NOTE: if parent explicitly controls `openAdvanced`, don't auto-open/close based on initialFilters —
@@ -67,7 +67,7 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
       setIsInitializing(false);
     }, 200);
     return () => clearTimeout(timer);
-  }, [initialFilters, openAdvanced]);
+  }, [normalizedInitialFilters, openAdvanced]);
 
   // If parent gives an explicit openAdvanced prop, keep showAdvanced in sync
   useEffect(() => {

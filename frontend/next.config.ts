@@ -30,6 +30,12 @@ const nextConfig: NextConfig = {
         pathname: '/cover-art/**',
       },
       {
+        // Allow staging API host for direct image links served by the API
+        protocol: 'https',
+        hostname: 'kollector-scum-staging-api.onrender.com',
+        pathname: '/**',
+      },
+      {
         // Allow Cloudflare Worker domains used as image proxy/public gateway
         protocol: 'https',
         hostname: '*.workers.dev',

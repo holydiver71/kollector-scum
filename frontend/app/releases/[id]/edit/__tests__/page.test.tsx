@@ -21,7 +21,7 @@ jest.mock('../../../../lib/api', () => ({
 
 // Mock AddReleaseForm component
 jest.mock('../../../../components/AddReleaseForm', () => {
-  // eslint-disable-next-line react/display-name
+   
   return ({ initialData, releaseId, onSuccess, onCancel }: any) => (
     <div data-testid="add-release-form">
       <div data-testid="form-release-id">{releaseId}</div>

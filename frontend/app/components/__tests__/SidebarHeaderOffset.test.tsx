@@ -5,6 +5,7 @@ import Sidebar from '../Sidebar';
 // Mock next/navigation used by Sidebar
 jest.mock('next/navigation', () => ({
   usePathname: () => '/',
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
 }));
 
 describe('Sidebar ↔ Header offset sync', () => {

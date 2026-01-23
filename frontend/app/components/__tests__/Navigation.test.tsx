@@ -4,7 +4,7 @@ import Navigation from '../Navigation';
 
 // Mock Next.js modules
 jest.mock('next/link', () => {
-  // eslint-disable-next-line react/display-name
+   
   return ({ children, href }: { children: React.ReactNode; href: string }) => (
     <a href={href}>{children}</a>
   );
@@ -118,8 +118,8 @@ describe('Navigation Component', () => {
     render(<Navigation />);
     
     // Check for description text if visible
-    const text = screen.queryByText(/collection overview/i) || 
-                 screen.queryByText(/browse your music/i);
+    const _text = screen.queryByText(/collection overview/i) || 
+           screen.queryByText(/browse your music/i);
     // Descriptions might be hidden on mobile, so we just check rendering works
     expect(screen.getByText('Dashboard')).toBeInTheDocument();
   });

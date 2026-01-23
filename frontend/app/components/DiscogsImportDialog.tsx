@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { fetchJson } from "../lib/api";
 
 export interface DiscogsImportDialogProps {
@@ -32,6 +32,19 @@ export function DiscogsImportDialog({
   const dialogRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const handleClose = useCallback(() => {
+    if (!isImporting) {
+      // If import was successful, trigger the success callback
+      if (result?.success) {
+        onSuccess();
+      }
+      setUsername("");
+      setResult(null);
+      setError(null);
+      onClose();
+    }
+  }, [isImporting, result, onSuccess, onClose]);
+
   // Focus username input when dialog opens
   useEffect(() => {
     if (isOpen && inputRef.current && !isImporting && !result) {
@@ -40,6 +53,7 @@ export function DiscogsImportDialog({
   }, [isOpen, isImporting, result]);
 
   // Handle Escape key to close dialog
+  // include `handleClose` in deps since it's referenced in the effect
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape" && isOpen && !isImporting) {
@@ -56,20 +70,7 @@ export function DiscogsImportDialog({
       document.removeEventListener("keydown", handleEscape);
       document.body.style.overflow = "";
     };
-  }, [isOpen, isImporting]);
-
-  const handleClose = () => {
-    if (!isImporting) {
-      // If import was successful, trigger the success callback
-      if (result?.success) {
-        onSuccess();
-      }
-      setUsername("");
-      setResult(null);
-      setError(null);
-      onClose();
-    }
-  };
+  }, [isOpen, isImporting, handleClose]);
 
   const handleImport = async () => {
     if (!username.trim()) {
@@ -93,12 +94,20 @@ export function DiscogsImportDialog({
       setResult(data);
       
       // Don't auto-close - let user review results and close manually
-    } catch (err: any) {
+    } catch (err) {
       console.error("Error importing from Discogs:", err);
-      if (err.name === "AbortError") {
-        setError("Import timed out. Please try again or contact support.");
+      // Prefer robust runtime checks rather than `any`.
+      const e = err as unknown;
+      if (err instanceof Error && err.name === 'AbortError') {
+        setError('Import timed out. Please try again or contact support.');
+      } else if (e && typeof e === 'object') {
+        const errObj = e as Record<string, unknown>;
+        if (typeof errObj.message === 'string') setError(errObj.message);
+        else setError('Failed to import from Discogs. Please try again.');
+      } else if (err instanceof Error) {
+        setError(err.message);
       } else {
-        setError(err.message || "Failed to import from Discogs. Please try again.");
+        setError('Failed to import from Discogs. Please try again.');
       }
     } finally {
       setIsImporting(false);
