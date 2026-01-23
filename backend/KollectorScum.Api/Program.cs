@@ -318,6 +318,10 @@ builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
 
+// Reduce noisy EF Core SQL command logs (they run at Information level by default)
+// Keep warnings/errors visible but suppress routine executed command output.
+builder.Logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", Microsoft.Extensions.Logging.LogLevel.Warning);
+
 var app = builder.Build();
 
 // Add global error handling middleware
