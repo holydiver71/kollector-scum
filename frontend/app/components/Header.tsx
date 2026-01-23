@@ -21,9 +21,7 @@ export default function Header() {
   const pathname = usePathname();
   const normalizedPath = pathname && pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
   const isMusicCollection = normalizedPath === '/collection';
-  const [headerQuery, setHeaderQuery] = React.useState('');
-  const filtersOpen = normalizedPath === '/collection' && (searchParams?.get('showAdvanced') === 'true');
-  const sortsOpen = normalizedPath === '/collection' && (searchParams?.get('showSort') === 'true');
+  const [/* headerQuery removed - unused */, setHeaderQuery] = React.useState('');
   const [kollections, setKollections] = React.useState<KollectionDto[]>([]);
   const [loadingKollections, setLoadingKollections] = React.useState(true);
 
@@ -84,7 +82,7 @@ export default function Header() {
     try {
       if (kollectionId === 'all') localStorage.removeItem('kollectionId');
       else localStorage.setItem('kollectionId', kollectionId);
-    } catch (e) {
+    } catch {
       // ignore storage errors (e.g., SSR or strict privacy)
     }
   };
@@ -104,7 +102,7 @@ export default function Header() {
     const applyHeight = () => {
       try {
         document.documentElement.style.setProperty('--app-header-height', `${(el as HTMLElement).offsetHeight}px`);
-      } catch (e) {}
+      } catch {}
     };
 
     applyHeight();
@@ -113,7 +111,7 @@ export default function Header() {
     const onScroll = () => {
       if (rafId) cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(() => {
-        const scrollY = (window as any).scrollY || window.pageYOffset || 0;
+        const scrollY = typeof window.scrollY === 'number' ? window.scrollY : (window.pageYOffset ?? 0);
         // compact when the user has scrolled a reasonable amount
         const shouldCompact = scrollY > 100;
         setIsCompact(shouldCompact);

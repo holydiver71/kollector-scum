@@ -112,8 +112,15 @@ export default function KollectionsPage() {
       }
       await loadKollections();
       handleCancelForm();
-    } catch (err: any) {
-      setFormError(err.message || "Failed to save kollection");
+    } catch (err) {
+      let msg = "Failed to save kollection";
+      if (err && typeof err === 'object') {
+        const e = err as Record<string, unknown>;
+        if (typeof e.message === 'string') msg = e.message;
+      } else if (err instanceof Error) {
+        msg = err.message;
+      }
+      setFormError(msg);
       console.error(err);
     }
   };

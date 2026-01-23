@@ -191,7 +191,7 @@ export function LookupDropdown<T extends LookupItem>({
   );
 }
 
-const lookupCache: Record<string, { data: any[], timestamp: number }> = {};
+const lookupCache: Record<string, { data: unknown[]; timestamp: number }> = {};
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 // Test helper: allow tests to clear the module-level lookup cache so
@@ -211,7 +211,8 @@ export function useLookupData<T extends LookupItem>(endpoint: string) {
     if (!force) {
       const cached = lookupCache[endpoint];
       if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
-        setData(cached.data);
+        // cached.data is stored as unknown[] at module scope; assert to T[] here
+        setData(cached.data as T[]);
         setLoading(false);
         return;
       }
