@@ -6,11 +6,11 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Restore
-COPY backend/KollectorScum.Api/KollectorScum.Api.csproj KollectorScum.Api/
+COPY KollectorScum.Api/KollectorScum.Api.csproj KollectorScum.Api/
 RUN dotnet restore KollectorScum.Api/KollectorScum.Api.csproj
 
 # Build/publish
-COPY backend/KollectorScum.Api/ KollectorScum.Api/
+COPY KollectorScum.Api/ KollectorScum.Api/
 RUN dotnet publish KollectorScum.Api/KollectorScum.Api.csproj -c Release -o /app/publish /p:UseAppHost=false
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
