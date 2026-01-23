@@ -1,0 +1,54 @@
+name: Apply EF Migrations
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment (staging|production)'
+        required: false
+        default: 'production'
+  push:
+    branches:
+      - master
+      - main
+
+jobs:
+  apply-migrations:
+    name: Apply migrations
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Ensure script is executable
+        run: |
+          chmod +x backend/scripts/apply-ef-migrations.sh
+
+      - name: Run migrations (production)
+        if: github.event_name == 'push' || github.event.inputs.environment == 'production'
+        env:
+          CONN_URL: ${{ secrets.KOLLECTOR_PROD_DB_URL }}
+        run: |
+          if [ -z "$CONN_URL" ]; then
+            echo "Missing secret KOLLECTOR_PROD_DB_URL" >&2
+            exit 1
+          fi
+          ./backend/scripts/apply-ef-migrations.sh "$CONN_URL"
+
+      - name: Run migrations (staging)
+        if: github.event.inputs.environment == 'staging'
+        env:
+          CONN_URL: ${{ secrets.KOLLECTOR_STAGING_DB_URL }}
+        run: |
+          if [ -z "$CONN_URL" ]; then
+            echo "Missing secret KOLLECTOR_STAGING_DB_URL" >&2
+            exit 1
+          fi
+          ./backend/scripts/apply-ef-migrations.sh "$CONN_URL"
