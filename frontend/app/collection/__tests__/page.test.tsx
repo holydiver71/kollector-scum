@@ -4,7 +4,7 @@ import CollectionPage from '../page';
 
 // Mock the child components
 jest.mock('../../components/SearchAndFilter', () => ({
-  SearchAndFilter: ({ onFiltersChange, initialFilters, enableUrlSync }: any) => (
+  SearchAndFilter: ({ onFiltersChange }: any) => (
     <div data-testid="search-and-filter">
       SearchAndFilter Component
       <button onClick={() => onFiltersChange({ search: 'test' })}>Apply Filters</button>
@@ -13,7 +13,7 @@ jest.mock('../../components/SearchAndFilter', () => ({
 }));
 
 jest.mock('../../components/MusicReleaseList', () => ({
-  MusicReleaseList: ({ filters, pageSize }: any) => (
+  MusicReleaseList: ({ pageSize }: any) => (
     <div data-testid="music-release-list">
       MusicReleaseList Component (pageSize: {pageSize})
     </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 
 // Mock the api module before importing the components so their imports use the mock
 jest.mock('../../lib/api');
@@ -8,7 +8,7 @@ import { MusicReleaseList, MusicReleaseCard } from '../MusicReleaseList';
 
 // Mock Next.js Link component
 jest.mock('next/link', () => {
-  // eslint-disable-next-line react/display-name
+   
   return ({ children, href }: { children: React.ReactNode; href: string }) => (
     <a href={href}>{children}</a>
   );

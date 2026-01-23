@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { SearchAndFilter } from "../components/SearchAndFilter";
 import { useLookupData } from "../components/LookupComponents";
+import type { LookupItemDto } from "../lib/types";
 import { MusicReleaseList } from "../components/MusicReleaseList";
 import { X } from "lucide-react";
 
@@ -29,14 +30,13 @@ export default function CollectionPage() {
   // Initialize immediately in tests to avoid timing issues where useEffect
   // updates state after mount. This keeps the UI stable for unit tests.
   const [isInitialized, setIsInitialized] = useState(true);
-  const [refreshKey, setRefreshKey] = useState(0);
 
   // Load lookup tables to show friendly names for selected ids in the active filters chip list
-  const { data: artists } = useLookupData<any>("artists");
-  const { data: genres } = useLookupData<any>("genres");
-  const { data: labels } = useLookupData<any>("labels");
-  const { data: countries } = useLookupData<any>("countries");
-  const { data: formats } = useLookupData<any>("formats");
+  const { data: artists } = useLookupData<LookupItemDto>("artists");
+  const { data: genres } = useLookupData<LookupItemDto>("genres");
+  const { data: labels } = useLookupData<LookupItemDto>("labels");
+  const { data: countries } = useLookupData<LookupItemDto>("countries");
+  const { data: formats } = useLookupData<LookupItemDto>("formats");
 
   // Load filters from URL whenever URL changes (but not when we just updated it)
   useEffect(() => {
@@ -60,7 +60,7 @@ export default function CollectionPage() {
           }
         }
       }
-    } catch (e) {
+    } catch {
       // ignore localStorage/read errors
     }
     if (searchParams && !isUpdatingUrl.current) {
@@ -102,7 +102,7 @@ export default function CollectionPage() {
             setIsInitialized(true);
             return prev as SearchFilters;
           }
-        } catch (e) {
+        } catch {
           // Fallback to always set if JSON stringify fails
         }
 
@@ -116,24 +116,7 @@ export default function CollectionPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams?.toString()]);
 
-  const showAdvancedFromParams = searchParams.get('showAdvanced') === 'true';
-  const showSortFromParams = searchParams.get('showSort') === 'true';
-
-  const handleAdvancedToggle = (open: boolean) => {
-    const params = new URLSearchParams(Array.from(searchParams.entries()));
-    if (open) params.set('showAdvanced', 'true');
-    else params.delete('showAdvanced');
-    const newUrl = params.toString() ? `/collection?${params.toString()}` : '/collection';
-    router.replace(newUrl, { scroll: false });
-  };
-
-  const handleSortToggle = (open: boolean) => {
-    const params = new URLSearchParams(Array.from(searchParams.entries()));
-    if (open) params.set('showSort', 'true');
-    else params.delete('showSort');
-    const newUrl = params.toString() ? `/collection?${params.toString()}` : '/collection';
-    router.replace(newUrl, { scroll: false });
-  };
+  // Advanced/sort params and toggles are intentionally managed inside `MusicReleaseList`.
 
   const handleFiltersChange = (newFilters: SearchFilters) => {
     console.log('CollectionPage handleFiltersChange:', newFilters);
@@ -348,7 +331,7 @@ export default function CollectionPage() {
 
             {/* Results */}
             <MusicReleaseList 
-              key={refreshKey}
+              key={JSON.stringify(filters)}
               filters={filters}
               pageSize={60}
             />

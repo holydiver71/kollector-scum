@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { fetchJson, updateRelease } from "../lib/api";
-import ComboBox, { ComboBoxItem } from "./ComboBox";
-import TrackListEditor, { Media } from "./TrackListEditor";
+import ComboBox from "./ComboBox";
+import TrackListEditor from "./TrackListEditor";
 
 // Lookup data interfaces
 interface LookupItem {
@@ -378,7 +378,21 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
       if (onSuccess) {
         // For update, use the existing releaseId; for create, try to accept multiple response shapes
         // Some APIs return { release: { id } } while tests/mock helpers sometimes return { id }
-        const createdId = (response as any)?.release?.id ?? (response as any)?.id ?? (response as any)?.releaseId;
+        let createdId: number | undefined;
+        if (response && typeof response === 'object') {
+          const respObj = response as Record<string, unknown>;
+          const rel = respObj.release;
+          if (rel && typeof rel === 'object') {
+            const relObj = rel as Record<string, unknown>;
+            if (typeof relObj.id === 'number') createdId = relObj.id;
+            else if (typeof relObj.id === 'string' && relObj.id) createdId = parseInt(relObj.id as string, 10);
+          }
+          if (createdId === undefined) {
+            if (typeof respObj.id === 'number') createdId = respObj.id as number;
+            else if (typeof respObj.id === 'string' && respObj.id) createdId = parseInt(respObj.id as string, 10);
+            else if (typeof respObj.releaseId === 'number') createdId = respObj.releaseId as number;
+          }
+        }
         const resultId = releaseId || createdId;
         onSuccess(resultId as number);
       }

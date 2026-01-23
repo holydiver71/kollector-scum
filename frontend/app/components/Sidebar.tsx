@@ -29,18 +29,12 @@ interface NavigationItem {
 const Sidebar: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  let pathname: string;
-  let router: any;
-  try {
-    pathname = usePathname();
-    router = useRouter();
-  } catch (err) {
-    // Tests / environments without the App Router will throw when calling
-    // these hooks. Fall back to safe defaults so unit tests can render.
-    pathname = typeof window !== 'undefined' ? window.location.pathname : '/';
-    router = { push: () => {}, replace: () => {} };
-  }
-  const { hasCollection, isReady, setHasCollection } = useCollection();
+  // Hooks must be called unconditionally at the top level.
+  const _pathname = usePathname();
+  // Call hooks unconditionally at top level to satisfy React Hooks rules.
+  const router = useRouter();
+  const pathname: string = _pathname ?? (typeof window !== 'undefined' ? window.location.pathname : '/');
+  const { hasCollection, setHasCollection } = useCollection();
 
   // Check auth state on mount and route changes
   useEffect(() => {
@@ -121,14 +115,13 @@ const Sidebar: React.FC = () => {
     return pathname.startsWith(href);
   };
 
+  const cssVar = isExpanded ? '240px' : '64px';
+  const inlineStyle = ({ ['--sidebar-offset']: cssVar } as unknown) as React.CSSProperties;
+
   return (
     <aside
       // reflect the current sidebar offset as a CSS variable used by Header
-      style={{
-        // keep a stable CSS variable for header offset - used by Header
-        // when collapsed -> 64px, when expanded -> 240px
-        ['--sidebar-offset' as any]: isExpanded ? '240px' : '64px',
-      }}
+      style={inlineStyle}
       className={`sidebar ${isExpanded ? 'sidebar-expanded' : 'sidebar-collapsed'} bg-gray-900 text-white flex flex-col shadow-2xl z-50 transition-all duration-300 ease-in-out`}
     >
       {/* Toggle Button */}

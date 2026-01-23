@@ -1,4 +1,5 @@
 // Learn more: https://github.com/testing-library/jest-dom
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import '@testing-library/jest-dom'
 
 // Provide a harmless global fetch mock for tests that render components which
@@ -38,17 +39,33 @@ if (typeof globalThis.fetch === 'undefined') {
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 jest.mock('next/navigation', () => ({
-	useRouter: () => ({
+	__esModule: true,
+	useRouter: jest.fn(() => ({
 		push: jest.fn(),
 		replace: jest.fn(),
 		back: jest.fn(),
 		refresh: jest.fn(),
 		prefetch: jest.fn().mockResolvedValue(undefined),
-	}),
-	usePathname: () => '/',
-	useSearchParams: () => new URLSearchParams(),
-	useParams: () => ({}),
+	})),
+	usePathname: jest.fn(() => '/'),
+	useSearchParams: jest.fn(() => new URLSearchParams()),
+	useParams: jest.fn(() => ({})),
 }));
+
+// Provide a minimal mock for @react-oauth/google used by Header and auth flows.
+// Tests don't need the real provider; ensure hooks and provider exist.
+jest.mock('@react-oauth/google', () => ({
+	__esModule: true,
+	GoogleOAuthProvider: ({ children }: any) => children,
+	useGoogleLogin: jest.fn(() => jest.fn()),
+	useGoogleOneTapLogin: jest.fn(() => jest.fn()),
+	useGoogleLogout: jest.fn(() => jest.fn()),
+	useGoogleOAuth: jest.fn(() => ({})),
+	GoogleLogin: jest.fn(() => null),
+}));
+
+// Ensure NEXT_PUBLIC_GOOGLE_CLIENT_ID is set for tests that require it.
+process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || 'test-google-client-id';
 
 // Polyfill ResizeObserver for the Jest/jsdom environment used by tests.
 // Many components measure layout using ResizeObserver; provide a minimal
@@ -86,10 +103,26 @@ try {
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore
 	if (typeof window !== 'undefined' && window.localStorage) {
-		// eslint-disable-next-line no-console
+		 
 		console.log('[jest.setup] auth_token =', window.localStorage.getItem('auth_token'));
 	}
 } catch (e) {}
+
+// Ensure each test starts with a test auth token so components under test
+// treat the environment as authenticated unless the test explicitly clears it.
+beforeEach(() => {
+	try {
+		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+		// @ts-ignore
+		if (typeof window !== 'undefined' && window.localStorage) {
+			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+			// @ts-ignore
+			window.localStorage.setItem('auth_token', 'test-token');
+			 
+			console.log('[jest.setup.beforeEach] auth_token =', window.localStorage.getItem('auth_token'));
+		}
+	} catch (e) {}
+});
 
 // NOTE: Previously we reset the module registry before each test to avoid
 // cross-test leakage. That interferes with test-level `jest.mock`/`doMock`
@@ -112,3 +145,42 @@ console.error = (...args: any[]) => {
 	}
 	_origConsoleError(...args);
 };
+
+// Provide lightweight default mocks for the app API helpers so components
+// that call `fetchJson` or `getKollections` during mount do not throw
+// TypeError in the Jest environment. Individual tests can override these
+// by using `jest.mock(...)` or providing more specific implementations.
+// Best-effort patching using dynamic `import()` so ESLint's
+// `no-require-imports` rule is satisfied while keeping behavior similar
+// to the previous synchronous `require()` approach. We run the async IIFE
+// immediately but tolerate failures silently (this is only a test helper).
+;(async () => {
+	try {
+		const apiLib = await import('./app/lib/api');
+		if (apiLib) {
+			// Only set mocks if functions are missing or not callable
+			if (typeof (apiLib as any).fetchJson !== 'function') {
+				(apiLib as any).fetchJson = jest.fn((..._args: any[]) => Promise.resolve({}));
+			}
+			if (typeof (apiLib as any).getKollections !== 'function') {
+				(apiLib as any).getKollections = jest.fn(() => Promise.resolve({ items: [] }));
+			}
+		}
+	} catch (e) {
+		// ignore - best-effort for the test environment
+	}
+
+	try {
+		const appApi = await import('./app/api');
+		if (appApi) {
+			if (typeof (appApi as any).fetchJson !== 'function') {
+				(appApi as any).fetchJson = jest.fn((..._args: any[]) => Promise.resolve({}));
+			}
+			if (typeof (appApi as any).getKollections !== 'function') {
+				(appApi as any).getKollections = jest.fn(() => Promise.resolve({ items: [] }));
+			}
+		}
+	} catch (e) {
+		// ignore - best-effort
+	}
+})();

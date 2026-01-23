@@ -2,9 +2,6 @@
 import React from 'react';
 import {
   YearStatistic,
-  GenreStatistic,
-  FormatStatistic,
-  CountryStatistic
 } from '../lib/api';
 
 interface BarChartProps {

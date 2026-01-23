@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { getLists, deleteList, updateList, createList, type ListSummaryDto } from "../lib/api";
-import { LoadingSpinner } from "../components/LoadingComponents";
 import { Plus, Edit2, Trash2, Check, X } from "lucide-react";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 
