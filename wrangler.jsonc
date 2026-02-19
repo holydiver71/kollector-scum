@@ -1,6 +1,5 @@
 {
   "name": "kollector-images",
-  "type": "service",
   "main": "worker/index.js",
   "compatibility_date": "2026-01-01",
   "account_id": "1c96409b15483aeb26499da3e9a1cb2b",
