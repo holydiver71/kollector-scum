@@ -120,6 +120,60 @@ jobs:
             | jq -r '.service | .id, .status' || true
 
 
+  pages_deploy:
+    name: "Cloudflare Pages: Deploy Frontend"
+    runs-on: ubuntu-latest
+    needs: frontend
+    if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      # @cloudflare/next-on-pages adapts the Next.js build for Cloudflare's edge runtime.
+      # It runs `next build` internally (webpack, not Turbopack) then transforms the output.
+      # NEXT_PUBLIC_* vars are baked in at build time so we rebuild per environment.
+      - name: Build for Cloudflare Pages (staging — dev branch)
+        if: github.ref == 'refs/heads/dev'
+        working-directory: frontend
+        env:
+          NEXT_PUBLIC_API_BASE_URL: ${{ secrets.NEXT_PUBLIC_API_BASE_URL_STAGING }}
+          NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE__CLIENTID }}
+          NEXT_PUBLIC_API_TIMEOUT_MS: "20000"
+        run: npx @cloudflare/next-on-pages@1
+
+      - name: Build for Cloudflare Pages (production — main branch)
+        if: github.ref == 'refs/heads/main'
+        working-directory: frontend
+        env:
+          NEXT_PUBLIC_API_BASE_URL: ${{ secrets.NEXT_PUBLIC_API_BASE_URL_PROD }}
+          NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE__CLIENTID }}
+          NEXT_PUBLIC_API_TIMEOUT_MS: "20000"
+        run: npx @cloudflare/next-on-pages@1
+
+      # Deploys .vercel/output/static to Cloudflare Pages.
+      # dev branch  → preview deployment (e.g. dev.kollector-scum-frontend.pages.dev)
+      # main branch → production deployment (kollector-scum-frontend.pages.dev)
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: 1c96409b15483aeb26499da3e9a1cb2b
+          projectName: kollector-scum-frontend
+          directory: frontend/.vercel/output/static
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref_name }}
+
   staging-health:
     name: "Staging: Health check"
     runs-on: ubuntu-latest
