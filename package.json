@@ -1,4 +1,9 @@
 {
+  "scripts": {
+    "deploy": "cd worker && npx wrangler deploy",
+    "deploy:staging": "cd worker && npx wrangler deploy --config wrangler.staging.toml",
+    "deploy:prod": "cd worker && npx wrangler deploy --config wrangler.prod.toml"
+  },
   "devDependencies": {
     "autoprefixer": "^10.4.21",
     "eslint-config-prettier": "^10.1.8",
