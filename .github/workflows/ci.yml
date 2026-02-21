@@ -165,14 +165,16 @@ jobs:
       # dev branch    → preview deployment (e.g. dev.kollector-scum-frontend.pages.dev)
       # master branch → production deployment (kollector-scum-frontend.pages.dev)
       - name: Deploy to Cloudflare Pages
-        uses: cloudflare/pages-action@v1
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: 1c96409b15483aeb26499da3e9a1cb2b
-          projectName: kollector-scum-frontend
-          directory: frontend/.vercel/output/static
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ github.ref_name }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        working-directory: frontend
+        run: |
+          BRANCH="${{ github.ref_name }}"
+          npx wrangler pages deploy .vercel/output/static \
+            --project-name=kollector-scum-frontend \
+            --branch="$BRANCH" \
+            --commit-dirty=true
 
   staging-health:
     name: "Staging: Health check"
