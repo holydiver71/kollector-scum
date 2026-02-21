@@ -9,6 +9,10 @@ const nextConfig: NextConfig = {
     root: path.resolve(__dirname),
   },
   images: {
+    // Next.js image optimisation requires a Node.js server; Cloudflare Pages runs on
+    // the edge runtime so we disable server-side optimisation here. Images are
+    // already served optimally from Cloudflare R2 via the Worker.
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
