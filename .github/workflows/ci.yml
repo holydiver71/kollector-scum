@@ -124,7 +124,7 @@ jobs:
     name: "Cloudflare Pages: Deploy Frontend"
     runs-on: ubuntu-latest
     needs: frontend
-    if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/master'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -152,8 +152,8 @@ jobs:
           NEXT_PUBLIC_API_TIMEOUT_MS: "20000"
         run: npx @cloudflare/next-on-pages@1
 
-      - name: Build for Cloudflare Pages (production — main branch)
-        if: github.ref == 'refs/heads/main'
+      - name: Build for Cloudflare Pages (production — master branch)
+        if: github.ref == 'refs/heads/master'
         working-directory: frontend
         env:
           NEXT_PUBLIC_API_BASE_URL: ${{ secrets.NEXT_PUBLIC_API_BASE_URL_PROD }}
@@ -162,8 +162,8 @@ jobs:
         run: npx @cloudflare/next-on-pages@1
 
       # Deploys .vercel/output/static to Cloudflare Pages.
-      # dev branch  → preview deployment (e.g. dev.kollector-scum-frontend.pages.dev)
-      # main branch → production deployment (kollector-scum-frontend.pages.dev)
+      # dev branch    → preview deployment (e.g. dev.kollector-scum-frontend.pages.dev)
+      # master branch → production deployment (kollector-scum-frontend.pages.dev)
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/pages-action@v1
         with:
