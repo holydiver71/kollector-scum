@@ -171,6 +171,8 @@ jobs:
         working-directory: frontend
         run: |
           BRANCH="${{ github.ref_name }}"
+          # Create project if it doesn't exist yet (no-op if it already exists)
+          npx wrangler pages project create kollector-scum-frontend --production-branch=master 2>/dev/null || true
           npx wrangler pages deploy .vercel/output/static \
             --project-name=kollector-scum-frontend \
             --branch="$BRANCH" \
