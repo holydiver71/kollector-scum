@@ -28,9 +28,10 @@ export function GoogleSignIn({ onSignIn, className }: GoogleSignInProps) {
         try {
           const userProfile = await getUserProfile();
           setProfile(userProfile);
-          if (onSignIn && userProfile) {
-            onSignIn(userProfile);
-          }
+          // Do NOT call onSignIn here — this is silent session restoration on
+          // mount, not an active sign-in event. Calling it here causes
+          // components that use onSignIn (e.g. Header) to re-run side effects
+          // they only intend to run after a fresh login.
         } catch (e) {
           console.error("Failed to get user profile", e);
           signOut(); // Clear invalid token
