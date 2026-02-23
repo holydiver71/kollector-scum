@@ -1,7 +1,7 @@
  "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { setAuthToken } from "../../lib/auth";
 
@@ -9,7 +9,6 @@ import { setAuthToken } from "../../lib/auth";
  * Inner component that reads the token from the URL and stores it.
  */
 function CallbackHandler() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
 
@@ -23,15 +22,15 @@ function CallbackHandler() {
 
     try {
       setAuthToken(token);
-      // Notify mounted components (e.g. Header / GoogleSignIn) that auth state changed
-      window.dispatchEvent(new Event("authChanged"));
-      // Redirect to dashboard after storing the token
-      router.replace("/");
+      // Use a full-page redirect so the app remounts at "/" with the token
+      // already in localStorage. This guarantees GoogleSignIn reads the
+      // correct auth state on its initial mount without any event-timing issues.
+      window.location.replace("/");
     } catch (e) {
       console.error("Failed to store auth token", e);
       setError("Authentication failed: could not store session.");
     }
-  }, [searchParams, router]);
+  }, [searchParams]);
 
   if (error) {
     return (
