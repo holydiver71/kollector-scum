@@ -1,0 +1,65 @@
+"use client";
+
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { setAuthToken } from "../../lib/auth";
+
+/**
+ * Inner component that reads the token from the URL and stores it.
+ */
+function CallbackHandler() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const token = searchParams.get("token");
+
+    if (!token) {
+      setError("Authentication failed: no token received.");
+      return;
+    }
+
+    try {
+      setAuthToken(token);
+      // Redirect to dashboard after storing the token
+      router.replace("/");
+    } catch (e) {
+      console.error("Failed to store auth token", e);
+      setError("Authentication failed: could not store session.");
+    }
+  }, [searchParams, router]);
+
+  if (error) {
+    return (
+      <div className="text-center space-y-4">
+        <p className="text-red-400 text-sm">{error}</p>
+        <a href="/" className="text-blue-400 hover:underline text-sm">
+          Return to home
+        </a>
+      </div>
+    );
+  }
+
+  return <div className="text-white/60 text-sm animate-pulse">Signing you in…</div>;
+}
+
+/**
+ * Auth callback page.
+ *
+ * After the user authenticates with Google via the backend OAuth flow,
+ * the backend redirects here with a JWT token as a query parameter:
+ *   /auth/callback?token=<jwt>
+ *
+ * This page reads the token, stores it in localStorage and redirects
+ * to the dashboard.
+ */
+export default function AuthCallbackPage() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-900">
+      <Suspense fallback={<div className="text-white/60 text-sm animate-pulse">Loading…</div>}>
+        <CallbackHandler />
+      </Suspense>
+    </div>
+  );
+}

@@ -13,13 +13,16 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const isTestEnv = typeof process !== 'undefined' && (process.env.NODE_ENV === 'test' || typeof process.env.JEST_WORKER_ID !== 'undefined');
   const [validated, setValidated] = useState(false);
   const isLandingPage = pathname === '/';
+  // Auth callback page must be accessible without a token so it can store the
+  // JWT returned by the backend Google OAuth flow before redirecting to '/'.
+  const isPublicRoute = isLandingPage || pathname === '/auth/callback';
 
   useEffect(() => {
     let cancelled = false;
 
     const validate = async () => {
-      // Landing page is public.
-      if (isLandingPage) {
+      // Landing page and other public routes don't require authentication.
+      if (isPublicRoute) {
         if (!cancelled) setValidated(true);
         return;
       }
@@ -70,10 +73,10 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       window.removeEventListener('authChanged', handleAuthChanged);
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, [pathname, router, isLandingPage, isTestEnv]);
+  }, [pathname, router, isPublicRoute, isTestEnv]);
 
-  // Landing page - always show
-  if (isLandingPage) {
+  // Public routes - always show
+  if (isPublicRoute) {
     return <>{children}</>;
   }
 

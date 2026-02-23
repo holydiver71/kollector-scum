@@ -181,6 +181,9 @@ if (!string.IsNullOrEmpty(jwtKey))
     builder.Services.AddAuthorization();
 }
 
+// Register IHttpClientFactory for outbound HTTP calls (e.g. Google token exchange)
+builder.Services.AddHttpClient();
+
 // Register HTTP context accessor for user context
 builder.Services.AddHttpContextAccessor();
 
