@@ -36,11 +36,18 @@ export function GoogleSignIn({ onSignIn, className }: GoogleSignInProps) {
           console.error("Failed to get user profile", e);
           signOut(); // Clear invalid token
         }
+      } else {
+        setProfile(null);
       }
       setLoading(false);
     };
 
     checkAuth();
+
+    // Re-run auth check whenever another part of the app signals an auth change
+    // (e.g. the OAuth callback page after it stores the JWT token).
+    window.addEventListener("authChanged", checkAuth);
+    return () => window.removeEventListener("authChanged", checkAuth);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Read error from query string set by backend on auth failure
