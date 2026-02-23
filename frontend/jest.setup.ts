@@ -52,21 +52,6 @@ jest.mock('next/navigation', () => ({
 	useParams: jest.fn(() => ({})),
 }));
 
-// Provide a minimal mock for @react-oauth/google used by Header and auth flows.
-// Tests don't need the real provider; ensure hooks and provider exist.
-jest.mock('@react-oauth/google', () => ({
-	__esModule: true,
-	GoogleOAuthProvider: ({ children }: any) => children,
-	useGoogleLogin: jest.fn(() => jest.fn()),
-	useGoogleOneTapLogin: jest.fn(() => jest.fn()),
-	useGoogleLogout: jest.fn(() => jest.fn()),
-	useGoogleOAuth: jest.fn(() => ({})),
-	GoogleLogin: jest.fn(() => null),
-}));
-
-// Ensure NEXT_PUBLIC_GOOGLE_CLIENT_ID is set for tests that require it.
-process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || 'test-google-client-id';
-
 // Polyfill ResizeObserver for the Jest/jsdom environment used by tests.
 // Many components measure layout using ResizeObserver; provide a minimal
 // no-op implementation so tests can run without the real browser API.

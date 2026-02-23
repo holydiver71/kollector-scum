@@ -1,3 +1,5 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using KollectorScum.Api.DTOs;
 using KollectorScum.Api.Interfaces;
 using KollectorScum.Api.Models;
@@ -20,6 +22,7 @@ namespace KollectorScum.Api.Controllers
         private readonly IConfiguration _configuration;
         private readonly IHostEnvironment _env;
         private readonly ILogger<AuthController> _logger;
+        private readonly IHttpClientFactory _httpClientFactory;
 
         public AuthController(
             IGoogleTokenValidator googleTokenValidator,
@@ -29,7 +32,8 @@ namespace KollectorScum.Api.Controllers
             ITokenService tokenService,
             IConfiguration configuration,
             IHostEnvironment env,
-            ILogger<AuthController> logger)
+            ILogger<AuthController> logger,
+            IHttpClientFactory httpClientFactory)
         {
             _googleTokenValidator = googleTokenValidator;
             _userRepository = userRepository;
@@ -39,6 +43,7 @@ namespace KollectorScum.Api.Controllers
             _configuration = configuration;
             _env = env;
             _logger = logger;
+            _httpClientFactory = httpClientFactory;
         }
 
         /// <summary>
@@ -147,6 +152,201 @@ namespace KollectorScum.Api.Controllers
                 _logger.LogError(ex, "Error during Google authentication");
                 return BadRequest(new { message = "Authentication failed" });
             }
+        }
+
+        /// <summary>
+        /// Initiates Google OAuth authorization code flow.
+        /// Redirects the browser to Google's consent screen.
+        /// </summary>
+        [HttpGet("google/login")]
+        [ProducesResponseType(StatusCodes.Status302Found)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public IActionResult GoogleLogin()
+        {
+            var clientId = _configuration["Google:ClientId"];
+            var redirectUri = _configuration["Google:RedirectUri"];
+
+            if (string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(redirectUri))
+            {
+                _logger.LogError("Google:ClientId or Google:RedirectUri is not configured");
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "OAuth is not configured on the server." });
+            }
+
+            var authUrl = "https://accounts.google.com/o/oauth2/v2/auth" +
+                $"?client_id={Uri.EscapeDataString(clientId)}" +
+                $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
+                "&response_type=code" +
+                $"&scope={Uri.EscapeDataString("openid email profile")}" +
+                "&access_type=offline" +
+                "&prompt=select_account";
+
+            _logger.LogInformation("Redirecting to Google OAuth consent screen");
+            return Redirect(authUrl);
+        }
+
+        /// <summary>
+        /// Handles the OAuth callback from Google.
+        /// Exchanges the authorization code for an ID token, creates/updates the user,
+        /// generates a JWT and redirects the browser to the frontend callback page.
+        /// </summary>
+        [HttpGet("google/callback")]
+        [ProducesResponseType(StatusCodes.Status302Found)]
+        public async Task<IActionResult> GoogleCallback([FromQuery] string? code, [FromQuery] string? error)
+        {
+            var frontendOrigin = GetFrontendOrigin();
+
+            if (!string.IsNullOrEmpty(error) || string.IsNullOrEmpty(code))
+            {
+                _logger.LogWarning("Google OAuth callback error: {Error}", error ?? "no code");
+                return Redirect($"{frontendOrigin}/?error=google_auth_failed");
+            }
+
+            try
+            {
+                // Exchange authorization code for tokens
+                var idToken = await ExchangeCodeForIdTokenAsync(code);
+
+                // Validate the ID token (reuse existing logic)
+                var (googleSub, email, displayName) = await _googleTokenValidator.ValidateTokenAsync(idToken);
+
+                // Check / create user (same logic as POST /api/auth/google)
+                var existingUser = await _userRepository.FindByGoogleSubAsync(googleSub);
+
+                if (existingUser == null)
+                {
+                    var invitation = await _userInvitationRepository.FindByEmailAsync(email);
+                    if (invitation == null)
+                    {
+                        _logger.LogWarning("Access denied for uninvited user: {Email}", email);
+                        return Redirect($"{frontendOrigin}/?error=not_invited");
+                    }
+
+                    var userByEmail = await _userRepository.FindByEmailAsync(email);
+                    if (userByEmail == null && invitation.IsUsed)
+                    {
+                        _logger.LogWarning("Access denied for deactivated user: {Email}", email);
+                        return Redirect($"{frontendOrigin}/?error=access_deactivated");
+                    }
+
+                    _logger.LogInformation("Creating new user for invited email {Email}", email);
+                    existingUser = new ApplicationUser
+                    {
+                        Id = Guid.NewGuid(),
+                        GoogleSub = googleSub,
+                        Email = email,
+                        DisplayName = displayName
+                    };
+                    existingUser = await _userRepository.CreateAsync(existingUser);
+
+                    var profile = new UserProfile
+                    {
+                        UserId = existingUser.Id,
+                        SelectedKollectionId = null
+                    };
+                    await _userProfileRepository.CreateAsync(profile);
+
+                    invitation.IsUsed = true;
+                    invitation.UsedAt = DateTime.UtcNow;
+                    await _userInvitationRepository.UpdateAsync(invitation);
+                }
+                else
+                {
+                    if (existingUser.Email != email || existingUser.DisplayName != displayName)
+                    {
+                        existingUser.Email = email;
+                        existingUser.DisplayName = displayName;
+                        await _userRepository.UpdateAsync(existingUser);
+                    }
+                }
+
+                var jwt = _tokenService.GenerateToken(existingUser);
+
+                _logger.LogInformation("Google OAuth callback succeeded for {Email}", email);
+                return Redirect($"{frontendOrigin}/auth/callback?token={Uri.EscapeDataString(jwt)}");
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                _logger.LogWarning(ex, "Invalid Google token in OAuth callback");
+                return Redirect($"{frontendOrigin}/?error=invalid_token");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during Google OAuth callback");
+                return Redirect($"{frontendOrigin}/?error=auth_failed");
+            }
+        }
+
+        /// <summary>
+        /// Exchanges a Google authorization code for an ID token by calling Google's token endpoint.
+        /// </summary>
+        /// <param name="code">The authorization code returned by Google</param>
+        /// <returns>The ID token string</returns>
+        private async Task<string> ExchangeCodeForIdTokenAsync(string code)
+        {
+            var clientId = _configuration["Google:ClientId"];
+            var clientSecret = _configuration["Google:ClientSecret"];
+            var redirectUri = _configuration["Google:RedirectUri"];
+
+            if (string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(clientSecret) || string.IsNullOrEmpty(redirectUri))
+            {
+                throw new InvalidOperationException("Google OAuth configuration is incomplete (ClientId, ClientSecret or RedirectUri missing).");
+            }
+
+            using var client = _httpClientFactory.CreateClient();
+
+            var tokenRequest = new FormUrlEncodedContent(new[]
+            {
+                new KeyValuePair<string, string>("code", code),
+                new KeyValuePair<string, string>("client_id", clientId),
+                new KeyValuePair<string, string>("client_secret", clientSecret),
+                new KeyValuePair<string, string>("redirect_uri", redirectUri),
+                new KeyValuePair<string, string>("grant_type", "authorization_code")
+            });
+
+            var response = await client.PostAsync("https://oauth2.googleapis.com/token", tokenRequest);
+            var body = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError("Google token exchange failed ({Status}): {Body}", response.StatusCode, body);
+                throw new UnauthorizedAccessException("Failed to exchange Google authorization code for tokens.");
+            }
+
+            var tokenData = JsonSerializer.Deserialize<GoogleTokenResponse>(body)
+                ?? throw new InvalidOperationException("Failed to deserialize Google token response.");
+
+            if (string.IsNullOrEmpty(tokenData.IdToken))
+            {
+                throw new InvalidOperationException("Google token response did not contain an id_token.");
+            }
+
+            return tokenData.IdToken;
+        }
+
+        /// <summary>
+        /// Returns the first configured frontend origin for redirect purposes.
+        /// </summary>
+        private string GetFrontendOrigin()
+        {
+            var raw = _configuration["Frontend:Origins"]
+                   ?? _configuration["Frontend:Origin"]
+                   ?? _configuration["FRONTEND_ORIGINS"]
+                   ?? _configuration["FRONTEND_ORIGIN"]
+                   ?? "http://localhost:3000";
+
+            return raw.Split(new[] { ',', ';', ' ' }, StringSplitOptions.RemoveEmptyEntries)[0].TrimEnd('/');
+        }
+
+        /// <summary>
+        /// Minimal DTO for deserializing Google's token endpoint response.
+        /// </summary>
+        private sealed class GoogleTokenResponse
+        {
+            [JsonPropertyName("id_token")]
+            public string? IdToken { get; init; }
+
+            [JsonPropertyName("access_token")]
+            public string? AccessToken { get; init; }
         }
 
         /// <summary>
