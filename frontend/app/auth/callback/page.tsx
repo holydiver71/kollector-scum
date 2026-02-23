@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { setAuthToken } from "../../lib/auth";
 
 /**
@@ -34,9 +35,9 @@ function CallbackHandler() {
     return (
       <div className="text-center space-y-4">
         <p className="text-red-400 text-sm">{error}</p>
-        <a href="/" className="text-blue-400 hover:underline text-sm">
+        <Link href="/" className="text-blue-400 hover:underline text-sm">
           Return to home
-        </a>
+        </Link>
       </div>
     );
   }
