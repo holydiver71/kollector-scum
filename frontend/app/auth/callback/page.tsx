@@ -1,4 +1,4 @@
-"use client";
+ "use client";
 
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -23,6 +23,8 @@ function CallbackHandler() {
 
     try {
       setAuthToken(token);
+      // Notify mounted components (e.g. Header / GoogleSignIn) that auth state changed
+      window.dispatchEvent(new Event("authChanged"));
       // Redirect to dashboard after storing the token
       router.replace("/");
     } catch (e) {
