@@ -24,16 +24,48 @@
   }
 }
 
+/* ─── metal-default theme (built-in default) ────────────────────────────── */
+:root,
+[data-theme="metal-default"] {
+  --theme-body-bg-start:   #120306;
+  --theme-body-bg-mid:     #8C240D;
+  --theme-body-bg-accent:  #C93B2A;
+  --theme-body-bg-end:     #120306;
+  --theme-header-bg:       #8C240D;
+  --theme-sidebar-bg:      #111827; /* gray-900 */
+  --theme-sidebar-hover:   #1f2937; /* gray-800 */
+  --theme-sidebar-text:    #ffffff;
+  --theme-card-bg:         #ffffff;
+  --theme-card-text:       #111827;
+  --theme-card-border:     #e5e7eb;
+  --theme-foreground:      #ededed;
+}
+
+/* ─── clean-light theme ─────────────────────────────────────────────────── */
+[data-theme="clean-light"] {
+  --theme-body-bg-start:   #f9fafb;
+  --theme-body-bg-mid:     #e5e7eb;
+  --theme-body-bg-accent:  #d1d5db;
+  --theme-body-bg-end:     #f9fafb;
+  --theme-header-bg:       #1f2937;
+  --theme-sidebar-bg:      #1f2937;
+  --theme-sidebar-hover:   #374151;
+  --theme-sidebar-text:    #ffffff;
+  --theme-card-bg:         #ffffff;
+  --theme-card-text:       #111827;
+  --theme-card-border:     #d1d5db;
+  --theme-foreground:      #111827;
+}
+
 body {
-  /* Diagonal top-left to bottom-right gradient from mid-red to very dark red */
-  /* Keep a CSS variable fallback for compatibility */
+  /* Diagonal top-left to bottom-right gradient driven by theme CSS variables */
   background: linear-gradient(
     to bottom right,
-    #120306 10%,
-    #8C240D 30%,
-    #C93B2A 50%,
-    #8C240D 70%,
-    #120306 100%
+    var(--theme-body-bg-start) 10%,
+    var(--theme-body-bg-mid) 30%,
+    var(--theme-body-bg-accent) 50%,
+    var(--theme-body-bg-mid) 70%,
+    var(--theme-body-bg-end) 100%
   );
   /* Provide a fallback solid color in case gradients are unsupported */
   background-color: var(--background);
@@ -82,7 +114,7 @@ body {
   width: calc(100% - var(--sidebar-offset, 64px));
   z-index: 40;
   /* Fallback gradient if image doesn't load */
-  background-color: #8C240D;
+  background-color: var(--theme-header-bg);
   /* Animate appearance changes like shrink / expand */
   transition: transform 220ms ease, box-shadow 220ms ease, background-color 220ms ease;
 }
