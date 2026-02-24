@@ -32,6 +32,13 @@ namespace KollectorScum.Api.Models
         public ApplicationUser User { get; set; } = null!;
 
         /// <summary>
+        /// Gets or sets the selected UI theme name (e.g. "metal-default", "clean-light").
+        /// Defaults to "metal-default".
+        /// </summary>
+        [MaxLength(100)]
+        public string SelectedTheme { get; set; } = "metal-default";
+
+        /// <summary>
         /// Navigation property for the selected kollection
         /// </summary>
         [ForeignKey(nameof(SelectedKollectionId))]

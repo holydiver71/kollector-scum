@@ -44,6 +44,7 @@ export interface UserProfile {
   email: string;
   displayName?: string;
   selectedKollectionId?: number;
+  selectedTheme: string;
   isAdmin: boolean;
 }
 
@@ -99,17 +100,19 @@ export async function getUserProfile(): Promise<UserProfile | null> {
 /**
  * Updates the user's profile
  * @param selectedKollectionId The selected kollection ID
+ * @param selectedTheme The selected UI theme name
  * @returns The updated user profile
  */
 export async function updateUserProfile(
-  selectedKollectionId: number | null
+  selectedKollectionId: number | null,
+  selectedTheme?: string
 ): Promise<UserProfile> {
   return fetchJson<UserProfile>('/api/profile', {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ selectedKollectionId }),
+    body: JSON.stringify({ selectedKollectionId, selectedTheme }),
   });
 }
 
