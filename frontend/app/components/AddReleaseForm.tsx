@@ -296,9 +296,19 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
       // Clean up the data before sending - remove empty arrays and convert years to DateTime
       const cleanedData = {
         ...formData,
-        // Keep release year strings as-provided (tests and some APIs expect a simple year string)
-        releaseYear: formData.releaseYear ? formData.releaseYear : undefined,
-        origReleaseYear: formData.origReleaseYear ? formData.origReleaseYear : undefined,
+        // Convert year strings to ISO DateTime strings expected by the backend.
+        // Handles bare 4-digit years (e.g. "1983") and full YYYY-MM-DD strings from
+        // the date picker. Appending "T00:00:00Z" before parsing ensures UTC midnight.
+        releaseYear: formData.releaseYear
+          ? (/^\d{4}$/.test(formData.releaseYear)
+              ? `${formData.releaseYear}-01-01T00:00:00.000Z`
+              : new Date(`${formData.releaseYear}T00:00:00Z`).toISOString())
+          : undefined,
+        origReleaseYear: formData.origReleaseYear
+          ? (/^\d{4}$/.test(formData.origReleaseYear)
+              ? `${formData.origReleaseYear}-01-01T00:00:00.000Z`
+              : new Date(`${formData.origReleaseYear}T00:00:00Z`).toISOString())
+          : undefined,
         // Only send lengthInSeconds if it's a positive number
         lengthInSeconds: formData.lengthInSeconds && formData.lengthInSeconds > 0 
           ? formData.lengthInSeconds 
