@@ -477,7 +477,7 @@ describe('AddReleaseForm', () => {
       mockFetchJson.mockImplementation((url: string, options?: any) => {
         if (options?.method === 'POST') {
           const body = JSON.parse(options.body);
-          expect(body.releaseYear).toBe('2024-06-15');
+          expect(body.releaseYear).toBe('2024-06-15T00:00:00.000Z');
           return Promise.resolve({ id: 123 });
         }
         if (url.includes('/api/artists')) return Promise.resolve(mockLookupData.artists);
