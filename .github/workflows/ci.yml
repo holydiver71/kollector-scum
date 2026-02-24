@@ -135,7 +135,7 @@ jobs:
           RENDER_SERVICE_ID_PROD: ${{ secrets.RENDER_SERVICE_ID_PROD }}
         run: |
           if [ -z "$RENDER_API_KEY" ] || [ -z "$RENDER_SERVICE_ID_PROD" ]; then
-            echo "Render deploy secrets are not set. Skipping deploy.";
+            echo "ERROR: RENDER_API_KEY or RENDER_SERVICE_ID_PROD secret is not set.";
             exit 1;
           fi
           echo "Triggering Render deploy for service $RENDER_SERVICE_ID_PROD"
