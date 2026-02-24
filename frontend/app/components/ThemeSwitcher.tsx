@@ -20,10 +20,13 @@ export default function ThemeSwitcher({ onSaveSuccess, onSaveError }: ThemeSwitc
   const { theme, setTheme } = useTheme();
   const [saving, setSaving] = React.useState(false);
   const [pendingTheme, setPendingTheme] = React.useState<ThemeName>(theme);
+  // Track the last successfully saved theme so we can revert on API error
+  const savedThemeRef = React.useRef<ThemeName>(theme);
 
   // Keep pendingTheme in sync if theme changes externally
   React.useEffect(() => {
     setPendingTheme(theme);
+    savedThemeRef.current = theme;
   }, [theme]);
 
   const handleSelect = (name: ThemeName) => {
@@ -34,15 +37,17 @@ export default function ThemeSwitcher({ onSaveSuccess, onSaveError }: ThemeSwitc
 
   const handleSave = async () => {
     setSaving(true);
+    const previousTheme = savedThemeRef.current;
     try {
       await updateUserProfile(null, pendingTheme);
+      savedThemeRef.current = pendingTheme;
       onSaveSuccess?.(pendingTheme);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to save theme";
       onSaveError?.(message);
-      // Revert to the saved theme on error
-      setTheme(theme);
-      setPendingTheme(theme);
+      // Revert to the last successfully saved theme on error
+      setTheme(previousTheme);
+      setPendingTheme(previousTheme);
     } finally {
       setSaving(false);
     }
