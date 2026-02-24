@@ -32,5 +32,15 @@ namespace KollectorScum.Api.Interfaces
         /// <param name="fileName">The filename</param>
         /// <returns>The public URL or path to access the file</returns>
         string GetPublicUrl(string bucketName, string userId, string fileName);
+
+        /// <summary>
+        /// Downloads a file from storage and returns its content stream.
+        /// Returns null when the file cannot be found.
+        /// </summary>
+        /// <param name="bucketName">The bucket or directory name</param>
+        /// <param name="userId">The user ID who owns the file</param>
+        /// <param name="fileName">The filename</param>
+        /// <returns>The file stream, or null if the file does not exist</returns>
+        Task<Stream?> GetFileStreamAsync(string bucketName, string userId, string fileName);
     }
 }

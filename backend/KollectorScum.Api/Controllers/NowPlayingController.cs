@@ -5,6 +5,7 @@ using KollectorScum.Api.Data;
 using KollectorScum.Api.Models;
 using KollectorScum.Api.DTOs;
 using KollectorScum.Api.Interfaces;
+using Microsoft.Extensions.Configuration;
 
 namespace KollectorScum.Api.Controllers
 {
@@ -18,19 +19,19 @@ namespace KollectorScum.Api.Controllers
     {
         private readonly KollectorScumDbContext _context;
         private readonly ILogger<NowPlayingController> _logger;
-        private readonly IMusicReleaseMapperService _mapperService;
         private readonly IUserContext _userContext;
+        private readonly string _coverArtBucket;
 
         public NowPlayingController(
             KollectorScumDbContext context,
             ILogger<NowPlayingController> logger,
-            IMusicReleaseMapperService mapperService,
-            IUserContext userContext)
+            IUserContext userContext,
+            IConfiguration configuration)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _mapperService = mapperService ?? throw new ArgumentNullException(nameof(mapperService));
             _userContext = userContext ?? throw new ArgumentNullException(nameof(userContext));
+            _coverArtBucket = configuration["R2:BucketName"] ?? configuration["R2__BucketName"] ?? "cover-art";
         }
 
         /// <summary>
@@ -259,10 +260,26 @@ namespace KollectorScum.Api.Controllers
                             var images = System.Text.Json.JsonSerializer.Deserialize<MusicReleaseImageDto>(
                                 np.MusicRelease.Images,
                                 new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                            // Resolve the stored filename/path to a proper public URL so that R2-backed
-                            // staging environments return the correct https:// URL instead of a bare filename.
-                            var releaseUserId = np.MusicRelease.UserId;
-                            coverFront = _mapperService.ResolveImageUrl(images?.CoverFront, releaseUserId);
+                            var rawValue = images?.CoverFront;
+                            if (!string.IsNullOrWhiteSpace(rawValue))
+                            {
+                                var v = rawValue.Trim();
+                                if (v.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                                    v.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    // Already a full public URL (e.g. Discogs CDN, R2 public gateway, etc.)
+                                    coverFront = v;
+                                }
+                                else
+                                {
+                                    // Bare filename or legacy /bucket/userId/file path.
+                                    // Normalise to {bucket}/{userId}/{filename} so ImagesController
+                                    // can redirect (public URL) or proxy (no public URL) from R2.
+                                    var fileName = v.Contains('/') ? Path.GetFileName(v) : v;
+                                    var releaseUserId = np.MusicRelease.UserId;
+                                    coverFront = $"{_coverArtBucket}/{releaseUserId}/{fileName}";
+                                }
+                            }
                         }
                         catch
                         {
