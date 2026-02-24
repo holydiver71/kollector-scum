@@ -58,8 +58,14 @@ function getImageUrl(coverFront?: string): string {
     return coverFront;
   }
   
-  // Otherwise, prepend the API images path
   const apiBaseUrl = API_BASE_URL || "http://localhost:5072";
+
+  // Handle multi-tenant local storage paths like /cover-art/{userId}/{filename}
+  if (coverFront.startsWith("/cover-art/")) {
+    return `${apiBaseUrl}${coverFront}`;
+  }
+
+  // Otherwise, proxy through the backend images endpoint
   return `${apiBaseUrl}/api/images/${coverFront}`;
 }
 

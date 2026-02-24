@@ -378,7 +378,8 @@ namespace KollectorScum.Api.Services
             return images;
         }
 
-        private string? ResolveImageUrl(string? imageValue, Guid userId)
+        /// <inheritdoc />
+        public string? ResolveImageUrl(string? imageValue, Guid userId)
         {
             if (string.IsNullOrWhiteSpace(imageValue)) return null;
             var trimmed = imageValue.Trim();
