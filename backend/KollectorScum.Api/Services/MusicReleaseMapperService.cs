@@ -68,6 +68,11 @@ namespace KollectorScum.Api.Services
                 var safe = Path.GetFileName(fileName);
                     return safe;
             }
+
+            public Task<Stream?> GetFileStreamAsync(string bucketName, string userId, string fileName)
+            {
+                return Task.FromResult<Stream?>(null);
+            }
         }
 
         public MusicReleaseSummaryDto MapToSummaryDto(MusicRelease musicRelease)
