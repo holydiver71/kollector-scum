@@ -133,5 +133,39 @@ namespace KollectorScum.Api.Services
             var serviceUrl = (_s3Client.Config.ServiceURL ?? string.Empty).TrimEnd('/');
             return $"{serviceUrl}/{bucketName}/{objectPath}";
         }
+
+        /// <summary>
+        /// Downloads a file from R2 and returns its content stream.
+        /// Returns null when the object is not found.
+        /// </summary>
+        public async Task<Stream?> GetFileStreamAsync(string bucketName, string userId, string fileName)
+        {
+            var safeFileName = Path.GetFileName(fileName);
+            var key = $"{userId}/{safeFileName}";
+            try
+            {
+                var request = new GetObjectRequest
+                {
+                    BucketName = bucketName ?? _bucketName,
+                    Key = key,
+                };
+                var response = await _s3Client.GetObjectAsync(request);
+                // Copy to a MemoryStream so the caller owns the data after the S3 response is disposed
+                var ms = new MemoryStream();
+                await response.ResponseStream.CopyToAsync(ms);
+                ms.Position = 0;
+                return ms;
+            }
+            catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                _logger.LogWarning("R2 object not found: bucket={Bucket}, key={Key}", bucketName, key);
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to download file from R2: bucket={Bucket}, key={Key}", bucketName, key);
+                return null;
+            }
+        }
     }
 }

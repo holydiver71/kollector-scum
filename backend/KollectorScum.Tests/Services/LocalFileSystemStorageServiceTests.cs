@@ -430,6 +430,63 @@ namespace KollectorScum.Tests.Services
 
         #endregion
 
+        #region GetFileStreamAsync
+
+        [Fact]
+        public async Task GetFileStreamAsync_ExistingFile_ReturnsStream()
+        {
+            // Arrange
+            var bucketName = "cover-art";
+            var userId = _testUserId.ToString();
+            var fileName = "stream-test.jpg";
+            var content = "fake image bytes"u8.ToArray();
+
+            // Upload first so the file exists; UploadFileAsync returns /{bucket}/{userId}/{uniqueName}
+            using var uploadStream = new MemoryStream(content);
+            var uploadedPath = await _service.UploadFileAsync(bucketName, userId, fileName, uploadStream, "image/jpeg");
+            var uniqueFileName = Path.GetFileName(uploadedPath); // extract the stored unique name
+
+            // Act
+            var stream = await _service.GetFileStreamAsync(bucketName, userId, uniqueFileName);
+
+            // Assert
+            Assert.NotNull(stream);
+            var result = new byte[stream!.Length];
+            await stream.ReadAsync(result);
+            Assert.Equal(content, result);
+            await stream.DisposeAsync();
+        }
+
+        [Fact]
+        public async Task GetFileStreamAsync_NonExistentFile_ReturnsNull()
+        {
+            // Arrange
+            var bucketName = "cover-art";
+            var userId = _testUserId.ToString();
+
+            // Act
+            var stream = await _service.GetFileStreamAsync(bucketName, userId, "does-not-exist.jpg");
+
+            // Assert
+            Assert.Null(stream);
+        }
+
+        [Fact]
+        public async Task GetFileStreamAsync_PathTraversalAttempt_ReturnsNull()
+        {
+            // Arrange
+            var bucketName = "cover-art";
+            var userId = _testUserId.ToString();
+
+            // Act – Path.GetFileName will strip traversal so file is just "passwd" which does not exist
+            var stream = await _service.GetFileStreamAsync(bucketName, userId, "../../etc/passwd");
+
+            // Assert
+            Assert.Null(stream);
+        }
+
+        #endregion
+
         #region Integration Scenarios
 
         [Fact]
