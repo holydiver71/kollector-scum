@@ -161,5 +161,24 @@ namespace KollectorScum.Api.Services
             // Return URL in format: /{bucketName}/{userId}/{fileName}
             return $"/{bucketName}/{userId}/{sanitizedFileName}";
         }
+
+        /// <summary>
+        /// Downloads a file from local storage and returns its content stream.
+        /// Returns null when the file does not exist.
+        /// </summary>
+        public Task<Stream?> GetFileStreamAsync(string bucketName, string userId, string fileName)
+        {
+            var sanitizedFileName = Path.GetFileName(fileName);
+            var filePath = Path.Combine(_environment.WebRootPath, bucketName, userId, sanitizedFileName);
+
+            if (!File.Exists(filePath))
+            {
+                _logger.LogWarning("Local file not found: {FilePath}", filePath);
+                return Task.FromResult<Stream?>(null);
+            }
+
+            Stream? stream = File.OpenRead(filePath);
+            return Task.FromResult(stream);
+        }
     }
 }

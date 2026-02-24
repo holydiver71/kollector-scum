@@ -37,7 +37,7 @@ namespace KollectorScum.Api.Controllers
         [HttpGet("{*imagePath}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult GetImage(string imagePath)
+        public async Task<IActionResult> GetImage(string imagePath)
         {
             try
             {
@@ -55,31 +55,56 @@ namespace KollectorScum.Api.Controllers
                     return BadRequest("Invalid image path");
                 }
 
-                // If the image path looks like a stored R2 path (e.g. "/cover-art/..."),
-                // and an R2 public base URL is configured, redirect the client to R2
-                if (!string.IsNullOrWhiteSpace(_r2PublicBaseUrl) &&
-                    (imagePath.StartsWith($"{_bucketName}/", StringComparison.OrdinalIgnoreCase) || 
-                     imagePath.StartsWith($"/{_bucketName}/", StringComparison.OrdinalIgnoreCase) ||
-                     imagePath.StartsWith("cover-art/", StringComparison.OrdinalIgnoreCase) || 
-                     imagePath.StartsWith("/cover-art/", StringComparison.OrdinalIgnoreCase)))
+                // Check whether this is a bucket-prefixed path in the form {bucket}/{userId}/{filename}.
+                // This is the format returned by NowPlayingController and other endpoints when R2 is used.
+                var normalizedPath = imagePath.TrimStart('/');
+                var bucketPrefixed =
+                    normalizedPath.StartsWith($"{_bucketName}/", StringComparison.OrdinalIgnoreCase) ||
+                    normalizedPath.StartsWith("cover-art/", StringComparison.OrdinalIgnoreCase);
+
+                if (bucketPrefixed)
                 {
-                    var relative = imagePath.TrimStart('/');
-
-                    // If the path starts with the bucket name, strip it to ensure we don't duplicate it 
-                    // in the redirect URL (assuming the worker/public URL is mapped to the bucket root).
-                    if (relative.StartsWith($"{_bucketName}/", StringComparison.OrdinalIgnoreCase))
+                    if (!string.IsNullOrWhiteSpace(_r2PublicBaseUrl))
                     {
-                        relative = relative.Substring(_bucketName.Length).TrimStart('/');
-                    }
-                    else if (relative.StartsWith("cover-art/", StringComparison.OrdinalIgnoreCase))
-                    {
-                         // Fallback for legacy paths or default bucket name
-                        relative = relative.Substring("cover-art".Length).TrimStart('/');
+                        // Redirect: strip the bucket prefix so the CDN/worker path starts with {userId}/{filename}
+                        var relative = normalizedPath;
+                        if (relative.StartsWith($"{_bucketName}/", StringComparison.OrdinalIgnoreCase))
+                            relative = relative.Substring(_bucketName.Length).TrimStart('/');
+                        else if (relative.StartsWith("cover-art/", StringComparison.OrdinalIgnoreCase))
+                            relative = relative.Substring("cover-art".Length).TrimStart('/');
+
+                        var r2Url = _r2PublicBaseUrl.TrimEnd('/') + "/" + relative;
+                        _logger.LogDebug("Redirecting image request to R2: {R2Url}", r2Url);
+                        return Redirect(r2Url);
                     }
 
-                    var r2Url = _r2PublicBaseUrl.TrimEnd('/') + "/" + relative;
-                    _logger.LogDebug("Redirecting image request to R2: {R2Url}", r2Url);
-                    return Redirect(r2Url);
+                    // No public URL configured – proxy the bytes directly from storage.
+                    // Path arrives as {bucket}/{userId}/{filename}; parse accordingly.
+                    var segments = normalizedPath.Split('/', 3);
+                    if (segments.Length == 3)
+                    {
+                        var proxyBucket = segments[0];
+                        var proxyUserId = segments[1];
+                        var proxyFile = segments[2];
+
+                        var stream = await _storageService.GetFileStreamAsync(proxyBucket, proxyUserId, proxyFile);
+                        if (stream != null)
+                        {
+                            var ext = Path.GetExtension(proxyFile).ToLowerInvariant();
+                            var ct = ext switch
+                            {
+                                ".jpg" or ".jpeg" => "image/jpeg",
+                                ".png" => "image/png",
+                                ".gif" => "image/gif",
+                                ".webp" => "image/webp",
+                                _ => "image/jpeg",
+                            };
+                            _logger.LogDebug("Proxying image from storage: {Path}", normalizedPath);
+                            return File(stream, ct);
+                        }
+                        _logger.LogWarning("Storage proxy: file not found for path {Path}", normalizedPath);
+                        return NotFound($"Image not found: {imagePath}");
+                    }
                 }
 
                 // Build full file path - handle different image types (local fallback)
