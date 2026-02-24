@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Moq;
 using Xunit;
+using System.Net.Http;
 
 namespace KollectorScum.Tests.Controllers
 {
@@ -23,6 +24,7 @@ namespace KollectorScum.Tests.Controllers
         private readonly Mock<IConfiguration> _mockConfiguration;
         private readonly Mock<IHostEnvironment> _mockEnvironment;
         private readonly Mock<ILogger<AuthController>> _mockLogger;
+        private readonly Mock<IHttpClientFactory> _mockHttpClientFactory;
         private readonly AuthController _controller;
 
         public AuthControllerTests()
@@ -35,6 +37,7 @@ namespace KollectorScum.Tests.Controllers
             _mockConfiguration = new Mock<IConfiguration>();
             _mockEnvironment = new Mock<IHostEnvironment>();
             _mockLogger = new Mock<ILogger<AuthController>>();
+            _mockHttpClientFactory = new Mock<IHttpClientFactory>();
 
             _controller = new AuthController(
                 _mockGoogleTokenValidator.Object,
@@ -44,7 +47,8 @@ namespace KollectorScum.Tests.Controllers
                 _mockTokenService.Object,
                 _mockConfiguration.Object,
                 _mockEnvironment.Object,
-                _mockLogger.Object
+                _mockLogger.Object,
+                _mockHttpClientFactory.Object
             );
         }
 
