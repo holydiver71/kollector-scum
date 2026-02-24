@@ -29,6 +29,11 @@ namespace KollectorScum.Api.DTOs
         /// Gets or sets whether the user is an admin
         /// </summary>
         public bool IsAdmin { get; set; }
+
+        /// <summary>
+        /// Gets or sets the selected UI theme
+        /// </summary>
+        public string SelectedTheme { get; set; } = "metal-default";
     }
 
     /// <summary>
@@ -40,6 +45,11 @@ namespace KollectorScum.Api.DTOs
         /// Gets or sets the selected kollection ID
         /// </summary>
         public int? SelectedKollectionId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the selected UI theme
+        /// </summary>
+        public string? SelectedTheme { get; set; }
     }
 
     /// <summary>
