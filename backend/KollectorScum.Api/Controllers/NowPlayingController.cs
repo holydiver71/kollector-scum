@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using KollectorScum.Api.Data;
 using KollectorScum.Api.Models;
 using KollectorScum.Api.DTOs;
+using KollectorScum.Api.Interfaces;
 
 namespace KollectorScum.Api.Controllers
 {
@@ -17,13 +18,19 @@ namespace KollectorScum.Api.Controllers
     {
         private readonly KollectorScumDbContext _context;
         private readonly ILogger<NowPlayingController> _logger;
+        private readonly IMusicReleaseMapperService _mapperService;
+        private readonly IUserContext _userContext;
 
         public NowPlayingController(
             KollectorScumDbContext context,
-            ILogger<NowPlayingController> logger)
+            ILogger<NowPlayingController> logger,
+            IMusicReleaseMapperService mapperService,
+            IUserContext userContext)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _mapperService = mapperService ?? throw new ArgumentNullException(nameof(mapperService));
+            _userContext = userContext ?? throw new ArgumentNullException(nameof(userContext));
         }
 
         /// <summary>
@@ -226,8 +233,16 @@ namespace KollectorScum.Api.Controllers
 
                 var fetchLimit = Math.Min(limit * 10, 1000); // buffer to allow collapsing
 
+                // Enforce multi-tenant isolation: only return plays for the current user's releases
+                var userId = _userContext.GetActingUserId();
+                if (userId == null)
+                {
+                    return Unauthorized();
+                }
+
                 var recentPlays = await _context.NowPlayings
                     .Include(np => np.MusicRelease)
+                    .Where(np => np.MusicRelease != null && np.MusicRelease.UserId == userId.Value)
                     .OrderByDescending(np => np.PlayedAt)
                     .Take(fetchLimit)
                     .ToListAsync();
@@ -244,7 +259,10 @@ namespace KollectorScum.Api.Controllers
                             var images = System.Text.Json.JsonSerializer.Deserialize<MusicReleaseImageDto>(
                                 np.MusicRelease.Images,
                                 new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                            coverFront = images?.CoverFront;
+                            // Resolve the stored filename/path to a proper public URL so that R2-backed
+                            // staging environments return the correct https:// URL instead of a bare filename.
+                            var releaseUserId = np.MusicRelease.UserId;
+                            coverFront = _mapperService.ResolveImageUrl(images?.CoverFront, releaseUserId);
                         }
                         catch
                         {
