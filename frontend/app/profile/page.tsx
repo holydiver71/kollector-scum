@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
 import { DeleteCollectionButton } from "../components/DeleteCollectionButton";
+import ThemeSwitcher from "../components/ThemeSwitcher";
+import type { ThemeName } from "../contexts/ThemeContext";
 
 export default function ProfilePage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -8,6 +10,16 @@ export default function ProfilePage() {
   const handleDeleteSuccess = (deletedCount: number) => {
     setSuccessMessage(`Successfully deleted ${deletedCount} album${deletedCount !== 1 ? 's' : ''} from your collection.`);
     // Auto-dismiss success message after 5 seconds
+    setTimeout(() => setSuccessMessage(null), 5000);
+  };
+
+  const handleThemeSaveSuccess = (theme: ThemeName) => {
+    setSuccessMessage(`Theme changed to "${theme}".`);
+    setTimeout(() => setSuccessMessage(null), 5000);
+  };
+
+  const handleThemeSaveError = (error: string) => {
+    setSuccessMessage(`Failed to save theme: ${error}`);
     setTimeout(() => setSuccessMessage(null), 5000);
   };
 
@@ -70,6 +82,22 @@ export default function ProfilePage() {
             </div>
           </div>
         )}
+
+        {/* Theme Settings Section */}
+        <div className="bg-white rounded-lg border border-gray-200 p-8 shadow-sm mb-8">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Appearance
+            </h2>
+            <p className="text-gray-600">
+              Choose your preferred UI theme. The change is applied immediately.
+            </p>
+          </div>
+          <ThemeSwitcher
+            onSaveSuccess={handleThemeSaveSuccess}
+            onSaveError={handleThemeSaveError}
+          />
+        </div>
 
         {/* Delete Collection Section */}
         <div className="bg-white rounded-lg border border-gray-200 p-8 shadow-sm">

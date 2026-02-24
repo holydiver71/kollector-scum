@@ -58,6 +58,7 @@ namespace KollectorScum.Api.Controllers
                 Email = user.Email,
                 DisplayName = user.DisplayName,
                 SelectedKollectionId = profile?.SelectedKollectionId,
+                SelectedTheme = profile?.SelectedTheme ?? "metal-default",
                 IsAdmin = user.IsAdmin
             });
         }
@@ -97,13 +98,23 @@ namespace KollectorScum.Api.Controllers
             }
 
             var profile = await _userProfileRepository.GetByUserIdAsync(userId.Value);
+
+            // Allowed theme names
+            var allowedThemes = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "metal-default", "clean-light" };
+            var requestedTheme = request.SelectedTheme?.Trim();
+            if (requestedTheme != null && !allowedThemes.Contains(requestedTheme))
+            {
+                return BadRequest(new { message = "Invalid theme name" });
+            }
+
             if (profile == null)
             {
                 // Create profile if it doesn't exist
                 profile = new Models.UserProfile
                 {
                     UserId = userId.Value,
-                    SelectedKollectionId = request.SelectedKollectionId
+                    SelectedKollectionId = request.SelectedKollectionId,
+                    SelectedTheme = requestedTheme ?? "metal-default"
                 };
                 await _userProfileRepository.CreateAsync(profile);
             }
@@ -111,11 +122,15 @@ namespace KollectorScum.Api.Controllers
             {
                 // Update existing profile
                 profile.SelectedKollectionId = request.SelectedKollectionId;
+                if (requestedTheme != null)
+                {
+                    profile.SelectedTheme = requestedTheme;
+                }
                 await _userProfileRepository.UpdateAsync(profile);
             }
 
-            _logger.LogInformation("Updated profile for user {UserId}, selected kollection: {KollectionId}",
-                userId.Value, request.SelectedKollectionId);
+            _logger.LogInformation("Updated profile for user {UserId}, selected kollection: {KollectionId}, theme: {Theme}",
+                userId.Value, request.SelectedKollectionId, profile.SelectedTheme);
 
             return Ok(new UserProfileDto
             {
@@ -123,6 +138,7 @@ namespace KollectorScum.Api.Controllers
                 Email = user.Email,
                 DisplayName = user.DisplayName,
                 SelectedKollectionId = profile.SelectedKollectionId,
+                SelectedTheme = profile.SelectedTheme,
                 IsAdmin = user.IsAdmin
             });
         }
