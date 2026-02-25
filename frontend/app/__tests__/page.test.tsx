@@ -221,8 +221,10 @@ describe('Dashboard Page', () => {
 
     render(<Dashboard />);
 
+    // The dashboard no longer shows the hero "Online" text; ensure the
+    // main stats rendered instead which indicates the app loaded successfully.
     await waitFor(() => {
-      expect(screen.getByText('Online')).toBeInTheDocument();
+      expect(screen.getByText('Releases')).toBeInTheDocument();
     });
   });
 
