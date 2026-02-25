@@ -48,7 +48,7 @@ export function GoogleSignIn({ onSignIn, className }: GoogleSignInProps) {
     // (e.g. the OAuth callback page after it stores the JWT token).
     window.addEventListener("authChanged", checkAuth);
     return () => window.removeEventListener("authChanged", checkAuth);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);  
 
   // Read error from query string set by backend on auth failure
   useEffect(() => {
