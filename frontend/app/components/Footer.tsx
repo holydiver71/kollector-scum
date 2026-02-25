@@ -1,55 +1,67 @@
-import React from 'react';
+'use client';
+import React, { useEffect, useState } from 'react';
 import DbConnectionStatus from './DbConnectionStatus';
+import { getHealth } from '../lib/api';
 
+/**
+ * Footer component displaying copyright, navigation links, DB status, and live API health indicator.
+ */
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
+  const [apiHealthy, setApiHealthy] = useState<boolean | null>(null);
+  const [lastDeploy, setLastDeploy] = useState<string | null>(null);
+
+  useEffect(() => {
+    /** Fetch API health, update indicator, and capture deploy timestamp. */
+    getHealth()
+      .then((h) => {
+        setApiHealthy(h?.status === 'Healthy');
+        if (h?.timestamp) {
+          setLastDeploy(new Date(h.timestamp).toLocaleString());
+        }
+      })
+      .catch(() => setApiHealthy(false));
+  }, []);
 
   return (
     <footer className="bg-gray-50 border-t mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-          {/* Left side - App info */}
-          <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-6">
-            <div className="text-sm text-gray-600">
-              © {currentYear} Kollector Sküm. Music Collection Manager.
-            </div>
-            <div className="text-xs text-gray-500">
-              Built with Next.js & .NET Core API
-            </div>
+          {/* Left side - Copyright */}
+          <div className="text-sm text-gray-600">
+            © {currentYear} Kollector Sküm. Music Collection Manager.
           </div>
 
-          {/* Right side - Links */}
+          {/* Right side - Links and status indicators */}
           <div className="flex items-center space-x-6">
-            <a 
-              href="/about" 
+            <a
+              href="/about"
               className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
             >
               About
             </a>
-            <a 
-              href="/api/health" 
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
+            <span
+              className="flex items-center gap-1.5 text-sm text-gray-600"
+              data-testid="api-health-status"
+              title={apiHealthy === null ? 'Checking API…' : apiHealthy ? 'API Online' : 'API Offline'}
             >
-              API Status
-            </a>
+              <span
+                className={`w-2.5 h-2.5 rounded-full ${
+                  apiHealthy === null
+                    ? 'bg-gray-400'
+                    : apiHealthy
+                    ? 'bg-green-500'
+                    : 'bg-red-500'
+                }`}
+              />
+              API
+            </span>
             <DbConnectionStatus />
-            <a 
-              href="/swagger" 
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-blue-600 hover:text-blue-800 transition-colors font-medium"
-            >
-              API Docs
-            </a>
-          </div>
-        </div>
-
-        {/* Stats section */}
-        <div className="mt-4 pt-4 border-t border-gray-200">
-          <div className="text-xs text-gray-500 text-center">
-            Phase 5 - Frontend Core Components | Backend API Ready
+            {lastDeploy && (
+              <span className="text-xs text-gray-400" data-testid="last-deploy">
+                Last Deploy: {lastDeploy}
+              </span>
+            )}
           </div>
         </div>
       </div>

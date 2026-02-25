@@ -115,7 +115,7 @@ export function GoogleSignIn({ onSignIn, className }: GoogleSignInProps) {
       )}
       <button
         onClick={handleSignIn}
-        className="flex items-center gap-2 bg-white text-gray-700 font-medium text-sm px-4 py-2 rounded-md shadow hover:shadow-md hover:bg-gray-50 transition-all duration-150 border border-gray-200"
+        className="flex items-center gap-2 bg-white text-gray-700 font-medium text-sm px-4 py-2 rounded-md shadow hover:shadow-md hover:bg-gray-50 transition-all duration-150 border border-gray-200 cursor-pointer"
       >
         {/* Google "G" logo */}
         <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
