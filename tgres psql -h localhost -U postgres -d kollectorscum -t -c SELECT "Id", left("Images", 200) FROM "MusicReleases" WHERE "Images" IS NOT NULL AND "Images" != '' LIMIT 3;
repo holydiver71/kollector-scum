@@ -1,0 +1,7 @@
+  Id  |                                                       Images                                                        
+------+---------------------------------------------------------------------------------------------------------------------
+ 2478 | {"CoverFront":"not-a-valid-url","CoverBack":null,"Thumbnail":null}
+   99 | {"CoverFront":"SladeRunRunaway19841532_f.jpeg","CoverBack":null,"Thumbnail":"00925015C58714989EA2229FC0B0E5F2.png"}
+ 2501 | {"CoverFront":"front.jpg","CoverBack":"back.jpg","Thumbnail":"thumb.jpg"}
+(3 rows)
+

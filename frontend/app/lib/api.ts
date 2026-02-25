@@ -124,6 +124,7 @@ export async function fetchJson<T = unknown>(path: string, options: FetchJsonOpt
 
 interface HealthResponse {
   status: string;
+  dbStatus?: string;
   timestamp: string;
   service: string;
   version: string;

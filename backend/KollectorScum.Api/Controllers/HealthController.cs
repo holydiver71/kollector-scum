@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using KollectorScum.Api.Interfaces;
 
 namespace KollectorScum.Api.Controllers
@@ -12,30 +13,63 @@ namespace KollectorScum.Api.Controllers
     {
         private readonly ILogger<HealthController> _logger;
         private readonly IDataSeedingService _dataSeedingService;
+        private readonly HealthCheckService _healthCheckService;
 
         /// <summary>
         /// Initializes a new instance of the HealthController class
         /// </summary>
         /// <param name="logger">The logger instance</param>
         /// <param name="dataSeedingService">The data seeding service</param>
-        public HealthController(ILogger<HealthController> logger, IDataSeedingService dataSeedingService)
+        /// <param name="healthCheckService">The ASP.NET Core health check service</param>
+        public HealthController(
+            ILogger<HealthController> logger,
+            IDataSeedingService dataSeedingService,
+            HealthCheckService healthCheckService)
         {
             _logger = logger;
             _dataSeedingService = dataSeedingService;
+            _healthCheckService = healthCheckService;
         }
 
         /// <summary>
-        /// Basic health check endpoint
+        /// Health check endpoint. Runs all registered health checks (including database)
+        /// and returns status for the API and each dependency.
         /// </summary>
-        /// <returns>Health status response</returns>
+        /// <returns>Health status response including DbStatus</returns>
         [HttpGet]
-        public IActionResult Get()
+        public async Task<IActionResult> Get()
         {
             _logger.LogInformation("Health check requested at {Timestamp}", DateTime.UtcNow);
-            
-            return Ok(new 
-            { 
-                Status = "Healthy", 
+
+            HealthReport report;
+            try
+            {
+                report = await _healthCheckService.CheckHealthAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Health check service threw an exception");
+                return Ok(new
+                {
+                    Status = "Degraded",
+                    DbStatus = "Unhealthy",
+                    Timestamp = DateTime.UtcNow,
+                    Service = "Kollector Scum API",
+                    Version = "1.0.0"
+                });
+            }
+
+            var dbStatus = report.Entries.TryGetValue("database", out var dbEntry)
+                && dbEntry.Status == HealthStatus.Healthy
+                    ? "Healthy"
+                    : "Unhealthy";
+
+            var overallStatus = report.Status == HealthStatus.Healthy ? "Healthy" : "Degraded";
+
+            return Ok(new
+            {
+                Status = overallStatus,
+                DbStatus = dbStatus,
                 Timestamp = DateTime.UtcNow,
                 Service = "Kollector Scum API",
                 Version = "1.0.0"

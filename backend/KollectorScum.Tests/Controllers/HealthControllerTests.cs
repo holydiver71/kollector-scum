@@ -1,10 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Moq;
 using Xunit;
 using KollectorScum.Api.Controllers;
 using KollectorScum.Api.Services;
 using KollectorScum.Api.Interfaces;
+using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace KollectorScum.Tests.Controllers
@@ -16,34 +19,103 @@ namespace KollectorScum.Tests.Controllers
     {
         private readonly Mock<ILogger<HealthController>> _mockLogger;
         private readonly Mock<IDataSeedingService> _mockDataSeedingService;
+        private readonly Mock<HealthCheckService> _mockHealthCheckService;
         private readonly HealthController _controller;
+
+        /// <summary>Builds a HealthReport with a single database entry at the given status.</summary>
+        private static HealthReport BuildReport(HealthStatus dbStatus)
+        {
+            var entries = new Dictionary<string, HealthReportEntry>
+            {
+                ["database"] = new HealthReportEntry(
+                    dbStatus, description: null, duration: TimeSpan.Zero,
+                    exception: null, data: null)
+            };
+            return new HealthReport(entries, dbStatus, TimeSpan.Zero);
+        }
 
         public HealthControllerTests()
         {
             _mockLogger = new Mock<ILogger<HealthController>>();
             _mockDataSeedingService = new Mock<IDataSeedingService>();
-            _controller = new HealthController(_mockLogger.Object, _mockDataSeedingService.Object);
+            _mockHealthCheckService = new Mock<HealthCheckService>();
+
+            // Default: database is healthy
+            _mockHealthCheckService
+                .Setup(s => s.CheckHealthAsync(
+                    It.IsAny<Func<HealthCheckRegistration, bool>?>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(BuildReport(HealthStatus.Healthy));
+
+            _controller = new HealthController(
+                _mockLogger.Object,
+                _mockDataSeedingService.Object,
+                _mockHealthCheckService.Object);
         }
 
         [Fact]
-        public void Get_ReturnsOkResult_WithHealthyStatus()
+        public async Task Get_ReturnsOkResult_WithHealthyStatus()
         {
             // Act
-            var result = _controller.Get();
+            var result = await _controller.Get();
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
             var healthStatus = okResult.Value;
-            
+
             Assert.NotNull(healthStatus);
-            
-            // Verify the anonymous object has expected properties
-            var statusProperty = healthStatus.GetType().GetProperty("Status");
+
+            var statusProperty   = healthStatus.GetType().GetProperty("Status");
+            var dbStatusProperty = healthStatus.GetType().GetProperty("DbStatus");
             var timestampProperty = healthStatus.GetType().GetProperty("Timestamp");
-            
+
             Assert.NotNull(statusProperty);
+            Assert.NotNull(dbStatusProperty);
             Assert.NotNull(timestampProperty);
-            Assert.Equal("Healthy", statusProperty.GetValue(healthStatus));
+            Assert.Equal("Healthy",  statusProperty.GetValue(healthStatus));
+            Assert.Equal("Healthy", dbStatusProperty.GetValue(healthStatus));
+        }
+
+        [Fact]
+        public async Task Get_ReturnsDbUnhealthy_WhenDatabaseCheckFails()
+        {
+            // Arrange
+            _mockHealthCheckService
+                .Setup(s => s.CheckHealthAsync(
+                    It.IsAny<Func<HealthCheckRegistration, bool>?>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(BuildReport(HealthStatus.Unhealthy));
+
+            // Act
+            var result = await _controller.Get();
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var healthStatus = okResult.Value!;
+            var dbStatusProperty = healthStatus.GetType().GetProperty("DbStatus");
+            Assert.Equal("Unhealthy", dbStatusProperty!.GetValue(healthStatus));
+        }
+
+        [Fact]
+        public async Task Get_ReturnsDegraded_WhenHealthCheckServiceThrows()
+        {
+            // Arrange
+            _mockHealthCheckService
+                .Setup(s => s.CheckHealthAsync(
+                    It.IsAny<Func<HealthCheckRegistration, bool>?>(),
+                    It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new InvalidOperationException("connection refused"));
+
+            // Act
+            var result = await _controller.Get();
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var healthStatus = okResult.Value!;
+            var statusProperty   = healthStatus.GetType().GetProperty("Status");
+            var dbStatusProperty = healthStatus.GetType().GetProperty("DbStatus");
+            Assert.Equal("Degraded",   statusProperty!.GetValue(healthStatus));
+            Assert.Equal("Unhealthy", dbStatusProperty!.GetValue(healthStatus));
         }
 
         [Fact]

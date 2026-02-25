@@ -94,7 +94,8 @@ builder.Services.AddResponseCaching(options =>
     options.UseCaseSensitivePaths = false;
 });
 
-builder.Services.AddHealthChecks();
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<KollectorScumDbContext>("database");
 
 // Configure CORS for frontend integration
 // - Development: allow all origins if no explicit origins are configured

@@ -180,35 +180,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Hero / Banner */}
-      <section className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-12">
-          <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-2">
-            KOLLECTOR SKÜM
-          </h1>
-          <p className="text-lg text-gray-600 mb-6 font-medium">
-            Organise and discover your music library
-          </p>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center text-sm">
-              <span className="mr-2 text-gray-500 font-semibold">Status:</span>
-              {health?.status === "Healthy" ? (
-                <span className="flex items-center text-green-600 font-medium">
-                  <span className="w-2 h-2 rounded-full bg-green-500 mr-2" />
-                  Online
-                </span>
-              ) : (
-                <span className="flex items-center text-red-600 font-medium">
-                  <span className="w-2 h-2 rounded-full bg-red-500 mr-2" />
-                  Offline
-                </span>
-              )}
-            </div>
-            {loading && <LoadingSpinner />}
-          </div>
-        </div>
-      </section>
-
       <main className="max-w-7xl mx-auto px-4 py-12">
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
@@ -277,17 +248,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* System Info */}
-        <div className="mt-8 text-center">
-          <div className="inline-block px-4 py-2 rounded border border-gray-200 bg-gray-50">
-            <p className="text-xs text-gray-600 font-semibold">
-              Powered by <span className="font-bold">{health?.service}</span> v{health?.version}
-            </p>
-            <p className="text-xs mt-1 text-gray-500 font-medium">
-              Last sync: {health?.timestamp ? new Date(health.timestamp).toLocaleString() : "Unknown"}
-            </p>
-          </div>
-        </div>
+
       </main>
     </div>
   );
