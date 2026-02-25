@@ -1,6 +1,19 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import Footer from '../Footer';
+
+// Mock the API module so no real network calls are made
+jest.mock('../../lib/api', () => ({
+  getHealth: jest.fn().mockResolvedValue({
+    status: 'Healthy',
+    timestamp: '',
+    service: 'test',
+    version: '1.0.0',
+  }),
+}));
+
+// Mock child component that makes its own API call
+jest.mock('../DbConnectionStatus', () => () => <div data-testid="db-connection-status" />);
 
 describe('Footer Component', () => {
   it('renders the footer element', () => {
@@ -20,11 +33,6 @@ describe('Footer Component', () => {
     expect(screen.getByText(/Kollector Sküm/)).toBeInTheDocument();
   });
 
-  it('displays technology stack information', () => {
-    render(<Footer />);
-    expect(screen.getByText(/Built with Next.js & .NET Core API/i)).toBeInTheDocument();
-  });
-
   it('renders About link', () => {
     render(<Footer />);
     const aboutLink = screen.getByRole('link', { name: /about/i });
@@ -32,25 +40,45 @@ describe('Footer Component', () => {
     expect(aboutLink).toHaveAttribute('href', '/about');
   });
 
-  it('renders API Status link', () => {
+  it('renders the API health status indicator', () => {
     render(<Footer />);
-    const statusLink = screen.getByRole('link', { name: /api status/i });
-    expect(statusLink).toBeInTheDocument();
-    expect(statusLink).toHaveAttribute('href', '/api/health');
-    expect(statusLink).toHaveAttribute('target', '_blank');
+    expect(screen.getByTestId('api-health-status')).toBeInTheDocument();
+    expect(screen.getByText('API')).toBeInTheDocument();
   });
 
-  it('renders API Docs link', () => {
+  it('shows a green dot when API is healthy', async () => {
+    const { getHealth } = require('../../lib/api');
+    getHealth.mockResolvedValueOnce({ status: 'Healthy', timestamp: '', service: 'test', version: '1.0.0' });
     render(<Footer />);
-    const docsLink = screen.getByRole('link', { name: /api docs/i });
-    expect(docsLink).toBeInTheDocument();
-    expect(docsLink).toHaveAttribute('href', '/swagger');
-    expect(docsLink).toHaveAttribute('target', '_blank');
+    await waitFor(() => {
+      const dot = screen.getByTestId('api-health-status').querySelector('span');
+      expect(dot).toHaveClass('bg-green-500');
+    });
   });
 
-  it('displays phase information', () => {
+  it('shows a red dot when the API is unhealthy', async () => {
+    const { getHealth } = require('../../lib/api');
+    getHealth.mockRejectedValueOnce(new Error('offline'));
     render(<Footer />);
-    expect(screen.getByText(/Phase 5/i)).toBeInTheDocument();
+    await waitFor(() => {
+      const dot = screen.getByTestId('api-health-status').querySelector('span');
+      expect(dot).toHaveClass('bg-red-500');
+    });
+  });
+
+  it('does not render "Built with Next.js" text', () => {
+    render(<Footer />);
+    expect(screen.queryByText(/built with next\.js/i)).not.toBeInTheDocument();
+  });
+
+  it('does not render a Phase 5 banner', () => {
+    render(<Footer />);
+    expect(screen.queryByText(/phase 5/i)).not.toBeInTheDocument();
+  });
+
+  it('does not render an API Docs link', () => {
+    render(<Footer />);
+    expect(screen.queryByRole('link', { name: /api docs/i })).not.toBeInTheDocument();
   });
 
   it('has proper footer styling', () => {
@@ -63,4 +91,19 @@ describe('Footer Component', () => {
     render(<Footer />);
     expect(screen.getByTestId('db-connection-status')).toBeInTheDocument();
   });
+
+  it('displays Last Deploy when health returns a timestamp', async () => {
+    const { getHealth } = require('../../lib/api');
+    getHealth.mockResolvedValueOnce({
+      status: 'Healthy',
+      timestamp: '2026-02-25T21:39:53Z',
+      service: 'test',
+      version: '1.0.0',
+    });
+    render(<Footer />);
+    await waitFor(() => {
+      expect(screen.getByTestId('last-deploy')).toHaveTextContent(/Last Deploy:/);
+    });
+  });
 });
+

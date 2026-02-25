@@ -102,8 +102,10 @@ namespace KollectorScum.Api.Controllers
                             _logger.LogDebug("Proxying image from storage: {Path}", normalizedPath);
                             return File(stream, ct);
                         }
-                        _logger.LogWarning("Storage proxy: file not found for path {Path}", normalizedPath);
-                        return NotFound($"Image not found: {imagePath}");
+                        _logger.LogDebug("Storage proxy: file not found for path {Path}, falling back to local images directory", normalizedPath);
+
+                        // Fall through to local filesystem lookup using just the filename
+                        imagePath = proxyFile;
                     }
                 }
 
