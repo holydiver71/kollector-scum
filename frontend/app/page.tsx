@@ -258,10 +258,12 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Recently Played */}
-        <div className="mb-12">
-          <RecentlyPlayed maxItems={24} />
-        </div>
+        {/* Recently Played — only rendered for authenticated users */}
+        {isLoggedIn && (
+          <div className="mb-12">
+            <RecentlyPlayed maxItems={24} />
+          </div>
+        )}
 
         {/* Recent Activity placeholder */}
         <div className="bg-white rounded-lg border border-gray-200 p-8 shadow-sm">

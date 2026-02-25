@@ -3,6 +3,7 @@ import { useEffect, useState, memo, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { getRecentlyPlayed, RecentlyPlayedItemDto, API_BASE_URL } from "../lib/api";
+import { isAuthenticated } from "../lib/auth";
 
 /**
  * Formats a date as a relative date string (Today, Yesterday, X days ago, etc.)
@@ -79,6 +80,13 @@ function RecentlyPlayedComponent({ maxItems = 24 }: RecentlyPlayedProps) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Guard: skip the API call if the user is not authenticated to avoid
+    // spurious 401 responses during initial page load before auth is confirmed.
+    if (!isAuthenticated()) {
+      setLoading(false);
+      return;
+    }
+
     const fetchRecentlyPlayed = async () => {
       try {
         setLoading(true);
