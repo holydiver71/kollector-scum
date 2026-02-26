@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { QuickSearch } from './SearchAndFilter';
@@ -151,11 +152,12 @@ export default function Header() {
         {/* Kollection selector (moved next to search input) — rendered inline with QuickSearch */}
         <div className="flex flex-col md:flex-row items-start gap-2 md:gap-4">
             <Link href="/" aria-label="Home" className="block">
-              <img
+              <Image
                 src="/images/Kollector-Skum-v2.png"
                 alt="Kollector Sküm logo"
+                width={400}
+                height={144}
                 className="h-36 w-auto object-contain"
-                style={{ display: 'block' }}
               />
             </Link>
           <div className="flex flex-col flex-1 min-w-0">

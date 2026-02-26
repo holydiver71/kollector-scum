@@ -81,9 +81,7 @@ try {
 	} else if (typeof globalThis !== 'undefined' && (globalThis as any).localStorage) {
 		(globalThis as any).localStorage.setItem('auth_token', 'test-token');
 	}
-} catch (e) {}
-
-// Debug: confirm localStorage token presence when running tests
+} catch {}
 try {
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore
@@ -91,7 +89,7 @@ try {
 		 
 		console.log('[jest.setup] auth_token =', window.localStorage.getItem('auth_token'));
 	}
-} catch (e) {}
+} catch {}
 
 // Ensure each test starts with a test auth token so components under test
 // treat the environment as authenticated unless the test explicitly clears it.
@@ -106,7 +104,7 @@ beforeEach(() => {
 			 
 			console.log('[jest.setup.beforeEach] auth_token =', window.localStorage.getItem('auth_token'));
 		}
-	} catch (e) {}
+	} catch {}
 });
 
 // NOTE: Previously we reset the module registry before each test to avoid
@@ -145,13 +143,13 @@ console.error = (...args: any[]) => {
 		if (apiLib) {
 			// Only set mocks if functions are missing or not callable
 			if (typeof (apiLib as any).fetchJson !== 'function') {
-				(apiLib as any).fetchJson = jest.fn((..._args: any[]) => Promise.resolve({}));
+				(apiLib as any).fetchJson = jest.fn(() => Promise.resolve({}));
 			}
 			if (typeof (apiLib as any).getKollections !== 'function') {
 				(apiLib as any).getKollections = jest.fn(() => Promise.resolve({ items: [] }));
 			}
 		}
-	} catch (e) {
+	} catch {
 		// ignore - best-effort for the test environment
 	}
 
@@ -159,13 +157,13 @@ console.error = (...args: any[]) => {
 		const appApi = await import('./app/api');
 		if (appApi) {
 			if (typeof (appApi as any).fetchJson !== 'function') {
-				(appApi as any).fetchJson = jest.fn((..._args: any[]) => Promise.resolve({}));
+				(appApi as any).fetchJson = jest.fn(() => Promise.resolve({}));
 			}
 			if (typeof (appApi as any).getKollections !== 'function') {
 				(appApi as any).getKollections = jest.fn(() => Promise.resolve({ items: [] }));
 			}
 		}
-	} catch (e) {
+	} catch {
 		// ignore - best-effort
 	}
 })();

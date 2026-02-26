@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Image from "next/image";
 
 interface ReleaseImages {
   coverFront?: string;
@@ -54,9 +55,12 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
     return (
       <div className="bg-white rounded-lg">
         <div className="aspect-square">
-          <img
+          <Image
             src={placeholderImage}
             alt={`${title} - Album Cover`}
+            width={500}
+            height={500}
+            sizes="(max-width: 768px) 100vw, 50vw"
             className="w-full h-full object-contain rounded-lg bg-gray-50"
           />
         </div>
@@ -72,9 +76,12 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
       <div className="bg-white rounded-lg">
         {/* Main Image */}
         <div className="aspect-square mb-4">
-          <img
+          <Image
             src={getImageUrl(selectedImage || primaryImage.path) || placeholderImage}
             alt={`${title} - ${selectedImage ? availableImages.find(img => img.path === selectedImage)?.label : primaryImage.label}`}
+            width={500}
+            height={500}
+            sizes="(max-width: 768px) 100vw, 50vw"
             className="w-full h-full object-contain rounded-lg bg-white cursor-pointer hover:shadow-lg transition-shadow"
             onError={(e) => handleImageError(selectedImage || primaryImage.path!, e)}
             onClick={() => {
@@ -100,9 +107,12 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
                     : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
-                <img
+                <Image
                   src={getImageUrl(image.path) || placeholderImage}
                   alt={`${title} - ${image.label}`}
+                  width={150}
+                  height={150}
+                  sizes="33vw"
                   className="w-full h-full object-contain bg-white"
                   onError={(e) => handleImageError(image.path!, e)}
                 />
