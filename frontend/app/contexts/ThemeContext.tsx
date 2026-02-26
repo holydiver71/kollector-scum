@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 /** All supported theme identifiers. */
-export type ThemeName = "metal-default" | "clean-light";
+export type ThemeName = "metal-default" | "metal-1" | "clean-light" | "dark";
 
 /** Metadata about a selectable theme. */
 export interface ThemeOption {
@@ -21,6 +21,16 @@ export const AVAILABLE_THEMES: ThemeOption[] = [
     name: "metal-default",
     label: "Metal Default",
     description: "The classic dark metal look with deep reds and dark greys.",
+  },
+  {
+    name: "metal-1",
+    label: "Metal Theme 1",
+    description: "Dark teal & cream palette inspired by the heavy metal stage.",
+  },
+  {
+    name: "dark",
+    label: "Dark",
+    description: "A deep, high-contrast dark theme for low-light environments.",
   },
   {
     name: "clean-light",
