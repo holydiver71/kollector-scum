@@ -420,10 +420,10 @@ export default function AddReleasePage() {
 
   if (showSuccess && newReleaseId) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-green-50 border border-green-200 rounded-lg p-8 text-center">
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        <div className="bg-[#13131F] border border-emerald-600/30 rounded-2xl p-8 text-center">
           <svg
-            className="mx-auto h-16 w-16 text-green-500 mb-4"
+            className="mx-auto h-16 w-16 text-emerald-400 mb-4"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -435,15 +435,15 @@ export default function AddReleasePage() {
               d="M5 13l4 4L19 7"
             />
           </svg>
-          <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-            Release Created Successfully!
+          <h2 className="text-2xl font-black text-white mb-2">
+            Release Added Successfully!
           </h2>
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-400 mb-4">
             Redirecting to release details...
           </p>
           <button
             onClick={() => router.push(`/releases/${newReleaseId}`)}
-            className="text-blue-600 hover:text-blue-800 underline"
+            className="text-[#8B5CF6] hover:text-[#A78BFA] underline transition-colors"
           >
             View Now
           </button>
@@ -453,67 +453,57 @@ export default function AddReleasePage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Add Release</h1>
-        <p className="mt-2 text-gray-600">
-          Add a new music release to your collection
-        </p>
+    <div className="max-w-3xl mx-auto px-4 py-8 text-white space-y-6">
+      <div>
+        <h1 className="text-2xl font-black text-white">Add Release</h1>
+        <p className="text-gray-400 mt-1 text-sm">Add a new music release to your collection</p>
       </div>
 
       {/* Tab Navigation */}
-      <div className="mb-6 border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
-          <button
-            onClick={() => setActiveTab("discogs")}
-            className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-              activeTab === "discogs"
-                ? "border-blue-500 text-blue-600"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            }`}
-          >
-            <span className="flex items-center">
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              Search Discogs
-            </span>
-          </button>
-          <button
-            onClick={() => setActiveTab("manual")}
-            className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-              activeTab === "manual"
-                ? "border-blue-500 text-blue-600"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            }`}
-          >
-            <span className="flex items-center">
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-              Manual Entry
-            </span>
-          </button>
-        </nav>
+      <div className="flex gap-1 bg-[#13131F] p-1 rounded-xl border border-[#1C1C28] w-fit">
+        <button
+          onClick={() => setActiveTab("discogs")}
+          className={`px-5 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${
+            activeTab === "discogs"
+              ? "bg-[#8B5CF6] text-white"
+              : "text-gray-400 hover:text-white"
+          }`}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          Search Discogs
+        </button>
+        <button
+          onClick={() => setActiveTab("manual")}
+          className={`px-5 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${
+            activeTab === "manual"
+              ? "bg-[#8B5CF6] text-white"
+              : "text-gray-400 hover:text-white"
+          }`}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+          Manual Entry
+        </button>
       </div>
 
       {/* Tab Content */}
       {activeTab === "discogs" && (
-        <div>
+        <div className="space-y-4">
           <DiscogsSearch
             onResultsFound={handleResultsFound}
             onError={handleSearchError}
           />
 
           {searchError && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-              <div className="flex">
-                <svg className="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+            <div className="bg-yellow-600/10 border border-yellow-600/20 rounded-xl p-4">
+              <div className="flex gap-3">
+                <svg className="h-5 w-5 text-yellow-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                 </svg>
-                <div className="ml-3">
-                  <p className="text-sm text-yellow-700">{searchError}</p>
-                </div>
+                <p className="text-sm text-yellow-300">{searchError}</p>
               </div>
             </div>
           )}
