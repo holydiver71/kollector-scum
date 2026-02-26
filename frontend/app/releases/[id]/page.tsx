@@ -12,7 +12,7 @@ import { DeleteReleaseButton } from "../../components/DeleteReleaseButton";
 import { EditReleaseButton } from "../../components/EditReleaseButton";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { AddToListDialog } from "../../components/AddToListDialog";
-import { Play, Check, X, ChevronDown, List, ChevronLeft } from "lucide-react";
+import { Play, Check, X, List, ChevronLeft } from "lucide-react";
 
 // Type definitions for detailed music release
 interface Artist {
@@ -251,7 +251,7 @@ export default function ReleaseDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
         <LoadingSpinner />
       </div>
     );
@@ -259,13 +259,13 @@ export default function ReleaseDetailPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-red-600 text-xl mb-4">Error loading release</div>
-          <p className="text-gray-600 mb-4">{error}</p>
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
+        <div className="text-center bg-[#13131F] border border-[#1C1C28] rounded-2xl p-8">
+          <div className="text-[#8B5CF6] text-xl mb-4">Error loading release</div>
+          <p className="text-gray-400 mb-4">{error}</p>
           <button
             onClick={() => router.back()}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            className="bg-[#8B5CF6] hover:bg-[#7C3AED] text-white px-4 py-2 rounded-xl transition-colors"
           >
             Go Back
           </button>
@@ -276,12 +276,12 @@ export default function ReleaseDetailPage() {
 
   if (!release) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-gray-600 text-xl mb-4">Release not found</div>
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
+        <div className="text-center bg-[#13131F] border border-[#1C1C28] rounded-2xl p-8">
+          <div className="text-gray-400 text-xl mb-4">Release not found</div>
           <Link
             href="/collection"
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            className="bg-[#8B5CF6] hover:bg-[#7C3AED] text-white px-4 py-2 rounded-xl transition-colors"
           >
             Back to Collection
           </Link>
@@ -329,410 +329,262 @@ export default function ReleaseDetailPage() {
   };
 
   return (
-    <div className="min-h-screen bg-transparent p-4 md:p-8">
-      <div className="max-w-[1400px] mx-auto">
-        {/* Header Actions Row */}
-        <div className="flex items-center justify-between mb-6">
-          <button
-            onClick={() => router.back()}
-            className="bg-white text-gray-600 hover:text-[#D93611] shadow-sm hover:shadow-md px-4 py-2 rounded-lg transition-all flex items-center gap-2 font-medium text-sm"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Back to Collection
-          </button>
-          
-          <div className="flex items-center gap-3">
-            <div className="bg-white rounded-lg shadow-sm p-1 flex gap-1">
-              <EditReleaseButton
-                releaseId={release.id}
-                releaseTitle={release.title}
-              />
-              <DeleteReleaseButton
-                releaseId={release.id}
-                releaseTitle={release.title}
-                onDeleteSuccess={handleDeleteSuccess}
-                onDeleteError={handleDeleteError}
-              />
-            </div>
-          </div>
-        </div>
+    <div className="min-h-screen bg-transparent p-4 md:p-8 text-white">
+      <div className="max-w-[1400px] mx-auto space-y-6">
+        {/* Back button */}
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-1 text-gray-400 hover:text-white text-sm transition-colors"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          Back to Collection
+        </button>
 
-        {/* Main Content Card */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          <div className="p-6 md:p-10 lg:p-12">
-            
-            {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-start justify-between gap-8 mb-12 border-b border-gray-100 pb-8">
-              <div className="flex-1">
-                {/* Artist Name */}
-                {release.artists && release.artists.length > 0 && (
-                  <div className="mb-2">
-                    {release.artists.map((artist, index) => (
-                      <span key={artist.id}>
-                        <Link
-                          href={`/collection?artistId=${artist.id}`}
-                          className="text-4xl md:text-5xl lg:text-6xl font-black text-gray-900 hover:text-[#D93611] transition-colors tracking-tight leading-none"
-                        >
-                          {artist.name}
-                        </Link>
-                        {release.artists && index < release.artists.length - 1 && (
-                          <span className="text-4xl md:text-5xl lg:text-6xl font-light text-gray-300"> & </span>
-                        )}
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Left Column - Cover & Metadata */}
+          <div className="space-y-4">
+            {/* Cover art */}
+            <div className="aspect-square bg-[#13131F] rounded-2xl border border-[#1C1C28] overflow-hidden relative">
+              <ImageGallery images={release.images} title={release.title} />
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex gap-2">
+              {/* Now Playing */}
+              <div className="relative flex-1">
+                <button
+                  onClick={handleNowPlayingClick}
+                  disabled={isPlayingLoading}
+                  className={`w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-colors ${
+                    isPlaying
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-[#8B5CF6] hover:bg-[#7C3AED] text-white'
+                  } ${isPlayingLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                  title={isPlaying ? 'Playing Now' : 'Mark as Played'}
+                >
+                  {isPlaying ? <Check className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current" />}
+                  {isPlaying ? 'Playing Now' : 'Mark as Played'}
+                </button>
+                {/* Confirmation Panel */}
+                <div
+                  className={`absolute left-0 top-full mt-2 bg-[#13131F] rounded-xl border border-[#1C1C28] shadow-xl p-3 z-20 min-w-[260px] transition-all duration-200 ${
+                    showConfirmation ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'
+                  }`}
+                >
+                  {confirmationTime && (
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs text-gray-400 font-medium">
+                        Confirm play at {confirmationTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}?
                       </span>
-                    ))}
+                      <div className="flex gap-1">
+                        <button
+                          onClick={handleConfirm}
+                          className="w-7 h-7 rounded-full bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 flex items-center justify-center transition-colors"
+                        >
+                          <Check className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={handleCancel}
+                          className="w-7 h-7 rounded-full bg-red-600/20 text-red-400 hover:bg-red-600/30 flex items-center justify-center transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Add to list */}
+              <button
+                onClick={() => setShowAddToList(true)}
+                className="w-12 h-12 bg-[#13131F] border border-[#1C1C28] rounded-xl flex items-center justify-center text-gray-400 hover:text-[#8B5CF6] transition-colors"
+                title="Add to List"
+              >
+                <List className="w-5 h-5" />
+              </button>
+
+              {/* Discogs link */}
+              {getDiscogsLink() && (
+                <a
+                  href={getDiscogsLink() || ''}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-12 h-12 bg-[#13131F] border border-[#1C1C28] rounded-xl flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+                  title="View on Discogs"
+                >
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
+                  </svg>
+                </a>
+              )}
+
+              {/* Edit */}
+              <div className="w-12 h-12 bg-[#13131F] border border-[#1C1C28] rounded-xl flex items-center justify-center">
+                <EditReleaseButton releaseId={release.id} releaseTitle={release.title} />
+              </div>
+
+              {/* Delete */}
+              <div className="w-12 h-12 bg-[#13131F] border border-red-900/30 rounded-xl flex items-center justify-center">
+                <DeleteReleaseButton
+                  releaseId={release.id}
+                  releaseTitle={release.title}
+                  onDeleteSuccess={handleDeleteSuccess}
+                  onDeleteError={handleDeleteError}
+                />
+              </div>
+            </div>
+
+            {/* Release Info */}
+            {[
+              {
+                title: "Release Info",
+                items: [
+                  release.releaseYear && ["Year", String(new Date(release.releaseYear).getFullYear())],
+                  release.origReleaseYear && release.origReleaseYear !== release.releaseYear && ["Orig. Year", String(new Date(release.origReleaseYear).getFullYear())],
+                  release.format?.name && ["Format", release.format.name],
+                  release.packaging?.name && ["Packaging", release.packaging.name],
+                  release.label?.name && ["Label", release.label.name],
+                  release.labelNumber && ["Cat #", release.labelNumber],
+                  release.country?.name && ["Country", release.country.name],
+                  release.upc && ["Barcode", release.upc],
+                  (release.lengthInSeconds && release.lengthInSeconds > 0) && ["Duration", formatDuration(release.lengthInSeconds) || ""],
+                ].filter(Boolean) as [string, string][],
+              },
+              ...(release.purchaseInfo ? [{
+                title: "Purchase Info",
+                items: [
+                  (release.purchaseInfo.storeName || release.purchaseInfo.storeId) && ["Store", String(release.purchaseInfo.storeName || release.purchaseInfo.storeId)],
+                  release.purchaseInfo.price !== undefined && release.purchaseInfo.price !== null && ["Price",
+                    release.purchaseInfo.currency === 'GBP' || !release.purchaseInfo.currency
+                      ? `£${release.purchaseInfo.price.toFixed(2)}`
+                      : `${release.purchaseInfo.currency} ${release.purchaseInfo.price.toFixed(2)}`
+                  ],
+                  release.purchaseInfo.purchaseDate && ["Date", new Date(release.purchaseInfo.purchaseDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })],
+                  release.purchaseInfo.notes && ["Notes", release.purchaseInfo.notes],
+                ].filter(Boolean) as [string, string][],
+              }] : []),
+              {
+                title: "Collection Data",
+                items: [
+                  ["Added", new Date(release.dateAdded).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })],
+                  ["Modified", new Date(release.lastModified).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })],
+                  release.lastPlayedAt && ["Last Played", new Date(release.lastPlayedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })],
+                ].filter(Boolean) as [string, string][],
+              },
+            ].map(({ title, items }) => items.length > 0 && (
+              <div key={title} className="bg-[#13131F] rounded-xl p-4 border border-[#1C1C28] space-y-2">
+                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">{title}</h3>
+                {items.map(([k, v]) => (
+                  <div key={k} className="flex justify-between text-sm">
+                    <span className="text-gray-500">{k}</span>
+                    <span className="text-white font-medium text-right max-w-[60%] break-words">{v}</span>
+                  </div>
+                ))}
+              </div>
+            ))}
+
+            {/* Play History */}
+            {release.lastPlayedAt && (
+              <div className="bg-[#13131F] rounded-xl p-4 border border-[#1C1C28]">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">Play History</h3>
+                  <button
+                    onClick={handlePlayHistoryToggle}
+                    className="text-xs text-[#8B5CF6] hover:text-[#A78BFA] transition-colors"
+                  >
+                    {showPlayHistory ? 'Hide' : 'Show'}
+                  </button>
+                </div>
+                {showPlayHistory && (
+                  <div className="text-xs space-y-1 mt-2">
+                    {playHistoryLoading ? (
+                      <div className="text-gray-500 text-center py-2">Loading history...</div>
+                    ) : playHistory ? (
+                      <>
+                        <div className="text-gray-400 mb-2">Total Plays: <span className="text-white font-bold">{playHistory.playCount}</span></div>
+                        <div className={`space-y-1 ${playHistory.playDates.length > 5 ? 'max-h-[150px] overflow-y-auto' : ''}`}>
+                          {playHistory.playDates.map((item) => (
+                            <div key={item.id} className="flex justify-between items-center group">
+                              <span className="text-gray-400">
+                                {new Date(item.playedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                              </span>
+                              <button
+                                onClick={() => handleDeletePlayHistory(item.id)}
+                                className="text-red-400 opacity-0 group-hover:opacity-100 hover:text-red-300 transition-all"
+                                title="Delete this play"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-red-400">Failed to load history</div>
+                    )}
                   </div>
                 )}
-
-                {/* Album Title */}
-                <h1 className="text-2xl md:text-3xl text-gray-500 font-medium tracking-wide">
-                  {release.title}
-                </h1>
-                
-                {/* Badges Row */}
-                <div className="flex flex-wrap items-center gap-3 mt-4">
-                   <div className="px-3 py-1 rounded-full bg-[#D9601A] text-white text-xs font-bold uppercase tracking-wider">
-                      {release.format?.name || 'Unknown Format'}
-                   </div>
-                   <div className="px-3 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-bold uppercase tracking-wider">
-                      #{release.id}
-                   </div>
-                   {release.live && (
-                      <div className="px-3 py-1 rounded-full bg-red-100 text-red-600 text-xs font-bold uppercase tracking-wider">
-                        Live Recording
-                      </div>
-                   )}
-                </div>
               </div>
+            )}
+          </div>
 
-              {/* Actions & External Links */}
-              <div className="flex items-center gap-3">
-                 {/* Add to List Button */}
-                 <button
-                    onClick={() => setShowAddToList(true)}
-                    className="w-12 h-12 rounded-full bg-orange-100 text-[#D93611] hover:bg-orange-200 flex items-center justify-center transition-all shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
-                    title="Add to list"
-                 >
-                    <List className="w-6 h-6" />
-                 </button>
-
-                 {/* Now Playing Button */}
-                 <div className="relative">
-                    <button
-                      onClick={handleNowPlayingClick}
-                      disabled={isPlayingLoading}
-                      className={`w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 ${
-                        isPlaying 
-                          ? 'bg-green-500 text-white' 
-                          : 'bg-[#D93611] text-white hover:bg-[#b92b0b]'
-                      } ${isPlayingLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
-                      title={isPlaying ? 'Playing Now' : 'Play Now'}
-                    >
-                      {isPlaying ? <Check className="w-6 h-6" /> : <Play className="w-6 h-6 fill-current" />}
-                    </button>
-                    
-                    {/* Confirmation Panel */}
-                    <div 
-                      className={`absolute right-0 top-full mt-2 bg-white rounded-xl shadow-xl border border-gray-100 p-3 z-20 min-w-[280px] transition-all duration-200 ${
-                        showConfirmation ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'
-                      }`}
-                    >
-                      {confirmationTime && (
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-xs text-gray-500 font-medium">
-                            Confirm play at {confirmationTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}?
-                          </span>
-                          <div className="flex gap-1">
-                            <button
-                              onClick={handleConfirm}
-                              className="w-7 h-7 rounded-full bg-green-100 text-green-600 hover:bg-green-200 flex items-center justify-center transition-colors"
-                            >
-                              <Check className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={handleCancel}
-                              className="w-7 h-7 rounded-full bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center transition-colors"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                 </div>
-
-                 {/* Discogs Link */}
-                 {getDiscogsLink() && (
-                    <a
-                      href={getDiscogsLink() || ''}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-12 h-12 rounded-full bg-black hover:bg-gray-800 text-white flex items-center justify-center transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-                      title="View on Discogs"
-                    >
-                      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
-                      </svg>
-                    </a>
-                 )}
+          {/* Right Column - Title, Tracklist & Extended Info */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Title area */}
+            <div>
+              {release.artists && release.artists.length > 0 && (
+                <p className="text-[#8B5CF6] font-semibold text-sm mb-1">
+                  {release.artists.map((a, i) => (
+                    <span key={a.id}>
+                      <Link href={`/collection?artistId=${a.id}`} className="hover:text-[#A78BFA] transition-colors">{a.name}</Link>
+                      {release.artists && i < release.artists.length - 1 && " & "}
+                    </span>
+                  ))}
+                </p>
+              )}
+              <h1 className="text-4xl font-black tracking-tight leading-tight text-white">{release.title}</h1>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {release.format?.name && (
+                  <span className="text-xs bg-[#8B5CF6] text-white px-2 py-1 rounded font-semibold">{release.format.name}</span>
+                )}
+                {release.live && (
+                  <span className="text-xs bg-red-600/20 text-red-400 px-2 py-1 rounded font-semibold">Live Recording</span>
+                )}
+                {release.genres?.map((g) => (
+                  <Link key={g.id} href={`/collection?genreId=${g.id}`} className="text-xs bg-[#8B5CF6]/15 text-[#A78BFA] px-2 py-1 rounded hover:bg-[#8B5CF6]/25 transition-colors">{g.name}</Link>
+                ))}
               </div>
             </div>
 
-            {/* Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] xl:grid-cols-[450px_1fr] gap-12 lg:gap-16">
-              {/* Left Column - Cover & Quick Stats */}
-              <div className="space-y-8">
-                <div className="rounded-xl overflow-hidden shadow-2xl bg-gray-100 aspect-square relative">
-                   <ImageGallery images={release.images} title={release.title} />
-                </div>
-                
-                {/* Quick Stats / Metadata Card */}
-                <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
-                   <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Release Details</h3>
-                   <dl className="space-y-3 text-sm">
-                      {release.releaseYear && (
-                        <div className="flex justify-between py-1 border-b border-gray-200 last:border-0">
-                          <dt className="text-gray-500">Year</dt>
-                          <dd className="font-medium text-gray-900 text-right">{new Date(release.releaseYear).getFullYear()}</dd>
-                        </div>
-                      )}
-                      {release.origReleaseYear && release.origReleaseYear !== release.releaseYear && (
-                        <div className="flex justify-between py-1 border-b border-gray-200 last:border-0">
-                          <dt className="text-gray-500">Original Year</dt>
-                          <dd className="font-medium text-gray-900 text-right">{new Date(release.origReleaseYear).getFullYear()}</dd>
-                        </div>
-                      )}
-                      {release.packaging && (
-                        <div className="flex justify-between py-1 border-b border-gray-200 last:border-0">
-                          <dt className="text-gray-500">Packaging</dt>
-                          <dd className="font-medium text-gray-900 text-right">{release.packaging.name}</dd>
-                        </div>
-                      )}
-                      {release.label && (
-                        <div className="flex justify-between py-1 border-b border-gray-200 last:border-0">
-                          <dt className="text-gray-500">Label</dt>
-                          <dd className="font-medium text-gray-900 text-right">{release.label.name}</dd>
-                        </div>
-                      )}
-                      {release.labelNumber && (
-                        <div className="flex justify-between py-1 border-b border-gray-200 last:border-0">
-                          <dt className="text-gray-500">Catalog #</dt>
-                          <dd className="font-medium text-gray-900 text-right">{release.labelNumber}</dd>
-                        </div>
-                      )}
-                      {release.upc && (
-                        <div className="flex justify-between py-1 border-b border-gray-200 last:border-0">
-                          <dt className="text-gray-500">Barcode</dt>
-                          <dd className="font-medium text-gray-900 text-right">{release.upc}</dd>
-                        </div>
-                      )}
-                      {release.country && (
-                        <div className="flex justify-between py-1 border-b border-gray-200 last:border-0">
-                          <dt className="text-gray-500">Country</dt>
-                          <dd className="font-medium text-gray-900 text-right">{release.country.name}</dd>
-                        </div>
-                      )}
-                      {(release.lengthInSeconds && release.lengthInSeconds > 0) ? (
-                        <div className="flex justify-between py-1 border-b border-gray-200 last:border-0">
-                          <dt className="text-gray-500">Duration</dt>
-                          <dd className="font-medium text-gray-900 text-right">{formatDuration(release.lengthInSeconds)}</dd>
-                        </div>
-                      ) : null}
-                      
-                      {/* Last Played with History Toggle */}
-                      {release.lastPlayedAt && (
-                        <div className="pt-2 mt-2 border-t border-gray-200">
-                          <div className="flex justify-between items-center mb-2">
-                            <dt className="text-gray-500">Last Played</dt>
-                            <dd className="font-medium text-gray-900 text-right flex items-center gap-1">
-                              {new Date(release.lastPlayedAt).toLocaleDateString('en-US', {
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric'
-                              })}
-                              <button
-                                onClick={handlePlayHistoryToggle}
-                                className="p-0.5 text-gray-400 hover:text-gray-700 transition-colors"
-                                title="Show play history"
-                              >
-                                <ChevronDown 
-                                  className={`w-4 h-4 transition-transform duration-200 ${showPlayHistory ? 'rotate-180' : ''}`} 
-                                />
-                              </button>
-                            </dd>
-                          </div>
-                          
-                          {/* Play History Panel */}
-                          {showPlayHistory && (
-                            <div className="bg-white rounded-lg border border-gray-200 p-3 text-xs">
-                              {playHistoryLoading ? (
-                                <div className="text-gray-500 text-center py-2">Loading history...</div>
-                              ) : playHistory ? (
-                                <div>
-                                  <div className="font-bold text-gray-900 mb-2 pb-1 border-b border-gray-100">
-                                    Total Plays: {playHistory.playCount}
-                                  </div>
-                                  {playHistory.playDates.length > 0 ? (
-                                    <div className={`space-y-1 ${playHistory.playDates.length > 5 ? 'max-h-[150px] overflow-y-auto pr-1 custom-scrollbar' : ''}`}>
-                                      {playHistory.playDates.map((item) => (
-                                        <div key={item.id} className="flex justify-between items-center group">
-                                          <span className="text-gray-600">
-                                            {new Date(item.playedAt).toLocaleDateString('en-US', {
-                                              year: 'numeric',
-                                              month: 'short',
-                                              day: 'numeric'
-                                            })}
-                                          </span>
-                                          <button
-                                            onClick={() => handleDeletePlayHistory(item.id)}
-                                            className="text-red-400 opacity-0 group-hover:opacity-100 hover:text-red-600 transition-all"
-                                            title="Delete this play"
-                                          >
-                                            <X className="w-3 h-3" />
-                                          </button>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  ) : (
-                                    <div className="text-gray-400 italic">No dates recorded</div>
-                                  )}
-                                </div>
-                              ) : (
-                                <div className="text-red-500">Failed to load history</div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                   </dl>
-                </div>
+            {/* Tracklist */}
+            <div className="bg-[#13131F] rounded-xl border border-[#1C1C28] overflow-hidden">
+              <div className="px-4 py-3 border-b border-[#1C1C28]">
+                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">Tracklist</h3>
               </div>
-
-              {/* Right Column - Tracklist & Extended Info */}
-              <div className="space-y-10">
-                 {/* Tracklist Section */}
-                 <div>
-                    <div className="bg-gray-50 rounded-xl p-1 border border-gray-100">
-                        <TrackList 
-                          media={release.media || []} 
-                          albumArtists={release.artists?.map(artist => artist.name) || []}
-                        />
-                    </div>
-                 </div>
-
-                 {/* Purchase & Collection Info Grid */}
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Purchase Info */}
-                    {release.purchaseInfo && (
-                       <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
-                          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                             <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                             Purchase Info
-                          </h3>
-                          <dl className="space-y-3 text-sm">
-                            {(release.purchaseInfo.storeName || release.purchaseInfo.storeId) && (
-                              <div className="flex justify-between">
-                                <dt className="text-gray-500">Store</dt>
-                                <dd className="font-medium text-gray-900">{release.purchaseInfo.storeName || release.purchaseInfo.storeId}</dd>
-                              </div>
-                            )}
-                            {release.purchaseInfo.price !== undefined && release.purchaseInfo.price !== null && (
-                              <div className="flex justify-between">
-                                <dt className="text-gray-500">Price</dt>
-                                <dd className="font-medium text-gray-900">
-                                  {release.purchaseInfo.currency === 'GBP' || !release.purchaseInfo.currency 
-                                    ? `£${release.purchaseInfo.price.toFixed(2)}`
-                                    : `${release.purchaseInfo.currency} ${release.purchaseInfo.price.toFixed(2)}`
-                                  }
-                                </dd>
-                              </div>
-                            )}
-                            {release.purchaseInfo.purchaseDate && (
-                              <div className="flex justify-between">
-                                <dt className="text-gray-500">Date</dt>
-                                <dd className="font-medium text-gray-900">
-                                  {new Date(release.purchaseInfo.purchaseDate).toLocaleDateString('en-US', {
-                                    year: 'numeric',
-                                    month: 'short',
-                                    day: 'numeric'
-                                  })}
-                                </dd>
-                              </div>
-                            )}
-                            {release.purchaseInfo.notes && (
-                              <div className="pt-2 mt-2 border-t border-gray-200">
-                                <dt className="text-gray-500 mb-1">Notes</dt>
-                                <dd className="text-gray-700 italic text-xs bg-white p-2 rounded border border-gray-100">
-                                  {release.purchaseInfo.notes}
-                                </dd>
-                              </div>
-                            )}
-                          </dl>
-                       </div>
-                    )}
-                    
-                    {/* Collection Info */}
-                    <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
-                       <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                          <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                          Collection Data
-                       </h3>
-                       <dl className="space-y-3 text-sm">
-                          <div className="flex justify-between">
-                            <dt className="text-gray-500">Added</dt>
-                            <dd className="font-medium text-gray-900">
-                              {new Date(release.dateAdded).toLocaleDateString('en-US', {
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric'
-                              })}
-                            </dd>
-                          </div>
-                          <div className="flex justify-between">
-                            <dt className="text-gray-500">Modified</dt>
-                            <dd className="font-medium text-gray-900">
-                              {new Date(release.lastModified).toLocaleDateString('en-US', {
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric'
-                              })}
-                            </dd>
-                          </div>
-                       </dl>
-                    </div>
-                 </div>
-                 
-                 {/* Genres Tags */}
-                 {release.genres && release.genres.length > 0 && (
-                    <div>
-                       <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Genres</h3>
-                       <div className="flex flex-wrap gap-2">
-                          {release.genres.map((genre) => (
-                             <Link
-                                key={genre.id}
-                                href={`/collection?genreId=${genre.id}`}
-                                className="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-600 text-sm font-medium hover:bg-[#D93611] hover:text-white transition-colors"
-                             >
-                                {genre.name}
-                             </Link>
-                          ))}
-                       </div>
-                    </div>
-                 )}
-                 
-                 {/* Links */}
-                 {release.links && release.links.length > 0 && (
-                    <div>
-                       <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">External Links</h3>
-                       <ReleaseLinks links={release.links} />
-                    </div>
-                 )}
-              </div>
+              <TrackList
+                media={release.media || []}
+                albumArtists={release.artists?.map(artist => artist.name) || []}
+              />
             </div>
 
+            {/* Links */}
+            {release.links && release.links.length > 0 && (
+              <div className="bg-[#13131F] rounded-xl border border-[#1C1C28] overflow-hidden">
+                <div className="px-4 py-3 border-b border-[#1C1C28] flex items-center justify-between">
+                  <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className="text-[#8B5CF6]"><path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                    Links
+                  </h3>
+                  <span className="text-[10px] text-gray-600">{release.links.length} link{release.links.length !== 1 ? 's' : ''}</span>
+                </div>
+                <ReleaseLinks links={release.links} />
+              </div>
+            )}
           </div>
         </div>
       </div>
-      
+
       <ConfirmDialog
         isOpen={!!playToDelete}
         title="Delete Play Record"
