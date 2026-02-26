@@ -1,17 +1,13 @@
 /**
- * Design Mockup Pages — /mockup/1 through /mockup/5
+ * Design Mockup Page — /mockup/1
  *
- * Five visually distinct redesign proposals for Kollector Sküm.
- * Each mockup is a fully self-contained static page using shared mock data.
+ * Midnight redesign proposal for Kollector Sküm.
+ * A fully self-contained static page using shared mock data.
  * All four key pages (Dashboard, Music Collection, Release Detail, Add Release)
- * are accessible via the tab navigation at the top of each mockup.
+ * are accessible via the tab navigation at the top of the mockup.
  *
- * Designs:
- *  1 – Midnight:       Dark bg, purple accents, streaming-platform aesthetic
- *  2 – Clean Pro:      White bg, ultra-minimal, Apple-inspired
- *  3 – Warm Crate:     Cream/amber, vintage vinyl record-store feel
- *  4 – Bold Editorial: High-contrast magazine style
- *  5 – Neo Glow:       Very dark bg, cyan/purple neon, glassmorphism cards
+ * Design:
+ *  1 – Midnight:  Dark bg, purple accents, streaming-platform aesthetic
  *
  * No API calls are made – all data is hardcoded for visual review only.
  */
@@ -64,11 +60,18 @@ const RD = {
 };
 
 const RP = [
-  { id: 1, title: "OK Computer", artist: "Radiohead", playedAt: "2024-02-10" },
-  { id: 5, title: "To Pimp A Butterfly", artist: "Kendrick Lamar", playedAt: "2024-02-08" },
-  { id: 10, title: "The Dark Side of the Moon", artist: "Pink Floyd", playedAt: "2024-02-07" },
-  { id: 12, title: "Hounds of Love", artist: "Kate Bush", playedAt: "2024-02-06" },
-  { id: 4, title: "Rumours", artist: "Fleetwood Mac", playedAt: "2024-02-05" },
+  { id: 1,  title: "OK Computer",             artist: "Radiohead",       relative: "Today",        playCount: 3, color: "#6366F1" },
+  { id: 2,  title: "Random Access Memories",  artist: "Daft Punk",        relative: "Today",        playCount: 1, color: "#F59E0B" },
+  { id: 5,  title: "To Pimp A Butterfly",     artist: "Kendrick Lamar",   relative: "Yesterday",     playCount: 2, color: "#10B981" },
+  { id: 3,  title: "Blonde",                  artist: "Frank Ocean",      relative: "Yesterday",     playCount: 1, color: "#F97316" },
+  { id: 10, title: "The Dark Side of the Moon", artist: "Pink Floyd",     relative: "3 days ago",    playCount: 5, color: "#1E293B" },
+  { id: 12, title: "Hounds of Love",           artist: "Kate Bush",       relative: "3 days ago",    playCount: 1, color: "#EC4899" },
+  { id: 4,  title: "Rumours",                  artist: "Fleetwood Mac",   relative: "1 week ago",    playCount: 2, color: "#8B5CF6" },
+  { id: 6,  title: "Kind of Blue",             artist: "Miles Davis",     relative: "1 week ago",    playCount: 4, color: "#3B82F6" },
+  { id: 7,  title: "Purple Rain",              artist: "Prince",          relative: "1 week ago",    playCount: 1, color: "#A855F7" },
+  { id: 8,  title: "Nevermind",                artist: "Nirvana",         relative: "2 weeks ago",   playCount: 1, color: "#06B6D4" },
+  { id: 9,  title: "Blue",                     artist: "Joni Mitchell",   relative: "2 weeks ago",   playCount: 1, color: "#0EA5E9" },
+  { id: 11, title: "Illmatic",                 artist: "Nas",             relative: "1 month ago",   playCount: 3, color: "#EF4444" },
 ];
 
 const QA = [
@@ -83,10 +86,6 @@ const QA = [
 
 const DESIGN_NAMES: Record<string, string> = {
   "1": "Midnight — Dark streaming platform aesthetic",
-  "2": "Clean Pro — Minimal, Apple-inspired",
-  "3": "Warm Crate — Vintage vinyl record store",
-  "4": "Bold Editorial — High-contrast magazine style",
-  "5": "Neo Glow — Futuristic glassmorphism",
 };
 
 type PageTab = "dashboard" | "collection" | "release" | "add";
@@ -97,7 +96,7 @@ const PAGE_TABS: { key: PageTab; label: string }[] = [
   { key: "add", label: "Add Release" },
 ];
 
-/** Shared release metadata form fields reused across all 5 Add-Release designs. */
+/** Shared release metadata form fields for the Add-Release mockup. */
 const RELEASE_FORM_FIELDS: [string, string][] = [
   ["Title *", "OK Computer"],
   ["Artist *", "Radiohead"],
@@ -109,7 +108,7 @@ const RELEASE_FORM_FIELDS: [string, string][] = [
   ["UPC", "0724384568924"],
 ];
 
-/** Shared purchase info fields reused across all 5 Add-Release designs. */
+/** Shared purchase info fields for the Add-Release mockup. */
 const PURCHASE_FORM_FIELDS: [string, string][] = [
   ["Store", "Rough Trade"],
   ["Price", "22.99"],
@@ -125,12 +124,12 @@ export default function MockupPage() {
   const [addTab, setAddTab] = useState<"manual" | "discogs">("manual");
   const designNum = parseInt(id, 10);
 
-  if (isNaN(designNum) || designNum < 1 || designNum > 5) {
+  if (isNaN(designNum) || designNum !== 1) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Mockup not found</h1>
-          <p className="mb-6">Valid mockup numbers are 1–5.</p>
+          <p className="mb-6">Valid mockup: /mockup/1 (Midnight)</p>
           <Link href="/mockup/1" className="px-4 py-2 bg-blue-600 text-white rounded">Go to Mockup 1</Link>
         </div>
       </div>
@@ -140,18 +139,8 @@ export default function MockupPage() {
   const mockupNav = (
     <div className="flex items-center gap-1 flex-wrap px-4 py-2 bg-gray-900 text-xs z-50 relative">
       <span className="text-gray-400 mr-2 font-semibold">Design Mockup:</span>
-      {[1, 2, 3, 4, 5].map((n) => (
-        <Link
-          key={n}
-          href={`/mockup/${n}`}
-          className={`px-3 py-1 rounded font-semibold transition-colors ${
-            n === designNum ? "bg-white text-gray-900" : "text-gray-300 hover:text-white hover:bg-gray-700"
-          }`}
-        >
-          #{n}
-        </Link>
-      ))}
-      <span className="ml-4 text-gray-500 italic hidden sm:inline">{DESIGN_NAMES[id]}</span>
+      <span className="px-3 py-1 rounded font-semibold bg-white text-gray-900">#1</span>
+      <span className="ml-4 text-gray-500 italic hidden sm:inline">{DESIGN_NAMES["1"]}</span>
       <span className="ml-auto">
         <Link href="/" className="text-gray-400 hover:text-white transition-colors">← Back to app</Link>
       </span>
@@ -163,11 +152,7 @@ export default function MockupPage() {
   return (
     <div>
       {mockupNav}
-      {designNum === 1 && <Design1 {...tabProps} />}
-      {designNum === 2 && <Design2 {...tabProps} />}
-      {designNum === 3 && <Design3 {...tabProps} />}
-      {designNum === 4 && <Design4 {...tabProps} />}
-      {designNum === 5 && <Design5 {...tabProps} />}
+      <Design1 {...tabProps} />
     </div>
   );
 }
@@ -257,19 +242,50 @@ function D1Dashboard() {
         </div>
       </div>
       <div>
-        <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Recently Played</h2>
-        <div className="space-y-2">
-          {RP.map((item, i) => (
-            <div key={item.id} className="flex items-center gap-4 bg-[#13131F] rounded-xl px-4 py-3 border border-[#1C1C28] hover:border-[#8B5CF6]/40 transition-all cursor-pointer">
-              <span className="text-gray-600 text-xs w-5 text-center">{i + 1}</span>
-              <div className="w-10 h-10 rounded-lg bg-[#1C1C28] flex items-center justify-center text-lg flex-shrink-0">💿</div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-semibold text-white truncate">{item.title}</div>
-                <div className="text-xs text-gray-400">{item.artist}</div>
+        <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+          <span className="text-base">🎵</span> Recently Played
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          {RP.map((item, i) => {
+            /* Show date header only for first item of each relative date group */
+            const showDate = i === 0 || RP[i - 1].relative !== item.relative;
+            return (
+              <div key={`${item.id}-${i}`} className="flex flex-col">
+                {/* Date heading row — fixed height so covers stay aligned */}
+                <div className="h-6 mb-2">
+                  {showDate && (
+                    <span className="text-[10px] font-bold text-[#8B5CF6] uppercase tracking-widest">
+                      {item.relative}
+                    </span>
+                  )}
+                </div>
+
+                {/* Cover art tile with tooltip */}
+                <div
+                  className="group relative aspect-square rounded-xl overflow-hidden border border-[#1C1C28] hover:border-[#8B5CF6]/50 transition-all cursor-pointer shadow-sm hover:shadow-lg hover:shadow-[#8B5CF6]/10"
+                  title={`${item.title} — ${item.artist}\nPlayed: ${item.relative}${item.playCount > 1 ? ` (×${item.playCount})` : ''}`}
+                >
+                  {/* Placeholder cover with unique colour per album */}
+                  <div className="w-full h-full flex items-center justify-center text-4xl" style={{ background: `linear-gradient(135deg, ${item.color}40, ${item.color}15)` }}>
+                    💿
+                  </div>
+
+                  {/* Hover overlay with title + artist */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2.5">
+                    <div className="text-xs font-semibold text-white truncate leading-tight">{item.title}</div>
+                    <div className="text-[10px] text-gray-300 truncate">{item.artist}</div>
+                  </div>
+
+                  {/* Play count badge — only when > 1 */}
+                  {item.playCount > 1 && (
+                    <div className="absolute bottom-2 right-2 bg-[#8B5CF6] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-lg z-10">
+                      ×{item.playCount}
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="text-xs text-gray-600 flex-shrink-0">{item.playedAt}</div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
       <div className="bg-[#13131F] rounded-2xl p-6 border border-[#1C1C28] text-center">
@@ -282,19 +298,150 @@ function D1Dashboard() {
 }
 
 function D1Collection() {
+  const [filtersOpen, setFiltersOpen] = useState(true);
+
+  /* Static filter options for the mockup */
+  const GENRE_OPTIONS = ["Alternative Rock", "Electronic", "R&B/Soul", "Rock", "Hip-Hop", "Jazz", "Pop/Rock", "Grunge", "Folk", "Progressive Rock", "Art Pop"];
+  const FORMAT_OPTIONS = ["Vinyl", "CD", "Cassette", "Digital"];
+  const ARTIST_OPTIONS = ["Radiohead", "Daft Punk", "Frank Ocean", "Fleetwood Mac", "Kendrick Lamar", "Miles Davis", "Prince", "Nirvana", "Joni Mitchell", "Pink Floyd", "Nas", "Kate Bush"];
+  const LABEL_OPTIONS = ["Parlophone", "Columbia", "Boys Don't Cry", "Warner Bros.", "Top Dawg", "DGC Records", "Reprise Records", "Harvest Records", "EMI"];
+  const COUNTRY_OPTIONS = ["UK", "France", "USA", "Canada", "Germany", "Japan"];
+
   return (
     <div className="space-y-6">
+      {/* Search bar + sort + Filters toggle */}
       <div className="flex gap-3 flex-wrap">
         <input readOnly type="text" placeholder="Search releases, artists, albums..." className="flex-1 min-w-64 bg-[#13131F] border border-[#1C1C28] rounded-xl px-4 py-3 text-white placeholder-gray-600 text-sm focus:outline-none" />
         <select className="bg-[#13131F] border border-[#1C1C28] rounded-xl px-4 py-3 text-gray-300 text-sm focus:outline-none">
           <option>Sort: Date Added</option><option>Title</option><option>Artist</option><option>Year</option>
         </select>
-        <button className="bg-[#8B5CF6] text-white px-5 rounded-xl text-sm font-medium">Filters</button>
+        <button
+          onClick={() => setFiltersOpen((o) => !o)}
+          className={`px-5 rounded-xl text-sm font-medium flex items-center gap-2 transition-all ${
+            filtersOpen
+              ? "bg-[#8B5CF6] text-white shadow-lg shadow-[#8B5CF6]/25"
+              : "bg-[#8B5CF6] text-white"
+          }`}
+        >
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+          Filters
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" className={`transition-transform ${filtersOpen ? "rotate-180" : ""}`}><path d="M2.5 4.5l3.5 3.5 3.5-3.5" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        </button>
       </div>
-      <div className="flex items-center gap-3 text-xs text-gray-500">
+
+      {/* ── Expanded filter panel ── */}
+      {filtersOpen && (
+        <div className="bg-[#13131F] border border-[#1C1C28] rounded-2xl p-6 space-y-5 animate-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className="text-[#8B5CF6]"><path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+              Advanced Filters
+            </h3>
+            <button className="text-xs text-[#8B5CF6] hover:text-[#A78BFA] font-medium transition-colors">Clear All</button>
+          </div>
+
+          {/* Row 1: Genre, Format, Artist */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Genre */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Genre</label>
+              <div className="relative">
+                <select defaultValue="Alternative Rock" className="w-full appearance-none bg-[#0A0A10] border border-[#2E2E3E] rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#8B5CF6] transition-colors cursor-pointer">
+                  <option value="">All Genres</option>
+                  {GENRE_OPTIONS.map((g) => <option key={g} value={g}>{g}</option>)}
+                </select>
+                <svg className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" width="14" height="14" viewBox="0 0 12 12" fill="none"><path d="M2.5 4.5l3.5 3.5 3.5-3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </div>
+            </div>
+
+            {/* Format */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Format</label>
+              <div className="relative">
+                <select className="w-full appearance-none bg-[#0A0A10] border border-[#2E2E3E] rounded-xl px-4 py-2.5 text-sm text-gray-400 focus:outline-none focus:border-[#8B5CF6] transition-colors cursor-pointer">
+                  <option value="">All Formats</option>
+                  {FORMAT_OPTIONS.map((f) => <option key={f} value={f}>{f}</option>)}
+                </select>
+                <svg className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" width="14" height="14" viewBox="0 0 12 12" fill="none"><path d="M2.5 4.5l3.5 3.5 3.5-3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </div>
+            </div>
+
+            {/* Artist */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Artist</label>
+              <div className="relative">
+                <select className="w-full appearance-none bg-[#0A0A10] border border-[#2E2E3E] rounded-xl px-4 py-2.5 text-sm text-gray-400 focus:outline-none focus:border-[#8B5CF6] transition-colors cursor-pointer">
+                  <option value="">All Artists</option>
+                  {ARTIST_OPTIONS.map((a) => <option key={a} value={a}>{a}</option>)}
+                </select>
+                <svg className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" width="14" height="14" viewBox="0 0 12 12" fill="none"><path d="M2.5 4.5l3.5 3.5 3.5-3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </div>
+            </div>
+          </div>
+
+          {/* Row 2: Label, Country, Year Range */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Label */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Label</label>
+              <div className="relative">
+                <select className="w-full appearance-none bg-[#0A0A10] border border-[#2E2E3E] rounded-xl px-4 py-2.5 text-sm text-gray-400 focus:outline-none focus:border-[#8B5CF6] transition-colors cursor-pointer">
+                  <option value="">All Labels</option>
+                  {LABEL_OPTIONS.map((l) => <option key={l} value={l}>{l}</option>)}
+                </select>
+                <svg className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" width="14" height="14" viewBox="0 0 12 12" fill="none"><path d="M2.5 4.5l3.5 3.5 3.5-3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </div>
+            </div>
+
+            {/* Country */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Country</label>
+              <div className="relative">
+                <select className="w-full appearance-none bg-[#0A0A10] border border-[#2E2E3E] rounded-xl px-4 py-2.5 text-sm text-gray-400 focus:outline-none focus:border-[#8B5CF6] transition-colors cursor-pointer">
+                  <option value="">All Countries</option>
+                  {COUNTRY_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+                <svg className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" width="14" height="14" viewBox="0 0 12 12" fill="none"><path d="M2.5 4.5l3.5 3.5 3.5-3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </div>
+            </div>
+
+            {/* Year Range */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Year Range</label>
+              <div className="flex gap-2">
+                <input readOnly type="text" placeholder="From" defaultValue="" className="w-1/2 bg-[#0A0A10] border border-[#2E2E3E] rounded-xl px-3 py-2.5 text-sm text-gray-400 placeholder-gray-600 focus:outline-none focus:border-[#8B5CF6] transition-colors" />
+                <span className="flex items-center text-gray-600 text-xs">–</span>
+                <input readOnly type="text" placeholder="To" defaultValue="" className="w-1/2 bg-[#0A0A10] border border-[#2E2E3E] rounded-xl px-3 py-2.5 text-sm text-gray-400 placeholder-gray-600 focus:outline-none focus:border-[#8B5CF6] transition-colors" />
+              </div>
+            </div>
+          </div>
+
+          {/* Action row */}
+          <div className="flex items-center justify-between pt-2 border-t border-[#1C1C28]">
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 cursor-pointer group">
+                <div className="w-4 h-4 rounded border border-[#2E2E3E] group-hover:border-[#8B5CF6] flex items-center justify-center transition-colors">
+                  <div className="w-2.5 h-2.5 rounded-sm bg-[#8B5CF6]" />
+                </div>
+                <span className="text-xs text-gray-400 group-hover:text-gray-300 font-medium">Live / Bootleg only</span>
+              </label>
+            </div>
+            <div className="flex items-center gap-3">
+              <button className="text-xs text-gray-500 hover:text-gray-300 transition-colors px-3 py-1.5">Reset</button>
+              <button className="bg-[#8B5CF6] hover:bg-[#7C3AED] text-white text-xs font-semibold px-5 py-2 rounded-lg transition-colors shadow-lg shadow-[#8B5CF6]/20">Apply Filters</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Active filter chips */}
+      <div className="flex items-center gap-3 text-xs text-gray-500 flex-wrap">
         <span>247 releases</span>
-        <span className="bg-[#8B5CF6]/15 text-[#A78BFA] px-3 py-1 rounded-full border border-[#8B5CF6]/20">Genre: Alternative Rock ×</span>
+        <span className="bg-[#8B5CF6]/15 text-[#A78BFA] px-3 py-1 rounded-full border border-[#8B5CF6]/20 flex items-center gap-1.5 cursor-pointer hover:bg-[#8B5CF6]/25 transition-colors">Genre: Alternative Rock <span className="opacity-60">×</span></span>
+        <span className="bg-[#8B5CF6]/15 text-[#A78BFA] px-3 py-1 rounded-full border border-[#8B5CF6]/20 flex items-center gap-1.5 cursor-pointer hover:bg-[#8B5CF6]/25 transition-colors">Live / Bootleg <span className="opacity-60">×</span></span>
       </div>
+
+      {/* Release grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
         {RELEASES.map((r) => (
           <div key={r.id} className="group cursor-pointer">
@@ -305,6 +452,8 @@ function D1Collection() {
           </div>
         ))}
       </div>
+
+      {/* Pagination */}
       <div className="flex justify-center items-center gap-2">
         <button className="px-4 py-2 rounded-lg bg-[#13131F] border border-[#1C1C28] text-gray-400 text-sm">← Prev</button>
         {[1,2,3,4,5].map((n) => (
@@ -317,20 +466,71 @@ function D1Collection() {
 }
 
 function D1Release() {
+  const [activeDisc, setActiveDisc] = useState(1);
+
+  /* Multi-disc tracklist data — 2×LP pressing of OK Computer */
+  const DISCS = [
+    {
+      label: "Disc 1",
+      sides: [
+        { side: "A", tracks: [
+          { pos: "A1", title: "Airbag", dur: "4:44" },
+          { pos: "A2", title: "Paranoid Android", dur: "6:23" },
+          { pos: "A3", title: "Subterranean Homesick Alien", dur: "4:27" },
+        ]},
+        { side: "B", tracks: [
+          { pos: "B1", title: "Exit Music (For a Film)", dur: "4:24" },
+          { pos: "B2", title: "Let Down", dur: "4:59" },
+          { pos: "B3", title: "Karma Police", dur: "4:22" },
+        ]},
+      ],
+    },
+    {
+      label: "Disc 2",
+      sides: [
+        { side: "C", tracks: [
+          { pos: "C1", title: "Fitter Happier", dur: "1:57" },
+          { pos: "C2", title: "Electioneering", dur: "3:50" },
+          { pos: "C3", title: "Climbing Up the Walls", dur: "4:45" },
+        ]},
+        { side: "D", tracks: [
+          { pos: "D1", title: "No Surprises", dur: "3:48" },
+          { pos: "D2", title: "Lucky", dur: "4:19" },
+          { pos: "D3", title: "The Tourist", dur: "5:24" },
+        ]},
+      ],
+    },
+  ];
+
+  const currentDisc = DISCS[activeDisc - 1];
+  const totalTracks = DISCS.reduce((sum, d) => sum + d.sides.reduce((s2, side) => s2 + side.tracks.length, 0), 0);
+
   return (
     <div className="space-y-6">
       <button className="flex items-center gap-1 text-gray-400 hover:text-white text-sm transition-colors">← Back to Collection</button>
       <div className="grid lg:grid-cols-3 gap-8">
         <div className="space-y-4">
-          <div className="aspect-square bg-[#13131F] rounded-2xl border border-[#1C1C28] flex items-center justify-center text-8xl">💿</div>
+          <div className="aspect-square bg-[#13131F] rounded-2xl border border-[#1C1C28] flex items-center justify-center text-8xl relative overflow-hidden">
+            💿
+            {/* Multi-disc badge */}
+            <div className="absolute top-3 right-3 bg-[#8B5CF6] text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg shadow-[#8B5CF6]/30">
+              2×LP
+            </div>
+          </div>
           <div className="flex gap-2">
             <button className="flex-1 bg-[#8B5CF6] text-white py-3 rounded-xl text-sm font-semibold">▶ Mark as Played</button>
+            <button className="w-12 h-12 bg-[#13131F] border border-[#1C1C28] rounded-xl flex items-center justify-center text-gray-400 hover:text-[#8B5CF6] transition-colors" title="Add to List">
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h10m-4 4h4m2 0h.01M16 18a1 1 0 11-2 0 1 1 0 012 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19 11v4m0 0v4m0-4h4m-4 0h-4" /></svg>
+            </button>
+            <a href="https://www.discogs.com/release/844254" target="_blank" rel="noopener noreferrer" className="w-12 h-12 bg-[#13131F] border border-[#1C1C28] rounded-xl flex items-center justify-center text-gray-400 hover:text-white transition-colors" title="View on Discogs">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.372 0 0 5.372 0 12s5.372 12 12 12 12-5.372 12-12S18.628 0 12 0zm0 21.6c-5.292 0-9.6-4.308-9.6-9.6S6.708 2.4 12 2.4s9.6 4.308 9.6 9.6-4.308 9.6-9.6 9.6zm0-17.04A7.44 7.44 0 004.56 12 7.44 7.44 0 0012 19.44 7.44 7.44 0 0019.44 12 7.44 7.44 0 0012 4.56zm0 12.72A5.28 5.28 0 016.72 12 5.28 5.28 0 0112 6.72 5.28 5.28 0 0117.28 12 5.28 5.28 0 0112 17.28zm0-8.4A3.12 3.12 0 008.88 12 3.12 3.12 0 0012 15.12 3.12 3.12 0 0015.12 12 3.12 3.12 0 0012 8.88z" /></svg>
+            </a>
             <button className="w-12 h-12 bg-[#13131F] border border-[#1C1C28] rounded-xl flex items-center justify-center text-gray-400 hover:text-white transition-colors">✎</button>
             <button className="w-12 h-12 bg-[#13131F] border border-red-900/30 rounded-xl flex items-center justify-center text-red-400/60 hover:text-red-400 transition-colors">🗑</button>
           </div>
           {[
-            { title: "Release Info", items: [["Format", RD.format], ["Label", RD.label], ["Cat #", RD.labelNumber], ["Country", RD.country], ["UPC", RD.upc]] },
-            { title: "Purchase Info", items: [["Store", RD.purchase.store], ["Price", RD.purchase.price], ["Date", RD.purchase.date], ["Condition", RD.purchase.condition]] },
+            { title: "Release Info", items: [["Format", "2× 12\" Vinyl LP"], ["Discs", "2"], ["Label", RD.label], ["Cat #", RD.labelNumber], ["Country", RD.country], ["UPC", RD.upc]] },
+            { title: "Purchase Info", items: [["Store", RD.purchase.store], ["Price", "GBP 34.99"], ["Date", RD.purchase.date], ["Condition", RD.purchase.condition]] },
             { title: "Collection Data", items: [["Added", RD.dateAdded], ["Modified", RD.lastModified], ["Last Played", RD.lastPlayed]] },
           ].map(({ title, items }) => (
             <div key={title} className="bg-[#13131F] rounded-xl p-4 border border-[#1C1C28] space-y-2">
@@ -348,26 +548,162 @@ function D1Release() {
           <div>
             <p className="text-[#8B5CF6] font-semibold text-sm mb-1">{RD.artist}</p>
             <h1 className="text-4xl font-black tracking-tight leading-tight">{RD.title}</h1>
-            <p className="text-gray-400 mt-1">{RD.year}</p>
+            <div className="flex items-center gap-3 mt-1">
+              <p className="text-gray-400">{RD.year}</p>
+              <span className="text-gray-600">·</span>
+              <span className="text-xs text-gray-500">{totalTracks} tracks across {DISCS.length} discs</span>
+            </div>
             <div className="flex gap-2 mt-2">
               {RD.genres.map((g) => <span key={g} className="text-xs bg-[#8B5CF6]/15 text-[#A78BFA] px-2 py-1 rounded">{g}</span>)}
+              <span className="text-xs bg-[#06B6D4]/15 text-[#22D3EE] px-2 py-1 rounded">2×LP</span>
             </div>
           </div>
+
+          {/* ── Disc selector tabs ── */}
           <div className="bg-[#13131F] rounded-xl border border-[#1C1C28] overflow-hidden">
-            <div className="px-4 py-3 border-b border-[#1C1C28]">
+            <div className="px-4 py-3 border-b border-[#1C1C28] flex items-center justify-between">
               <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">Tracklist</h3>
-            </div>
-            {RD.tracks.map((t, i) => (
-              <div key={t.pos} className={`flex items-center px-4 py-3 hover:bg-[#1C1C28] cursor-pointer ${i>0 ? "border-t border-[#1C1C28]/50" : ""}`}>
-                <span className="text-xs text-gray-600 w-8">{t.pos}</span>
-                <span className="flex-1 text-sm text-white">{t.title}</span>
-                <span className="text-xs text-gray-500">{t.dur}</span>
+              <div className="flex items-center gap-1 bg-[#0A0A10] rounded-lg p-0.5">
+                {DISCS.map((d, i) => (
+                  <button
+                    key={d.label}
+                    onClick={() => setActiveDisc(i + 1)}
+                    className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                      activeDisc === i + 1
+                        ? "bg-[#8B5CF6] text-white shadow-md shadow-[#8B5CF6]/20"
+                        : "text-gray-500 hover:text-gray-300"
+                    }`}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="opacity-60"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none"/><circle cx="12" cy="12" r="3" /></svg>
+                    {d.label}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setActiveDisc(0)}
+                  className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                    activeDisc === 0
+                      ? "bg-[#8B5CF6] text-white shadow-md shadow-[#8B5CF6]/20"
+                      : "text-gray-500 hover:text-gray-300"
+                  }`}
+                >
+                  All
+                </button>
               </div>
-            ))}
+            </div>
+
+            {/* Show either a single disc or all discs */}
+            {activeDisc === 0 ? (
+              /* All discs view */
+              DISCS.map((disc, di) => (
+                <div key={disc.label}>
+                  {/* Disc header divider */}
+                  <div className="flex items-center gap-3 px-4 py-2.5 bg-[#0E0E18] border-t border-[#1C1C28]">
+                    <div className="flex items-center gap-1.5">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-[#8B5CF6]"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none"/><circle cx="12" cy="12" r="3" /></svg>
+                      <span className="text-xs font-bold text-[#8B5CF6] uppercase tracking-wider">{disc.label}</span>
+                    </div>
+                    <div className="flex-1 h-px bg-[#1C1C28]" />
+                    <span className="text-[10px] text-gray-600">{disc.sides.reduce((s, side) => s + side.tracks.length, 0)} tracks</span>
+                  </div>
+                  {disc.sides.map((side) => (
+                    <div key={side.side}>
+                      {/* Side header */}
+                      <div className="flex items-center gap-2 px-4 py-2 bg-[#11111B]">
+                        <span className="text-[10px] font-bold text-gray-600 uppercase tracking-widest">Side {side.side}</span>
+                        <div className="flex-1 h-px bg-[#1C1C28]/50" />
+                      </div>
+                      {side.tracks.map((t, ti) => (
+                        <div key={t.pos} className={`flex items-center px-4 py-3 hover:bg-[#1C1C28] cursor-pointer ${ti > 0 || di > 0 ? "border-t border-[#1C1C28]/30" : ""}`}>
+                          <span className="text-xs text-gray-600 w-8 font-mono">{t.pos}</span>
+                          <span className="flex-1 text-sm text-white">{t.title}</span>
+                          <span className="text-xs text-gray-500 tabular-nums">{t.dur}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              ))
+            ) : (
+              /* Single-disc view */
+              currentDisc.sides.map((side, si) => (
+                <div key={side.side}>
+                  {/* Side header */}
+                  <div className={`flex items-center gap-2 px-4 py-2 bg-[#11111B] ${si > 0 ? "border-t border-[#1C1C28]" : ""}`}>
+                    <span className="text-[10px] font-bold text-gray-600 uppercase tracking-widest">Side {side.side}</span>
+                    <div className="flex-1 h-px bg-[#1C1C28]/50" />
+                    <span className="text-[10px] text-gray-600">{side.tracks.length} tracks</span>
+                  </div>
+                  {side.tracks.map((t, ti) => (
+                    <div key={t.pos} className={`flex items-center px-4 py-3 hover:bg-[#1C1C28] cursor-pointer ${ti > 0 ? "border-t border-[#1C1C28]/30" : ""}`}>
+                      <span className="text-xs text-gray-600 w-8 font-mono">{t.pos}</span>
+                      <span className="flex-1 text-sm text-white">{t.title}</span>
+                      <span className="text-xs text-gray-500 tabular-nums">{t.dur}</span>
+                    </div>
+                  ))}
+                </div>
+              ))
+            )}
+
+            {/* Total duration footer */}
+            <div className="px-4 py-3 border-t border-[#1C1C28] bg-[#0E0E18] flex items-center justify-between">
+              <span className="text-xs text-gray-600">
+                {activeDisc === 0 ? `${DISCS.length} discs · ${totalTracks} tracks` : `${currentDisc.label} · ${currentDisc.sides.reduce((s, side) => s + side.tracks.length, 0)} tracks`}
+              </span>
+              <span className="text-xs text-gray-500 tabular-nums">Total: 53:02</span>
+            </div>
           </div>
+
           <div className="bg-[#13131F] rounded-xl p-4 border border-[#1C1C28]">
             <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">Notes</h3>
-            <p className="text-sm text-gray-400 italic">{RD.purchase.notes}</p>
+            <p className="text-sm text-gray-400 italic">Original UK 2×LP pressing on 180g vinyl. Gatefold sleeve with printed inner sleeves. {RD.purchase.notes}</p>
+          </div>
+
+          {/* ── Links section ── */}
+          <div className="bg-[#13131F] rounded-xl border border-[#1C1C28] overflow-hidden">
+            <div className="px-4 py-3 border-b border-[#1C1C28] flex items-center justify-between">
+              <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className="text-[#8B5CF6]"><path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+                Links
+              </h3>
+              <span className="text-[10px] text-gray-600">6 links</span>
+            </div>
+            {[
+              { type: "Discogs", url: "https://www.discogs.com/release/844254", desc: "Discogs release page", icon: (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className="text-gray-400 group-hover:text-white transition-colors"><path d="M12 0C5.372 0 0 5.372 0 12s5.372 12 12 12 12-5.372 12-12S18.628 0 12 0zm0 21.6c-5.292 0-9.6-4.308-9.6-9.6S6.708 2.4 12 2.4s9.6 4.308 9.6 9.6-4.308 9.6-9.6 9.6zm0-17.04A7.44 7.44 0 004.56 12 7.44 7.44 0 0012 19.44 7.44 7.44 0 0019.44 12 7.44 7.44 0 0012 4.56zm0 12.72A5.28 5.28 0 016.72 12 5.28 5.28 0 0112 6.72 5.28 5.28 0 0117.28 12 5.28 5.28 0 0112 17.28zm0-8.4A3.12 3.12 0 008.88 12 3.12 3.12 0 0012 15.12 3.12 3.12 0 0015.12 12 3.12 3.12 0 0012 8.88z" /></svg>
+              )},
+              { type: "Spotify", url: "https://open.spotify.com/album/6dVIqQ8qmQ5GBnJ9shOYGE", desc: "Listen on Spotify", icon: (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className="text-[#1DB954] group-hover:text-[#1ed760] transition-colors"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z" /></svg>
+              )},
+              { type: "YouTube", url: "https://www.youtube.com/playlist?list=OLAK5uy_nEg_Hed3JqojOwsSaXJk9Fk7YBe5iamM8", desc: "Full album on YouTube", icon: (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className="text-[#FF0000] group-hover:text-[#ff3333] transition-colors"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" /></svg>
+              )},
+              { type: "MusicBrainz", url: "https://musicbrainz.org/release/a1c42b12-14e6-3407-a5e4-c4bae54bf50f", desc: "MusicBrainz entry", icon: (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#BA478F] group-hover:text-[#d45daa] transition-colors"><circle cx="12" cy="12" r="10" /><path strokeLinecap="round" d="M8 8l8 8M16 8l-8 8" /></svg>
+              )},
+              { type: "Bandcamp", url: "https://radiohead.bandcamp.com/album/ok-computer", desc: "Buy on Bandcamp", icon: (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className="text-[#629aa9] group-hover:text-[#7bc0d2] transition-colors"><path d="M0 18.75l7.437-13.5H24l-7.438 13.5H0z" /></svg>
+              )},
+              { type: "Last.fm", url: "https://www.last.fm/music/Radiohead/OK+Computer", desc: "Scrobbles & stats", icon: (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className="text-[#D51007] group-hover:text-[#ff2a20] transition-colors"><path d="M10.584 17.21l-.88-2.392s-1.43 1.594-3.573 1.594c-1.897 0-3.244-1.649-3.244-4.288 0-3.382 1.704-4.591 3.381-4.591 2.42 0 3.189 1.567 3.849 3.574l.88 2.749c.88 2.666 2.529 4.81 7.284 4.81 3.409 0 5.718-1.044 5.718-3.793 0-2.227-1.265-3.381-3.63-3.933l-1.758-.385c-1.21-.275-1.567-.77-1.567-1.594 0-.935.742-1.484 1.952-1.484 1.32 0 2.034.495 2.144 1.677l2.749-.33c-.22-2.474-1.924-3.492-4.729-3.492-2.474 0-4.893.935-4.893 3.932 0 1.87.907 3.051 3.189 3.602l1.87.44c1.402.33 1.869.825 1.869 1.648 0 1.044-.99 1.484-2.86 1.484-2.776 0-3.933-1.457-4.591-3.464l-.907-2.749c-1.155-3.575-2.997-4.894-6.653-4.894C1.731 6.328 0 8.878 0 12.944c0 3.878 1.731 6.126 5.088 6.126 2.694 0 4.344-1.209 5.496-1.86z" /></svg>
+              )},
+            ].map((link, i) => (
+              <a
+                key={link.type}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`flex items-center gap-4 px-4 py-3 hover:bg-[#1C1C28] cursor-pointer group transition-all ${i > 0 ? "border-t border-[#1C1C28]/50" : ""}`}
+              >
+                <div className="w-8 h-8 rounded-lg bg-[#0A0A10] flex items-center justify-center flex-shrink-0">
+                  {link.icon}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-semibold text-white group-hover:text-[#8B5CF6] transition-colors">{link.type}</div>
+                  <div className="text-xs text-gray-500 truncate">{link.desc}</div>
+                </div>
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className="text-gray-600 group-hover:text-[#8B5CF6] transition-colors flex-shrink-0"><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+              </a>
+            ))}
           </div>
         </div>
       </div>
@@ -444,1039 +780,3 @@ function D1Add({ addTab, setAddTab }: { addTab: "manual"|"discogs"; setAddTab: (
   );
 }
 
-/* ══════════════════════════════════════════════
-   DESIGN 2 — CLEAN PRO (Minimal / Apple-inspired)
-   White bg, black accents, generous whitespace
-══════════════════════════════════════════════ */
-function Design2({ activeTab, setActiveTab, addTab, setAddTab }: DesignProps) {
-  return (
-    <div className="min-h-screen bg-white text-gray-900" style={{ fontFamily: "Inter, sans-serif" }}>
-      <header className="bg-white/95 backdrop-blur border-b border-gray-100 px-8 py-4 flex items-center justify-between sticky top-0 z-10">
-        <span className="text-lg font-bold tracking-tight">Kollector Sküm</span>
-        <nav className="hidden md:flex gap-1">
-          {PAGE_TABS.map((t) => (
-            <button key={t.key} onClick={() => setActiveTab(t.key)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${activeTab===t.key ? "bg-gray-900 text-white" : "text-gray-500 hover:text-gray-900"}`}>
-              {t.label}
-            </button>
-          ))}
-        </nav>
-        <div className="flex items-center gap-3">
-          <input readOnly type="text" placeholder="Search..." className="bg-gray-100 rounded-full px-4 py-2 text-sm text-gray-600 w-40 focus:outline-none placeholder-gray-400 border-0" />
-          <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-semibold text-gray-600">U</div>
-        </div>
-      </header>
-      <main className="max-w-6xl mx-auto px-8 py-12">
-        {activeTab === "dashboard" && <D2Dashboard />}
-        {activeTab === "collection" && <D2Collection />}
-        {activeTab === "release" && <D2Release />}
-        {activeTab === "add" && <D2Add addTab={addTab} setAddTab={setAddTab} />}
-      </main>
-    </div>
-  );
-}
-
-function D2Dashboard() {
-  return (
-    <div className="space-y-12">
-      <div>
-        <h1 className="text-5xl font-bold tracking-tight text-gray-900">Good evening.</h1>
-        <p className="text-gray-400 mt-2 text-lg">Your collection has {STATS.releases} releases.</p>
-        <div className="flex items-center gap-2 mt-4">
-          <span className="w-2 h-2 rounded-full bg-green-500" />
-          <span className="text-xs text-green-600 font-semibold">Online · v2.1.0</span>
-        </div>
-      </div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: "Releases", value: STATS.releases },
-          { label: "Artists", value: STATS.artists },
-          { label: "Genres", value: STATS.genres },
-          { label: "Labels", value: STATS.labels },
-        ].map((s) => (
-          <div key={s.label} className="bg-gray-50 rounded-2xl p-7 border border-gray-100">
-            <div className="text-4xl font-bold text-gray-900 mb-1">{s.value.toLocaleString()}</div>
-            <div className="text-sm text-gray-400 font-medium">{s.label}</div>
-          </div>
-        ))}
-      </div>
-      <div>
-        <h2 className="text-xs font-semibold text-gray-400 tracking-widest uppercase mb-5">Quick Actions</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-          {QA.map((a) => (
-            <div key={a.title} className="rounded-2xl border border-gray-100 p-5 hover:border-gray-300 hover:shadow-sm cursor-pointer transition-all group">
-              <div className="text-2xl mb-3">{a.icon}</div>
-              <div className="text-sm font-semibold text-gray-800">{a.title}</div>
-              <div className="text-xs text-gray-400 mt-1">{a.desc}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div>
-        <h2 className="text-xs font-semibold text-gray-400 tracking-widest uppercase mb-5">Recently Played</h2>
-        <div className="rounded-2xl border border-gray-100 overflow-hidden divide-y divide-gray-50">
-          {RP.map((item, i) => (
-            <div key={item.id} className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50 cursor-pointer transition-colors">
-              <span className="text-gray-300 text-sm w-5 text-center">{i+1}</span>
-              <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">💿</div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-semibold text-gray-900 truncate">{item.title}</div>
-                <div className="text-xs text-gray-400">{item.artist}</div>
-              </div>
-              <div className="text-xs text-gray-300 flex-shrink-0">{item.playedAt}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div className="rounded-2xl border border-gray-100 p-10 text-center">
-        <div className="text-4xl mb-3">⏱️</div>
-        <p className="text-sm font-semibold text-gray-500">Activity tracking coming soon</p>
-        <p className="text-xs text-gray-300 mt-1">View your recent collection updates and changes here.</p>
-      </div>
-      <div className="text-center">
-        <p className="text-xs text-gray-300">Powered by Kollector API v2.1.0 · Last sync: just now</p>
-      </div>
-    </div>
-  );
-}
-
-function D2Collection() {
-  return (
-    <div className="space-y-6">
-      <div className="flex gap-3 flex-wrap items-center">
-        <input readOnly type="text" placeholder="Search releases, artists, albums..." className="flex-1 min-w-64 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm placeholder-gray-400 focus:outline-none" />
-        <select className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-700 focus:outline-none">
-          <option>Date Added</option><option>Title</option><option>Artist</option><option>Year</option>
-        </select>
-        <button className="bg-gray-900 text-white px-5 py-2.5 rounded-xl text-sm font-medium">Filters</button>
-      </div>
-      <div className="flex items-center gap-2 text-xs text-gray-400">
-        <span>247 releases</span>
-        <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full border border-gray-200">Genre: Alternative Rock ×</span>
-      </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-        {RELEASES.map((r) => (
-          <div key={r.id} className="group cursor-pointer">
-            <div className="aspect-square bg-gray-50 rounded-xl border border-gray-100 group-hover:border-gray-300 group-hover:shadow-md transition-all mb-2 flex items-center justify-center text-4xl">💿</div>
-            <div className="text-xs font-semibold text-gray-900 truncate">{r.title}</div>
-            <div className="text-xs text-gray-500 truncate">{r.artist}</div>
-            <div className="text-xs text-gray-300">{r.year} · {r.format}</div>
-          </div>
-        ))}
-      </div>
-      <div className="flex justify-center gap-2">
-        <button className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-400">← Prev</button>
-        {[1,2,3,4,5].map((n) => <button key={n} className={`w-9 h-9 rounded-xl text-sm ${n===1 ? "bg-gray-900 text-white" : "border border-gray-200 text-gray-500 hover:border-gray-400"}`}>{n}</button>)}
-        <button className="px-4 py-2 rounded-xl border border-gray-200 text-sm text-gray-400">Next →</button>
-      </div>
-    </div>
-  );
-}
-
-function D2Release() {
-  return (
-    <div className="space-y-8">
-      <button className="text-sm text-gray-400 hover:text-gray-700 transition-colors">← Collection</button>
-      <div className="grid lg:grid-cols-3 gap-10">
-        <div className="space-y-5">
-          <div className="aspect-square bg-gray-50 border border-gray-100 rounded-3xl flex items-center justify-center text-8xl shadow-sm">💿</div>
-          <div className="flex gap-2">
-            <button className="flex-1 bg-gray-900 text-white py-3 rounded-xl text-sm font-semibold">▶ Mark as Played</button>
-            <button className="w-11 h-11 border border-gray-200 rounded-xl flex items-center justify-center text-gray-400 hover:text-gray-700 hover:border-gray-400 transition-colors">✎</button>
-            <button className="w-11 h-11 border border-red-100 rounded-xl flex items-center justify-center text-red-300 hover:text-red-500 hover:border-red-200 transition-colors">🗑</button>
-          </div>
-          {[
-            { title: "Release Info", items: [["Format", RD.format], ["Label", RD.label], ["Cat #", RD.labelNumber], ["Country", RD.country], ["UPC", RD.upc]] },
-            { title: "Purchase", items: [["Store", RD.purchase.store], ["Price", RD.purchase.price], ["Date", RD.purchase.date], ["Condition", RD.purchase.condition]] },
-            { title: "Collection", items: [["Added", RD.dateAdded], ["Modified", RD.lastModified], ["Last Played", RD.lastPlayed]] },
-          ].map(({ title, items }) => (
-            <div key={title} className="rounded-xl border border-gray-100 p-4">
-              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">{title}</h3>
-              {items.map(([k, v]) => (
-                <div key={k} className="flex justify-between py-1.5 text-sm border-b border-gray-50 last:border-0">
-                  <span className="text-gray-400">{k}</span>
-                  <span className="text-gray-800 font-medium text-right max-w-xs truncate">{v}</span>
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-        <div className="lg:col-span-2 space-y-6">
-          <div>
-            <p className="text-sm text-gray-400 font-medium mb-2">{RD.artist}</p>
-            <h1 className="text-5xl font-bold text-gray-900 tracking-tight leading-none">{RD.title}</h1>
-            <p className="text-gray-400 mt-2">{RD.year} · {RD.genres.join(", ")}</p>
-          </div>
-          <div className="rounded-2xl border border-gray-100 overflow-hidden">
-            <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
-              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Tracklist</h3>
-            </div>
-            {RD.tracks.map((t, i) => (
-              <div key={t.pos} className={`flex items-center px-5 py-3 hover:bg-gray-50 cursor-pointer transition-colors ${i>0 ? "border-t border-gray-50" : ""}`}>
-                <span className="text-xs text-gray-300 w-8">{t.pos}</span>
-                <span className="flex-1 text-sm text-gray-800">{t.title}</span>
-                <span className="text-xs text-gray-400">{t.dur}</span>
-              </div>
-            ))}
-          </div>
-          <div className="rounded-xl border border-gray-100 p-4">
-            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Notes</h3>
-            <p className="text-sm text-gray-600 italic">{RD.purchase.notes}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function D2Add({ addTab, setAddTab }: { addTab: "manual"|"discogs"; setAddTab: (t:"manual"|"discogs")=>void }) {
-  return (
-    <div className="max-w-2xl space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Add Release</h1>
-        <p className="text-gray-400 mt-1">Add a new music release to your collection</p>
-      </div>
-      <div className="border-b border-gray-100 flex gap-6">
-        {(["discogs","manual"] as const).map((t) => (
-          <button key={t} onClick={() => setAddTab(t)}
-            className={`pb-3 text-sm font-medium border-b-2 -mb-px transition-colors ${addTab===t ? "border-gray-900 text-gray-900" : "border-transparent text-gray-400 hover:text-gray-600"}`}>
-            {t === "discogs" ? "Search Discogs" : "Manual Entry"}
-          </button>
-        ))}
-      </div>
-      {addTab === "discogs" ? (
-        <div className="space-y-4">
-          <div className="flex gap-3">
-            <input readOnly type="text" placeholder="Artist, album, barcode..." className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none" />
-            <button className="bg-gray-900 text-white px-5 rounded-xl text-sm font-medium">Search</button>
-          </div>
-          <div className="bg-gray-50 rounded-2xl p-12 text-center text-gray-400">
-            <p className="text-4xl mb-3">��</p>
-            <p className="text-sm font-medium">Search Discogs to import a release</p>
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-5">
-          <div className="grid grid-cols-2 gap-4">
-            {RELEASE_FORM_FIELDS.map(([lbl, ph]) => (
-              <div key={lbl}>
-                <label className="block text-xs font-medium text-gray-500 mb-1">{lbl}</label>
-                <input readOnly type="text" placeholder={ph} className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none" />
-              </div>
-            ))}
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Format</label>
-              <select className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm"><option>12&quot; Vinyl LP</option><option>CD</option><option>Cassette</option></select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">Genre</label>
-              <select className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm"><option>Alternative Rock</option><option>Electronic</option><option>Jazz</option></select>
-            </div>
-          </div>
-          <div className="border-t border-gray-100 pt-5">
-            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">Purchase Information</h3>
-            <div className="grid grid-cols-2 gap-4">
-              {PURCHASE_FORM_FIELDS.map(([lbl, ph]) => (
-                <div key={lbl}>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">{lbl}</label>
-                  <input readOnly type="text" placeholder={ph} className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none" />
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <button className="flex-1 bg-gray-900 text-white py-3 rounded-xl text-sm font-semibold">Add to Collection</button>
-            <button className="px-5 py-3 border border-gray-200 text-gray-500 rounded-xl text-sm hover:border-gray-400 transition-colors">Cancel</button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ══════════════════════════════════════════════
-   DESIGN 3 — WARM CRATE (Vintage / Record store)
-   Cream bg, amber accents, serif typography
-══════════════════════════════════════════════ */
-function Design3({ activeTab, setActiveTab, addTab, setAddTab }: DesignProps) {
-  return (
-    <div className="min-h-screen bg-[#F6F0E6]" style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}>
-      <header className="bg-[#1A1008] px-8 py-4 flex items-center justify-between">
-        <div>
-          <span className="text-xl font-bold tracking-widest text-[#E8C87A]">KOLLECTOR SKÜM</span>
-          <span className="ml-3 text-xs text-[#A07840] font-sans uppercase tracking-widest">Record Collection</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <input readOnly type="text" placeholder="Search the crates..." className="bg-[#2A1C0A] border border-[#3A2A10] rounded px-3 py-2 text-sm text-[#E8C87A] placeholder-[#6A4A20] font-sans focus:outline-none w-48" />
-          <div className="w-8 h-8 rounded-full bg-[#B45309] flex items-center justify-center text-sm font-bold text-white font-sans">U</div>
-        </div>
-      </header>
-      <div className="bg-[#2A1C0A] border-b border-[#3A2A10] px-8">
-        <nav className="flex">
-          {PAGE_TABS.map((t) => (
-            <button key={t.key} onClick={() => setActiveTab(t.key)}
-              className={`px-5 py-3 text-sm border-b-2 transition-colors font-sans ${activeTab===t.key ? "border-[#E8C87A] text-[#E8C87A]" : "border-transparent text-[#8A6A30] hover:text-[#C8A850]"}`}>
-              {t.label}
-            </button>
-          ))}
-        </nav>
-      </div>
-      <main className="max-w-6xl mx-auto px-8 py-10">
-        {activeTab === "dashboard" && <D3Dashboard />}
-        {activeTab === "collection" && <D3Collection />}
-        {activeTab === "release" && <D3Release />}
-        {activeTab === "add" && <D3Add addTab={addTab} setAddTab={setAddTab} />}
-      </main>
-    </div>
-  );
-}
-
-function D3Dashboard() {
-  return (
-    <div className="space-y-8">
-      <div className="border-b-2 border-[#C8A850] pb-6">
-        <h1 className="text-4xl font-bold text-[#1A1008]">Your Record Collection</h1>
-        <p className="text-[#7A5A28] mt-2 font-sans text-sm">Organise and discover your music library</p>
-        <div className="flex items-center gap-2 mt-3">
-          <span className="w-2 h-2 rounded-full bg-green-600" />
-          <span className="text-xs text-green-700 font-sans font-medium">System Online · v2.1.0</span>
-        </div>
-      </div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[{label:"Releases",value:STATS.releases,icon:"🎵"},{label:"Artists",value:STATS.artists,icon:"👤"},{label:"Genres",value:STATS.genres,icon:"🏷️"},{label:"Labels",value:STATS.labels,icon:"🏢"}].map((s) => (
-          <div key={s.label} className="bg-[#FEFCF5] rounded-lg border-2 border-[#DDD0B0] p-6 text-center shadow-sm">
-            <div className="text-3xl mb-2">{s.icon}</div>
-            <div className="text-3xl font-bold text-[#1A1008]">{s.value.toLocaleString()}</div>
-            <div className="text-xs text-[#8A6A30] font-sans uppercase tracking-widest mt-1">{s.label}</div>
-          </div>
-        ))}
-      </div>
-      <div>
-        <h2 className="text-lg font-bold text-[#1A1008] mb-4 border-b border-[#DDD0B0] pb-2">Quick Actions</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-          {QA.map((a) => (
-            <div key={a.title} className="bg-[#FEFCF5] rounded-lg border border-[#DDD0B0] p-4 hover:border-[#B45309] cursor-pointer transition-all group">
-              <div className="text-2xl mb-2">{a.icon}</div>
-              <div className="text-sm font-bold text-[#1A1008] font-sans group-hover:text-[#B45309] transition-colors">{a.title}</div>
-              <div className="text-xs text-[#8A6A30] font-sans mt-1">{a.desc}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div>
-        <h2 className="text-lg font-bold text-[#1A1008] mb-4 border-b border-[#DDD0B0] pb-2">Recently Played</h2>
-        <div className="space-y-2">
-          {RP.map((item, i) => (
-            <div key={item.id} className="flex items-center gap-4 bg-[#FEFCF5] rounded-lg border border-[#DDD0B0] px-4 py-3 hover:border-[#B45309] cursor-pointer transition-colors">
-              <span className="text-[#C8A850] font-bold w-5 text-center font-sans">{i+1}</span>
-              <div className="w-10 h-10 rounded bg-[#EDE0C0] flex items-center justify-center text-lg flex-shrink-0">💿</div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-bold text-[#1A1008] truncate">{item.title}</div>
-                <div className="text-xs text-[#7A5A28] font-sans">{item.artist}</div>
-              </div>
-              <div className="text-xs text-[#A09070] font-sans flex-shrink-0">{item.playedAt}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div className="bg-[#FEFCF5] rounded-lg border border-[#DDD0B0] p-8 text-center">
-        <div className="text-4xl mb-3">⏱️</div>
-        <p className="font-bold text-[#1A1008]">Activity tracking coming soon</p>
-        <p className="text-sm text-[#8A6A30] font-sans mt-1">View your recent collection updates and changes here.</p>
-      </div>
-      <div className="text-center">
-        <p className="text-xs text-[#A09070] font-sans">Powered by Kollector API v2.1.0 · Last sync: just now</p>
-      </div>
-    </div>
-  );
-}
-
-function D3Collection() {
-  return (
-    <div className="space-y-5">
-      <div className="flex gap-3 flex-wrap">
-        <input readOnly type="text" placeholder="Search the crates..." className="flex-1 min-w-64 bg-[#FEFCF5] border-2 border-[#DDD0B0] rounded px-4 py-2.5 text-sm font-sans text-[#1A1008] placeholder-[#B0A080] focus:outline-none focus:border-[#B45309]" />
-        <select className="bg-[#FEFCF5] border-2 border-[#DDD0B0] rounded px-4 py-2.5 text-sm font-sans text-[#1A1008] focus:outline-none">
-          <option>Sort: Date Added</option><option>Title</option><option>Artist</option>
-        </select>
-        <button className="bg-[#B45309] text-white px-5 py-2.5 rounded text-sm font-sans font-medium">Filters</button>
-      </div>
-      <div className="flex items-center gap-2 text-xs font-sans text-[#8A6A30]">
-        <span>247 releases</span>
-        <span className="bg-[#EDE0C0] text-[#7A4A10] px-2 py-0.5 rounded font-medium">Genre: Alternative Rock ×</span>
-      </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-        {RELEASES.map((r) => (
-          <div key={r.id} className="group cursor-pointer">
-            <div className="aspect-square bg-[#EDE0C0] rounded-lg border-2 border-[#DDD0B0] group-hover:border-[#B45309] transition-colors mb-2 flex items-center justify-center text-4xl">💿</div>
-            <div className="text-xs font-bold text-[#1A1008] truncate">{r.title}</div>
-            <div className="text-xs text-[#7A5A28] font-sans truncate">{r.artist}</div>
-            <div className="text-xs text-[#A09070] font-sans">{r.year} · {r.format}</div>
-          </div>
-        ))}
-      </div>
-      <div className="flex justify-center gap-2">
-        <button className="px-4 py-2 rounded border-2 border-[#DDD0B0] text-sm font-sans text-[#8A6A30]">← Prev</button>
-        {[1,2,3,4,5].map((n) => <button key={n} className={`w-9 h-9 rounded font-sans text-sm border-2 ${n===1 ? "bg-[#B45309] border-[#B45309] text-white" : "border-[#DDD0B0] text-[#7A5A28]"}`}>{n}</button>)}
-        <button className="px-4 py-2 rounded border-2 border-[#DDD0B0] text-sm font-sans text-[#8A6A30]">Next →</button>
-      </div>
-    </div>
-  );
-}
-
-function D3Release() {
-  return (
-    <div className="space-y-6">
-      <button className="text-sm font-sans text-[#7A5A28] hover:text-[#B45309] transition-colors">← Back to Collection</button>
-      <div className="grid lg:grid-cols-3 gap-8">
-        <div className="space-y-4">
-          <div className="aspect-square bg-[#EDE0C0] rounded-lg border-2 border-[#DDD0B0] flex items-center justify-center text-8xl shadow-md">💿</div>
-          <div className="flex gap-2">
-            <button className="flex-1 bg-[#B45309] text-white py-3 rounded font-sans text-sm font-semibold">▶ Mark as Played</button>
-            <button className="w-11 h-11 border-2 border-[#DDD0B0] rounded flex items-center justify-center text-[#7A5A28] font-sans">✎</button>
-            <button className="w-11 h-11 border-2 border-red-200 rounded flex items-center justify-center text-red-400 font-sans">🗑</button>
-          </div>
-          {[
-            { title: "Release Info", items: [["Format", RD.format], ["Label", RD.label], ["Cat #", RD.labelNumber], ["Country", RD.country], ["UPC", RD.upc]] },
-            { title: "Purchase Info", items: [["Store", RD.purchase.store], ["Price", RD.purchase.price], ["Date", RD.purchase.date], ["Condition", RD.purchase.condition]] },
-            { title: "Collection Data", items: [["Added", RD.dateAdded], ["Modified", RD.lastModified], ["Last Played", RD.lastPlayed]] },
-          ].map(({ title, items }) => (
-            <div key={title} className="bg-[#FEFCF5] rounded-lg border border-[#DDD0B0] p-4">
-              <h3 className="text-xs font-sans font-bold text-[#8A6A30] uppercase tracking-widest mb-3">{title}</h3>
-              {items.map(([k, v]) => (
-                <div key={k} className="flex justify-between text-sm py-1.5 border-b border-[#EDE0C0] last:border-0">
-                  <span className="text-[#7A5A28] font-sans">{k}</span>
-                  <span className="text-[#1A1008] font-semibold font-sans text-right max-w-xs truncate">{v}</span>
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-        <div className="lg:col-span-2 space-y-6">
-          <div className="border-b-2 border-[#C8A850] pb-4">
-            <p className="text-sm text-[#B45309] font-sans font-bold uppercase tracking-widest mb-1">{RD.artist}</p>
-            <h1 className="text-4xl font-bold text-[#1A1008] leading-tight">{RD.title}</h1>
-            <p className="text-[#7A5A28] font-sans mt-2">{RD.year} · {RD.genres.join(", ")}</p>
-          </div>
-          <div className="bg-[#FEFCF5] rounded-lg border border-[#DDD0B0] overflow-hidden">
-            <div className="px-4 py-3 bg-[#EDE0C0] border-b border-[#DDD0B0]">
-              <h3 className="text-xs font-sans font-bold text-[#7A5A28] uppercase tracking-widest">Tracklist</h3>
-            </div>
-            {RD.tracks.map((t, i) => (
-              <div key={t.pos} className={`flex items-center px-4 py-3 hover:bg-[#EDE0C0] cursor-pointer ${i>0 ? "border-t border-[#EDE0C0]" : ""}`}>
-                <span className="text-xs text-[#C8A850] font-sans font-bold w-8">{t.pos}</span>
-                <span className="flex-1 text-sm text-[#1A1008]">{t.title}</span>
-                <span className="text-xs text-[#8A6A30] font-sans">{t.dur}</span>
-              </div>
-            ))}
-          </div>
-          <div className="bg-[#FEFCF5] rounded-lg border border-[#DDD0B0] p-4">
-            <h3 className="text-xs font-sans font-bold text-[#8A6A30] uppercase tracking-widest mb-2">Notes</h3>
-            <p className="text-sm text-[#5A3A18] italic">{RD.purchase.notes}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function D3Add({ addTab, setAddTab }: { addTab: "manual"|"discogs"; setAddTab: (t:"manual"|"discogs")=>void }) {
-  return (
-    <div className="max-w-2xl space-y-6">
-      <div className="border-b-2 border-[#C8A850] pb-4">
-        <h1 className="text-2xl font-bold text-[#1A1008]">Add to Crates</h1>
-        <p className="text-[#7A5A28] font-sans mt-1 text-sm">Add a new music release to your collection</p>
-      </div>
-      <div className="flex gap-3">
-        {(["discogs","manual"] as const).map((t) => (
-          <button key={t} onClick={() => setAddTab(t)}
-            className={`px-5 py-2 rounded border-2 text-sm font-sans font-semibold transition-colors ${addTab===t ? "bg-[#B45309] border-[#B45309] text-white" : "border-[#DDD0B0] text-[#7A5A28] hover:border-[#B45309]"}`}>
-            {t === "discogs" ? "🔎 Search Discogs" : "✏️ Manual Entry"}
-          </button>
-        ))}
-      </div>
-      {addTab === "discogs" ? (
-        <div className="space-y-4">
-          <div className="flex gap-3">
-            <input readOnly type="text" placeholder="Artist, album, barcode..." className="flex-1 bg-[#FEFCF5] border-2 border-[#DDD0B0] rounded px-4 py-3 text-sm font-sans focus:outline-none focus:border-[#B45309]" />
-            <button className="bg-[#B45309] text-white px-5 rounded text-sm font-sans font-semibold">Search</button>
-          </div>
-          <div className="bg-[#FEFCF5] rounded-lg border border-[#DDD0B0] p-12 text-center">
-            <p className="text-4xl mb-3">🔍</p>
-            <p className="text-sm font-sans font-semibold text-[#7A5A28]">Search Discogs to import a release</p>
-          </div>
-        </div>
-      ) : (
-        <div className="bg-[#FEFCF5] rounded-lg border border-[#DDD0B0] p-6 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            {RELEASE_FORM_FIELDS.map(([lbl, ph]) => (
-              <div key={lbl}>
-                <label className="block text-xs font-sans font-semibold text-[#7A5A28] mb-1">{lbl}</label>
-                <input readOnly type="text" placeholder={ph} className="w-full bg-white border-2 border-[#DDD0B0] rounded px-3 py-2.5 text-sm font-sans focus:outline-none focus:border-[#B45309]" />
-              </div>
-            ))}
-            <div>
-              <label className="block text-xs font-sans font-semibold text-[#7A5A28] mb-1">Format</label>
-              <select className="w-full bg-white border-2 border-[#DDD0B0] rounded px-3 py-2.5 text-sm font-sans"><option>12&quot; Vinyl LP</option><option>CD</option></select>
-            </div>
-            <div>
-              <label className="block text-xs font-sans font-semibold text-[#7A5A28] mb-1">Genre</label>
-              <select className="w-full bg-white border-2 border-[#DDD0B0] rounded px-3 py-2.5 text-sm font-sans"><option>Alternative Rock</option><option>Electronic</option></select>
-            </div>
-          </div>
-          <div className="border-t border-[#DDD0B0] pt-4">
-            <h3 className="text-xs font-sans font-bold text-[#8A6A30] uppercase tracking-widest mb-3">Purchase Information</h3>
-            <div className="grid grid-cols-2 gap-4">
-              {PURCHASE_FORM_FIELDS.map(([lbl, ph]) => (
-                <div key={lbl}>
-                  <label className="block text-xs font-sans font-semibold text-[#7A5A28] mb-1">{lbl}</label>
-                  <input readOnly type="text" placeholder={ph} className="w-full bg-white border-2 border-[#DDD0B0] rounded px-3 py-2.5 text-sm font-sans focus:outline-none focus:border-[#B45309]" />
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <button className="flex-1 bg-[#B45309] text-white py-3 rounded font-sans text-sm font-semibold">Add to Collection</button>
-            <button className="px-6 py-3 border-2 border-[#DDD0B0] text-[#7A5A28] rounded text-sm font-sans">Cancel</button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ══════════════════════════════════════════════
-   DESIGN 4 — BOLD EDITORIAL (Magazine / High contrast)
-   White bg, bold black elements, red accent
-══════════════════════════════════════════════ */
-function Design4({ activeTab, setActiveTab, addTab, setAddTab }: DesignProps) {
-  return (
-    <div className="min-h-screen bg-white text-black" style={{ fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif" }}>
-      <header className="border-b-4 border-black px-8 py-5 flex items-center justify-between">
-        <div className="flex items-center gap-6">
-          <span className="text-2xl font-black tracking-tighter">KOLLECTOR SKÜM</span>
-          <div className="hidden md:flex gap-6 border-l-2 border-black pl-6">
-            {PAGE_TABS.map((t) => (
-              <button key={t.key} onClick={() => setActiveTab(t.key)}
-                className={`text-sm font-black tracking-tight uppercase transition-colors ${activeTab===t.key ? "text-[#DC2626]" : "text-black hover:text-[#DC2626]"}`}>
-                {t.label}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <input readOnly type="text" placeholder="SEARCH" className="border-b-2 border-black bg-transparent px-2 py-1 text-xs font-black tracking-widest placeholder-black/40 focus:outline-none w-32" />
-          <div className="w-8 h-8 bg-black text-white flex items-center justify-center text-xs font-black">U</div>
-        </div>
-      </header>
-      <main className="max-w-7xl mx-auto px-8 py-10">
-        {activeTab === "dashboard" && <D4Dashboard />}
-        {activeTab === "collection" && <D4Collection />}
-        {activeTab === "release" && <D4Release />}
-        {activeTab === "add" && <D4Add addTab={addTab} setAddTab={setAddTab} />}
-      </main>
-    </div>
-  );
-}
-
-function D4Dashboard() {
-  return (
-    <div className="space-y-10">
-      <div className="border-b-4 border-black pb-8 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-xs font-black uppercase tracking-widest text-[#DC2626] mb-2">— Dashboard</p>
-          <h1 className="text-6xl md:text-8xl font-black tracking-tighter leading-none">YOUR<br />COLLECTION</h1>
-          <p className="text-gray-500 mt-4 font-medium">Organise and discover your music library</p>
-        </div>
-        <div className="text-right">
-          <div className="flex items-center gap-2 justify-end">
-            <span className="w-3 h-3 rounded-full bg-green-500" />
-            <span className="text-sm font-black">ONLINE</span>
-          </div>
-          <p className="text-xs text-gray-400 mt-1">v2.1.0 · Synced just now</p>
-        </div>
-      </div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 border-2 border-black divide-x-2 divide-black">
-        {[{label:"RELEASES",value:STATS.releases},{label:"ARTISTS",value:STATS.artists},{label:"GENRES",value:STATS.genres},{label:"LABELS",value:STATS.labels}].map((s) => (
-          <div key={s.label} className="p-8">
-            <div className="text-5xl font-black text-[#DC2626]">{s.value}</div>
-            <div className="text-xs font-black tracking-widest mt-2 text-gray-500">{s.label}</div>
-          </div>
-        ))}
-      </div>
-      <div>
-        <h2 className="text-xs font-black tracking-widest mb-6 flex items-center gap-3">QUICK ACTIONS <span className="flex-1 h-px bg-black" /></h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 border-t-2 border-l-2 border-black">
-          {QA.map((a) => (
-            <div key={a.title} className="p-5 border-b-2 border-r-2 border-black hover:bg-black hover:text-white cursor-pointer transition-colors group">
-              <div className="text-2xl mb-2">{a.icon}</div>
-              <div className="text-sm font-black">{a.title}</div>
-              <div className="text-xs text-gray-500 group-hover:text-gray-300 mt-1">{a.desc}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div>
-        <h2 className="text-xs font-black tracking-widest mb-6 flex items-center gap-3">RECENTLY PLAYED <span className="flex-1 h-px bg-black" /></h2>
-        <div className="border-2 border-black divide-y-2 divide-black">
-          {RP.map((item, i) => (
-            <div key={item.id} className="flex items-center gap-4 px-5 py-4 hover:bg-black hover:text-white cursor-pointer transition-colors group">
-              <span className="text-2xl font-black text-[#DC2626] group-hover:text-white w-8">{String(i+1).padStart(2,"0")}</span>
-              <div className="w-10 h-10 border-2 border-current flex items-center justify-center flex-shrink-0">💿</div>
-              <div className="flex-1 min-w-0">
-                <div className="font-black truncate">{item.title}</div>
-                <div className="text-sm text-gray-500 group-hover:text-gray-300">{item.artist}</div>
-              </div>
-              <div className="text-xs font-bold text-gray-400 group-hover:text-gray-300 flex-shrink-0">{item.playedAt}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div className="border-2 border-black p-8 text-center">
-        <div className="text-4xl mb-3">⏱️</div>
-        <p className="font-black text-lg">ACTIVITY TRACKING COMING SOON</p>
-        <p className="text-sm text-gray-500 mt-1">View your recent collection updates and changes here.</p>
-      </div>
-      <p className="text-center text-xs text-gray-400 font-bold">POWERED BY KOLLECTOR API v2.1.0 · LAST SYNC: JUST NOW</p>
-    </div>
-  );
-}
-
-function D4Collection() {
-  return (
-    <div className="space-y-6">
-      <div className="flex gap-0 flex-wrap border-2 border-black">
-        <input readOnly type="text" placeholder="SEARCH RELEASES..." className="flex-1 min-w-64 border-r-2 border-black px-4 py-3 text-sm font-black tracking-wider placeholder-black/40 focus:outline-none bg-transparent" />
-        <select className="border-r-2 border-black px-4 py-3 text-sm font-black bg-transparent focus:outline-none">
-          <option>DATE ADDED</option><option>TITLE</option><option>ARTIST</option><option>YEAR</option>
-        </select>
-        <button className="bg-[#DC2626] text-white px-6 py-3 text-xs font-black tracking-widest">FILTERS</button>
-      </div>
-      <div className="flex items-center gap-3 text-xs font-black">
-        <span>247 RELEASES</span>
-        <span className="bg-black text-white px-3 py-1 tracking-widest">GENRE: ALT ROCK ×</span>
-      </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-        {RELEASES.map((r) => (
-          <div key={r.id} className="group cursor-pointer">
-            <div className="aspect-square bg-gray-100 border-2 border-black group-hover:bg-black group-hover:border-[#DC2626] transition-all mb-2 flex items-center justify-center text-4xl">💿</div>
-            <div className="text-xs font-black truncate">{r.title}</div>
-            <div className="text-xs text-gray-500 font-bold truncate">{r.artist}</div>
-            <div className="text-xs text-gray-400 font-bold">{r.year} · {r.format}</div>
-          </div>
-        ))}
-      </div>
-      <div className="flex justify-center border-2 border-black divide-x-2 divide-black w-fit mx-auto">
-        <button className="px-5 py-2 text-sm font-black hover:bg-black hover:text-white transition-colors">← PREV</button>
-        {[1,2,3,4,5].map((n) => <button key={n} className={`w-10 h-10 text-sm font-black transition-colors ${n===1 ? "bg-[#DC2626] text-white" : "hover:bg-black hover:text-white"}`}>{n}</button>)}
-        <button className="px-5 py-2 text-sm font-black hover:bg-black hover:text-white transition-colors">NEXT →</button>
-      </div>
-    </div>
-  );
-}
-
-function D4Release() {
-  return (
-    <div className="space-y-6">
-      <button className="text-xs font-black tracking-widest hover:text-[#DC2626] transition-colors">← BACK TO COLLECTION</button>
-      <div className="grid lg:grid-cols-3 border-2 border-black">
-        <div className="border-r-2 border-black p-6 space-y-4">
-          <div className="aspect-square bg-gray-100 border-2 border-black flex items-center justify-center text-8xl">💿</div>
-          <div className="flex border-2 border-black divide-x-2 divide-black">
-            <button className="flex-1 bg-[#DC2626] text-white py-3 text-xs font-black tracking-widest">▶ PLAYED</button>
-            <button className="w-12 flex items-center justify-center hover:bg-black hover:text-white transition-colors">✎</button>
-            <button className="w-12 flex items-center justify-center text-red-500 hover:bg-red-600 hover:text-white transition-colors">🗑</button>
-          </div>
-          {[
-            { title: "RELEASE", items: [["Format", RD.format], ["Label", RD.label], ["Cat #", RD.labelNumber], ["Country", RD.country], ["UPC", RD.upc]] },
-            { title: "PURCHASE", items: [["Store", RD.purchase.store], ["Price", RD.purchase.price], ["Date", RD.purchase.date], ["Condition", RD.purchase.condition]] },
-            { title: "COLLECTION", items: [["Added", RD.dateAdded], ["Modified", RD.lastModified], ["Last Played", RD.lastPlayed]] },
-          ].map(({ title, items }) => (
-            <div key={title} className="border-2 border-black">
-              <div className="bg-black text-white px-3 py-1.5 text-xs font-black tracking-widest">{title}</div>
-              {items.map(([k, v]) => (
-                <div key={k} className="flex justify-between px-3 py-2 border-t border-black/10 text-xs">
-                  <span className="text-gray-500 font-bold">{k}</span>
-                  <span className="font-black text-right max-w-xs truncate">{v}</span>
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-        <div className="lg:col-span-2 p-8 space-y-6">
-          <div className="border-b-4 border-black pb-6">
-            <p className="text-xs font-black tracking-widest text-[#DC2626] mb-2">{RD.artist.toUpperCase()}</p>
-            <h1 className="text-5xl font-black tracking-tighter leading-none">{RD.title.toUpperCase()}</h1>
-            <p className="font-bold mt-3 text-gray-600">{RD.year} · {RD.genres.join(" / ")}</p>
-          </div>
-          <div>
-            <h3 className="text-xs font-black tracking-widest mb-3 flex items-center gap-3">TRACKLIST <span className="flex-1 h-0.5 bg-black" /></h3>
-            <div className="border-2 border-black divide-y divide-black/10">
-              {RD.tracks.map((t, i) => (
-                <div key={t.pos} className={`flex items-center px-4 py-3 hover:bg-black hover:text-white transition-colors cursor-pointer`}>
-                  <span className="text-xs font-black text-[#DC2626] w-8">{t.pos}</span>
-                  <span className="flex-1 text-sm font-bold">{t.title}</span>
-                  <span className="text-xs font-bold text-gray-400">{t.dur}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="bg-gray-50 border-2 border-black p-4">
-            <h3 className="text-xs font-black tracking-widest mb-2">NOTES</h3>
-            <p className="text-sm text-gray-600">{RD.purchase.notes}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function D4Add({ addTab, setAddTab }: { addTab: "manual"|"discogs"; setAddTab: (t:"manual"|"discogs")=>void }) {
-  return (
-    <div className="max-w-2xl space-y-6">
-      <div className="border-b-4 border-black pb-6">
-        <p className="text-xs font-black tracking-widest text-[#DC2626] mb-2">— ADD RELEASE</p>
-        <h1 className="text-4xl font-black tracking-tighter">ADD TO COLLECTION</h1>
-      </div>
-      <div className="flex border-2 border-black divide-x-2 divide-black w-fit">
-        {(["discogs","manual"] as const).map((t) => (
-          <button key={t} onClick={() => setAddTab(t)}
-            className={`px-6 py-3 text-xs font-black tracking-widest transition-colors ${addTab===t ? "bg-black text-white" : "hover:bg-gray-100"}`}>
-            {t === "discogs" ? "SEARCH DISCOGS" : "MANUAL ENTRY"}
-          </button>
-        ))}
-      </div>
-      {addTab === "discogs" ? (
-        <div className="space-y-4">
-          <div className="flex border-2 border-black">
-            <input readOnly type="text" placeholder="ARTIST, ALBUM, BARCODE..." className="flex-1 border-r-2 border-black px-4 py-3 text-sm font-black placeholder-black/30 focus:outline-none tracking-wider" />
-            <button className="bg-[#DC2626] text-white px-6 text-xs font-black tracking-widest">SEARCH</button>
-          </div>
-          <div className="border-2 border-black p-12 text-center">
-            <p className="text-4xl mb-3">🔍</p>
-            <p className="text-sm font-black tracking-wide">SEARCH DISCOGS TO IMPORT A RELEASE</p>
-          </div>
-        </div>
-      ) : (
-        <div className="border-2 border-black">
-          <div className="grid grid-cols-2 border-b-2 border-black">
-            {[["TITLE *","OK Computer"],["ARTIST *","Radiohead"],["RELEASE YEAR","1997"],["ORIGINAL YEAR","1997"],["LABEL","Parlophone"],["CATALOGUE #","NODATA 02"],["COUNTRY","United Kingdom"],["UPC","0724384568924"]].map(([lbl,ph],i) => (
-              <div key={lbl} className={`p-4 border-b border-r border-black/20 ${i%2===1 ? "border-r-0" : ""}`}>
-                <label className="block text-xs font-black tracking-widest text-gray-500 mb-1">{lbl}</label>
-                <input readOnly type="text" placeholder={ph} className="w-full text-sm font-bold focus:outline-none bg-transparent placeholder-gray-300" />
-              </div>
-            ))}
-          </div>
-          <div className="grid grid-cols-2 border-b-2 border-black divide-x-2 divide-black">
-            <div className="p-4"><label className="block text-xs font-black tracking-widest text-gray-500 mb-1">FORMAT</label><select className="w-full text-sm font-bold bg-transparent focus:outline-none"><option>12&quot; Vinyl LP</option><option>CD</option></select></div>
-            <div className="p-4"><label className="block text-xs font-black tracking-widest text-gray-500 mb-1">GENRE</label><select className="w-full text-sm font-bold bg-transparent focus:outline-none"><option>Alternative Rock</option><option>Electronic</option></select></div>
-          </div>
-          <div className="p-4 border-b-2 border-black">
-            <p className="text-xs font-black tracking-widest text-gray-500 mb-3">PURCHASE INFORMATION</p>
-            <div className="grid grid-cols-2 gap-4">
-              {[["STORE","Rough Trade"],["PRICE","22.99"],["DATE",""],["CONDITION","Near Mint"]].map(([lbl,ph]) => (
-                <div key={lbl}><label className="block text-xs font-black tracking-widest text-gray-500 mb-1">{lbl}</label><input readOnly type="text" placeholder={ph} className="w-full text-sm font-bold border-b-2 border-black focus:outline-none bg-transparent pb-1 placeholder-gray-300" /></div>
-              ))}
-            </div>
-          </div>
-          <div className="flex p-4 gap-3">
-            <button className="flex-1 bg-[#DC2626] text-white py-3 text-xs font-black tracking-widest">ADD TO COLLECTION</button>
-            <button className="border-2 border-black px-6 text-xs font-black tracking-widest hover:bg-gray-100 transition-colors">CANCEL</button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ══════════════════════════════════════════════
-   DESIGN 5 — NEO GLOW (Futuristic / Glassmorphism)
-   Very dark bg, cyan/purple neon, blur effects
-══════════════════════════════════════════════ */
-
-/** Base glassmorphism card style used throughout Design 5. */
-const glassStyle: React.CSSProperties = {
-  background: "rgba(255,255,255,0.03)",
-  border: "1px solid rgba(255,255,255,0.07)",
-  backdropFilter: "blur(10px)",
-};
-
-function Design5({ activeTab, setActiveTab, addTab, setAddTab }: DesignProps) {
-  return (
-    <div className="min-h-screen text-white relative overflow-hidden"
-      style={{ background: "linear-gradient(135deg, #050510 0%, #0A0520 50%, #050510 100%)", fontFamily: "Inter, sans-serif" }}>
-      <div className="fixed top-0 left-1/4 w-96 h-96 rounded-full pointer-events-none"
-        style={{ background: "radial-gradient(circle, rgba(0,212,255,0.06) 0%, transparent 70%)", filter: "blur(40px)" }} />
-      <div className="fixed bottom-0 right-1/4 w-96 h-96 rounded-full pointer-events-none"
-        style={{ background: "radial-gradient(circle, rgba(123,47,255,0.05) 0%, transparent 70%)", filter: "blur(40px)" }} />
-      <header className="relative px-8 py-4 flex items-center justify-between border-b sticky top-0 z-10"
-        style={{ borderColor: "rgba(0,212,255,0.15)", background: "rgba(5,5,20,0.85)", backdropFilter: "blur(20px)" }}>
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "linear-gradient(135deg, #00D4FF, #7B2FFF)" }}>
-            <span className="text-white text-xs font-black">K</span>
-          </div>
-          <span className="text-sm font-bold tracking-wide" style={{ background: "linear-gradient(90deg, #00D4FF, #7B2FFF)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-            KOLLECTOR SKÜM
-          </span>
-        </div>
-        <nav className="hidden md:flex gap-1">
-          {PAGE_TABS.map((t) => (
-            <button key={t.key} onClick={() => setActiveTab(t.key)}
-              className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${activeTab===t.key ? "text-white" : "text-gray-500 hover:text-gray-300"}`}
-              style={activeTab===t.key ? { background: "rgba(0,212,255,0.12)", border: "1px solid rgba(0,212,255,0.25)" } : {}}>
-              {t.label}
-            </button>
-          ))}
-        </nav>
-        <div className="flex items-center gap-3">
-          <input readOnly type="text" placeholder="Search..." className="text-sm bg-transparent rounded-lg px-3 py-2 text-gray-300 placeholder-gray-600 focus:outline-none w-36"
-            style={{ border: "1px solid rgba(0,212,255,0.15)" }} />
-          <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: "linear-gradient(135deg, #00D4FF, #7B2FFF)" }}>U</div>
-        </div>
-      </header>
-      <main className="max-w-7xl mx-auto px-6 py-8 relative z-10">
-        {activeTab === "dashboard" && <D5Dashboard />}
-        {activeTab === "collection" && <D5Collection />}
-        {activeTab === "release" && <D5Release />}
-        {activeTab === "add" && <D5Add addTab={addTab} setAddTab={setAddTab} />}
-      </main>
-    </div>
-  );
-}
-
-function D5Dashboard() {
-  return (
-    <div className="space-y-8">
-      <div className="flex items-start justify-between flex-wrap gap-4">
-        <div>
-          <p className="text-xs font-bold tracking-widest mb-2" style={{ color: "#00D4FF" }}>DASHBOARD</p>
-          <h1 className="text-4xl font-black text-white tracking-tight">Your Collection</h1>
-          <p className="text-gray-500 mt-1 text-sm">Organise and discover your music library</p>
-          <div className="flex items-center gap-2 mt-3">
-            <span className="w-2 h-2 rounded-full bg-emerald-400" style={{ boxShadow: "0 0 6px #10B981" }} />
-            <span className="text-xs text-emerald-400 font-semibold">System Online · v2.1.0</span>
-          </div>
-        </div>
-        <div className="text-right text-xs text-gray-600">Powered by Kollector API · Last sync: just now</div>
-      </div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: "Releases", value: STATS.releases, c: "#00D4FF" },
-          { label: "Artists", value: STATS.artists, c: "#7B2FFF" },
-          { label: "Genres", value: STATS.genres, c: "#00FFB2" },
-          { label: "Labels", value: STATS.labels, c: "#FF6B00" },
-        ].map((s) => (
-          <div key={s.label} className="rounded-2xl p-5 relative overflow-hidden" style={glassStyle}>
-            <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full opacity-20" style={{ background: s.c, filter: "blur(15px)" }} />
-            <div className="text-3xl font-black" style={{ color: s.c }}>{s.value.toLocaleString()}</div>
-            <div className="text-xs text-gray-500 mt-1 font-medium uppercase tracking-widest">{s.label}</div>
-          </div>
-        ))}
-      </div>
-      <div>
-        <h2 className="text-xs font-bold tracking-widest mb-4" style={{ color: "#00D4FF" }}>QUICK ACTIONS</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-          {QA.map((a) => (
-            <div key={a.title} className="rounded-xl p-4 cursor-pointer transition-all hover:scale-[1.02]" style={{ ...glassStyle, border: "1px solid rgba(0,212,255,0.15)" }}>
-              <div className="text-2xl mb-2">{a.icon}</div>
-              <div className="text-sm font-semibold text-white">{a.title}</div>
-              <div className="text-xs text-gray-500 mt-1">{a.desc}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div>
-        <h2 className="text-xs font-bold tracking-widest mb-4" style={{ color: "#00D4FF" }}>RECENTLY PLAYED</h2>
-        <div className="space-y-2">
-          {RP.map((item, i) => (
-            <div key={item.id} className="flex items-center gap-4 rounded-xl px-4 py-3 cursor-pointer" style={glassStyle}>
-              <span className="text-xs font-bold w-5 text-center" style={{ color: "#00D4FF" }}>{i+1}</span>
-              <div className="w-10 h-10 rounded-lg flex items-center justify-center text-lg flex-shrink-0" style={{ background: "rgba(0,212,255,0.08)" }}>💿</div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-semibold text-white truncate">{item.title}</div>
-                <div className="text-xs text-gray-500">{item.artist}</div>
-              </div>
-              <div className="text-xs text-gray-600 flex-shrink-0">{item.playedAt}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div className="rounded-2xl p-6 text-center" style={glassStyle}>
-        <div className="text-4xl mb-3">⏱️</div>
-        <p className="font-semibold text-gray-400">Activity tracking coming soon</p>
-        <p className="text-sm text-gray-600 mt-1">View your recent collection updates and changes here.</p>
-      </div>
-    </div>
-  );
-}
-
-function D5Collection() {
-  return (
-    <div className="space-y-6">
-      <div className="flex gap-3 flex-wrap">
-        <input readOnly type="text" placeholder="Search releases, artists, albums..." className="flex-1 min-w-64 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none" style={glassStyle} />
-        <select className="rounded-xl px-4 py-3 text-sm text-gray-300 focus:outline-none" style={glassStyle}>
-          <option className="bg-gray-900">Date Added</option><option className="bg-gray-900">Title</option><option className="bg-gray-900">Artist</option>
-        </select>
-        <button className="px-5 py-3 rounded-xl text-sm font-semibold text-black" style={{ background: "linear-gradient(135deg, #00D4FF, #7B2FFF)" }}>Filters</button>
-      </div>
-      <div className="flex items-center gap-3 text-xs text-gray-500">
-        <span>247 releases</span>
-        <span className="px-2 py-0.5 rounded-full text-xs font-medium" style={{ background: "rgba(0,212,255,0.1)", color: "#00D4FF", border: "1px solid rgba(0,212,255,0.25)" }}>Genre: Alternative Rock ×</span>
-      </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-        {RELEASES.map((r) => (
-          <div key={r.id} className="group cursor-pointer">
-            <div className="aspect-square rounded-xl mb-2 flex items-center justify-center text-4xl transition-all group-hover:scale-105" style={glassStyle}>💿</div>
-            <div className="text-xs font-semibold text-white truncate">{r.title}</div>
-            <div className="text-xs text-gray-500 truncate">{r.artist}</div>
-            <div className="text-xs text-gray-700">{r.year} · {r.format}</div>
-          </div>
-        ))}
-      </div>
-      <div className="flex justify-center items-center gap-2">
-        <button className="px-4 py-2 rounded-lg text-sm text-gray-400" style={glassStyle}>← Prev</button>
-        {[1,2,3,4,5].map((n) => (
-          <button key={n} className="w-9 h-9 rounded-lg text-sm font-medium"
-            style={n===1 ? { background: "linear-gradient(135deg, #00D4FF, #7B2FFF)" } : glassStyle}>{n}</button>
-        ))}
-        <button className="px-4 py-2 rounded-lg text-sm text-gray-400" style={glassStyle}>Next →</button>
-      </div>
-    </div>
-  );
-}
-
-function D5Release() {
-  return (
-    <div className="space-y-6">
-      <button className="text-xs font-semibold tracking-widest transition-colors" style={{ color: "#00D4FF" }}>← COLLECTION</button>
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className="space-y-4">
-          <div className="aspect-square rounded-2xl flex items-center justify-center text-8xl" style={glassStyle}>💿</div>
-          <div className="flex gap-2">
-            <button className="flex-1 py-3 rounded-xl text-sm font-semibold text-black" style={{ background: "linear-gradient(135deg, #00D4FF, #7B2FFF)" }}>▶ Mark as Played</button>
-            <button className="w-12 h-12 rounded-xl flex items-center justify-center text-gray-400 hover:text-white transition-colors" style={glassStyle}>✎</button>
-            <button className="w-12 h-12 rounded-xl flex items-center justify-center text-red-400/60 hover:text-red-400 transition-colors" style={{ ...glassStyle, border: "1px solid rgba(239,68,68,0.2)" }}>🗑</button>
-          </div>
-          {[
-            { title: "Release Info", items: [["Format", RD.format], ["Label", RD.label], ["Cat #", RD.labelNumber], ["Country", RD.country], ["UPC", RD.upc]] },
-            { title: "Purchase Info", items: [["Store", RD.purchase.store], ["Price", RD.purchase.price], ["Date", RD.purchase.date], ["Condition", RD.purchase.condition]] },
-            { title: "Collection", items: [["Added", RD.dateAdded], ["Modified", RD.lastModified], ["Last Played", RD.lastPlayed]] },
-          ].map(({ title, items }) => (
-            <div key={title} className="rounded-xl p-4" style={glassStyle}>
-              <h3 className="text-xs font-bold tracking-widest mb-3" style={{ color: "#00D4FF" }}>{title.toUpperCase()}</h3>
-              {items.map(([k, v]) => (
-                <div key={k} className="flex justify-between text-sm py-1.5 border-b border-white/5 last:border-0">
-                  <span className="text-gray-500">{k}</span>
-                  <span className="text-white font-medium text-right max-w-xs truncate">{v}</span>
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-        <div className="lg:col-span-2 space-y-6">
-          <div>
-            <p className="text-xs font-bold tracking-widest mb-1" style={{ color: "#00D4FF" }}>{RD.artist.toUpperCase()}</p>
-            <h1 className="text-4xl font-black text-white tracking-tight">{RD.title}</h1>
-            <p className="text-gray-500 mt-1">{RD.year}</p>
-            <div className="flex gap-2 mt-2">
-              {RD.genres.map((g) => <span key={g} className="text-xs px-2 py-1 rounded-full" style={{ background: "rgba(0,212,255,0.1)", color: "#00D4FF", border: "1px solid rgba(0,212,255,0.2)" }}>{g}</span>)}
-            </div>
-          </div>
-          <div className="rounded-2xl overflow-hidden" style={glassStyle}>
-            <div className="px-5 py-3 border-b" style={{ borderColor: "rgba(255,255,255,0.05)" }}>
-              <h3 className="text-xs font-bold tracking-widest" style={{ color: "#00D4FF" }}>TRACKLIST</h3>
-            </div>
-            {RD.tracks.map((t, i) => (
-              <div key={t.pos} className="flex items-center px-5 py-3 cursor-pointer hover:bg-white/5 transition-colors"
-                style={i>0 ? { borderTop: "1px solid rgba(255,255,255,0.04)" } : {}}>
-                <span className="text-xs font-bold w-8" style={{ color: "#7B2FFF" }}>{t.pos}</span>
-                <span className="flex-1 text-sm text-white">{t.title}</span>
-                <span className="text-xs text-gray-600">{t.dur}</span>
-              </div>
-            ))}
-          </div>
-          <div className="rounded-xl p-4" style={glassStyle}>
-            <h3 className="text-xs font-bold tracking-widest mb-2" style={{ color: "#00D4FF" }}>NOTES</h3>
-            <p className="text-sm text-gray-400 italic">{RD.purchase.notes}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function D5Add({ addTab, setAddTab }: { addTab: "manual"|"discogs"; setAddTab: (t:"manual"|"discogs")=>void }) {
-  return (
-    <div className="max-w-2xl space-y-6">
-      <div>
-        <p className="text-xs font-bold tracking-widest mb-1" style={{ color: "#00D4FF" }}>ADD RELEASE</p>
-        <h1 className="text-2xl font-black text-white">Add to Collection</h1>
-        <p className="text-gray-500 mt-1 text-sm">Add a new music release to your collection</p>
-      </div>
-      <div className="flex gap-1 p-1 rounded-xl w-fit" style={glassStyle}>
-        {(["discogs","manual"] as const).map((t) => (
-          <button key={t} onClick={() => setAddTab(t)}
-            className="px-5 py-2 rounded-lg text-sm font-semibold transition-all"
-            style={addTab===t ? { background: "linear-gradient(135deg, #00D4FF, #7B2FFF)", color: "#fff" } : { color: "#6B7280" }}>
-            {t === "discogs" ? "🔎 Discogs" : "✏️ Manual"}
-          </button>
-        ))}
-      </div>
-      {addTab === "discogs" ? (
-        <div className="space-y-4">
-          <div className="flex gap-3">
-            <input readOnly type="text" placeholder="Artist, album, barcode..." className="flex-1 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none" style={glassStyle} />
-            <button className="px-5 rounded-xl text-sm font-semibold text-black" style={{ background: "linear-gradient(135deg, #00D4FF, #7B2FFF)" }}>Search</button>
-          </div>
-          <div className="rounded-xl p-12 text-center" style={glassStyle}>
-            <p className="text-4xl mb-3">🔍</p>
-            <p className="text-sm text-gray-500">Search Discogs to import a release</p>
-          </div>
-        </div>
-      ) : (
-        <div className="rounded-2xl p-6 space-y-5" style={glassStyle}>
-          <div className="grid grid-cols-2 gap-4">
-            {RELEASE_FORM_FIELDS.map(([lbl, ph]) => (
-              <div key={lbl}>
-                <label className="block text-xs font-semibold text-gray-500 mb-1">{lbl}</label>
-                <input readOnly type="text" placeholder={ph} className="w-full rounded-lg px-3 py-2.5 text-sm text-white placeholder-gray-700 focus:outline-none"
-                  style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }} />
-              </div>
-            ))}
-            <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-1">Format</label>
-              <select className="w-full rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none"
-                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                <option className="bg-gray-900">12&quot; Vinyl LP</option><option className="bg-gray-900">CD</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-1">Genre</label>
-              <select className="w-full rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none"
-                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                <option className="bg-gray-900">Alternative Rock</option><option className="bg-gray-900">Electronic</option>
-              </select>
-            </div>
-          </div>
-          <div className="pt-3 border-t border-white/5">
-            <h3 className="text-xs font-bold tracking-widest mb-3" style={{ color: "#00D4FF" }}>PURCHASE INFO</h3>
-            <div className="grid grid-cols-2 gap-4">
-              {PURCHASE_FORM_FIELDS.map(([lbl, ph]) => (
-                <div key={lbl}>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1">{lbl}</label>
-                  <input readOnly type="text" placeholder={ph} className="w-full rounded-lg px-3 py-2.5 text-sm text-white placeholder-gray-700 focus:outline-none"
-                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }} />
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <button className="flex-1 py-3 rounded-xl text-sm font-semibold text-black" style={{ background: "linear-gradient(135deg, #00D4FF, #7B2FFF)" }}>Add to Collection</button>
-            <button className="px-6 py-3 rounded-xl text-sm text-gray-400 hover:text-white transition-colors" style={glassStyle}>Cancel</button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
