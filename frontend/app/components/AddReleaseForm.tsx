@@ -880,6 +880,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
             )}
             {formData.images?.coverFront && (
               <div className="mt-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img 
                   src={formData.images.coverFront} 
                   alt="Front cover preview" 
@@ -914,6 +915,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
             )}
             {formData.images?.coverBack && (
               <div className="mt-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img 
                   src={formData.images.coverBack} 
                   alt="Back cover preview" 
@@ -948,6 +950,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
             )}
             {formData.images?.thumbnail && (
               <div className="mt-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img 
                   src={formData.images.thumbnail} 
                   alt="Thumbnail preview" 

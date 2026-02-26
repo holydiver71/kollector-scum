@@ -17,7 +17,7 @@ interface GoogleSignInProps {
  * such as Cloudflare Pages where the Google Identity Services SDK has
  * limited support).
  */
-export function GoogleSignIn({ onSignIn, className }: GoogleSignInProps) {
+export function GoogleSignIn({ className }: GoogleSignInProps) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,7 +48,7 @@ export function GoogleSignIn({ onSignIn, className }: GoogleSignInProps) {
     // (e.g. the OAuth callback page after it stores the JWT token).
     window.addEventListener("authChanged", checkAuth);
     return () => window.removeEventListener("authChanged", checkAuth);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   // Read error from query string set by backend on auth failure
   useEffect(() => {
