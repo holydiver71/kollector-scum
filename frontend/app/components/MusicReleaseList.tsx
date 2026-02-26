@@ -107,8 +107,8 @@ export const MusicReleaseCard = React.memo(function MusicReleaseCard({ release }
   const origReleaseYear = release.origReleaseYear ? new Date(release.origReleaseYear).getFullYear() : null;
 
   return (
-    <div className="group bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
-      <div className="relative aspect-square bg-gray-100">
+    <div className="group bg-[#13131F] rounded-xl overflow-hidden border border-[#1C1C28] hover:border-[#8B5CF6]/50 transition-all duration-300 cursor-pointer">
+      <div className="relative aspect-square bg-[#0A0A10]">
         {!imageError ? (
           <Image
             src={getCoverImageUrl()}
@@ -122,16 +122,16 @@ export const MusicReleaseCard = React.memo(function MusicReleaseCard({ release }
             quality={75}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-400">
+          <div className="w-full h-full flex items-center justify-center text-gray-600">
             <Disc3 className="w-12 h-12" />
           </div>
         )}
 
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
           <div className="flex gap-2">
             <Link 
               href={`/releases/${release.id}`}
-              className="bg-white text-[#D93611] rounded-full w-10 h-10 flex items-center justify-center hover:scale-110 transition-transform shadow-lg"
+              className="bg-[#8B5CF6] text-white rounded-full w-10 h-10 flex items-center justify-center hover:scale-110 transition-transform shadow-lg"
             >
               <Eye className="w-5 h-5" />
             </Link>
@@ -141,8 +141,8 @@ export const MusicReleaseCard = React.memo(function MusicReleaseCard({ release }
               disabled={isLoading}
               className={`rounded-full w-10 h-10 flex items-center justify-center hover:scale-110 transition-transform shadow-lg ${
                 isPlaying 
-                  ? 'bg-green-500 text-white' 
-                  : 'bg-white text-[#D93611]'
+                  ? 'bg-emerald-500 text-white' 
+                  : 'bg-white/90 text-[#8B5CF6]'
               }`}
               title={isPlaying ? 'Playing now' : 'Mark as now playing'}
             >
@@ -155,7 +155,7 @@ export const MusicReleaseCard = React.memo(function MusicReleaseCard({ release }
 
             <button
               onClick={handleAddToList}
-              className="bg-white text-[#D93611] rounded-full w-10 h-10 flex items-center justify-center hover:scale-110 transition-transform shadow-lg"
+              className="bg-white/90 text-[#8B5CF6] rounded-full w-10 h-10 flex items-center justify-center hover:scale-110 transition-transform shadow-lg"
               title="Add to list"
             >
               <List className="w-5 h-5" />
@@ -172,40 +172,35 @@ export const MusicReleaseCard = React.memo(function MusicReleaseCard({ release }
       />
       
       <div className="p-3">
-        <h3 className="font-bold text-sm text-gray-900 truncate mb-0.5" title={release.title}>
+        <h3 className="font-semibold text-sm text-white truncate mb-0.5" title={release.title}>
           <Link 
             href={`/releases/${release.id}`}
-            className="hover:text-[#D93611] transition-colors"
+            className="hover:text-[#A78BFA] transition-colors"
           >
             {release.title}
           </Link>
         </h3>
         
-        <p className="text-xs text-gray-600 truncate mb-1" title={release.artistNames?.join(", ")}>{
+        <p className="text-xs text-gray-400 truncate mb-1" title={release.artistNames?.join(", ")}>{
           release.artistNames?.join(", ")
         }</p>
 
         {release.genreNames && release.genreNames.length > 0 && (
-          <p className="text-xs text-gray-500 truncate mb-1" title={release.genreNames.join(", ")}>
+          <p className="text-[10px] text-gray-600 truncate mb-1" title={release.genreNames.join(", ")}>
             {release.genreNames.join(", ")}
           </p>
         )}
 
-        <div className="flex items-center gap-1 text-[10px] text-gray-500 truncate mb-2">
+        <div className="flex items-center gap-1 text-[10px] text-gray-600 truncate mb-1">
           {release.labelName && <span title={release.labelName}>{release.labelName}</span>}
-          {release.labelName && release.countryName && <span>•</span>}
+          {release.labelName && release.countryName && <span>·</span>}
           {release.countryName && <span title={release.countryName}>{release.countryName}</span>}
         </div>
 
-        <div className="flex items-center justify-between text-xs text-gray-500">
-          <div className="flex flex-col leading-tight">
-            <span>{releaseYear}</span>
-            {origReleaseYear && origReleaseYear !== releaseYear && (
-              <span className="text-[10px] text-gray-400">Orig: {origReleaseYear}</span>
-            )}
-          </div>
+        <div className="flex items-center justify-between text-xs text-gray-600 mt-1">
+          <span>{new Date(release.releaseYear).getFullYear()}</span>
           {release.formatName && (
-            <span className="px-2 py-0.5 rounded-full font-bold text-white text-[10px] bg-[#D9601A]">
+            <span className="px-2 py-0.5 rounded-full font-semibold text-white text-[10px] bg-[#8B5CF6]">
               {release.formatName}
             </span>
           )}
@@ -511,17 +506,17 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
 
   if (error) {
     return (
-      <div className="bg-white rounded-lg border border-red-200 p-8 text-center">
-        <div className="text-red-600 mb-4">
+      <div className="bg-[#13131F] rounded-2xl border border-[#1C1C28] p-8 text-center">
+        <div className="text-[#8B5CF6] mb-4">
           <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.502 0L4.312 15.5c-.77.833.192 2.5 1.732 2.5z" />
           </svg>
         </div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Error Loading Releases</h3>
-        <p className="text-gray-600 mb-4">{error}</p>
+        <h3 className="text-lg font-medium text-white mb-2">Error Loading Releases</h3>
+        <p className="text-gray-400 mb-4">{error}</p>
         <button
           onClick={() => fetchReleases(currentPage)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          className="px-4 py-2 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white rounded-xl transition-colors"
         >
           Try Again
         </button>
@@ -531,14 +526,14 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
 
   if (releases.length === 0) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
-        <div className="text-gray-400 mb-4">
+      <div className="bg-[#13131F] rounded-2xl border border-[#1C1C28] p-8 text-center">
+        <div className="text-gray-600 mb-4">
           <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.441.935-5.982 2.457M16.5 4.5L19 7l-2.5 2.5M4.5 4.5L7 7 4.5 9.5" />
           </svg>
         </div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">No Releases Found</h3>
-        <p className="text-gray-600">No music releases match your current filters.</p>
+        <h3 className="text-lg font-medium text-white mb-2">No Releases Found</h3>
+        <p className="text-gray-500">No music releases match your current filters.</p>
       </div>
     );
   }
@@ -553,7 +548,7 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
         </div>
         <div className="flex items-center gap-3">
           {/* Filters toggle placed to the left of the sort control */}
-          <div className="inline-flex items-center divide-x divide-white/10 rounded-md border border-white/10 bg-gradient-to-br from-red-900 via-red-950 to-black shadow-sm overflow-hidden">
+          <div className="inline-flex items-center divide-x divide-[#1C1C28] rounded-xl border border-[#1C1C28] bg-[#13131F] overflow-hidden">
             <button
               type="button"
               onClick={() => {
@@ -577,7 +572,7 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
               aria-expanded={searchParams?.get('showAdvanced') === 'true'}
               className={`px-2 py-2 flex items-center gap-2 text-sm transition-transform duration-200 w-20 h-9 justify-center text-white focus:outline-none`}
             >
-              <div className={`${iconAnimating ? 'scale-105 opacity-90' : 'scale-100 opacity-100'} inline-flex items-center justify-center rounded-md w-16 h-7 ${searchParams?.get('showAdvanced') === 'true' ? 'bg-[#F28A2E]/50 hover:bg-[#F28A2E]/40 text-white' : 'bg-white/10 hover:bg-white/20 text-white'}`}>
+              <div className={`${iconAnimating ? 'scale-105 opacity-90' : 'scale-100 opacity-100'} inline-flex items-center justify-center rounded-lg w-16 h-7 ${searchParams?.get('showAdvanced') === 'true' ? 'bg-[#8B5CF6] text-white' : 'bg-[#1C1C28] hover:bg-[#2E2E3E] text-gray-300'}`}>
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                   <path d="M3 5h18M6 12h12M10 19h4" />
                 </svg>
@@ -609,7 +604,7 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
               aria-expanded={showSortOpen}
               className={`px-2 py-2 flex items-center gap-2 text-sm transition-transform duration-200 w-20 h-9 justify-center focus:outline-none`}
             >
-              <div className={`${iconAnimating ? 'scale-105 opacity-90' : 'scale-100 opacity-100'} inline-flex items-center justify-center rounded-md w-16 h-7 ${showSortOpen ? 'bg-[#F28A2E]/50 hover:bg-[#F28A2E]/40 text-white' : 'bg-white/10 hover:bg-white/20 text-white'}`}> 
+              <div className={`${iconAnimating ? 'scale-105 opacity-90' : 'scale-100 opacity-100'} inline-flex items-center justify-center rounded-lg w-16 h-7 ${showSortOpen ? 'bg-[#8B5CF6] text-white' : 'bg-[#1C1C28] hover:bg-[#2E2E3E] text-gray-300'}`}> 
                 {loading ? (
                   <div className="flex items-center gap-1">
                     <div className="w-12 h-6 flex items-center justify-center">
@@ -702,9 +697,9 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
           <button
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage <= 1 || loading}
-            className="px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 rounded-xl bg-[#13131F] border border-[#1C1C28] text-gray-400 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:border-[#8B5CF6]/40 transition-colors"
           >
-            Previous
+            ← Prev
           </button>
 
           <div className="flex items-center gap-1">
@@ -731,10 +726,10 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
                     key={`page-${pageNum}`}
                     onClick={() => handlePageChange(pageNum)}
                     disabled={loading}
-                    className={`px-3 py-2 text-sm border rounded-md disabled:cursor-not-allowed ${
+                    className={`w-9 h-9 rounded-xl text-sm font-medium disabled:cursor-not-allowed ${
                       isCurrentPage
-                        ? "bg-blue-600 text-white border-blue-600"
-                        : "border-gray-300 hover:bg-gray-50"
+                        ? "bg-[#8B5CF6] text-white"
+                        : "bg-[#13131F] border border-[#1C1C28] text-gray-400 hover:border-[#8B5CF6]/40"
                     }`}
                   >
                     {pageNum}
@@ -747,9 +742,9 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
           <button
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage >= totalPages || loading}
-            className="px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 rounded-xl bg-[#13131F] border border-[#1C1C28] text-gray-400 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:border-[#8B5CF6]/40 transition-colors"
           >
-            Next
+            Next →
           </button>
         </div>
       )}

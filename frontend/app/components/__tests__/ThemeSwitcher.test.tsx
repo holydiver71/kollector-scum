@@ -35,8 +35,8 @@ describe('ThemeSwitcher', () => {
 
   it('marks the default theme as active', () => {
     renderWithTheme(<ThemeSwitcher />);
-    const metalBtn = screen.getByRole('button', { name: /metal default/i });
-    expect(metalBtn).toHaveAttribute('aria-pressed', 'true');
+    const midnightBtn = screen.getByRole('button', { name: /midnight/i });
+    expect(midnightBtn).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('switches active state when a theme is clicked', () => {
