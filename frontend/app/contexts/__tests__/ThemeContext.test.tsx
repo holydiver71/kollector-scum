@@ -28,13 +28,13 @@ describe('ThemeProvider', () => {
     document.documentElement.removeAttribute('data-theme');
   });
 
-  it('provides the default theme "metal-default"', () => {
+  it('provides the default theme "midnight"', () => {
     render(
       <ThemeProvider>
         <ThemeConsumer />
       </ThemeProvider>
     );
-    expect(screen.getByTestId('current-theme').textContent).toBe('metal-default');
+    expect(screen.getByTestId('current-theme').textContent).toBe('midnight');
   });
 
   it('applies data-theme attribute to <html> on mount', () => {
@@ -43,7 +43,7 @@ describe('ThemeProvider', () => {
         <ThemeConsumer />
       </ThemeProvider>
     );
-    expect(document.documentElement.getAttribute('data-theme')).toBe('metal-default');
+    expect(document.documentElement.getAttribute('data-theme')).toBe('midnight');
   });
 
   it('updates the theme when setTheme is called', () => {
@@ -97,11 +97,15 @@ describe('ThemeProvider', () => {
     );
 
     // Should fall back to default
-    expect(screen.getByTestId('current-theme').textContent).toBe('metal-default');
+    expect(screen.getByTestId('current-theme').textContent).toBe('midnight');
   });
 });
 
 describe('AVAILABLE_THEMES', () => {
+  it('contains midnight', () => {
+    expect(AVAILABLE_THEMES.some((t) => t.name === 'midnight')).toBe(true);
+  });
+
   it('contains metal-default', () => {
     expect(AVAILABLE_THEMES.some((t) => t.name === 'metal-default')).toBe(true);
   });

@@ -24,8 +24,27 @@
   }
 }
 
-/* ─── metal-default theme (built-in default) ────────────────────────────── */
+/* ─── midnight theme (default) ──────────────────────────────────────────── */
 :root,
+[data-theme="midnight"] {
+  --theme-body-bg-start:   #0A0A10;
+  --theme-body-bg-mid:     #0D0D1A;
+  --theme-body-bg-accent:  #111120;
+  --theme-body-bg-end:     #0A0A10;
+  --theme-header-bg:       #0A0A10;
+  --theme-sidebar-bg:      #0A0A10;
+  --theme-sidebar-hover:   #1C1C28;
+  --theme-sidebar-text:    #ffffff;
+  --theme-card-bg:         #13131F;
+  --theme-card-text:       #ffffff;
+  --theme-card-border:     #1C1C28;
+  --theme-foreground:      #ffffff;
+  --theme-accent:          #8B5CF6;
+  --theme-accent-hover:    #7C3AED;
+  --theme-accent-light:    #A78BFA;
+}
+
+/* ─── metal-default theme ────────────────────────────────────────────────── */
 [data-theme="metal-default"] {
   --theme-body-bg-start:   #120306;
   --theme-body-bg-mid:     #8C240D;
@@ -39,6 +58,9 @@
   --theme-card-text:       #111827;
   --theme-card-border:     #e5e7eb;
   --theme-foreground:      #ededed;
+  --theme-accent:          #D93611;
+  --theme-accent-hover:    #B02D0D;
+  --theme-accent-light:    #F27141;
 }
 
 /* ─── clean-light theme ─────────────────────────────────────────────────── */
@@ -55,6 +77,9 @@
   --theme-card-text:       #111827;
   --theme-card-border:     #d1d5db;
   --theme-foreground:      #111827;
+  --theme-accent:          #D93611;
+  --theme-accent-hover:    #B02D0D;
+  --theme-accent-light:    #F27141;
 }
 
 body {

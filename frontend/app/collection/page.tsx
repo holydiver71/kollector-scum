@@ -184,7 +184,7 @@ export default function CollectionPage() {
                 <div className="flex flex-wrap gap-2 sm:gap-3 items-center">
                   {/* Search */}
                     {filters.search && (
-                      <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm sm:text-sm font-semibold text-white bg-[#D9601A]">
+                      <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm sm:text-sm font-semibold bg-[#8B5CF6]/15 border border-[#8B5CF6]/20 text-[#A78BFA]">
                         Search: “{filters.search}”
                         <button
                           onClick={() => handleFiltersChange({ ...filters, search: undefined })}
@@ -199,7 +199,7 @@ export default function CollectionPage() {
 
                   {/* Artist */}
                   {filters.artistId && (
-                    <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm sm:text-sm font-semibold text-white bg-[#D9601A]">
+                    <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm sm:text-sm font-semibold bg-[#8B5CF6]/15 border border-[#8B5CF6]/20 text-[#A78BFA]">
                       Artist: {artists.find(a => a.id === filters.artistId)?.name || filters.artistId}
                       <button
                         onClick={() => handleFiltersChange({ ...filters, artistId: undefined })}
@@ -214,7 +214,7 @@ export default function CollectionPage() {
 
                   {/* Genre */}
                   {filters.genreId && (
-                    <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm sm:text-sm font-semibold text-white bg-[#D9601A]">
+                    <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm sm:text-sm font-semibold bg-[#8B5CF6]/15 border border-[#8B5CF6]/20 text-[#A78BFA]">
                       Genre: {genres.find(g => g.id === filters.genreId)?.name || filters.genreId}
                       <button
                         onClick={() => handleFiltersChange({ ...filters, genreId: undefined })}
@@ -229,7 +229,7 @@ export default function CollectionPage() {
 
                   {/* Label */}
                   {filters.labelId && (
-                    <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm sm:text-sm font-semibold text-white bg-[#D9601A]">
+                    <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm sm:text-sm font-semibold bg-[#8B5CF6]/15 border border-[#8B5CF6]/20 text-[#A78BFA]">
                       Label: {labels.find(l => l.id === filters.labelId)?.name || filters.labelId}
                       <button
                         onClick={() => handleFiltersChange({ ...filters, labelId: undefined })}
@@ -244,7 +244,7 @@ export default function CollectionPage() {
 
                   {/* Country */}
                   {filters.countryId && (
-                    <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm sm:text-sm font-semibold text-white bg-[#D9601A]">
+                    <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm sm:text-sm font-semibold bg-[#8B5CF6]/15 border border-[#8B5CF6]/20 text-[#A78BFA]">
                       Country: {countries.find(c => c.id === filters.countryId)?.name || filters.countryId}
                       <button
                         onClick={() => handleFiltersChange({ ...filters, countryId: undefined })}
@@ -259,7 +259,7 @@ export default function CollectionPage() {
 
                   {/* Format */}
                   {filters.formatId && (
-                    <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm sm:text-sm font-semibold text-white bg-[#D9601A]">
+                    <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm sm:text-sm font-semibold bg-[#8B5CF6]/15 border border-[#8B5CF6]/20 text-[#A78BFA]">
                       Format: {formats.find(f => f.id === filters.formatId)?.name || filters.formatId}
                       <button
                         onClick={() => handleFiltersChange({ ...filters, formatId: undefined })}
@@ -274,7 +274,7 @@ export default function CollectionPage() {
 
                   {/* Live */}
                   {filters.live !== undefined && (
-                    <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm sm:text-sm font-semibold text-white bg-[#D9601A]">
+                    <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm sm:text-sm font-semibold bg-[#8B5CF6]/15 border border-[#8B5CF6]/20 text-[#A78BFA]">
                       {filters.live ? 'Live recordings' : 'Studio recordings'}
                       <button
                         onClick={() => handleFiltersChange({ ...filters, live: undefined })}
@@ -289,7 +289,7 @@ export default function CollectionPage() {
 
                   {/* Year range */}
                   {(filters.yearFrom || filters.yearTo) && (
-                    <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-bold text-white bg-[#D9601A]">
+                    <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-bold bg-[#8B5CF6]/15 border border-[#8B5CF6]/20 text-[#A78BFA]">
                       Year: {filters.yearFrom || '—'}{filters.yearFrom || filters.yearTo ? '–' : ''}{filters.yearTo || '—'}
                       <button
                         onClick={() => handleFiltersChange({ ...filters, yearFrom: undefined, yearTo: undefined })}
@@ -318,7 +318,7 @@ export default function CollectionPage() {
                       };
                       handleFiltersChange(cleared);
                     }}
-                    className="text-sm font-bold text-[#D93611] ml-2 px-2 py-1 cursor-pointer"
+                    className="text-sm font-bold text-[#8B5CF6] ml-2 px-2 py-1 cursor-pointer"
                     aria-label="Clear all filters"
                   >
                     Clear all
