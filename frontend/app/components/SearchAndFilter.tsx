@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useLayoutEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { CountryDropdown, GenreDropdown, ArtistDropdown, LabelDropdown, FormatDropdown, LookupDropdown } from "./LookupComponents";
 import { getSearchSuggestions, SearchSuggestion } from '../lib/api';
 
@@ -31,7 +31,6 @@ interface SearchAndFilterProps {
 
 export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync = false, showSearchInput = true, openAdvanced, onAdvancedToggle, kollectionId, compact = false }: SearchAndFilterProps) {
   const router = useRouter();
-  const _searchParams = useSearchParams();
   const [filters, setFilters] = useState<SearchFilters>(initialFilters || {});
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
@@ -162,15 +161,6 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
     // Clear any previous validation error and notify parent
     if (yearValidationError) setYearValidationError(null);
     onFiltersChange(updatedFilters);
-  };
-
-  // Clear all filters
-  const clearFilters = () => {
-    const emptyFilters: SearchFilters = {};
-    setFilters(emptyFilters);
-    onFiltersChange(emptyFilters);
-    setSuggestions([]);
-    setShowSuggestions(false);
   };
 
   // Handle suggestion selection
