@@ -40,7 +40,7 @@ jest.mock('../LookupComponents', () => ({
       <option value="1">Vinyl</option>
     </select>
   ),
-  LookupDropdown: ({ items, value, placeholder, onSelect }: any) => (
+  LookupDropdown: ({ items, value, placeholder }: any) => (
     <div>
       <button type="button">{items?.find((i: any) => i.id === value)?.name || placeholder}</button>
     </div>
