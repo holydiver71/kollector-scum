@@ -600,7 +600,7 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
                   }
                   const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
                   router.replace(newUrl, { scroll: false });
-                } catch (e) {
+                } catch {
                   // ignore
                 }
               }}
