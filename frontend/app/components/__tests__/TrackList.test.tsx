@@ -175,9 +175,8 @@ describe('TrackList Component', () => {
   });
 
   it('handles single disc without showing disc header', () => {
-    const { container } = render(<TrackList media={mockSingleDiscMedia} />);
+    render(<TrackList media={mockSingleDiscMedia} />);
     // Should not show "CD 1" as a header when there's only one disc
-    const discHeaders = container.querySelectorAll('h4');
     // May have headers but not for single disc
     expect(screen.queryByText(/^CD 1$/)).not.toBeInTheDocument();
   });
