@@ -13,8 +13,8 @@
  */
 "use client";
 
-import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useParams, useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 
 /* ── Shared mock data ───────────────────────────────────────────────────── */
@@ -119,10 +119,19 @@ const PURCHASE_FORM_FIELDS: [string, string][] = [
 /* ─── MAIN PAGE ─── */
 export default function MockupPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const id = (params?.id as string) ?? "1";
   const [activeTab, setActiveTab] = useState<PageTab>("dashboard");
   const [addTab, setAddTab] = useState<"manual" | "discogs">("manual");
   const designNum = parseInt(id, 10);
+
+  // Set initial tab from URL parameter if provided
+  useEffect(() => {
+    const tabParam = searchParams?.get('tab') as PageTab | null;
+    if (tabParam && ['dashboard', 'collection', 'release', 'add'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   if (isNaN(designNum) || designNum !== 1) {
     return (

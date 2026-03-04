@@ -28,7 +28,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" data-theme="midnight">
       <body className={`${inter.variable} font-sans antialiased`}>
         <ErrorBoundary>
           <ThemeProvider>
