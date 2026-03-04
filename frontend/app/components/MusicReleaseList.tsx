@@ -5,11 +5,10 @@ import Image from "next/image";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { fetchJson, createNowPlaying, ApiError } from "../lib/api";
 import { clearAuthToken } from "../lib/auth";
-import { LoadingSpinner } from "./LoadingComponents";
+ 
 import { VinylSpinner } from "./VinylSpinner";
 import { Play, Check, User, Clock, Calendar, Disc3, Eye, List } from "lucide-react";
 
-import SortPanel from "./SortPanel";
 import { AddToListDialog } from "./AddToListDialog";
 import { SearchAndFilter } from "./SearchAndFilter";
 
@@ -54,6 +53,7 @@ interface MusicReleaseFilters {
 interface MusicReleaseListProps {
   filters?: MusicReleaseFilters;
   pageSize?: number;
+  activeFiltersRender?: React.ReactNode;
 }
 
 export const MusicReleaseCard = React.memo(function MusicReleaseCard({ release }: { release: MusicRelease }) {
@@ -107,8 +107,8 @@ export const MusicReleaseCard = React.memo(function MusicReleaseCard({ release }
   const origReleaseYear = release.origReleaseYear ? new Date(release.origReleaseYear).getFullYear() : null;
 
   return (
-    <div className="group bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
-      <div className="relative aspect-square bg-gray-100">
+    <div className="group cursor-pointer">
+      <div className="aspect-square bg-[#13131F] rounded-xl border border-[#1C1C28] group-hover:border-[#8B5CF6]/50 transition-all mb-2 flex items-center justify-center text-4xl overflow-hidden relative">
         {!imageError ? (
           <Image
             src={getCoverImageUrl()}
@@ -122,43 +122,43 @@ export const MusicReleaseCard = React.memo(function MusicReleaseCard({ release }
             quality={75}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-400">
+          <div className="w-full h-full flex items-center justify-center text-gray-600 bg-[#13131F]">
             <Disc3 className="w-12 h-12" />
           </div>
         )}
 
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
-          <div className="flex gap-2">
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100 p-2">
+          <div className="flex gap-2 flex-wrap justify-center">
             <Link 
               href={`/releases/${release.id}`}
-              className="bg-white text-[#D93611] rounded-full w-10 h-10 flex items-center justify-center hover:scale-110 transition-transform shadow-lg"
+              className="bg-[#8B5CF6] text-white rounded-full w-9 h-9 flex items-center justify-center hover:scale-110 transition-transform shadow-lg"
             >
-              <Eye className="w-5 h-5" />
+              <Eye className="w-4 h-4" />
             </Link>
             
             <button
               onClick={handleNowPlaying}
               disabled={isLoading}
-              className={`rounded-full w-10 h-10 flex items-center justify-center hover:scale-110 transition-transform shadow-lg ${
+              className={`rounded-full w-9 h-9 flex items-center justify-center hover:scale-110 transition-transform shadow-lg ${
                 isPlaying 
-                  ? 'bg-green-500 text-white' 
-                  : 'bg-white text-[#D93611]'
+                  ? 'bg-emerald-500 text-white' 
+                  : 'bg-white/90 text-[#8B5CF6]'
               }`}
               title={isPlaying ? 'Playing now' : 'Mark as now playing'}
             >
               {isPlaying ? (
-                <Check className="w-5 h-5" />
+                <Check className="w-4 h-4" />
               ) : (
-                <Play className="w-5 h-5" />
+                <Play className="w-4 h-4" />
               )}
             </button>
 
             <button
               onClick={handleAddToList}
-              className="bg-white text-[#D93611] rounded-full w-10 h-10 flex items-center justify-center hover:scale-110 transition-transform shadow-lg"
+              className="bg-white/90 text-[#8B5CF6] rounded-full w-9 h-9 flex items-center justify-center hover:scale-110 transition-transform shadow-lg"
               title="Add to list"
             >
-              <List className="w-5 h-5" />
+              <List className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -171,51 +171,22 @@ export const MusicReleaseCard = React.memo(function MusicReleaseCard({ release }
         onClose={() => setShowAddToList(false)}
       />
       
-      <div className="p-3">
-        <h3 className="font-bold text-sm text-gray-900 truncate mb-0.5" title={release.title}>
-          <Link 
-            href={`/releases/${release.id}`}
-            className="hover:text-[#D93611] transition-colors"
-          >
-            {release.title}
-          </Link>
-        </h3>
-        
-        <p className="text-xs text-gray-600 truncate mb-1" title={release.artistNames?.join(", ")}>{
-          release.artistNames?.join(", ")
-        }</p>
-
-        {release.genreNames && release.genreNames.length > 0 && (
-          <p className="text-xs text-gray-500 truncate mb-1" title={release.genreNames.join(", ")}>
-            {release.genreNames.join(", ")}
-          </p>
-        )}
-
-        <div className="flex items-center gap-1 text-[10px] text-gray-500 truncate mb-2">
-          {release.labelName && <span title={release.labelName}>{release.labelName}</span>}
-          {release.labelName && release.countryName && <span>•</span>}
-          {release.countryName && <span title={release.countryName}>{release.countryName}</span>}
-        </div>
-
-        <div className="flex items-center justify-between text-xs text-gray-500">
-          <div className="flex flex-col leading-tight">
-            <span>{releaseYear}</span>
-            {origReleaseYear && origReleaseYear !== releaseYear && (
-              <span className="text-[10px] text-gray-400">Orig: {origReleaseYear}</span>
-            )}
-          </div>
-          {release.formatName && (
-            <span className="px-2 py-0.5 rounded-full font-bold text-white text-[10px] bg-[#D9601A]">
-              {release.formatName}
-            </span>
-          )}
-        </div>
+      <div className="text-xs font-semibold text-white truncate" title={release.title}>
+        <Link href={`/releases/${release.id}`} className="hover:text-[#A78BFA] transition-colors">
+          {release.title}
+        </Link>
+      </div>
+      <div className="text-xs text-gray-400 truncate" title={release.artistNames?.join(", ")}>
+        {release.artistNames?.join(", ") || "Unknown Artist"}
+      </div>
+      <div className="text-xs text-gray-600 truncate">
+        {releaseYear} {release.formatName ? `· ${release.formatName}` : ''}
       </div>
     </div>
   );
 });
 
-export const MusicReleaseList = React.memo(function MusicReleaseList({ filters = {}, pageSize = 60, onSortChange }: MusicReleaseListProps & { onSortChange?: (f: MusicReleaseFilters) => void }) {
+export const MusicReleaseList = React.memo(function MusicReleaseList({ filters = {}, pageSize = 60, onSortChange, activeFiltersRender }: MusicReleaseListProps & { onSortChange?: (f: MusicReleaseFilters) => void }) {
   const [releases, setReleases] = useState<MusicRelease[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -511,17 +482,17 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
 
   if (error) {
     return (
-      <div className="bg-white rounded-lg border border-red-200 p-8 text-center">
-        <div className="text-red-600 mb-4">
+      <div className="bg-[#13131F] rounded-2xl border border-[#1C1C28] p-8 text-center">
+        <div className="text-[#8B5CF6] mb-4">
           <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.502 0L4.312 15.5c-.77.833.192 2.5 1.732 2.5z" />
           </svg>
         </div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Error Loading Releases</h3>
-        <p className="text-gray-600 mb-4">{error}</p>
+        <h3 className="text-lg font-medium text-white mb-2">Error Loading Releases</h3>
+        <p className="text-gray-400 mb-4">{error}</p>
         <button
           onClick={() => fetchReleases(currentPage)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          className="px-4 py-2 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white rounded-xl transition-colors"
         >
           Try Again
         </button>
@@ -531,161 +502,117 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
 
   if (releases.length === 0) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
-        <div className="text-gray-400 mb-4">
+      <div className="bg-[#13131F] rounded-2xl border border-[#1C1C28] p-8 text-center">
+        <div className="text-gray-600 mb-4">
           <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.441.935-5.982 2.457M16.5 4.5L19 7l-2.5 2.5M4.5 4.5L7 7 4.5 9.5" />
           </svg>
         </div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">No Releases Found</h3>
-        <p className="text-gray-600">No music releases match your current filters.</p>
+        <h3 className="text-lg font-medium text-white mb-2">No Releases Found</h3>
+        <p className="text-gray-500">No music releases match your current filters.</p>
       </div>
     );
   }
 
   return (
     <div>
-      {/* Results Header - hidden during initial load */}
+      {/* Results Header */}
       {!loading && (
-      <div className={`flex items-center justify-between ${(searchParams?.get('showSort') === 'true' || searchParams?.get('showAdvanced') === 'true') ? 'mb-1' : 'mb-6'}`}>
-        <div className="text-sm text-white">
-          Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, totalCount)} of {totalCount} releases
-        </div>
-        <div className="flex items-center gap-3">
-          {/* Filters toggle placed to the left of the sort control */}
-          <div className="inline-flex items-center divide-x divide-white/10 rounded-md border border-white/10 bg-gradient-to-br from-red-900 via-red-950 to-black shadow-sm overflow-hidden">
+        <div className="space-y-6 mb-6">
+          <div className="flex gap-3 flex-wrap items-center">
+            <div className="flex-1 min-w-[200px] relative">
+              <input 
+                type="text" 
+                placeholder="Search releases, artists, albums..." 
+                className="w-full bg-[#13131F] border border-[#1C1C28] rounded-xl px-4 py-3 text-white placeholder-gray-600 text-sm focus:outline-none focus:border-[#8B5CF6]"
+                value={searchParams?.get('search') || ''}
+                onChange={(e) => {
+                  try {
+                    const params = new URLSearchParams(searchParams ? searchParams.toString() : '');
+                    if (e.target.value) params.set('search', e.target.value);
+                    else params.delete('search');
+                    const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+                    router.replace(newUrl, { scroll: false });
+                  } catch {}
+                }}
+              />
+            </div>
+            
+            <select 
+              className="bg-[#13131F] border border-[#1C1C28] rounded-xl px-4 py-3 text-gray-300 text-sm focus:outline-none focus:border-[#8B5CF6] cursor-pointer"
+              value={`${filters.sortBy || 'DateAdded'}_${filters.sortOrder || 'desc'}`}
+              onChange={(e) => {
+                const [by, order] = e.target.value.split('_');
+                applySortChange({ sortBy: by, sortOrder: order });
+              }}
+            >
+              <option value="DateAdded_desc">Sort: Date Added</option>
+              <option value="Title_asc">Title (A-Z)</option>
+              <option value="Title_desc">Title (Z-A)</option>
+              <option value="Artist_asc">Artist (A-Z)</option>
+              <option value="Artist_desc">Artist (Z-A)</option>
+              <option value="Year_desc">Year (Newest)</option>
+              <option value="Year_asc">Year (Oldest)</option>
+            </select>
+
             <button
-              type="button"
               onClick={() => {
                 try {
                   const params = new URLSearchParams(searchParams ? searchParams.toString() : '');
                   const currentlyOpen = params.get('showAdvanced') === 'true';
-                  if (currentlyOpen) {
-                    params.delete('showAdvanced');
-                  } else {
-                    params.set('showAdvanced', 'true');
-                    params.delete('showSort');
-                  }
+                  if (currentlyOpen) params.delete('showAdvanced');
+                  else params.set('showAdvanced', 'true');
                   const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
                   router.replace(newUrl, { scroll: false });
-                } catch {
-                      // ignore
-                    }
+                } catch {}
               }}
-              aria-label="Filters"
-              title="Filters"
-              aria-expanded={searchParams?.get('showAdvanced') === 'true'}
-              className={`px-2 py-2 flex items-center gap-2 text-sm transition-transform duration-200 w-20 h-9 justify-center text-white focus:outline-none`}
+              className={`px-5 rounded-xl text-sm font-medium flex items-center gap-2 transition-all h-[46px] ${
+                searchParams?.get('showAdvanced') === 'true'
+                  ? "bg-[#8B5CF6] text-white shadow-lg shadow-[#8B5CF6]/25"
+                  : "bg-[#13131F] border border-[#1C1C28] text-gray-300 hover:text-white hover:border-[#2E2E3E]"
+              }`}
             >
-              <div className={`${iconAnimating ? 'scale-105 opacity-90' : 'scale-100 opacity-100'} inline-flex items-center justify-center rounded-md w-16 h-7 ${searchParams?.get('showAdvanced') === 'true' ? 'bg-[#F28A2E]/50 hover:bg-[#F28A2E]/40 text-white' : 'bg-white/10 hover:bg-white/20 text-white'}`}>
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M3 5h18M6 12h12M10 19h4" />
-                </svg>
-              </div>
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+              Filters
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" className={`transition-transform duration-200 ${searchParams?.get('showAdvanced') === 'true' ? "rotate-180" : ""}`}><path d="M2.5 4.5l3.5 3.5 3.5-3.5" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </button>
-            <button
-              type="button"
-              onClick={() => {
-                try {
-                  const params = new URLSearchParams(searchParams ? searchParams.toString() : '');
-                  const currently = params.get('showSort') === 'true';
-                  if (currently) {
-                    params.delete('showSort');
-                    setShowSortOpen(false);
-                  } else {
-                    params.set('showSort', 'true');
-                    // ensure advanced filters are closed when opening sort
-                    params.delete('showAdvanced');
-                    setShowSortOpen(true);
-                  }
-                  const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
-                  router.replace(newUrl, { scroll: false });
-                } catch {
-                  // ignore
-                }
-              }}
-              title={getSortLabel(effectiveFilters.sortBy, effectiveFilters.sortOrder)}
-              aria-label={`Current sort: ${getSortLabel(effectiveFilters.sortBy, effectiveFilters.sortOrder)}`}
-              aria-expanded={showSortOpen}
-              className={`px-2 py-2 flex items-center gap-2 text-sm transition-transform duration-200 w-20 h-9 justify-center focus:outline-none`}
-            >
-              <div className={`${iconAnimating ? 'scale-105 opacity-90' : 'scale-100 opacity-100'} inline-flex items-center justify-center rounded-md w-16 h-7 ${showSortOpen ? 'bg-[#F28A2E]/50 hover:bg-[#F28A2E]/40 text-white' : 'bg-white/10 hover:bg-white/20 text-white'}`}> 
-                {loading ? (
-                  <div className="flex items-center gap-1">
-                    <div className="w-12 h-6 flex items-center justify-center">
-                      <LoadingSpinner size="small" color="white" />
-                    </div>
-                  </div>
-                ) : (
-                  (filters?.sortBy) ? (
-                    renderSortIcon()
-                  ) : (
-                    <div className="text-sm">Sort</div>
-                  )
-                )}
-              </div>
-            </button>
-
-            {/* Next/Previous sort controls removed — sort toggle now opens the SortPanel */}
+          </div>
+          
+          <div className="flex items-center gap-3 text-xs text-gray-500 flex-wrap mt-2 mb-4">
+            <span>{totalCount} release{totalCount !== 1 ? 's' : ''}</span>
+            {activeFiltersRender}
           </div>
 
-          {/* loading spinner is shown in the middle segment to avoid layout shift */}
-        </div>
-      </div>
-      )}
-
-      {!loading && searchParams?.get('showSort') === 'true' && (
-        <div className="w-full mt-0 mb-6">
-          <SortPanel
-            filters={filters}
-            onChange={(newSort) => applySortChange(newSort)}
-            open={true}
-            onClose={() => {
-              try {
-                const params = new URLSearchParams(searchParams ? searchParams.toString() : '');
-                params.delete('showSort');
-                const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
-                router.replace(newUrl, { scroll: false });
-              } catch {
-                // ignore
-              }
-            }}
-          />
-        </div>
-      )}
-
-      {searchParams?.get('showAdvanced') === 'true' && (
-        <div className="w-full mt-0 mb-6">
-          <SearchAndFilter
-            onFiltersChange={(newFilters) => {
-              try {
-                const params = new URLSearchParams(searchParams ? searchParams.toString() : '');
-                Object.entries(newFilters as Record<string, unknown>).forEach(([k, v]) => {
-                  if (v !== undefined && v !== null && v !== '') params.set(k, String(v));
-                  else params.delete(k);
-                });
-                const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
-                router.replace(newUrl, { scroll: false });
-              } catch {
-                // ignore
-              }
-            }}
-            initialFilters={filters}
-            enableUrlSync={false}
-            showSearchInput={false}
-            openAdvanced={true}
-            compact={true}
-            onAdvancedToggle={(open) => {
-              try {
-                const params = new URLSearchParams(searchParams ? searchParams.toString() : '');
-                if (open) params.set('showAdvanced', 'true'); else params.delete('showAdvanced');
-                const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
-                router.replace(newUrl, { scroll: false });
-              } catch {
-                // ignore
-              }
-            }}
-          />
+          {searchParams?.get('showAdvanced') === 'true' && (
+            <div className="w-full mt-0">
+              <SearchAndFilter
+                onFiltersChange={(newFilters) => {
+                  try {
+                    const params = new URLSearchParams(searchParams ? searchParams.toString() : '');
+                    Object.entries(newFilters as Record<string, unknown>).forEach(([k, v]) => {
+                      if (v !== undefined && v !== null && v !== '') params.set(k, String(v));
+                      else params.delete(k);
+                    });
+                    const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+                    router.replace(newUrl, { scroll: false });
+                  } catch {}
+                }}
+                initialFilters={filters}
+                enableUrlSync={false}
+                showSearchInput={false}
+                openAdvanced={true}
+                compact={true}
+                onAdvancedToggle={(open) => {
+                  try {
+                    const params = new URLSearchParams(searchParams ? searchParams.toString() : '');
+                    if (open) params.set('showAdvanced', 'true'); else params.delete('showAdvanced');
+                    const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+                    router.replace(newUrl, { scroll: false });
+                  } catch {}
+                }}
+              />
+            </div>
+          )}
         </div>
       )}
 
@@ -702,9 +629,9 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
           <button
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage <= 1 || loading}
-            className="px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 rounded-xl bg-[#13131F] border border-[#1C1C28] text-gray-400 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:border-[#8B5CF6]/40 transition-colors"
           >
-            Previous
+            ← Prev
           </button>
 
           <div className="flex items-center gap-1">
@@ -731,10 +658,10 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
                     key={`page-${pageNum}`}
                     onClick={() => handlePageChange(pageNum)}
                     disabled={loading}
-                    className={`px-3 py-2 text-sm border rounded-md disabled:cursor-not-allowed ${
+                    className={`w-9 h-9 rounded-xl text-sm font-medium disabled:cursor-not-allowed ${
                       isCurrentPage
-                        ? "bg-blue-600 text-white border-blue-600"
-                        : "border-gray-300 hover:bg-gray-50"
+                        ? "bg-[#8B5CF6] text-white"
+                        : "bg-[#13131F] border border-[#1C1C28] text-gray-400 hover:border-[#8B5CF6]/40"
                     }`}
                   >
                     {pageNum}
@@ -747,9 +674,9 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
           <button
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage >= totalPages || loading}
-            className="px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 rounded-xl bg-[#13131F] border border-[#1C1C28] text-gray-400 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:border-[#8B5CF6]/40 transition-colors"
           >
-            Next
+            Next →
           </button>
         </div>
       )}

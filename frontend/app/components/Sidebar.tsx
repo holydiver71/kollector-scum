@@ -122,13 +122,13 @@ const Sidebar: React.FC = () => {
     <aside
       // reflect the current sidebar offset as a CSS variable used by Header
       style={inlineStyle}
-      className={`sidebar ${isExpanded ? 'sidebar-expanded' : 'sidebar-collapsed'} bg-gray-900 text-white flex flex-col shadow-2xl z-50 transition-all duration-300 ease-in-out`}
+      className={`sidebar ${isExpanded ? 'sidebar-expanded' : 'sidebar-collapsed'} bg-[#0A0A10] text-white flex flex-col shadow-2xl z-50 transition-all duration-300 ease-in-out`}
     >
       {/* Toggle Button */}
-      <div className="p-4 flex justify-center border-b border-gray-800">
+      <div className="p-4 flex justify-center border-b border-[#1C1C28]">
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="sidebar-icon text-2xl hover:text-orange-400 focus:outline-none transition-colors"
+          className="sidebar-icon text-2xl hover:text-[#8B5CF6] focus:outline-none transition-colors"
         >
           <Menu size={24} />
         </button>
@@ -147,8 +147,8 @@ const Sidebar: React.FC = () => {
                   href={item.href}
                   className={`flex items-center px-4 py-3 transition-colors ${
                     isActive
-                      ? 'bg-[#D93611]'
-                      : 'hover:bg-gray-800'
+                      ? 'bg-[#8B5CF6]'
+                      : 'hover:bg-[#1C1C28]'
                   }`}
                 >
                   <Icon className="sidebar-icon w-6 h-6 min-w-6 text-center" />
@@ -161,7 +161,7 @@ const Sidebar: React.FC = () => {
                   </span>
                 </Link>
                 {!isExpanded && (
-                  <div className="tooltip absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-gray-800 text-white px-3 py-1 rounded text-sm whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="tooltip absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-[#1C1C28] text-white px-3 py-1 rounded text-sm whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
                     {item.name}
                   </div>
                 )}
@@ -182,7 +182,7 @@ const Sidebar: React.FC = () => {
                   console.error('Failed to get random release id', err);
                 }
               }}
-              className={`flex items-center w-full text-left px-4 py-3 transition-colors hover:bg-gray-800`}
+              className={`flex items-center w-full text-left px-4 py-3 transition-colors hover:bg-[#1C1C28]`}
             >
               <Shuffle className="sidebar-icon w-6 h-6 min-w-6 text-center" />
               <span
@@ -194,7 +194,7 @@ const Sidebar: React.FC = () => {
               </span>
             </button>
             {!isExpanded && (
-              <div className="tooltip absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-gray-800 text-white px-3 py-1 rounded text-sm whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="tooltip absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-[#1C1C28] text-white px-3 py-1 rounded text-sm whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
                 Random Album
               </div>
             )}
@@ -203,7 +203,7 @@ const Sidebar: React.FC = () => {
       </nav>
 
       {/* Settings Section */}
-      <div className="border-t border-gray-800 py-4">
+      <div className="border-t border-[#1C1C28] py-4">
         <ul className="space-y-2">
           {settingsItems.map((item) => {
             const Icon = item.icon;
@@ -215,8 +215,8 @@ const Sidebar: React.FC = () => {
                   href={item.href}
                   className={`flex items-center px-4 py-3 transition-colors ${
                     isActive
-                      ? 'bg-[#D93611]'
-                      : 'hover:bg-gray-800'
+                      ? 'bg-[#8B5CF6]'
+                      : 'hover:bg-[#1C1C28]'
                   }`}
                 >
                   <Icon className="sidebar-icon w-6 h-6 min-w-6 text-center" />
@@ -229,7 +229,7 @@ const Sidebar: React.FC = () => {
                   </span>
                 </Link>
                 {!isExpanded && (
-                  <div className="tooltip absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-gray-800 text-white px-3 py-1 rounded text-sm whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="tooltip absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-[#1C1C28] text-white px-3 py-1 rounded text-sm whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
                     {item.name}
                   </div>
                 )}
