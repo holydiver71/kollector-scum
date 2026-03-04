@@ -8,7 +8,7 @@ const viewports = [
 
 for (const vp of viewports) {
   test.describe.parallel(`Visuals: ${vp.name}`, () => {
-    test(`header snapshot - ${vp.name}`, async ({ page, baseURL }) => {
+    test(`header snapshot - ${vp.name}`, async ({ page }) => {
       await page.setViewportSize({ width: vp.width, height: vp.height });
       await page.goto('/collection');
 
