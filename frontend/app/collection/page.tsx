@@ -178,10 +178,12 @@ export default function CollectionPage() {
 
             {/* Sort panel is rendered inside `MusicReleaseList` so it appears below the header */}
 
-            {/* Active filters display (show currently applied filters as chips) */}
-            {hasAppliedFilters && (
-              <div className="mb-6">
-                <div className="flex flex-wrap gap-2 sm:gap-3 items-center">
+            {/* Active filters are passed into MusicReleaseList */}
+            {/* Sort Controls removed — replaced by header-driven SortPanel */}
+
+            {/* Results */}
+            <MusicReleaseList
+              activeFiltersRender={hasAppliedFilters ? (<>\n
                   {/* Search */}
                     {filters.search && (
                       <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm sm:text-sm font-semibold bg-[#8B5CF6]/15 border border-[#8B5CF6]/20 text-[#A78BFA]">
@@ -323,14 +325,7 @@ export default function CollectionPage() {
                   >
                     Clear all
                   </button>
-                </div>
-              </div>
-            )}
-
-            {/* Sort Controls removed — replaced by header-driven SortPanel */}
-
-            {/* Results */}
-            <MusicReleaseList 
+                </>) : null} 
               key={JSON.stringify(filters)}
               filters={filters}
               pageSize={60}

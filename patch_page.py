@@ -1,15 +1,51 @@
 import re
 
-with open("frontend/app/page.tsx", "r") as f:
+with open('frontend/app/collection/page.tsx', 'r') as f:
     content = f.read()
 
-# Remove the const RP block
-content = re.sub(r'  /\* Static recently played for now since there\'s no backend for it \*/\n  const RP = \[.*?\n  \];\n', '', content, flags=re.DOTALL)
+# Replace "            {/* Active filters display (show currently applied filters as chips) */}" 
+# all the way to "            {/* Sort Controls removed" 
+start_str = "            {/* Active filters display (show currently applied filters as chips) */}"
+end_str = "            {/* Sort Controls removed" 
 
-# Replace the Recent Played map with the real component
-content = re.sub(r'          <div>\n            <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">\n              <span className="text-base">🎵</span> Recently Played\n            </h2>\n            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">\n              \{RP\.map\(\(item, i\) => \{.*?\n              \}\)\}\n            </div>\n          </div>', r'''        <div>
-          <RecentlyPlayed maxItems={24} />
-        </div>''', content, flags=re.DOTALL)
+start_idx = content.find(start_str)
+end_idx = content.find(end_str)
 
-with open("frontend/app/page.tsx", "w") as f:
-    f.write(content)
+if start_idx == -1 or end_idx == -1:
+    print("Could not find the block")
+    exit(1)
+
+chips_content = content[start_idx:end_idx]
+
+# We want to extract what's inside the {hasAppliedFilters && ( ... )}
+
+pattern = r'\{hasAppliedFilters && \(\s*<div className="mb-6">\s*<div className="flex flex-wrap gap-2 sm:gap-3 items-center">(.*?)</div>\s*</div>\s*\)'
+
+match = re.search(pattern, chips_content, flags=re.DOTALL)
+if match:
+    inner_chips = match.group(1)
+else:
+    print("Could not parse chips")
+    exit(1)
+
+active_filters_node = f"""            {{/* Active filters display (show currently applied filters as chips) */}}"""
+
+# Now we construct the variable at the top of the function
+# We should embed it directly as a prop to MusicReleaseList
+replacement = f"""            {{/* Active filters are passed into MusicReleaseList */}}
+"""
+
+new_content = content[:start_idx] + replacement + content[end_idx:]
+
+music_list_start = "<MusicReleaseList"
+ml_idx = new_content.find(music_list_start)
+if ml_idx != -1:
+    # insert activeFiltersRender
+    prop_val = "{hasAppliedFilters ? (<>\\n" + inner_chips + "</>) : null}"
+    
+    new_content = new_content[:ml_idx] + "<MusicReleaseList\n              activeFiltersRender=" + prop_val + new_content[ml_idx+17:]
+    
+with open('frontend/app/collection/page.tsx', 'w') as f:
+    f.write(new_content)
+
+print("Done patching page.tsx")
