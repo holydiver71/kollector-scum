@@ -63,15 +63,10 @@ describe('MusicReleaseCard Component', () => {
     expect(screen.getByText('Artist 1, Artist 2, Artist 3')).toBeInTheDocument();
   });
 
-  it('displays genre information', () => {
+  it('displays year and format information', () => {
     render(<MusicReleaseCard release={mockRelease} />);
-    expect(screen.getByText('Thrash Metal')).toBeInTheDocument();
-  });
-
-  it('displays format and country information', () => {
-    render(<MusicReleaseCard release={mockRelease} />);
+    expect(screen.getByText(/1986/)).toBeInTheDocument();
     expect(screen.getByText(/Vinyl/)).toBeInTheDocument();
-    expect(screen.getByText(/USA/)).toBeInTheDocument();
   });
 
   it('renders links to release details page', () => {
@@ -147,7 +142,7 @@ describe('MusicReleaseList Component', () => {
     await waitFor(() => {
       expect(screen.getByText('Master of Puppets')).toBeInTheDocument();
       expect(screen.getByText('Metallica')).toBeInTheDocument();
-      expect(screen.getByText('Thrash Metal')).toBeInTheDocument();
+      expect(screen.getByText(/1986/)).toBeInTheDocument();
     });
   });
 

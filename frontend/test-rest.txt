@@ -1,0 +1,3325 @@
+
+> frontend@0.1.0 test
+> jest
+
+PASS app/components/__tests__/AddReleaseForm.edit.test.tsx
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+PASS app/components/__tests__/ComboBox.test.tsx
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+PASS app/components/__tests__/MusicReleaseList.test.tsx
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.error
+      Received `true` for a non-boolean attribute `fill`.
+      
+      If you want to write it to the DOM, pass a string instead: fill="true" or fill={value.toString()}.
+
+      127 | 		if (first.includes('Failed to fetch') || first.includes('Error fetching')) return;
+      128 | 	}
+    > 129 | 	_origConsoleError(...args);
+          | 	^
+      130 | };
+      131 |
+      132 | // Provide lightweight default mocks for the app API helpers so components
+
+      at console._origConsoleError [as error] (jest.setup.ts:129:2)
+      at validateProperty (node_modules/react-dom/cjs/react-dom-client.development.js:3078:27)
+      at warnUnknownProperties (node_modules/react-dom/cjs/react-dom-client.development.js:3154:9)
+      at validatePropertiesInDevelopment (node_modules/react-dom/cjs/react-dom-client.development.js:17117:9)
+      at setInitialProperties (node_modules/react-dom/cjs/react-dom-client.development.js:17741:7)
+      at completeWork (node_modules/react-dom/cjs/react-dom-client.development.js:11391:18)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)
+      at completeUnitOfWork (node_modules/react-dom/cjs/react-dom-client.development.js:15268:19)
+      at performUnitOfWork (node_modules/react-dom/cjs/react-dom-client.development.js:15149:11)
+      at workLoopSync (node_modules/react-dom/cjs/react-dom-client.development.js:14956:41)
+      at renderRootSync (node_modules/react-dom/cjs/react-dom-client.development.js:14936:11)
+      at performWorkOnRoot (node_modules/react-dom/cjs/react-dom-client.development.js:14419:13)
+      at performWorkOnRootViaSchedulerTask (node_modules/react-dom/cjs/react-dom-client.development.js:16216:7)
+      at flushActQueue (node_modules/react/cjs/react.development.js:566:34)
+      at process.env.NODE_ENV.exports.act (node_modules/react/cjs/react.development.js:859:10)
+      at node_modules/@testing-library/react/dist/act-compat.js:46:25
+      at renderRoot (node_modules/@testing-library/react/dist/pure.js:189:26)
+      at render (node_modules/@testing-library/react/dist/pure.js:291:10)
+      at Object.<anonymous> (app/components/__tests__/MusicReleaseList.test.tsx:49:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      MusicReleaseList filters changed, resetting to page 1: {}
+
+      at log (app/components/MusicReleaseList.tsx:450:13)
+
+    console.log
+      MusicReleaseList filters: {}
+
+      at log (app/components/MusicReleaseList.tsx:350:15)
+
+    console.log
+      API URL: /api/musicreleases?Pagination.PageNumber=1&Pagination.PageSize=60&SortBy=title&SortOrder=asc
+
+      at log (app/components/MusicReleaseList.tsx:369:15)
+
+    console.log
+      MusicReleaseList filters changed, resetting to page 1: {}
+
+      at log (app/components/MusicReleaseList.tsx:450:13)
+
+    console.log
+      MusicReleaseList filters: {}
+
+      at log (app/components/MusicReleaseList.tsx:350:15)
+
+    console.log
+      API URL: /api/musicreleases?Pagination.PageNumber=1&Pagination.PageSize=60&SortBy=title&SortOrder=asc
+
+      at log (app/components/MusicReleaseList.tsx:369:15)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      MusicReleaseList filters changed, resetting to page 1: {}
+
+      at log (app/components/MusicReleaseList.tsx:450:13)
+
+    console.log
+      MusicReleaseList filters: {}
+
+      at log (app/components/MusicReleaseList.tsx:350:15)
+
+    console.log
+      API URL: /api/musicreleases?Pagination.PageNumber=1&Pagination.PageSize=60&SortBy=title&SortOrder=asc
+
+      at log (app/components/MusicReleaseList.tsx:369:15)
+
+    console.log
+      MusicReleaseList filters changed, resetting to page 1: {}
+
+      at log (app/components/MusicReleaseList.tsx:450:13)
+
+    console.log
+      MusicReleaseList filters: {}
+
+      at log (app/components/MusicReleaseList.tsx:350:15)
+
+    console.log
+      API URL: /api/musicreleases?Pagination.PageNumber=1&Pagination.PageSize=60&SortBy=title&SortOrder=asc
+
+      at log (app/components/MusicReleaseList.tsx:369:15)
+
+    console.log
+      MusicReleaseList filters changed, resetting to page 1: {}
+
+      at log (app/components/MusicReleaseList.tsx:450:13)
+
+    console.log
+      MusicReleaseList filters: {}
+
+      at log (app/components/MusicReleaseList.tsx:350:15)
+
+    console.log
+      API URL: /api/musicreleases?Pagination.PageNumber=1&Pagination.PageSize=60&SortBy=title&SortOrder=asc
+
+      at log (app/components/MusicReleaseList.tsx:369:15)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      MusicReleaseList filters changed, resetting to page 1: { search: 'metallica', genreId: 1, yearFrom: 1980, yearTo: 1990 }
+
+      at log (app/components/MusicReleaseList.tsx:450:13)
+
+    console.log
+      MusicReleaseList filters: { search: 'metallica', genreId: 1, yearFrom: 1980, yearTo: 1990 }
+
+      at log (app/components/MusicReleaseList.tsx:350:15)
+
+    console.log
+      API URL: /api/musicreleases?Pagination.PageNumber=1&Pagination.PageSize=60&Search=metallica&GenreId=1&YearFrom=1980&YearTo=1990&SortBy=title&SortOrder=asc
+
+      at log (app/components/MusicReleaseList.tsx:369:15)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      MusicReleaseList filters changed, resetting to page 1: {}
+
+      at log (app/components/MusicReleaseList.tsx:450:13)
+
+    console.log
+      MusicReleaseList filters: {}
+
+      at log (app/components/MusicReleaseList.tsx:350:15)
+
+    console.log
+      API URL: /api/musicreleases?Pagination.PageNumber=1&Pagination.PageSize=60&SortBy=title&SortOrder=asc
+
+      at log (app/components/MusicReleaseList.tsx:369:15)
+
+    console.log
+      MusicReleaseList filters changed, resetting to page 1: {}
+
+      at log (app/components/MusicReleaseList.tsx:450:13)
+
+    console.log
+      MusicReleaseList filters: {}
+
+      at log (app/components/MusicReleaseList.tsx:350:15)
+
+    console.log
+      API URL: /api/musicreleases?Pagination.PageNumber=1&Pagination.PageSize=60&SortBy=title&SortOrder=asc
+
+      at log (app/components/MusicReleaseList.tsx:369:15)
+
+    console.log
+      MusicReleaseList filters changed, resetting to page 1: {}
+
+      at log (app/components/MusicReleaseList.tsx:450:13)
+
+    console.log
+      MusicReleaseList filters: {}
+
+      at log (app/components/MusicReleaseList.tsx:350:15)
+
+    console.log
+      API URL: /api/musicreleases?Pagination.PageNumber=1&Pagination.PageSize=60&SortBy=title&SortOrder=asc
+
+      at log (app/components/MusicReleaseList.tsx:369:15)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      MusicReleaseList filters changed, resetting to page 1: {}
+
+      at log (app/components/MusicReleaseList.tsx:450:13)
+
+    console.log
+      MusicReleaseList filters: {}
+
+      at log (app/components/MusicReleaseList.tsx:350:15)
+
+    console.log
+      API URL: /api/musicreleases?Pagination.PageNumber=1&Pagination.PageSize=60&SortBy=title&SortOrder=asc
+
+      at log (app/components/MusicReleaseList.tsx:369:15)
+
+    console.log
+      MusicReleaseList filters changed, resetting to page 1: {}
+
+      at log (app/components/MusicReleaseList.tsx:450:13)
+
+    console.log
+      MusicReleaseList filters: {}
+
+      at log (app/components/MusicReleaseList.tsx:350:15)
+
+    console.log
+      API URL: /api/musicreleases?Pagination.PageNumber=1&Pagination.PageSize=60&SortBy=title&SortOrder=asc
+
+      at log (app/components/MusicReleaseList.tsx:369:15)
+
+    console.log
+      MusicReleaseList filters changed, resetting to page 1: {}
+
+      at log (app/components/MusicReleaseList.tsx:450:13)
+
+    console.log
+      MusicReleaseList filters: {}
+
+      at log (app/components/MusicReleaseList.tsx:350:15)
+
+    console.log
+      API URL: /api/musicreleases?Pagination.PageNumber=1&Pagination.PageSize=60&SortBy=title&SortOrder=asc
+
+      at log (app/components/MusicReleaseList.tsx:369:15)
+
+PASS app/components/__tests__/DeleteReleaseButton.test.tsx
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+PASS app/components/__tests__/SearchAndFilter.test.tsx
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      SearchAndFilter initialFilters changed: {}
+
+      at log (app/components/SearchAndFilter.tsx:50:13)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      SearchAndFilter initialFilters changed: {}
+
+      at log (app/components/SearchAndFilter.tsx:50:13)
+
+    console.log
+      SearchAndFilter updateFilters called: {
+        old: {},
+        new: { search: 'test search' },
+        result: { search: 'test search' }
+      }
+
+      at log (app/components/SearchAndFilter.tsx:131:13)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      SearchAndFilter initialFilters changed: {}
+
+      at log (app/components/SearchAndFilter.tsx:50:13)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      SearchAndFilter initialFilters changed: { search: 'metal' }
+
+      at log (app/components/SearchAndFilter.tsx:50:13)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      SearchAndFilter initialFilters changed: {}
+
+      at log (app/components/SearchAndFilter.tsx:50:13)
+
+    console.log
+      SearchAndFilter updateFilters called: { old: {}, new: { search: 'test' }, result: { search: 'test' } }
+
+      at log (app/components/SearchAndFilter.tsx:131:13)
+
+    console.log
+      SearchAndFilter initialization complete
+
+      at log (app/components/SearchAndFilter.tsx:65:15)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      SearchAndFilter initialFilters changed: {}
+
+      at log (app/components/SearchAndFilter.tsx:50:13)
+
+    console.log
+      SearchAndFilter updateFilters called: { old: {}, new: { yearFrom: 1980 }, result: { yearFrom: 1980 } }
+
+      at log (app/components/SearchAndFilter.tsx:131:13)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      SearchAndFilter initialFilters changed: {}
+
+      at log (app/components/SearchAndFilter.tsx:50:13)
+
+    console.log
+      SearchAndFilter updateFilters called: { old: {}, new: { live: true }, result: { live: true } }
+
+      at log (app/components/SearchAndFilter.tsx:131:13)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      SearchAndFilter initialFilters changed: { search: 'test' }
+
+      at log (app/components/SearchAndFilter.tsx:50:13)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      SearchAndFilter initialFilters changed: {}
+
+      at log (app/components/SearchAndFilter.tsx:50:13)
+
+    console.log
+      SearchAndFilter updateFilters called: { old: {}, new: { search: 'a' }, result: { search: 'a' } }
+
+      at log (app/components/SearchAndFilter.tsx:131:13)
+
+PASS app/__tests__/page.test.tsx
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.error
+      Error: API connection failed
+          at Object.<anonymous> (/home/andy/Projects/kollector-scum/frontend/app/__tests__/page.test.tsx:133:52)
+          at Promise.finally.completed (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)
+          at _callCircusTest (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)
+          at runNextTicks (node:internal/process/task_queues:64:5)
+          at listOnTimeout (node:internal/timers:567:9)
+          at processTimers (node:internal/timers:541:7)
+          at _runTest (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:947:3)
+          at /home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:849:7
+          at _runTestsForDescribeBlock (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:862:11)
+          at _runTestsForDescribeBlock (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:857:11)
+          at run (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:761:3)
+          at runAndTransformResultsToJestFormat (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)
+          at jestAdapter (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/runner.js:101:19)
+          at runTestInternal (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-runner/build/testWorker.js:275:16)
+          at runTest (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-runner/build/testWorker.js:343:7)
+          at Object.worker (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-runner/build/testWorker.js:497:12)
+
+      127 | 		if (first.includes('Failed to fetch') || first.includes('Error fetching')) return;
+      128 | 	}
+    > 129 | 	_origConsoleError(...args);
+          | 	^
+      130 | };
+      131 |
+      132 | // Provide lightweight default mocks for the app API helpers so components
+
+      at console._origConsoleError [as error] (jest.setup.ts:129:2)
+      at error (app/page.tsx:68:17)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.error
+      Error: API Error
+          at Object.<anonymous> (/home/andy/Projects/kollector-scum/frontend/app/__tests__/page.test.tsx:151:52)
+          at Promise.finally.completed (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)
+          at _callCircusTest (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)
+          at _runTest (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:947:3)
+          at /home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:849:7
+          at _runTestsForDescribeBlock (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:862:11)
+          at _runTestsForDescribeBlock (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:857:11)
+          at run (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:761:3)
+          at runAndTransformResultsToJestFormat (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)
+          at jestAdapter (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/runner.js:101:19)
+          at runTestInternal (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-runner/build/testWorker.js:275:16)
+          at runTest (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-runner/build/testWorker.js:343:7)
+          at Object.worker (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-runner/build/testWorker.js:497:12)
+
+      127 | 		if (first.includes('Failed to fetch') || first.includes('Error fetching')) return;
+      128 | 	}
+    > 129 | 	_origConsoleError(...args);
+          | 	^
+      130 | };
+      131 |
+      132 | // Provide lightweight default mocks for the app API helpers so components
+
+      at console._origConsoleError [as error] (jest.setup.ts:129:2)
+      at error (app/page.tsx:68:17)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.error
+      Error: Failed to fetch
+          at Object.<anonymous> (/home/andy/Projects/kollector-scum/frontend/app/__tests__/page.test.tsx:167:22)
+          at Promise.finally.completed (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)
+          at _callCircusTest (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)
+          at _runTest (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:947:3)
+          at /home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:849:7
+          at _runTestsForDescribeBlock (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:862:11)
+          at _runTestsForDescribeBlock (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:857:11)
+          at run (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:761:3)
+          at runAndTransformResultsToJestFormat (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)
+          at jestAdapter (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/runner.js:101:19)
+          at runTestInternal (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-runner/build/testWorker.js:275:16)
+          at runTest (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-runner/build/testWorker.js:343:7)
+          at Object.worker (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-runner/build/testWorker.js:497:12) {
+        url: 'http://localhost:5000/api/health'
+      }
+
+      127 | 		if (first.includes('Failed to fetch') || first.includes('Error fetching')) return;
+      128 | 	}
+    > 129 | 	_origConsoleError(...args);
+          | 	^
+      130 | };
+      131 |
+      132 | // Provide lightweight default mocks for the app API helpers so components
+
+      at console._origConsoleError [as error] (jest.setup.ts:129:2)
+      at error (app/page.tsx:68:17)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+PASS app/components/__tests__/RecentlyPlayed.test.tsx
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+PASS app/components/__tests__/ConfirmDialog.test.tsx
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+PASS app/components/__tests__/SidebarHeaderOffset.test.tsx
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+PASS app/components/__tests__/LookupComponents.test.tsx
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      Fetched artists page 1: {
+        items: [
+          { id: 1, name: 'Metallica', country: 'USA' },
+          { id: 2, name: 'Iron Maiden', country: 'UK' }
+        ]
+      }
+
+      at log (app/components/LookupComponents.tsx:232:17)
+
+    console.log
+      Loaded 2 total artists, first: Metallica, last: Iron Maiden
+
+      at log (app/components/LookupComponents.tsx:250:15)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      Fetched genres page 1: {
+        items: [
+          { id: 1, name: 'Metallica', country: 'USA' },
+          { id: 2, name: 'Iron Maiden', country: 'UK' }
+        ]
+      }
+
+      at log (app/components/LookupComponents.tsx:232:17)
+
+    console.log
+      Loaded 2 total genres, first: Metallica, last: Iron Maiden
+
+      at log (app/components/LookupComponents.tsx:250:15)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      Fetched labels page 1: {
+        items: [
+          { id: 1, name: 'Metallica', country: 'USA' },
+          { id: 2, name: 'Iron Maiden', country: 'UK' }
+        ]
+      }
+
+      at log (app/components/LookupComponents.tsx:232:17)
+
+    console.log
+      Loaded 2 total labels, first: Metallica, last: Iron Maiden
+
+      at log (app/components/LookupComponents.tsx:250:15)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      Fetched countries page 1: { items: [] }
+
+      at log (app/components/LookupComponents.tsx:232:17)
+
+    console.log
+      Loaded 0 total countries, first: undefined, last: undefined
+
+      at log (app/components/LookupComponents.tsx:250:15)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      Fetched formats page 1: {
+        items: [
+          { id: 1, name: 'Heavy Metal', description: 'Heavy metal music' },
+          { id: 2, name: 'Thrash Metal', description: 'Thrash metal music' }
+        ]
+      }
+
+      at log (app/components/LookupComponents.tsx:232:17)
+
+    console.log
+      Loaded 2 total formats, first: Heavy Metal, last: Thrash Metal
+
+      at log (app/components/LookupComponents.tsx:250:15)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+PASS app/components/__tests__/Navigation.test.tsx
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+PASS app/components/__tests__/RandomPickButton.test.tsx
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+PASS app/components/__tests__/ThemeSwitcher.test.tsx
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+PASS app/components/__tests__/LoadingComponents.test.tsx
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+PASS app/releases/[id]/edit/__tests__/page.test.tsx
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+PASS app/components/__tests__/ErrorBoundary.test.tsx
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+PASS app/components/__tests__/Footer.test.tsx
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+PASS app/statistics/__tests__/page.test.tsx
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+PASS app/components/__tests__/ReleaseLinks.test.tsx
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+PASS app/collection/__tests__/page.test.tsx
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      CollectionPage URL params: { artistId: null, urlFilters: {} }
+
+      at log (app/collection/page.tsx:94:15)
+
+    console.log
+      Fetched artists page 1: {}
+
+      at log (app/components/LookupComponents.tsx:232:17)
+
+    console.log
+      Loaded 0 total artists, first: undefined, last: undefined
+
+      at log (app/components/LookupComponents.tsx:250:15)
+
+    console.log
+      Fetched genres page 1: {}
+
+      at log (app/components/LookupComponents.tsx:232:17)
+
+    console.log
+      Loaded 0 total genres, first: undefined, last: undefined
+
+      at log (app/components/LookupComponents.tsx:250:15)
+
+    console.log
+      Fetched labels page 1: {}
+
+      at log (app/components/LookupComponents.tsx:232:17)
+
+    console.log
+      Loaded 0 total labels, first: undefined, last: undefined
+
+      at log (app/components/LookupComponents.tsx:250:15)
+
+    console.log
+      Fetched countries page 1: {}
+
+      at log (app/components/LookupComponents.tsx:232:17)
+
+    console.log
+      Loaded 0 total countries, first: undefined, last: undefined
+
+      at log (app/components/LookupComponents.tsx:250:15)
+
+    console.log
+      Fetched formats page 1: {}
+
+      at log (app/components/LookupComponents.tsx:232:17)
+
+    console.log
+      Loaded 0 total formats, first: undefined, last: undefined
+
+      at log (app/components/LookupComponents.tsx:250:15)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      CollectionPage URL params: { artistId: null, urlFilters: {} }
+
+      at log (app/collection/page.tsx:94:15)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      CollectionPage URL params: { artistId: null, urlFilters: {} }
+
+      at log (app/collection/page.tsx:94:15)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      CollectionPage URL params: { artistId: null, urlFilters: {} }
+
+      at log (app/collection/page.tsx:94:15)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      CollectionPage URL params: { artistId: null, urlFilters: {} }
+
+      at log (app/collection/page.tsx:94:15)
+
+    console.log
+      CollectionPage handleFiltersChange: { search: 'test' }
+
+      at log (app/collection/page.tsx:122:13)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      CollectionPage URL params: { artistId: null, urlFilters: {} }
+
+      at log (app/collection/page.tsx:94:15)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      CollectionPage URL params: { artistId: null, urlFilters: {} }
+
+      at log (app/collection/page.tsx:94:15)
+
+PASS app/releases/[id]/__tests__/page.test.tsx
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+PASS app/search/__tests__/page.test.tsx
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+PASS app/components/__tests__/Header.responsive.test.tsx
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [Header] Loading kollections...
+
+      at log (app/components/Header.tsx:39:17)
+
+    console.error
+      [Header] Failed to load kollections: TypeError: (0 , _api.getKollections) is not a function
+          at loadKollections (/home/andy/Projects/kollector-scum/frontend/app/components/Header.tsx:40:46)
+          at loadKollections (/home/andy/Projects/kollector-scum/frontend/app/components/Header.tsx:56:5)
+          at Object.react-stack-bottom-frame (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)
+          at runWithFiberInDEV (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)
+          at commitHookEffectListMount (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)
+          at commitHookPassiveMountEffects (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)
+          at commitPassiveMountOnFiber (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)
+          at recursivelyTraversePassiveMountEffects (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)
+          at commitPassiveMountOnFiber (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:13853:11)
+          at flushPassiveEffects (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:15737:9)
+          at /home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:15379:15
+          at flushActQueue (/home/andy/Projects/kollector-scum/frontend/node_modules/react/cjs/react.development.js:566:34)
+          at process.env.NODE_ENV.exports.act (/home/andy/Projects/kollector-scum/frontend/node_modules/react/cjs/react.development.js:859:10)
+          at /home/andy/Projects/kollector-scum/frontend/node_modules/@testing-library/react/dist/act-compat.js:46:25
+          at renderRoot (/home/andy/Projects/kollector-scum/frontend/node_modules/@testing-library/react/dist/pure.js:189:26)
+          at render (/home/andy/Projects/kollector-scum/frontend/node_modules/@testing-library/react/dist/pure.js:291:10)
+          at Object.<anonymous> (/home/andy/Projects/kollector-scum/frontend/app/components/__tests__/Header.responsive.test.tsx:43:33)
+          at Promise.finally.completed (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)
+          at _callCircusTest (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)
+          at processTicksAndRejections (node:internal/process/task_queues:103:5)
+          at _runTest (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:947:3)
+          at /home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:849:7
+          at _runTestsForDescribeBlock (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:862:11)
+          at _runTestsForDescribeBlock (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:857:11)
+          at run (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:761:3)
+          at runAndTransformResultsToJestFormat (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)
+          at jestAdapter (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/runner.js:101:19)
+          at runTestInternal (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-runner/build/testWorker.js:275:16)
+          at runTest (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-runner/build/testWorker.js:343:7)
+          at Object.worker (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-runner/build/testWorker.js:497:12)
+
+      127 | 		if (first.includes('Failed to fetch') || first.includes('Error fetching')) return;
+      128 | 	}
+    > 129 | 	_origConsoleError(...args);
+          | 	^
+      130 | };
+      131 |
+      132 | // Provide lightweight default mocks for the app API helpers so components
+
+      at console._origConsoleError [as error] (jest.setup.ts:129:2)
+      at error (app/components/Header.tsx:50:17)
+      at loadKollections (app/components/Header.tsx:56:5)
+      at Object.react-stack-bottom-frame (node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)
+      at commitHookEffectListMount (node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)
+      at commitHookPassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:13853:11)
+      at flushPassiveEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15737:9)
+      at node_modules/react-dom/cjs/react-dom-client.development.js:15379:15
+      at flushActQueue (node_modules/react/cjs/react.development.js:566:34)
+      at process.env.NODE_ENV.exports.act (node_modules/react/cjs/react.development.js:859:10)
+      at node_modules/@testing-library/react/dist/act-compat.js:46:25
+      at renderRoot (node_modules/@testing-library/react/dist/pure.js:189:26)
+      at render (node_modules/@testing-library/react/dist/pure.js:291:10)
+      at Object.<anonymous> (app/components/__tests__/Header.responsive.test.tsx:43:33)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [Header] Loading kollections...
+
+      at log (app/components/Header.tsx:39:17)
+
+    console.error
+      [Header] Failed to load kollections: TypeError: (0 , _api.getKollections) is not a function
+          at loadKollections (/home/andy/Projects/kollector-scum/frontend/app/components/Header.tsx:40:46)
+          at loadKollections (/home/andy/Projects/kollector-scum/frontend/app/components/Header.tsx:56:5)
+          at Object.react-stack-bottom-frame (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)
+          at runWithFiberInDEV (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)
+          at commitHookEffectListMount (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)
+          at commitHookPassiveMountEffects (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)
+          at commitPassiveMountOnFiber (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)
+          at recursivelyTraversePassiveMountEffects (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)
+          at commitPassiveMountOnFiber (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:13853:11)
+          at flushPassiveEffects (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:15737:9)
+          at /home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:15379:15
+          at flushActQueue (/home/andy/Projects/kollector-scum/frontend/node_modules/react/cjs/react.development.js:566:34)
+          at process.env.NODE_ENV.exports.act (/home/andy/Projects/kollector-scum/frontend/node_modules/react/cjs/react.development.js:859:10)
+          at /home/andy/Projects/kollector-scum/frontend/node_modules/@testing-library/react/dist/act-compat.js:46:25
+          at renderRoot (/home/andy/Projects/kollector-scum/frontend/node_modules/@testing-library/react/dist/pure.js:189:26)
+          at render (/home/andy/Projects/kollector-scum/frontend/node_modules/@testing-library/react/dist/pure.js:291:10)
+          at Object.<anonymous> (/home/andy/Projects/kollector-scum/frontend/app/components/__tests__/Header.responsive.test.tsx:78:11)
+          at Promise.finally.completed (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)
+          at _callCircusTest (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)
+          at runNextTicks (node:internal/process/task_queues:64:5)
+          at listOnTimeout (node:internal/timers:567:9)
+          at processTimers (node:internal/timers:541:7)
+          at _runTest (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:947:3)
+          at /home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:849:7
+          at _runTestsForDescribeBlock (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:862:11)
+          at _runTestsForDescribeBlock (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:857:11)
+          at run (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:761:3)
+          at runAndTransformResultsToJestFormat (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)
+          at jestAdapter (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/runner.js:101:19)
+          at runTestInternal (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-runner/build/testWorker.js:275:16)
+          at runTest (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-runner/build/testWorker.js:343:7)
+          at Object.worker (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-runner/build/testWorker.js:497:12)
+
+      127 | 		if (first.includes('Failed to fetch') || first.includes('Error fetching')) return;
+      128 | 	}
+    > 129 | 	_origConsoleError(...args);
+          | 	^
+      130 | };
+      131 |
+      132 | // Provide lightweight default mocks for the app API helpers so components
+
+      at console._origConsoleError [as error] (jest.setup.ts:129:2)
+      at error (app/components/Header.tsx:50:17)
+      at loadKollections (app/components/Header.tsx:56:5)
+      at Object.react-stack-bottom-frame (node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)
+      at commitHookEffectListMount (node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)
+      at commitHookPassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:13853:11)
+      at flushPassiveEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15737:9)
+      at node_modules/react-dom/cjs/react-dom-client.development.js:15379:15
+      at flushActQueue (node_modules/react/cjs/react.development.js:566:34)
+      at process.env.NODE_ENV.exports.act (node_modules/react/cjs/react.development.js:859:10)
+      at node_modules/@testing-library/react/dist/act-compat.js:46:25
+      at renderRoot (node_modules/@testing-library/react/dist/pure.js:189:26)
+      at render (node_modules/@testing-library/react/dist/pure.js:291:10)
+      at Object.<anonymous> (app/components/__tests__/Header.responsive.test.tsx:78:11)
+
+PASS app/components/__tests__/SearchAndFilter.responsive.test.tsx
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      SearchAndFilter initialFilters changed: {}
+
+      at log (app/components/SearchAndFilter.tsx:50:13)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      SearchAndFilter initialFilters changed: {}
+
+      at log (app/components/SearchAndFilter.tsx:50:13)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      SearchAndFilter initialFilters changed: {}
+
+      at log (app/components/SearchAndFilter.tsx:50:13)
+
+PASS app/components/__tests__/AddReleaseForm.test.tsx (6.14 s)
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.error
+      Error loading lookup data: Error: Network error
+          at Object.<anonymous> (/home/andy/Projects/kollector-scum/frontend/app/components/__tests__/AddReleaseForm.test.tsx:147:39)
+          at Promise.finally.completed (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)
+          at _callCircusTest (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)
+          at _runTest (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:947:3)
+          at /home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:849:7
+          at _runTestsForDescribeBlock (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:862:11)
+          at _runTestsForDescribeBlock (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:857:11)
+          at _runTestsForDescribeBlock (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:857:11)
+          at run (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:761:3)
+          at runAndTransformResultsToJestFormat (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)
+          at jestAdapter (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/runner.js:101:19)
+          at runTestInternal (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-runner/build/testWorker.js:275:16)
+          at runTest (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-runner/build/testWorker.js:343:7)
+          at Object.worker (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-runner/build/testWorker.js:497:12)
+
+      127 | 		if (first.includes('Failed to fetch') || first.includes('Error fetching')) return;
+      128 | 	}
+    > 129 | 	_origConsoleError(...args);
+          | 	^
+      130 | };
+      131 |
+      132 | // Provide lightweight default mocks for the app API helpers so components
+
+      at console._origConsoleError [as error] (jest.setup.ts:129:2)
+      at error (app/components/AddReleaseForm.tsx:221:15)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.error
+      Error creating release: Error: Server error
+          at /home/andy/Projects/kollector-scum/frontend/app/components/__tests__/AddReleaseForm.test.tsx:354:33
+          at /home/andy/Projects/kollector-scum/frontend/node_modules/jest-mock/build/index.js:305:39
+          at /home/andy/Projects/kollector-scum/frontend/node_modules/jest-mock/build/index.js:312:13
+          at mockConstructor (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-mock/build/index.js:102:19)
+          at handleSubmit (/home/andy/Projects/kollector-scum/frontend/app/components/AddReleaseForm.tsx:379:35)
+          at executeDispatch (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:16368:9)
+          at runWithFiberInDEV (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)
+          at processDispatchQueue (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:16418:19)
+          at /home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:17016:9
+          at batchedUpdates$1 (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:3262:40)
+          at dispatchEventForPluginEventSystem (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:16572:7)
+          at dispatchEvent (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:20658:11)
+          at dispatchDiscreteEvent (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:20626:11)
+          at HTMLDivElement.callTheUserObjectsOperation (/home/andy/Projects/kollector-scum/frontend/node_modules/jsdom/lib/jsdom/living/generated/EventListener.js:26:30)
+          at innerInvokeEventListeners (/home/andy/Projects/kollector-scum/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:350:25)
+          at invokeEventListeners (/home/andy/Projects/kollector-scum/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:286:3)
+          at HTMLFormElementImpl._dispatch (/home/andy/Projects/kollector-scum/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:233:9)
+          at fireAnEvent (/home/andy/Projects/kollector-scum/frontend/node_modules/jsdom/lib/jsdom/living/helpers/events.js:18:36)
+          at HTMLFormElementImpl.requestSubmit (/home/andy/Projects/kollector-scum/frontend/node_modules/jsdom/lib/jsdom/living/nodes/HTMLFormElement-impl.js:126:10)
+          at HTMLFormElementImpl._doRequestSubmit (/home/andy/Projects/kollector-scum/frontend/node_modules/jsdom/lib/jsdom/living/nodes/HTMLFormElement-impl.js:100:10)
+          at HTMLButtonElementImpl._activationBehavior (/home/andy/Projects/kollector-scum/frontend/node_modules/jsdom/lib/jsdom/living/nodes/HTMLButtonElement-impl.js:23:14)
+          at HTMLButtonElementImpl._dispatch (/home/andy/Projects/kollector-scum/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:252:26)
+          at HTMLButtonElementImpl.dispatchEvent (/home/andy/Projects/kollector-scum/frontend/node_modules/jsdom/lib/jsdom/living/events/EventTarget-impl.js:104:17)
+          at HTMLButtonElement.dispatchEvent (/home/andy/Projects/kollector-scum/frontend/node_modules/jsdom/lib/jsdom/living/generated/EventTarget.js:241:34)
+          at /home/andy/Projects/kollector-scum/frontend/node_modules/@testing-library/user-event/dist/cjs/event/dispatchEvent.js:45:43
+          at /home/andy/Projects/kollector-scum/frontend/node_modules/@testing-library/react/dist/pure.js:107:16
+          at /home/andy/Projects/kollector-scum/frontend/node_modules/@testing-library/react/dist/act-compat.js:47:24
+          at process.env.NODE_ENV.exports.act (/home/andy/Projects/kollector-scum/frontend/node_modules/react/cjs/react.development.js:789:22)
+          at /home/andy/Projects/kollector-scum/frontend/node_modules/@testing-library/react/dist/act-compat.js:46:25
+          at Object.eventWrapper (/home/andy/Projects/kollector-scum/frontend/node_modules/@testing-library/react/dist/pure.js:106:28)
+          at Object.wrapEvent (/home/andy/Projects/kollector-scum/frontend/node_modules/@testing-library/user-event/dist/cjs/event/wrapEvent.js:6:28)
+          at Object.dispatchEvent (/home/andy/Projects/kollector-scum/frontend/node_modules/@testing-library/user-event/dist/cjs/event/dispatchEvent.js:45:22)
+          at Object.dispatchUIEvent (/home/andy/Projects/kollector-scum/frontend/node_modules/@testing-library/user-event/dist/cjs/event/dispatchEvent.js:22:26)
+          at Mouse.up (/home/andy/Projects/kollector-scum/frontend/node_modules/@testing-library/user-event/dist/cjs/system/pointer/mouse.js:100:30)
+          at PointerHost.release (/home/andy/Projects/kollector-scum/frontend/node_modules/@testing-library/user-event/dist/cjs/system/pointer/index.js:87:24)
+          at pointerAction (/home/andy/Projects/kollector-scum/frontend/node_modules/@testing-library/user-event/dist/cjs/pointer/index.js:54:47)
+          at Object.pointer (/home/andy/Projects/kollector-scum/frontend/node_modules/@testing-library/user-event/dist/cjs/pointer/index.js:27:9)
+          at Object.asyncWrapper (/home/andy/Projects/kollector-scum/frontend/node_modules/@testing-library/react/dist/pure.js:87:22)
+          at Object.<anonymous> (/home/andy/Projects/kollector-scum/frontend/app/components/__tests__/AddReleaseForm.test.tsx:381:7)
+
+      127 | 		if (first.includes('Failed to fetch') || first.includes('Error fetching')) return;
+      128 | 	}
+    > 129 | 	_origConsoleError(...args);
+          | 	^
+      130 | };
+      131 |
+      132 | // Provide lightweight default mocks for the app API helpers so components
+
+      at console._origConsoleError [as error] (jest.setup.ts:129:2)
+      at error (app/components/AddReleaseForm.tsx:411:15)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+PASS app/components/__tests__/Header.test.tsx
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.error
+      Failed to get user profile: TypeError: (0 , _api.fetchJson) is not a function
+          at getUserProfile (/home/andy/Projects/kollector-scum/frontend/app/lib/auth.ts:89:36)
+          at checkAuth (/home/andy/Projects/kollector-scum/frontend/app/components/GoogleSignIn.tsx:29:51)
+          at checkAuth (/home/andy/Projects/kollector-scum/frontend/app/components/GoogleSignIn.tsx:45:5)
+          at Object.react-stack-bottom-frame (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)
+          at runWithFiberInDEV (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)
+          at commitHookEffectListMount (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)
+          at commitHookPassiveMountEffects (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)
+          at commitPassiveMountOnFiber (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)
+          at recursivelyTraversePassiveMountEffects (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)
+          at commitPassiveMountOnFiber (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:13957:11)
+          at recursivelyTraversePassiveMountEffects (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)
+          at commitPassiveMountOnFiber (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:13957:11)
+          at recursivelyTraversePassiveMountEffects (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)
+          at commitPassiveMountOnFiber (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)
+          at recursivelyTraversePassiveMountEffects (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)
+          at commitPassiveMountOnFiber (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:13853:11)
+          at flushPassiveEffects (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:15737:9)
+          at /home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:15379:15
+          at flushActQueue (/home/andy/Projects/kollector-scum/frontend/node_modules/react/cjs/react.development.js:566:34)
+          at /home/andy/Projects/kollector-scum/frontend/node_modules/react/cjs/react.development.js:822:21
+          at processTicksAndRejections (node:internal/process/task_queues:103:5)
+
+      127 | 		if (first.includes('Failed to fetch') || first.includes('Error fetching')) return;
+      128 | 	}
+    > 129 | 	_origConsoleError(...args);
+          | 	^
+      130 | };
+      131 |
+      132 | // Provide lightweight default mocks for the app API helpers so components
+
+      at console._origConsoleError [as error] (jest.setup.ts:129:2)
+      at error (app/lib/auth.ts:94:13)
+      at checkAuth (app/components/GoogleSignIn.tsx:29:51)
+      at checkAuth (app/components/GoogleSignIn.tsx:45:5)
+      at Object.react-stack-bottom-frame (node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)
+      at commitHookEffectListMount (node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)
+      at commitHookPassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:13957:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:13957:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:13853:11)
+      at flushPassiveEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15737:9)
+      at node_modules/react-dom/cjs/react-dom-client.development.js:15379:15
+      at flushActQueue (node_modules/react/cjs/react.development.js:566:34)
+      at node_modules/react/cjs/react.development.js:822:21
+
+    console.log
+      [Header] Not authenticated, skipping kollections load
+
+      at log (app/components/Header.tsx:33:17)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.error
+      Failed to get user profile: TypeError: (0 , _api.fetchJson) is not a function
+          at getUserProfile (/home/andy/Projects/kollector-scum/frontend/app/lib/auth.ts:89:36)
+          at checkAuth (/home/andy/Projects/kollector-scum/frontend/app/components/GoogleSignIn.tsx:29:51)
+          at checkAuth (/home/andy/Projects/kollector-scum/frontend/app/components/GoogleSignIn.tsx:45:5)
+          at Object.react-stack-bottom-frame (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)
+          at runWithFiberInDEV (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)
+          at commitHookEffectListMount (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)
+          at commitHookPassiveMountEffects (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)
+          at commitPassiveMountOnFiber (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)
+          at recursivelyTraversePassiveMountEffects (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)
+          at commitPassiveMountOnFiber (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:13957:11)
+          at recursivelyTraversePassiveMountEffects (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)
+          at commitPassiveMountOnFiber (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:13957:11)
+          at recursivelyTraversePassiveMountEffects (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)
+          at commitPassiveMountOnFiber (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)
+          at recursivelyTraversePassiveMountEffects (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)
+          at commitPassiveMountOnFiber (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:13853:11)
+          at flushPassiveEffects (/home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:15737:9)
+          at /home/andy/Projects/kollector-scum/frontend/node_modules/react-dom/cjs/react-dom-client.development.js:15379:15
+          at flushActQueue (/home/andy/Projects/kollector-scum/frontend/node_modules/react/cjs/react.development.js:566:34)
+          at process.env.NODE_ENV.exports.act (/home/andy/Projects/kollector-scum/frontend/node_modules/react/cjs/react.development.js:859:10)
+          at /home/andy/Projects/kollector-scum/frontend/node_modules/@testing-library/react/dist/act-compat.js:46:25
+          at renderRoot (/home/andy/Projects/kollector-scum/frontend/node_modules/@testing-library/react/dist/pure.js:189:26)
+          at render (/home/andy/Projects/kollector-scum/frontend/node_modules/@testing-library/react/dist/pure.js:291:10)
+          at Object.<anonymous> (/home/andy/Projects/kollector-scum/frontend/app/components/__tests__/Header.test.tsx:49:11)
+          at Promise.finally.completed (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:1557:28)
+          at new Promise (<anonymous>)
+          at callAsyncCircusFn (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:1497:10)
+          at _callCircusTest (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:1007:40)
+          at _runTest (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:947:3)
+          at /home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:849:7
+          at _runTestsForDescribeBlock (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:862:11)
+          at _runTestsForDescribeBlock (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:857:11)
+          at run (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:761:3)
+          at runAndTransformResultsToJestFormat (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/jestAdapterInit.js:1918:21)
+          at jestAdapter (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-circus/build/runner.js:101:19)
+          at runTestInternal (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-runner/build/testWorker.js:275:16)
+          at runTest (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-runner/build/testWorker.js:343:7)
+          at Object.worker (/home/andy/Projects/kollector-scum/frontend/node_modules/jest-runner/build/testWorker.js:497:12)
+
+      127 | 		if (first.includes('Failed to fetch') || first.includes('Error fetching')) return;
+      128 | 	}
+    > 129 | 	_origConsoleError(...args);
+          | 	^
+      130 | };
+      131 |
+      132 | // Provide lightweight default mocks for the app API helpers so components
+
+      at console._origConsoleError [as error] (jest.setup.ts:129:2)
+      at error (app/lib/auth.ts:94:13)
+      at checkAuth (app/components/GoogleSignIn.tsx:29:51)
+      at checkAuth (app/components/GoogleSignIn.tsx:45:5)
+      at Object.react-stack-bottom-frame (node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)
+      at commitHookEffectListMount (node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)
+      at commitHookPassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:13957:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:13957:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)
+      at recursivelyTraversePassiveMountEffects (node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)
+      at commitPassiveMountOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:13853:11)
+      at flushPassiveEffects (node_modules/react-dom/cjs/react-dom-client.development.js:15737:9)
+      at node_modules/react-dom/cjs/react-dom-client.development.js:15379:15
+      at flushActQueue (node_modules/react/cjs/react.development.js:566:34)
+      at process.env.NODE_ENV.exports.act (node_modules/react/cjs/react.development.js:859:10)
+      at node_modules/@testing-library/react/dist/act-compat.js:46:25
+      at renderRoot (node_modules/@testing-library/react/dist/pure.js:189:26)
+      at render (node_modules/@testing-library/react/dist/pure.js:291:10)
+      at Object.<anonymous> (app/components/__tests__/Header.test.tsx:49:11)
+
+    console.log
+      [Header] Not authenticated, skipping kollections load
+
+      at log (app/components/Header.tsx:33:17)
+
+PASS app/components/__tests__/TrackList.test.tsx
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      Track artists: [ 'Guest Artist' ]
+
+      at log (app/components/TrackList.tsx:36:13)
+          at Array.map (<anonymous>)
+          at Array.map (<anonymous>)
+
+    console.log
+      Album artists: [ 'Main Artist' ]
+
+      at log (app/components/TrackList.tsx:37:13)
+          at Array.map (<anonymous>)
+          at Array.map (<anonymous>)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+PASS app/add/__tests__/page.test.tsx
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+PASS app/components/__tests__/EditReleaseButton.test.tsx
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+PASS app/components/__tests__/StatisticsCharts.test.tsx
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+PASS app/components/__tests__/HookSmoke.test.tsx
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+PASS app/contexts/__tests__/ThemeContext.test.tsx
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+PASS app/components/__tests__/ImageGallery.test.tsx
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+PASS app/lib/__tests__/api.test.ts
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+PASS app/components/__tests__/RootLayout.test.tsx
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+PASS app/components/__tests__/HeaderRenderSimple.test.tsx
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+PASS app/components/__tests__/HeaderImport.test.tsx
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+PASS app/add/__tests__/mapDiscogsToFormData.test.ts
+  ● Console
+
+    console.log
+      [jest.setup] auth_token = test-token
+
+      at Object.log (jest.setup.ts:90:11)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+    console.log
+      [jest.setup.beforeEach] auth_token = test-token
+
+      at Object.log (jest.setup.ts:105:12)
+
+
+Test Suites: 38 passed, 38 total
+Tests:       416 passed, 416 total
+Snapshots:   3 passed, 3 total
+Time:        7.939 s, estimated 9 s
+Ran all test suites.

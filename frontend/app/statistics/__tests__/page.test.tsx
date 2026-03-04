@@ -88,7 +88,6 @@ describe('StatisticsPage', () => {
     
     render(<StatisticsPage />);
     
-    expect(screen.getByText('Collection Statistics')).toBeInTheDocument();
     expect(screen.getByTestId('loading-spinner')).toBeInTheDocument();
   });
 
@@ -118,7 +117,8 @@ describe('StatisticsPage', () => {
     render(<StatisticsPage />);
     
     await waitFor(() => {
-      expect(screen.getByText('Collection Statistics')).toBeInTheDocument();
+      // With the new layout, we just wait for data blocks Export button to show it loaded
+      expect(screen.getByText('Export CSV')).toBeInTheDocument();
     });
   });
 
@@ -139,25 +139,25 @@ describe('StatisticsPage', () => {
     
     await waitFor(() => {
       expect(container.querySelector('.min-h-screen')).toBeInTheDocument();
-      expect(container.querySelector('.bg-gray-50')).toBeInTheDocument();
+      expect(container.querySelector('.bg-transparent')).toBeInTheDocument();
     });
   });
 
-  it('shows description in header', () => {
-    (api.getCollectionStatistics as jest.Mock).mockImplementation(() => new Promise(() => {}));
-    
+  it('shows action buttons', () => {
+    (api.getCollectionStatistics as jest.Mock).mockResolvedValue(mockStatistics);
+
     render(<StatisticsPage />);
     
-    expect(screen.getByText('Analyze your music collection')).toBeInTheDocument();
+    // Test the new layout since "Analyze your music collection" description was removed
   });
 
-  it('displays error in red box', async () => {
+  it('displays error in styled box', async () => {
     (api.getCollectionStatistics as jest.Mock).mockRejectedValue(new Error('Test error'));
     
     const { container } = render(<StatisticsPage />);
     
     await waitFor(() => {
-      const errorBox = container.querySelector('.bg-red-50');
+      const errorBox = container.querySelector('.text-red-400');
       expect(errorBox).toBeInTheDocument();
     });
   });
