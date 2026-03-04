@@ -30,14 +30,8 @@ export default function StatisticsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="bg-white border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 py-6">
-            <h1 className="text-2xl font-black text-gray-900">Collection Statistics</h1>
-            <p className="text-gray-600 mt-1 font-medium">Analyze your music collection</p>
-          </div>
-        </div>
-        <div className="max-w-7xl mx-auto px-4 py-12">
+      <div className="min-h-screen bg-transparent">
+        <div className="max-w-7xl mx-auto px-4 py-6">
           <LoadingSpinner />
         </div>
       </div>
@@ -46,14 +40,9 @@ export default function StatisticsPage() {
 
   if (error || !statistics) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="bg-white border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 py-6">
-            <h1 className="text-2xl font-black text-gray-900">Collection Statistics</h1>
-          </div>
-        </div>
-        <div className="max-w-7xl mx-auto px-4 py-12">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 font-medium">
+      <div className="min-h-screen bg-transparent">
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-red-400 font-medium">
             {error}
           </div>
         </div>
@@ -119,41 +108,30 @@ export default function StatisticsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Page Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-black text-gray-900">Collection Statistics</h1>
-              <p className="text-gray-600 mt-1 font-medium">Comprehensive analysis of your music collection</p>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={exportCSV}
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center gap-2 font-bold"
-              >
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Export CSV
-              </button>
-              <button
-                onClick={exportData}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2 font-bold"
-              >
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Export JSON
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
+    <div className="min-h-screen bg-transparent">
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* Export Buttons */}
+        <div className="flex justify-end gap-2 mb-6">
+          <button
+            onClick={exportCSV}
+            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-colors flex items-center gap-2 font-semibold"
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Export CSV
+          </button>
+          <button
+            onClick={exportData}
+            className="px-4 py-2 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white rounded-xl transition-colors flex items-center gap-2 font-semibold"
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Export JSON
+          </button>
+        </div>
         {/* Overview Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
           <StatCard
@@ -198,11 +176,11 @@ export default function StatisticsPage() {
               />
             )}
             {statistics.mostExpensiveRelease && (
-              <div className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                <p className="text-sm font-medium text-gray-600 mb-2">Most Expensive</p>
+              <div className="bg-[#13131F] rounded-xl border border-[#1C1C28] p-6 hover:shadow-lg transition-shadow">
+                <p className="text-sm font-medium text-gray-400 mb-2">Most Expensive</p>
                 <Link
                   href={`/releases/${statistics.mostExpensiveRelease.id}`}
-                  className="text-lg font-semibold text-blue-600 hover:text-blue-700 line-clamp-2"
+                  className="text-lg font-semibold text-[#8B5CF6] hover:text-[#A78BFA] line-clamp-2"
                 >
                   {statistics.mostExpensiveRelease.title}
                 </Link>
@@ -256,8 +234,8 @@ export default function StatisticsPage() {
 
         {/* Recently Added */}
         {statistics.recentlyAdded.length > 0 && (
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Recently Added</h3>
+          <div className="bg-[#13131F] rounded-xl border border-[#1C1C28] p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Recently Added</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               {statistics.recentlyAdded.map((release) => {
                 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5072';
@@ -271,7 +249,7 @@ export default function StatisticsPage() {
                     href={`/releases/${release.id}`}
                     className="group"
                   >
-                    <div className="aspect-square mb-2 overflow-hidden rounded-md border border-gray-200">
+                    <div className="aspect-square mb-2 overflow-hidden rounded-xl border border-[#1C1C28]">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={imageUrl}
@@ -279,7 +257,7 @@ export default function StatisticsPage() {
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                       />
                     </div>
-                    <p className="text-sm font-medium text-gray-900 line-clamp-1 group-hover:text-blue-600">
+                    <p className="text-sm font-medium text-white line-clamp-1 group-hover:text-[#8B5CF6]">
                       {release.title}
                     </p>
                     {release.artistNames && release.artistNames.length > 0 && (

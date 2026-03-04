@@ -117,15 +117,15 @@ function RecentlyPlayedComponent({ maxItems = 24 }: RecentlyPlayedProps) {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-8 shadow-sm">
-        <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <span className="text-xl">🎵</span> Recently Played
-        </h3>
+      <div className="space-y-4">
+        <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+          <span className="text-base">🎵</span> Recently Played
+        </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {[...Array(6)].map((_, i) => (
             <div key={i}>
               <div className="h-6 mb-2" />
-              <div className="aspect-square bg-gray-200 animate-pulse rounded-lg" />
+              <div className="aspect-square bg-[#1C1C28] animate-pulse rounded-xl" />
             </div>
           ))}
         </div>
@@ -135,10 +135,10 @@ function RecentlyPlayedComponent({ maxItems = 24 }: RecentlyPlayedProps) {
 
   if (error) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-8 shadow-sm">
-        <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <span className="text-xl">🎵</span> Recently Played
-        </h3>
+      <div className="bg-[#13131F] rounded-2xl border border-[#1C1C28] p-8">
+        <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+          <span className="text-base">🎵</span> Recently Played
+        </h2>
         <div className="text-center py-8 text-gray-500">
           <div className="text-4xl mb-4">⚠️</div>
           <p className="font-bold mb-2">Unable to load recently played</p>
@@ -150,10 +150,10 @@ function RecentlyPlayedComponent({ maxItems = 24 }: RecentlyPlayedProps) {
 
   if (items.length === 0) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-8 shadow-sm">
-        <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <span className="text-xl">🎵</span> Recently Played
-        </h3>
+      <div className="bg-[#13131F] rounded-2xl border border-[#1C1C28] p-8">
+        <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+          <span className="text-base">🎵</span> Recently Played
+        </h2>
         <div className="text-center py-8 text-gray-500">
           <div className="text-4xl mb-4">🎧</div>
           <p className="font-bold mb-2">No recently played albums</p>
@@ -164,17 +164,17 @@ function RecentlyPlayedComponent({ maxItems = 24 }: RecentlyPlayedProps) {
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-8 shadow-sm">
-      <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-        <span className="text-xl">🎵</span> Recently Played
-      </h3>
+    <div className="space-y-4">
+      <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+        <span className="text-base">🎵</span> Recently Played
+      </h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
         {itemsWithDateInfo.map((item) => (
           <div key={`${item.id}-${item.playedAt}`} className="flex flex-col">
             {/* Date heading - only shown for first item of each date */}
             <div className="h-6 mb-2">
               {item.showDate && (
-                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <span className="text-[10px] font-bold text-[#8B5CF6] uppercase tracking-widest">
                   {item.relativeDate}
                 </span>
               )}
@@ -183,7 +183,7 @@ function RecentlyPlayedComponent({ maxItems = 24 }: RecentlyPlayedProps) {
             {/* Clickable cover image with play count badge */}
             <Link
               href={`/releases/${item.id}`}
-              className="block aspect-square rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-200 relative"
+              className="group relative block aspect-square rounded-xl overflow-hidden border border-[#1C1C28] hover:border-[#8B5CF6]/50 transition-all cursor-pointer shadow-sm hover:shadow-lg hover:shadow-[#8B5CF6]/10"
               title={`Played on ${new Date(item.playedAt).toLocaleString('en-US', {
                 year: 'numeric',
                 month: 'short',
@@ -200,9 +200,13 @@ function RecentlyPlayedComponent({ maxItems = 24 }: RecentlyPlayedProps) {
                 className="object-cover"
                 loading="lazy"
               />
+              {/* Hover overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
+                <div className="text-[10px] text-gray-300">View</div>
+              </div>
               {/* Play count badge - only shown if played more than once */}
               {item.playCount > 1 && (
-                <div className="absolute bottom-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-md">
+                <div className="absolute bottom-2 right-2 bg-[#8B5CF6] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-lg z-10">
                   x{item.playCount}
                 </div>
               )}

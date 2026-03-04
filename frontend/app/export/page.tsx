@@ -2,24 +2,12 @@
 
 export default function ExportPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <section className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-12">
-          <h1 className="text-4xl font-black text-gray-900 mb-2 flex items-center gap-3">
-            <span className="text-3xl">📤</span>
-            Export Collection
-          </h1>
-          <p className="text-lg text-gray-600 font-medium">
-            Export your music collection data
-          </p>
+    <div className="min-h-screen bg-transparent">
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className="bg-[#13131F] rounded-xl border border-[#1C1C28] p-8 text-center">
+          <p className="text-gray-400">Export functionality coming soon...</p>
         </div>
-      </section>
-
-      <main className="max-w-7xl mx-auto px-4 py-12">
-        <div className="bg-white rounded-lg border border-gray-200 p-8 shadow-sm text-center">
-          <p className="text-gray-600">Export functionality coming soon...</p>
-        </div>
-      </main>
+      </div>
     </div>
   );
 }

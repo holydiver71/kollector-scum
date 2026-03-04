@@ -100,7 +100,7 @@ namespace KollectorScum.Api.Controllers
             var profile = await _userProfileRepository.GetByUserIdAsync(userId.Value);
 
             // Allowed theme names
-            var allowedThemes = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "metal-default", "clean-light" };
+            var allowedThemes = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "midnight", "metal-default", "clean-light" };
             var requestedTheme = request.SelectedTheme?.Trim();
             if (requestedTheme != null && !allowedThemes.Contains(requestedTheme))
             {

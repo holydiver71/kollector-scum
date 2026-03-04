@@ -38,7 +38,7 @@ export default function SortPanel({
       aria-hidden={!open}
       className={`transition-all duration-200 ease-in-out overflow-hidden ${
         open ? 'max-h-[640px] opacity-100 translate-y-0' : 'max-h-0 opacity-0 -translate-y-0'
-      } bg-gradient-to-br from-red-900 via-red-950 to-black rounded-lg border border-white/10 px-4 py-4 mb-0 text-white w-full`}
+      } bg-gradient-to-br from-[#13131F] via-[#0D0D1A] to-[#0A0A10] rounded-lg border border-[#1C1C28] px-4 py-4 mb-0 text-white w-full`}
     >
       <div className="flex items-center justify-between">
         <h3
@@ -71,7 +71,7 @@ export default function SortPanel({
             <button
               onClick={() => onChange({ sortBy: 'title', sortOrder: 'asc' })}
               className={`inline-flex items-center justify-center gap-2 w-12 h-10 text-sm font-bold transition-colors rounded-l-lg border-r border-white/10
-                ${filters.sortBy === 'title' && filters.sortOrder === 'asc' ? 'bg-[#F28A2E]/50 text-white hover:bg-[#F28A2E]/40' : 'text-white/90 hover:bg-[#F28A2E]/10'}`}
+                ${filters.sortBy === 'title' && filters.sortOrder === 'asc' ? 'bg-[#8B5CF6]/50 text-white hover:bg-[#8B5CF6]/40' : 'text-white/90 hover:bg-[#8B5CF6]/10'}`}
               title="Title (A-Z)"
             >
               <Disc3 className="w-4 h-4" />
@@ -82,7 +82,7 @@ export default function SortPanel({
             <button
               onClick={() => onChange({ sortBy: 'title', sortOrder: 'desc' })}
               className={`inline-flex items-center justify-center gap-2 w-12 h-10 text-sm font-bold transition-colors rounded-r-lg
-                ${filters.sortBy === 'title' && filters.sortOrder === 'desc' ? 'bg-[#F28A2E]/50 text-white hover:bg-[#F28A2E]/40' : 'text-white/90 hover:bg-[#F28A2E]/10'}`}
+                ${filters.sortBy === 'title' && filters.sortOrder === 'desc' ? 'bg-[#8B5CF6]/50 text-white hover:bg-[#8B5CF6]/40' : 'text-white/90 hover:bg-[#8B5CF6]/10'}`}
               title="Title (Z-A)"
             >
               <Disc3 className="w-4 h-4" />
@@ -97,7 +97,7 @@ export default function SortPanel({
             <button
               onClick={() => onChange({ sortBy: 'artist', sortOrder: 'asc' })}
                 className={`inline-flex items-center justify-center gap-2 w-12 h-10 text-sm font-bold transition-colors rounded-l-lg border-r border-white/10
-                ${filters.sortBy === 'artist' && filters.sortOrder === 'asc' ? 'bg-[#F28A2E]/50 text-white hover:bg-[#F28A2E]/40' : 'text-white/90 hover:bg-[#F28A2E]/10'}`}
+                ${filters.sortBy === 'artist' && filters.sortOrder === 'asc' ? 'bg-[#8B5CF6]/50 text-white hover:bg-[#8B5CF6]/40' : 'text-white/90 hover:bg-[#8B5CF6]/10'}`}
               title="Artist (A-Z)"
             >
               <User className="w-4 h-4" />
@@ -108,7 +108,7 @@ export default function SortPanel({
             <button
               onClick={() => onChange({ sortBy: 'artist', sortOrder: 'desc' })}
                 className={`inline-flex items-center justify-center gap-2 w-12 h-10 text-sm font-bold transition-colors rounded-r-lg
-                ${filters.sortBy === 'artist' && filters.sortOrder === 'desc' ? 'bg-[#F28A2E]/50 text-white hover:bg-[#F28A2E]/40' : 'text-white/90 hover:bg-[#F28A2E]/10'}`}
+                ${filters.sortBy === 'artist' && filters.sortOrder === 'desc' ? 'bg-[#8B5CF6]/50 text-white hover:bg-[#8B5CF6]/40' : 'text-white/90 hover:bg-[#8B5CF6]/10'}`}
               title="Artist (Z-A)"
             >
               <User className="w-4 h-4" />
@@ -123,7 +123,7 @@ export default function SortPanel({
               <button
                 onClick={() => onChange({ sortBy: 'dateadded', sortOrder: 'desc' })}
                 className={`inline-flex items-center justify-center gap-2 w-12 h-10 text-sm font-bold transition-colors rounded-l-lg border-r border-white/10
-                  ${filters.sortBy === 'dateadded' && filters.sortOrder === 'desc' ? 'bg-[#F28A2E]/50 text-white hover:bg-[#F28A2E]/40' : 'text-white/90 hover:bg-[#F28A2E]/10'}`}
+                  ${filters.sortBy === 'dateadded' && filters.sortOrder === 'desc' ? 'bg-[#8B5CF6]/50 text-white hover:bg-[#8B5CF6]/40' : 'text-white/90 hover:bg-[#8B5CF6]/10'}`}
                 title="Recently Added (Newest first)"
               >
                 <Clock className="w-4 h-4" />
@@ -134,7 +134,7 @@ export default function SortPanel({
               <button
                 onClick={() => onChange({ sortBy: 'dateadded', sortOrder: 'asc' })}
                 className={`inline-flex items-center justify-center gap-2 w-12 h-10 text-sm font-bold transition-colors rounded-r-lg
-                  ${filters.sortBy === 'dateadded' && filters.sortOrder === 'asc' ? 'bg-[#F28A2E]/50 text-white hover:bg-[#F28A2E]/40' : 'text-white/90 hover:bg-[#F28A2E]/10'}`}
+                  ${filters.sortBy === 'dateadded' && filters.sortOrder === 'asc' ? 'bg-[#8B5CF6]/50 text-white hover:bg-[#8B5CF6]/40' : 'text-white/90 hover:bg-[#8B5CF6]/10'}`}
                 title="Oldest First"
               >
                 <Clock className="w-4 h-4" />
@@ -149,7 +149,7 @@ export default function SortPanel({
             <button
               onClick={() => onChange({ sortBy: 'origreleaseyear', sortOrder: 'desc' })}
               className={`inline-flex items-center justify-center gap-2 w-12 h-10 text-sm font-bold transition-colors rounded-l-lg border-r border-white/10
-                ${filters.sortBy === 'origreleaseyear' && filters.sortOrder === 'desc' ? 'bg-[#F28A2E]/50 text-white hover:bg-[#F28A2E]/40' : 'text-white/90 hover:bg-[#F28A2E]/10'}`}
+                ${filters.sortBy === 'origreleaseyear' && filters.sortOrder === 'desc' ? 'bg-[#8B5CF6]/50 text-white hover:bg-[#8B5CF6]/40' : 'text-white/90 hover:bg-[#8B5CF6]/10'}`}
               title="Original Release Year (Newest First)"
             >
               <Calendar className="w-4 h-4" />
@@ -160,7 +160,7 @@ export default function SortPanel({
             <button
               onClick={() => onChange({ sortBy: 'origreleaseyear', sortOrder: 'asc' })}
               className={`inline-flex items-center justify-center gap-2 w-12 h-10 text-sm font-bold transition-colors rounded-r-lg
-                ${filters.sortBy === 'origreleaseyear' && filters.sortOrder === 'asc' ? 'bg-[#F28A2E]/50 text-white hover:bg-[#F28A2E]/40' : 'text-white/90 hover:bg-[#F28A2E]/10'}`}
+                ${filters.sortBy === 'origreleaseyear' && filters.sortOrder === 'asc' ? 'bg-[#8B5CF6]/50 text-white hover:bg-[#8B5CF6]/40' : 'text-white/90 hover:bg-[#8B5CF6]/10'}`}
               title="Original Release Year (Oldest First)"
             >
               <Calendar className="w-4 h-4" />
