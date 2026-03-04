@@ -82,6 +82,30 @@
   --theme-accent-light:    #F27141;
 }
 
+/* Force legacy light utility classes to render in midnight theme */
+[data-theme="midnight"] .bg-white {
+  background-color: var(--theme-card-bg) !important;
+}
+
+[data-theme="midnight"] .bg-gray-50,
+[data-theme="midnight"] .bg-slate-50 {
+  background-color: var(--theme-sidebar-hover) !important;
+}
+
+[data-theme="midnight"] .border-gray-100,
+[data-theme="midnight"] .border-gray-200,
+[data-theme="midnight"] .border-gray-300 {
+  border-color: var(--theme-card-border) !important;
+}
+
+[data-theme="midnight"] .text-gray-900,
+[data-theme="midnight"] .text-gray-800,
+[data-theme="midnight"] .text-gray-700,
+[data-theme="midnight"] .text-gray-600,
+[data-theme="midnight"] .text-gray-500 {
+  color: var(--theme-card-text) !important;
+}
+
 body {
   /* Diagonal top-left to bottom-right gradient driven by theme CSS variables */
   background: linear-gradient(

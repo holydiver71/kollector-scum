@@ -47,6 +47,7 @@ const ThemeContext = createContext<ThemeContextType>({
 });
 
 const THEME_STORAGE_KEY = "selectedTheme";
+const THEME_MIGRATION_V1_KEY = "selectedTheme_migrated_v1";
 
 /**
  * Provider that manages the active UI theme.
@@ -60,6 +61,19 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const stored = localStorage.getItem(THEME_STORAGE_KEY) as ThemeName | null;
+    const hasMigrated = localStorage.getItem(THEME_MIGRATION_V1_KEY) === "1";
+
+    if (!hasMigrated && stored === "metal-default") {
+      localStorage.setItem(THEME_STORAGE_KEY, "midnight");
+      localStorage.setItem(THEME_MIGRATION_V1_KEY, "1");
+      setThemeState("midnight");
+      return;
+    }
+
+    if (!hasMigrated) {
+      localStorage.setItem(THEME_MIGRATION_V1_KEY, "1");
+    }
+
     if (stored && AVAILABLE_THEMES.some((t) => t.name === stored)) {
       setThemeState(stored);
     }

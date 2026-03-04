@@ -38,15 +38,7 @@ export default function SearchPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Page Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <h1 className="text-2xl font-bold text-gray-900">Search Music</h1>
-          <p className="text-gray-600 mt-1">Find specific releases in your collection</p>
-        </div>
-      </div>
-
+    <div className="min-h-screen bg-transparent">
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-6">
         {!showResults ? (
@@ -54,8 +46,8 @@ export default function SearchPage() {
           <div className="max-w-2xl mx-auto">
             <div className="text-center mb-8">
               <div className="text-6xl mb-4">🔍</div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">Search Your Collection</h2>
-              <p className="text-gray-600">
+              <h2 className="text-xl font-semibold text-white mb-2">Search Your Collection</h2>
+              <p className="text-gray-400">
                 Use the search below to quickly find releases, or use advanced filters for more specific results.
               </p>
             </div>
