@@ -201,25 +201,21 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
 
   return (
     <div 
-      className={`relative bg-cover bg-center rounded-lg border border-white/10 ${compact ? 'px-4 py-1 mb-0 sm:py-1' : 'p-4 mb-4 sm:p-6'} text-white overflow-visible`}
-      style={{ backgroundImage: "url('/images/Kollector-Skum-bg.png')" }}
+      className={`relative bg-[#13131F] rounded-2xl border border-[#1C1C28] ${compact ? 'px-4 py-3 mb-0' : 'p-6 mb-4'} text-white overflow-visible`}
     >
-      {/* dark overlay for legibility */}
-      <div className="absolute inset-0 bg-black/70" />
-
       <div className={`relative z-10 ${compact ? 'space-y-2' : 'space-y-4'}`}>
         {/* Search Input with Autocomplete */}
         {showSearchInput && (
         <div>
-          <label htmlFor="search" className="block text-sm font-bold text-gray-200 mb-2 flex items-center gap-2">
-            <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <label htmlFor="search" className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+            <svg className="h-4 w-4 text-[#8B5CF6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             Search Releases
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
@@ -232,7 +228,7 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
               onChange={(e) => updateFilters({ search: e.target.value || undefined })}
               onKeyDown={handleKeyDown}
               onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-              className="block w-full pl-10 pr-3 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:border-white text-white placeholder-gray-400 transition-all duration-200 hover:bg-white/10"
+              className="block w-full pl-10 pr-3 py-2.5 bg-[#0A0A10] border border-[#2E2E3E] rounded-xl focus:outline-none focus:border-[#8B5CF6] text-white placeholder-gray-600 transition-all"
               autoComplete="off"
             />
             
@@ -240,14 +236,14 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
             {showSuggestions && suggestions.length > 0 && (
               <div 
                 ref={suggestionsRef}
-                className="absolute z-10 w-full mt-1 bg-neutral-900 border border-white/10 rounded-lg shadow-2xl max-h-60 overflow-auto backdrop-blur-xl"
+                className="absolute z-10 w-full mt-1 bg-[#13131F] border border-[#1C1C28] rounded-xl shadow-2xl max-h-60 overflow-auto"
               >
                 {suggestions.map((suggestion, index) => (
                   <button
                     key={`${suggestion.type}-${suggestion.id}`}
                     onClick={() => handleSuggestionClick(suggestion)}
-                    className={`w-full text-left px-4 py-3 hover:bg-red-600/20 flex items-center justify-between transition-colors border-b border-white/10 last:border-0 ${
-                      index === suggestionIndex ? 'bg-red-600/30' : ''
+                    className={`w-full text-left px-4 py-3 hover:bg-[#1C1C28] flex items-center justify-between transition-colors border-b border-[#1C1C28]/50 last:border-0 ${
+                      index === suggestionIndex ? 'bg-[#8B5CF6]/10' : ''
                     }`}
                   >
                     <div>
@@ -256,7 +252,7 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
                         <div className="text-sm text-gray-400">{suggestion.subtitle}</div>
                       )}
                     </div>
-                    <span className="text-xs text-red-400 capitalize px-2 py-1 bg-red-500/10 rounded-full">{suggestion.type}</span>
+                    <span className="text-xs text-[#A78BFA] capitalize px-2 py-1 bg-[#8B5CF6]/10 rounded-full">{suggestion.type}</span>
                   </button>
                 ))}
               </div>
@@ -277,8 +273,9 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
           }`}
         >
           <div className={`flex items-center justify-between ${compact ? 'mb-1' : 'mb-3'}`}>
-            <h3 className="text-sm font-semibold text-gray-200">
-              Filters
+            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2">
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" className="text-[#8B5CF6]"><path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+              Advanced Filters
             </h3>
             <button
               type="button"
@@ -288,17 +285,17 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
               }}
               aria-label="Close filters"
               title="Close filters"
-              className="inline-flex items-center justify-center p-1.5 rounded-lg hover:bg-white/10 transition-colors"
+              className="text-xs text-[#8B5CF6] hover:text-[#A78BFA] font-medium transition-colors"
             >
-              <X className="w-4 h-4 text-gray-300" />
+              Close
             </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Artist Filter */}
-            <div className="group bg-white/5 rounded-lg border border-white/10 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white hover:shadow-lg hover:shadow-white/10">
-              <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
                 Artist
@@ -310,9 +307,9 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
             </div>
 
             {/* Genre Filter */}
-            <div className="group bg-white/5 rounded-lg border border-white/10 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white hover:shadow-lg hover:shadow-white/10">
-              <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                 </svg>
                 Genre
@@ -325,15 +322,8 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
             </div>
 
             {/* Label Filter */}
-            <div className="group bg-white/5 rounded-lg border border-white/10 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white hover:shadow-lg hover:shadow-white/10">
-              <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21h18" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 16h5v5M8 16V9l4 2 4-2v7h3" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 7V3h2v4" />
-                </svg>
-                Label
-              </label>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Label</label>
               <LabelDropdown
                 value={filters.labelId}
                 onSelect={(label) => updateFilters({ labelId: label?.id })}
@@ -341,13 +331,8 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
             </div>
 
             {/* Country Filter */}
-            <div className="group bg-white/5 rounded-lg border border-white/10 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white hover:shadow-lg hover:shadow-white/10">
-              <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Country
-              </label>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Country</label>
               <CountryDropdown
                 value={filters.countryId}
                 onSelect={(country) => updateFilters({ countryId: country?.id })}
@@ -355,29 +340,17 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
             </div>
 
             {/* Format Filter */}
-            <div className="group bg-white/5 rounded-lg border border-white/10 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white hover:shadow-lg hover:shadow-white/10">
-              <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                  <circle cx="12" cy="12" r="10" />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
-                Format
-              </label>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Format</label>
               <FormatDropdown
                 value={filters.formatId}
                 onSelect={(format) => updateFilters({ formatId: format?.id })}
               />
             </div>
 
-            {/* Live Recording Filter - use the LookupDropdown styling for visual consistency */}
-            <div className="group bg-white/5 rounded-lg border border-white/10 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white hover:shadow-lg hover:shadow-white/10">
-              <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                </svg>
-                Recording Type
-              </label>
+            {/* Live Recording Filter */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Recording Type</label>
               <LookupDropdown
                 items={[{ id: 1, name: 'Studio recordings' }, { id: 2, name: 'Live recordings' }]}
                 value={filters.live === undefined ? undefined : (filters.live ? 2 : 1)}
@@ -392,13 +365,8 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
             </div>
 
             {/* Year Range Filters */}
-            <div className="group bg-white/5 rounded-lg border border-white/10 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white hover:shadow-lg hover:shadow-white/10">
-              <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                From Year
-              </label>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">From Year</label>
               <input
                 type="number"
                 placeholder="e.g., 1970"
@@ -406,17 +374,12 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
                 onChange={(e) => updateFilters({ yearFrom: e.target.value ? parseInt(e.target.value) : undefined })}
                 min="1900"
                 max={new Date().getFullYear()}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:border-white text-white placeholder-gray-400 transition-all"
+                className="w-full px-3 py-2.5 bg-[#0A0A10] border border-[#2E2E3E] rounded-xl focus:outline-none focus:border-[#8B5CF6] text-white placeholder-gray-600 transition-all text-sm"
               />
             </div>
 
-            <div className="group bg-white/5 rounded-lg border border-white/10 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white hover:shadow-lg hover:shadow-white/10">
-              <label className="block text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                To Year
-              </label>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">To Year</label>
               <input
                 type="number"
                 placeholder="e.g., 2024"
@@ -424,7 +387,7 @@ export function SearchAndFilter({ onFiltersChange, initialFilters, enableUrlSync
                 onChange={(e) => updateFilters({ yearTo: e.target.value ? parseInt(e.target.value) : undefined })}
                 min="1900"
                 max={new Date().getFullYear()}
-                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:border-white text-white placeholder-gray-400 transition-all"
+                className="w-full px-3 py-2.5 bg-[#0A0A10] border border-[#2E2E3E] rounded-xl focus:outline-none focus:border-[#8B5CF6] text-white placeholder-gray-600 transition-all text-sm"
               />
             </div>
               {/* Validation message for year inputs */}
@@ -585,7 +548,7 @@ export function QuickSearch({
           if (onQueryChange) onQueryChange(v);
         }}
         onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-        className="block w-full pl-10 pr-10 py-2 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-white focus:border-white bg-white/5 focus:bg-white/10 text-white placeholder-gray-400 transition-all"
+        className="block w-full pl-10 pr-10 py-2 border border-[#2E2E3E] rounded-xl focus:outline-none focus:border-[#8B5CF6] bg-[#0A0A10] focus:bg-[#0A0A10] text-white placeholder-gray-600 transition-all"
         autoComplete="off"
       />
       {query && (
@@ -604,19 +567,19 @@ export function QuickSearch({
       {/* Removed submit arrow button — submission still works via Enter key */}
 
       {showSuggestions && suggestions.length > 0 && dropdownStyle && createPortal(
-        <div ref={dropdownRef} style={dropdownStyle} className="bg-neutral-900 border border-white/10 rounded-lg shadow-2xl max-h-60 overflow-auto backdrop-blur-xl">
+        <div ref={dropdownRef} style={dropdownStyle} className="bg-[#13131F] border border-[#1C1C28] rounded-xl shadow-2xl max-h-60 overflow-auto">
           {suggestions.map((s, idx) => (
             <button
               key={`${s.type}-${s.id}`}
               type="button"
               onClick={() => handleSuggestionClick(s)}
-              className={`w-full text-left px-4 py-3 hover:bg-red-600/20 flex items-center justify-between transition-colors border-b border-white/10 last:border-0 ${idx === suggestionIndex ? 'bg-red-600/30' : ''}`}
+              className={`w-full text-left px-4 py-3 hover:bg-[#1C1C28] flex items-center justify-between transition-colors border-b border-[#1C1C28]/50 last:border-0 ${idx === suggestionIndex ? 'bg-[#8B5CF6]/10' : ''}`}
             >
               <div>
                 <div className="font-medium text-white">{s.name}</div>
                 {s.subtitle && <div className="text-sm text-gray-400">{s.subtitle}</div>}
               </div>
-              <span className="text-xs text-red-400 capitalize px-2 py-1 bg-red-500/10 rounded-full">{s.type}</span>
+              <span className="text-xs text-[#A78BFA] capitalize px-2 py-1 bg-[#8B5CF6]/10 rounded-full">{s.type}</span>
             </button>
           ))}
         </div>,
