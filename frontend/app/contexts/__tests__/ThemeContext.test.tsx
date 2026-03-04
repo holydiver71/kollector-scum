@@ -99,6 +99,20 @@ describe('ThemeProvider', () => {
     // Should fall back to default
     expect(screen.getByTestId('current-theme').textContent).toBe('midnight');
   });
+
+  it('migrates legacy metal-default selection to midnight once', () => {
+    localStorage.setItem('selectedTheme', 'metal-default');
+
+    render(
+      <ThemeProvider>
+        <ThemeConsumer />
+      </ThemeProvider>
+    );
+
+    expect(screen.getByTestId('current-theme').textContent).toBe('midnight');
+    expect(localStorage.getItem('selectedTheme')).toBe('midnight');
+    expect(localStorage.getItem('selectedTheme_migrated_v1')).toBe('1');
+  });
 });
 
 describe('AVAILABLE_THEMES', () => {
