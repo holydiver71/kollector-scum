@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 /** All supported theme identifiers. */
-export type ThemeName = "metal-default" | "metal-1" | "clean-light" | "dark";
+export type ThemeName = "midnight" | "metal-default" | "metal-1" | "clean-light" | "dark";
 
 /** Metadata about a selectable theme. */
 export interface ThemeOption {
@@ -17,6 +17,11 @@ export interface ThemeOption {
 
 /** Themes available to users. Add new entries here to expose additional themes. */
 export const AVAILABLE_THEMES: ThemeOption[] = [
+  {
+    name: "midnight",
+    label: "Midnight",
+    description: "Dark streaming-platform aesthetic with purple accents.",
+  },
   {
     name: "metal-default",
     label: "Metal Default",
@@ -47,11 +52,12 @@ interface ThemeContextType {
 }
 
 const ThemeContext = createContext<ThemeContextType>({
-  theme: "metal-default",
+  theme: "midnight",
   setTheme: () => {},
 });
 
 const THEME_STORAGE_KEY = "selectedTheme";
+const THEME_MIGRATION_V1_KEY = "selectedTheme_migrated_v1";
 
 /**
  * Provider that manages the active UI theme.
@@ -59,12 +65,25 @@ const THEME_STORAGE_KEY = "selectedTheme";
  * in `localStorage` so the preference survives page reloads.
  */
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeName>("metal-default");
+  const [theme, setThemeState] = useState<ThemeName>("midnight");
 
   // Initialise from localStorage on mount (client-only)
   useEffect(() => {
     if (typeof window === "undefined") return;
     const stored = localStorage.getItem(THEME_STORAGE_KEY) as ThemeName | null;
+    const hasMigrated = localStorage.getItem(THEME_MIGRATION_V1_KEY) === "1";
+
+    if (!hasMigrated && stored === "metal-default") {
+      localStorage.setItem(THEME_STORAGE_KEY, "midnight");
+      localStorage.setItem(THEME_MIGRATION_V1_KEY, "1");
+      setThemeState("midnight");
+      return;
+    }
+
+    if (!hasMigrated) {
+      localStorage.setItem(THEME_MIGRATION_V1_KEY, "1");
+    }
+
     if (stored && AVAILABLE_THEMES.some((t) => t.name === stored)) {
       setThemeState(stored);
     }
