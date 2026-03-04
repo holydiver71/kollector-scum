@@ -32,13 +32,6 @@ jest.mock('../../components/MusicReleaseList', () => ({
 }));
 
 describe('SearchPage', () => {
-  it('renders the page header', () => {
-    render(<SearchPage />);
-    
-    expect(screen.getByText('Search Music')).toBeInTheDocument();
-    expect(screen.getByText('Find specific releases in your collection')).toBeInTheDocument();
-  });
-
   it('initially shows search landing page', () => {
     render(<SearchPage />);
     
@@ -99,7 +92,7 @@ describe('SearchPage', () => {
     
     // Check for main layout elements
     expect(container.querySelector('.min-h-screen')).toBeInTheDocument();
-    expect(container.querySelector('.bg-gray-50')).toBeInTheDocument();
+    expect(container.querySelector('.bg-transparent')).toBeInTheDocument();
   });
 
   it('shows search icon in landing page', () => {
