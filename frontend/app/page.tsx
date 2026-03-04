@@ -1,9 +1,9 @@
 "use client";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { LoadingSpinner } from "./components/LoadingComponents";
-import { RecentlyPlayed } from "./components/RecentlyPlayed";
 import { WelcomeScreen } from "./components/WelcomeScreen";
+import { RecentlyPlayed } from "./components/RecentlyPlayed";
 import { useCollection } from "./contexts/CollectionContext";
 
 import { getHealth, getPagedCount, ApiError } from "./lib/api";
@@ -16,6 +16,7 @@ interface CollectionStats { totalReleases: number; totalArtists: number; totalGe
 export default function Dashboard() {
   const [health, setHealth] = useState<HealthData | null>(null);
   const [stats, setStats] = useState<CollectionStats | null>(null);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -120,23 +121,8 @@ export default function Dashboard() {
   };
 
   // Memoize stat cards to prevent unnecessary recalculations
-  const statCards = useMemo(() => [
-    { key: "releases", label: "Releases", value: stats?.totalReleases || 0, color: "blue", icon: "🎵" },
-    { key: "artists", label: "Artists", value: stats?.totalArtists || 0, color: "green", icon: "👤" },
-    { key: "genres", label: "Genres", value: stats?.totalGenres || 0, color: "purple", icon: "🏷️" },
-    { key: "labels", label: "Labels", value: stats?.totalLabels || 0, color: "orange", icon: "🏢" }
-  ], [stats]);
 
   // Memoize actions array (static content)
-  const actions = useMemo(() => [
-    { title: "Browse Collection", href: "/collection", desc: "Explore your music library", icon: "📻", color: "gray" },
-    { title: "Search Music", href: "/search", desc: "Find specific releases", icon: "🔍", color: "blue" },
-    { title: "Ask a Question", href: "/query", desc: "Natural language queries", icon: "🔮", color: "purple" },
-    { title: "View Statistics", href: "/statistics", desc: "Analyze your collection", icon: "📊", color: "green" },
-    { title: "Add Release", href: "/add", desc: "Add new music to collection", icon: "➕", color: "green" },
-    { title: "Genres", href: "/genres", desc: "Browse by genre", icon: "⚡", color: "purple" },
-    { title: "Artists", href: "/artists", desc: "Browse artists", icon: "👤", color: "indigo" }
-  ], []);
 
   if (!isLoggedIn && !loading) {
     return (
@@ -178,88 +164,84 @@ export default function Dashboard() {
     return <WelcomeScreen onDismiss={handleDismissWelcome} onStartFresh={handleStartFresh} />;
   }
 
+  const QA = [
+    { title: "Browse Collection", icon: "📻", desc: "Explore your music library", link: "/collection" },
+    { title: "Search Music", icon: "🔍", desc: "Find specific releases", link: "/search" },
+    { title: "Ask a Question", icon: "🔮", desc: "Natural language queries", link: "/query" },
+    { title: "View Statistics", icon: "📊", desc: "Analyse your collection", link: "/statistics" },
+    { title: "Add Release", icon: "➕", desc: "Add new music", link: "/add" },
+    { title: "Genres", icon: "⚡", desc: "Browse by genre", link: "/genres" },
+    { title: "Artists", icon: "👤", desc: "Browse artists", link: "/artists" },
+  ];
+
+
   return (
     <div className="min-h-screen bg-transparent text-white">
-      {/* Page title section */}
-      <div className="max-w-7xl mx-auto px-6 pt-8 pb-6">
-        <div className="flex items-start justify-between flex-wrap gap-4">
-          <div>
-            <h1 className="text-3xl font-black tracking-tight text-white">Your Collection</h1>
-            <p className="text-gray-400 mt-1 text-sm">Organise and discover your music library</p>
-            <div className="flex items-center gap-2 mt-3">
-              {health?.status === "Healthy" ? (
-                <>
-                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                  <span className="text-xs text-emerald-400 font-semibold">Online</span>
-                </>
-              ) : (
-                <>
-                  <span className="w-2 h-2 rounded-full bg-red-400" />
-                  <span className="text-xs text-red-400 font-semibold">Offline</span>
-                </>
-              )}
-              {loading && <LoadingSpinner />}
+      <main className="max-w-7xl mx-auto px-6 py-8">
+        <div className="space-y-8">
+          <div className="flex items-start justify-between flex-wrap gap-4">
+            <div>
+              <h1 className="text-3xl font-black tracking-tight">Your Collection</h1>
+              <p className="text-gray-400 mt-1 text-sm">Organise and discover your music library</p>
+              <div className="flex items-center gap-2 mt-3">
+                {health?.status === "Healthy" ? (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                    <span className="text-xs text-emerald-400 font-semibold">System Online</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-red-400" />
+                    <span className="text-xs text-red-400 font-semibold">Offline</span>
+                  </>
+                )}
+                {loading && <LoadingSpinner />}
+              </div>
+            </div>
+            <div className="text-right text-xs text-gray-600">
+              Powered by Kollector API · Last sync: {health?.timestamp ? new Date(health.timestamp).toLocaleString() : "Unknown"}
             </div>
           </div>
-          <div className="text-right text-xs text-gray-600">
-            Powered by Kollector API · Last sync: {health?.timestamp ? new Date(health.timestamp).toLocaleString() : "Unknown"}
-          </div>
-        </div>
-      </div>
-
-      <main className="max-w-7xl mx-auto px-6 pb-12 space-y-10">
-        {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {loading ? (
-            [...Array(4)].map((_, i) => (
-              <div key={i} className="bg-[#13131F] rounded-2xl p-5 border border-[#1C1C28]">
-                <div className="h-8 w-16 bg-[#1C1C28] animate-pulse rounded mb-2" />
-                <div className="h-3 w-20 bg-[#1C1C28] animate-pulse rounded" />
+          
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { label: "Releases", value: stats?.totalReleases || 0, color: "#8B5CF6" },
+              { label: "Artists", value: stats?.totalArtists || 0, color: "#06B6D4" },
+              { label: "Genres", value: stats?.totalGenres || 0, color: "#10B981" },
+              { label: "Labels", value: stats?.totalLabels || 0, color: "#F59E0B" },
+            ].map((s) => (
+              <div key={s.label} className="bg-[#13131F] rounded-2xl p-5 border border-[#1C1C28] relative overflow-hidden">
+                <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full opacity-10" style={{ background: s.color, filter: "blur(20px)" }} />
+                <div className="text-3xl font-black mb-1" style={{ color: s.color }}>{s.value.toLocaleString()}</div>
+                <div className="text-xs text-gray-400 font-medium uppercase tracking-wider">{s.label}</div>
               </div>
-            ))
-          ) : (
-            statCards.map((card, i) => {
-              const colors = ["#8B5CF6", "#06B6D4", "#10B981", "#F59E0B"];
-              const color = colors[i % colors.length];
-              return (
-                <div key={card.key} className="bg-[#13131F] rounded-2xl p-5 border border-[#1C1C28] relative overflow-hidden">
-                  <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full opacity-10" style={{ background: color, filter: "blur(20px)" }} />
-                  <div className="text-3xl font-black mb-1" style={{ color }}>{card.value.toLocaleString()}</div>
-                  <div className="text-xs text-gray-400 font-medium uppercase tracking-wider">{card.label}</div>
-                </div>
-              );
-            })
-          )}
-        </div>
-
-        {/* Quick Actions */}
-        <div>
-          <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {actions.map(a => (
-              <Link
-                key={a.title}
-                href={a.href}
-                className="bg-[#13131F] rounded-xl p-4 border border-[#1C1C28] hover:border-[#8B5CF6]/40 cursor-pointer group transition-all"
-              >
-                <div className="text-2xl mb-2">{a.icon}</div>
-                <div className="text-sm font-semibold text-white group-hover:text-[#8B5CF6] transition-colors">{a.title}</div>
-                <div className="text-xs text-gray-500 mt-1">{a.desc}</div>
-              </Link>
             ))}
           </div>
-        </div>
 
-        {/* Recently Played */}
+          <div>
+            <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Quick Actions</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              {QA.map((a) => (
+                <Link href={a.link} key={a.title} className="block">
+                  <div className="h-full bg-[#13131F] rounded-xl p-4 border border-[#1C1C28] hover:border-[#8B5CF6]/40 cursor-pointer group transition-all">
+                    <div className="text-2xl mb-2">{a.icon}</div>
+                    <div className="text-sm font-semibold text-white group-hover:text-[#8B5CF6] transition-colors">{a.title}</div>
+                    <div className="text-xs text-gray-500 mt-1">{a.desc}</div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+
         <div>
           <RecentlyPlayed maxItems={24} />
         </div>
 
-        {/* Recent Activity placeholder */}
-        <div className="bg-[#13131F] rounded-2xl p-6 border border-[#1C1C28] text-center">
-          <div className="text-4xl mb-3">⏱️</div>
-          <p className="font-semibold text-gray-400">Activity tracking coming soon</p>
-          <p className="text-sm text-gray-600 mt-1">View your recent collection updates and changes here.</p>
+          <div className="bg-[#13131F] rounded-2xl p-6 border border-[#1C1C28] text-center">
+            <div className="text-4xl mb-3">⏱️</div>
+            <p className="font-semibold text-gray-400">Activity tracking coming soon</p>
+            <p className="text-sm text-gray-600 mt-1">View your recent collection updates and changes here.</p>
+          </div>
         </div>
       </main>
     </div>
