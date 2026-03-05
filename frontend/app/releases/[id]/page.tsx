@@ -559,7 +559,7 @@ export default function ReleaseDetailPage() {
 
             {/* Tracklist */}
             <div className="bg-[#13131F] rounded-xl border border-[#1C1C28] overflow-hidden">
-              <div className="px-4 py-3 border-b border-[#1C1C28]">
+              <div className="px-4 py-3 border-b border-[#1C1C28] mb-4">
                 <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">Tracklist</h3>
               </div>
               <TrackList

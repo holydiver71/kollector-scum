@@ -95,7 +95,7 @@ export function ReleaseLinks({ links }: ReleaseLinksProps) {
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 px-4 pb-4 pt-4">
       {validLinks.map((link, index) => (
         <a
           key={index}

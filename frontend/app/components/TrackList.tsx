@@ -71,9 +71,7 @@ export function TrackList({ media, albumArtists = [] }: TrackListProps) {
   const isMultiDisc = media.length > 1;
 
   return (
-    <div className="space-y-8">
-      {/* Top-level heading visible for all layouts */}
-      <h3 className="text-lg font-bold">Tracklist</h3>
+    <div className="space-y-8 px-4 pb-4">
       {/* Multi-disc: 2 column grid layout with custom proportions */}
       {isMultiDisc ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -217,7 +215,7 @@ export function TrackList({ media, albumArtists = [] }: TrackListProps) {
             const totalTracks = media.reduce((total, disc) => total + (disc.tracks?.length || 0), 0);
             const totalDuration = media.reduce((total, disc) => total + getTotalDuration(disc.tracks), 0);
             return totalDuration > 0 ? (
-              <div className="mt-4 pt-2 border-t border-gray-200 text-xs text-gray-600 font-bold uppercase tracking-widest flex justify-between">
+              <div className="mt-4 pt-4 pb-2 border-t border-[#1C1C28] text-xs text-gray-400 font-bold uppercase tracking-widest flex justify-between">
                 <span>{totalTracks} total tracks</span>
                 <span className="tabular-nums">{formatDuration(totalDuration)}</span>
               </div>
@@ -232,8 +230,8 @@ export function TrackList({ media, albumArtists = [] }: TrackListProps) {
           const totalDuration = media.reduce((total, disc) => total + getTotalDuration(disc.tracks), 0);
           
           return (
-            <div className="mt-8 pt-4 border-t border-gray-200">
-              <div className="flex justify-between items-center text-xs text-gray-600 uppercase tracking-widest font-bold">
+            <div className="mt-8 pt-4 pb-2 border-t border-[#1C1C28]">
+              <div className="flex justify-between items-center text-xs text-gray-400 uppercase tracking-widest font-bold">
                 <span>{totalTracks} total tracks</span>
                 {totalDuration > 0 && (
                   <span className="tabular-nums">{formatDuration(totalDuration)}</span>

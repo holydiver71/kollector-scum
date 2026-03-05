@@ -235,7 +235,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
     }
   };
 
-  const validateForm = (): boolean => {
+  const validateForm = (): Record<string, string> => {
     const errors: Record<string, string> = {};
 
     // Required fields
@@ -244,7 +244,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
     }
 
     // Check if at least one artist is selected OR new artist names are provided
-    if (formData.artistIds.length === 0 && (!formData.artistNames || formData.artistNames.length === 0)) {
+    if ((!formData.artistIds || formData.artistIds.length === 0) && (!formData.artistNames || formData.artistNames.length === 0)) {
       errors.artists = "At least one artist is required";
     }
 
@@ -259,33 +259,38 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
     });
 
     // Validate purchase info
-    if (formData.purchaseInfo?.price !== undefined) {
+    if (formData.purchaseInfo?.price !== undefined && formData.purchaseInfo?.price !== null) {
       if (formData.purchaseInfo.price < 0) {
         errors.price = "Price cannot be negative";
       }
       // Require currency when price is provided
       if (!formData.purchaseInfo.currency || !formData.purchaseInfo.currency.trim()) {
-        errors.currency = "Currency is required when price is specified";
+        // Default to USD if they didn't select it but price is provided
+        formData.purchaseInfo.currency = "USD";
       }
     }
 
     // Validate tracks
     formData.media?.forEach((disc, discIndex) => {
-      disc.tracks.forEach((track, trackIndex) => {
-        if (!track.title.trim()) {
+      disc.tracks?.forEach((track, trackIndex) => {
+        if (!track.title || !track.title.trim()) {
           errors[`track${discIndex}_${trackIndex}`] = "Track title is required";
         }
       });
     });
 
     setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
+    return errors;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) {
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      const errorList = Object.values(errors).join(" | ");
+      setError(`Please fix the validation errors before submitting: ${errorList}`);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
