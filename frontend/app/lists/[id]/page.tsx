@@ -46,7 +46,8 @@ export default function ListDetailPage() {
           const idsParam = listData.releaseIds.join(',');
           const params = new URLSearchParams({
             ids: idsParam,
-            pageSize: listData.releaseIds.length.toString()
+            "Pagination.PageSize": listData.releaseIds.length.toString(),
+            "Pagination.PageNumber": "1"
           });
           
           const releasesData = await fetchJson<{ items: MusicRelease[] }>(`/api/musicreleases?${params.toString()}`);

@@ -7,6 +7,11 @@ namespace KollectorScum.Api.DTOs
     public class MusicReleaseQueryParameters
     {
         /// <summary>
+        /// Filter by specific release IDs
+        /// </summary>
+        public string? Ids { get; set; }
+
+        /// <summary>
         /// Search term for title/artist/label search
         /// </summary>
         public string? Search { get; set; }
