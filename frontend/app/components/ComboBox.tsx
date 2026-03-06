@@ -41,6 +41,7 @@ export default function ComboBox({
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -78,6 +79,31 @@ export default function ComboBox({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Position the fixed dropdown relative to the input container
+  const updateDropdownPosition = () => {
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      setDropdownStyle({
+        position: "fixed",
+        top: rect.bottom + 4,
+        left: rect.left,
+        width: rect.width,
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (!isOpen) return;
+    updateDropdownPosition();
+    window.addEventListener("scroll", updateDropdownPosition, true);
+    window.addEventListener("resize", updateDropdownPosition);
+    return () => {
+      window.removeEventListener("scroll", updateDropdownPosition, true);
+      window.removeEventListener("resize", updateDropdownPosition);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const handleSelect = (itemId: number) => {
     if (multiple) {
@@ -228,7 +254,10 @@ export default function ComboBox({
 
       {/* Dropdown list */}
       {isOpen && !disabled && (
-        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+        <div
+          className="z-50 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
+          style={dropdownStyle}
+        >
           {filteredItems.length === 0 && !isNewValue && (
             <div className="px-3 py-2 text-sm text-gray-500">No results found</div>
           )}

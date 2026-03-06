@@ -253,9 +253,6 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
       if (link.url && !validateUrl(link.url)) {
         errors[`link${index}`] = "Invalid URL format";
       }
-      if (link.url && !link.type) {
-        errors[`linkType${index}`] = "Link type is required when URL is provided";
-      }
     });
 
     // Validate purchase info
@@ -298,22 +295,35 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
     setError(null);
 
     try {
+      // Normalise a year/date string to a full UTC ISO string for the backend.
+      // Handles three shapes that can arrive here:
+      //   1. "1983"                  – bare 4-digit year
+      //   2. "2023-06-01"            – YYYY-MM-DD from the HTML date picker
+      //   3. "2023-01-01T00:00:00"   – existing ISO value from the backend
+      //      that was never changed by the user (no "T" suffix should be added)
+      const toBackendDate = (value: string): string => {
+        // Shape 1: bare year
+        if (/^\d{4}$/.test(value)) {
+          return `${value}-01-01T00:00:00.000Z`;
+        }
+        // Shape 2: YYYY-MM-DD only (from <input type="date">)
+        if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+          return `${value}T00:00:00.000Z`;
+        }
+        // Shape 3 (and any other valid ISO/date string): parse and re-serialise
+        const d = new Date(value);
+        if (!isNaN(d.getTime())) {
+          return d.toISOString();
+        }
+        // Fallback – return as-is rather than crashing
+        return value;
+      };
+
       // Clean up the data before sending - remove empty arrays and convert years to DateTime
       const cleanedData = {
         ...formData,
-        // Convert year strings to ISO DateTime strings expected by the backend.
-        // Handles bare 4-digit years (e.g. "1983") and full YYYY-MM-DD strings from
-        // the date picker. Appending "T00:00:00Z" before parsing ensures UTC midnight.
-        releaseYear: formData.releaseYear
-          ? (/^\d{4}$/.test(formData.releaseYear)
-              ? `${formData.releaseYear}-01-01T00:00:00.000Z`
-              : new Date(`${formData.releaseYear}T00:00:00Z`).toISOString())
-          : undefined,
-        origReleaseYear: formData.origReleaseYear
-          ? (/^\d{4}$/.test(formData.origReleaseYear)
-              ? `${formData.origReleaseYear}-01-01T00:00:00.000Z`
-              : new Date(`${formData.origReleaseYear}T00:00:00Z`).toISOString())
-          : undefined,
+        releaseYear: formData.releaseYear ? toBackendDate(formData.releaseYear) : undefined,
+        origReleaseYear: formData.origReleaseYear ? toBackendDate(formData.origReleaseYear) : undefined,
         // Only send lengthInSeconds if it's a positive number
         lengthInSeconds: formData.lengthInSeconds && formData.lengthInSeconds > 0 
           ? formData.lengthInSeconds 
@@ -489,7 +499,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+        <div role="alert" className="bg-red-50 border border-red-200 rounded-md p-4">
           <p className="text-sm text-red-800">{error}</p>
         </div>
       )}
@@ -993,7 +1003,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
                       URL
                     </label>
                     <input
-                      type="url"
+                      type="text"
                       value={link.url}
                       onChange={(e) => {
                         const newLinks = [...(formData.links || [])];
@@ -1006,7 +1016,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Type
+                      Type (Optional)
                     </label>
                     <select
                       value={link.type}

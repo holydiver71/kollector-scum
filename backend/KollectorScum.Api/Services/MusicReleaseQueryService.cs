@@ -208,6 +208,25 @@ namespace KollectorScum.Api.Services
             var userIdProp = Expression.Property(param, nameof(MusicRelease.UserId));
             clauses.Add(Expression.Equal(userIdProp, Expression.Constant(userId.Value)));
 
+            // Filter by specific IDs
+            if (!string.IsNullOrEmpty(parameters.Ids))
+            {
+                var idList = parameters.Ids.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                                           .Select(idStr => int.TryParse(idStr, out var id) ? (int?)id : null)
+                                           .Where(id => id.HasValue)
+                                           .Select(id => id!.Value)
+                                           .ToList();
+
+                if (idList.Any())
+                {
+                    var idProp = Expression.Property(param, nameof(MusicRelease.Id));
+                    var containsMethodArray = typeof(List<int>).GetMethod("Contains", new[] { typeof(int) })!;
+                    var idListConst = Expression.Constant(idList);
+                    var idContains = Expression.Call(idListConst, containsMethodArray, idProp);
+                    clauses.Add(idContains);
+                }
+            }
+
             var containsMethod = typeof(string).GetMethod("Contains", new[] { typeof(string) })!;
             var toLowerMethod = typeof(string).GetMethod("ToLower", Array.Empty<Type>());
 
