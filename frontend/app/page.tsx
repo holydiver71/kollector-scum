@@ -4,6 +4,7 @@ import Link from "next/link";
 import { LoadingSpinner } from "./components/LoadingComponents";
 import { WelcomeScreen } from "./components/WelcomeScreen";
 import { RecentlyPlayed } from "./components/RecentlyPlayed";
+import { IntroPage } from "./components/IntroPage";
 import { useCollection } from "./contexts/CollectionContext";
 
 import { getHealth, getPagedCount, ApiError } from "./lib/api";
@@ -124,23 +125,12 @@ export default function Dashboard() {
 
   // Memoize actions array (static content)
 
-  if (!isLoggedIn && !loading) {
-    return (
-      <div className="min-h-screen bg-[#0A0A10] flex flex-col items-center justify-center p-4">
-        <div className="text-center max-w-2xl">
-          <h1 className="text-6xl font-black text-white mb-6">KOLLECTOR SKÜM</h1>
-          <p className="text-xl text-gray-400 mb-8">
-            Your personal music collection manager.
-            <br/>
-            Organize, discover, and track your physical media.
-          </p>
-          <div className="p-8 bg-[#13131F] rounded-2xl border border-[#1C1C28]">
-            <p className="text-lg font-medium text-white mb-4">Please sign in to access your collection</p>
-            <p className="text-sm text-gray-500">Use the Google Sign-In button in the top right corner.</p>
-          </div>
-        </div>
-      </div>
-    );
+  if (loading) {
+    return <IntroPage loading />;
+  }
+
+  if (!isLoggedIn) {
+    return <IntroPage />;
   }
 
   if (error) {
