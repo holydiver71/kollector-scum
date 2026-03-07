@@ -48,6 +48,9 @@ export default function Dashboard() {
           return;
         }
 
+        // We have a valid user profile, they are indeed logged in
+        setIsLoggedIn(true);
+
         // Now fetch stats in parallel
         const [healthJson, totalReleases, totalArtists, totalGenres, totalLabels] = await Promise.all([
           getHealth(),
@@ -57,7 +60,6 @@ export default function Dashboard() {
           getPagedCount('/api/labels')
         ]);
 
-        setIsLoggedIn(true);
         setHealth(healthJson);
         setStats({ totalReleases, totalArtists, totalGenres, totalLabels });
         
