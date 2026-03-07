@@ -170,30 +170,6 @@ export default function Dashboard() {
     <div className="min-h-screen bg-transparent text-white">
       <main className="max-w-7xl mx-auto px-6 py-8">
         <div className="space-y-8">
-          <div className="flex items-start justify-between flex-wrap gap-4">
-            <div>
-              <h1 className="text-3xl font-black tracking-tight">Your Collection</h1>
-              <p className="text-gray-400 mt-1 text-sm">Organise and discover your music library</p>
-              <div className="flex items-center gap-2 mt-3">
-                {health?.status === "Healthy" ? (
-                  <>
-                    <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                    <span className="text-xs text-emerald-400 font-semibold">System Online</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="w-2 h-2 rounded-full bg-red-400" />
-                    <span className="text-xs text-red-400 font-semibold">Offline</span>
-                  </>
-                )}
-                {loading && <LoadingSpinner />}
-              </div>
-            </div>
-            <div className="text-right text-xs text-gray-600">
-              Powered by Kollector API · Last sync: {health?.timestamp ? new Date(health.timestamp).toLocaleString() : "Unknown"}
-            </div>
-          </div>
-          
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
               { label: "Releases", value: stats?.totalReleases || 0, color: "#8B5CF6" },
