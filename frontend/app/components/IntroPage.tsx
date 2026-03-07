@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import { LoadingSpinner } from "./LoadingComponents";
 
 export const IntroPage = ({ loading }: { loading?: boolean }) => {
@@ -8,11 +9,17 @@ export const IntroPage = ({ loading }: { loading?: boolean }) => {
       <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-[#8B5CF6]/10 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-[#3B82F6]/10 blur-[120px] rounded-full pointer-events-none" />
       
-      <div className="z-10 text-center max-w-4xl mx-auto w-full">
+      <div className="z-10 text-center max-w-4xl mx-auto w-full flex flex-col items-center">
         {/* Logo / Header */}
-        <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-500 mb-6 drop-shadow-sm">
-          KOLLECTOR SKÜM
-        </h1>
+        <div className="relative w-full max-w-2xl h-32 md:h-64 mb-6">
+          <Image 
+            src="/images/Kollector-Skum-v2.png" 
+            alt="Kollector Sküm Logo" 
+            fill
+            className="object-contain drop-shadow-[0_0_15px_rgba(139,92,246,0.3)]"
+            priority
+          />
+        </div>
         
         <p className="text-xl md:text-3xl text-gray-300 mb-8 font-light tracking-wide">
           The Ultimate Hub for Your Physical Media.
