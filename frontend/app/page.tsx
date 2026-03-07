@@ -39,22 +39,23 @@ export default function Dashboard() {
         setLoading(true);
         setError(null);
 
-        // Parallelize all API calls for faster loading
-        // Profile validation is still required but we can fetch health and stats concurrently
-        const [profile, healthJson, totalReleases, totalArtists, totalGenres, totalLabels] = await Promise.all([
-          getUserProfile(),
+        // Validate profile first before querying collection data
+        const profile = await getUserProfile();
+        
+        if (!profile) {
+          setIsLoggedIn(false);
+          setLoading(false);
+          return;
+        }
+
+        // Now fetch stats in parallel
+        const [healthJson, totalReleases, totalArtists, totalGenres, totalLabels] = await Promise.all([
           getHealth(),
           getPagedCount('/api/musicreleases'),
           getPagedCount('/api/artists'),
           getPagedCount('/api/genres'),
           getPagedCount('/api/labels')
         ]);
-
-        if (!profile) {
-          setIsLoggedIn(false);
-          setLoading(false);
-          return;
-        }
 
         setIsLoggedIn(true);
         setHealth(healthJson);
