@@ -26,12 +26,24 @@ export const IntroPage = ({ loading }: { loading?: boolean }) => {
           The Ultimate Hub for Your Physical Media.
         </p>
         
-        <p className="text-lg md:text-xl text-gray-400 mb-12 max-w-2xl mx-auto leading-relaxed">
+        <p className="text-lg md:text-xl text-gray-400 mb-8 max-w-2xl mx-auto leading-relaxed">
           Organize, discover, and track your music collection. Whether you are spinning vinyl, popping in cassettes, or curating CDs—elevate your obsession.
         </p>
 
+        {/* Sign-in CTA */}
+        {loading ? (
+          <div className="flex flex-col items-center justify-center space-y-4 mb-12">
+            <LoadingSpinner />
+            <p className="text-gray-400 font-medium">Loading your experience...</p>
+          </div>
+        ) : (
+          <div className="flex justify-center mb-12">
+            <GoogleSignIn />
+          </div>
+        )}
+
         {/* Feature Highlights Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16 text-left">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
           <div className="bg-[#13131F]/80 backdrop-blur border border-[#1C1C28] p-6 rounded-2xl hover:border-[#8B5CF6]/50 transition-colors">
             <div className="text-4xl mb-4">🎵</div>
             <h3 className="text-white font-bold text-xl mb-2">Track Everything</h3>
@@ -48,27 +60,6 @@ export const IntroPage = ({ loading }: { loading?: boolean }) => {
             <div className="text-4xl mb-4">🪐</div>
             <h3 className="text-white font-bold text-xl mb-2">Dark & Sleek</h3>
             <p className="text-gray-400">Experience a modern, Midnight-themed interface optimized for fast navigation and immersion.</p>
-          </div>
-        </div>
-
-        {/* Call to action */}
-        <div className="p-8 bg-gradient-to-b from-[#1A1A2A] to-[#13131F] rounded-3xl border border-[#2A2A3A] shadow-2xl relative overflow-hidden">
-          <div className="absolute inset-0 bg-grid-white/[0.02]" />
-          <div className="relative z-10">
-            {loading ? (
-              <div className="flex flex-col items-center justify-center space-y-4">
-                <LoadingSpinner />
-                <p className="text-gray-400 font-medium">Loading your experience...</p>
-              </div>
-            ) : (
-              <>
-                <h2 className="text-2xl font-bold text-white mb-4">Ready to spin?</h2>
-                <p className="text-gray-400 mb-6">Sign in with Google to get started and manage your music collection.</p>
-                <div className="flex justify-center">
-                  <GoogleSignIn />
-                </div>
-              </>
-            )}
           </div>
         </div>
       </div>
