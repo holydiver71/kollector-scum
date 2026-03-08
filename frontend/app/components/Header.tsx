@@ -25,12 +25,9 @@ export default function Header() {
   const [/* headerQuery removed - unused */, setHeaderQuery] = React.useState('');
   const [kollections, setKollections] = React.useState<KollectionDto[]>([]);
   const [loadingKollections, setLoadingKollections] = React.useState(true);
-  const [isLoggedIn, setIsLoggedIn] = React.useState(() => {
-    // Initialise synchronously so the header renders immediately when the user
-    // is already authenticated (avoids a flash of null on the first paint).
-    if (typeof window === 'undefined') return false;
-    return isAuthenticated();
-  });
+  // Start `false` on server so SSR output matches. Update on client after
+  // mount to avoid hydration mismatches.
+  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
 
   // Track auth state to conditionally render the header
   React.useEffect(() => {
@@ -47,7 +44,7 @@ export default function Header() {
   }, []);
 
   // Load kollections
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     const loadKollections = async () => {
       if (!isAuthenticated()) {
         console.log('[Header] Not authenticated, skipping kollections load');
@@ -57,6 +54,11 @@ export default function Header() {
 
       try {
         console.log('[Header] Loading kollections...');
+        if (typeof getKollections !== 'function') {
+          console.log('[Header] getKollections not available in this environment, skipping load');
+          setLoadingKollections(false);
+          return;
+        }
         const response = await getKollections();
         console.log('[Header] Kollections loaded:', response.items.length, 'items', response);
         setKollections(response.items);
@@ -85,7 +87,7 @@ export default function Header() {
     return () => {
       window.removeEventListener('authChanged', handleAuthChange);
     };
-  }, []);
+  }, [isLoggedIn]);
 
   const selectedKollectionId = searchParams?.get('kollectionId');
 
@@ -117,12 +119,15 @@ export default function Header() {
   };
 
   React.useEffect(() => {
+    if (!isLoggedIn) return;
+
     const el = headerRef.current || document.querySelector('header');
     if (!el) return;
 
     const applyHeight = () => {
       try {
-        document.documentElement.style.setProperty('--app-header-height', `${(el as HTMLElement).offsetHeight}px`);
+        const height = (el as HTMLElement).offsetHeight || 0;
+        document.documentElement.style.setProperty('--app-header-height', `${height}px`);
       } catch {}
     };
 
@@ -133,7 +138,6 @@ export default function Header() {
       if (rafId) cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(() => {
         const scrollY = typeof window.scrollY === 'number' ? window.scrollY : (window.pageYOffset ?? 0);
-        // compact when the user has scrolled a reasonable amount
         const shouldCompact = scrollY > 100;
         setIsCompact(shouldCompact);
         applyHeight();
@@ -141,7 +145,6 @@ export default function Header() {
     };
 
     window.addEventListener('scroll', onScroll);
-    // observe resize/mutations that change header size
     const ro = new ResizeObserver(() => applyHeight());
     ro.observe(el as Element);
 
@@ -150,7 +153,7 @@ export default function Header() {
       if (rafId) cancelAnimationFrame(rafId);
       ro.disconnect();
     };
-  }, []);
+  }, [isLoggedIn]);
 
   // Don't render the header on the pre-login page (unauthenticated state)
   if (!isLoggedIn) return null;
