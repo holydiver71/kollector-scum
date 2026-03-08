@@ -31,7 +31,7 @@ export default function QueryPage() {
             </li>
             <li className="flex items-start gap-2">
               <span className="text-emerald-400">✓</span>
-              <span>Filter by format (CD, Vinyl, Cassette), year, artist, label, country, or genre</span>
+              <span>Filter by format (CD, Vinyl, Cassette, EP, Boxset), year, artist, label, country, or genre</span>
             </li>
           </ul>
         </div>

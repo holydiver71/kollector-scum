@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" aria-labelledby="title desc" role="img">
+  <title id="title">EP (vinyl)</title>
+  <desc id="desc">Stylised vinyl disc representing an EP with a coloured centre label.</desc>
+  <!-- Outer disc -->
+  <circle cx="32" cy="32" r="28" fill="#0b0b0b" />
+
+  <!-- Grooves (concentric rings) -->
+  <g fill="none" stroke="#111" stroke-width="0.8">
+    <circle cx="32" cy="32" r="22" stroke-opacity="0.6" />
+    <circle cx="32" cy="32" r="18" stroke-opacity="0.5" />
+    <circle cx="32" cy="32" r="14" stroke-opacity="0.4" />
+    <circle cx="32" cy="32" r="10" stroke-opacity="0.35" />
+  </g>
+
+  <!-- Label -->
+  <circle cx="32" cy="32" r="8.5" fill="#FFB400" stroke="#0b0b0b" stroke-width="0.6" />
+
+  <!-- Centre hole -->
+  <circle cx="32" cy="32" r="1.6" fill="#111" />
+</svg>

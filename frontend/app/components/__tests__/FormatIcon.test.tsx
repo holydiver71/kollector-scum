@@ -18,6 +18,8 @@ describe('FormatIcon', () => {
     { name: '10" Vinyl', formatName: '10"' },
     { name: '12" Vinyl', formatName: '12"' },
     { name: 'LP', formatName: 'LP' },
+    { name: 'EP', formatName: 'EP', contains: '#2EC4B6' },
+    { name: 'Boxset', formatName: 'Boxset', contains: '<polygon' },
     { name: 'Unknown Format', formatName: 'Unknown', fallback: true }
   ];
 
@@ -40,6 +42,10 @@ describe('FormatIcon', () => {
       
       if (tc.gradientRef) {
         expect(container.innerHTML).toContain(`url(#${tc.gradientRef})`);
+      }
+
+      if (tc.contains) {
+        expect(container.innerHTML).toContain(tc.contains);
       }
 
       if (tc.fallback) {

@@ -139,37 +139,36 @@ console.error = (...args: any[]) => {
 // that call `fetchJson` or `getKollections` during mount do not throw
 // TypeError in the Jest environment. Individual tests can override these
 // by using `jest.mock(...)` or providing more specific implementations.
-// Best-effort patching using dynamic `import()` so ESLint's
-// `no-require-imports` rule is satisfied while keeping behavior similar
-// to the previous synchronous `require()` approach. We run the async IIFE
-// immediately but tolerate failures silently (this is only a test helper).
-;(async () => {
-	try {
-		const apiLib = await import('./app/lib/api');
-		if (apiLib) {
-			// Only set mocks if functions are missing or not callable
-			if (typeof (apiLib as any).fetchJson !== 'function') {
-				(apiLib as any).fetchJson = jest.fn(() => Promise.resolve({}));
-			}
-			if (typeof (apiLib as any).getKollections !== 'function') {
-				(apiLib as any).getKollections = jest.fn(() => Promise.resolve({ items: [] }));
-			}
+// Use synchronous `require()` here so the mocks are installed before any
+// component mounts during tests (dynamic import caused timing issues).
+try {
+	// eslint-disable-next-line @typescript-eslint/no-var-requires
+	// @ts-ignore
+	const apiLib = require('./app/lib/api');
+	if (apiLib) {
+		if (typeof (apiLib as any).fetchJson !== 'function') {
+			(apiLib as any).fetchJson = jest.fn(() => Promise.resolve({}));
 		}
-	} catch {
-		// ignore - best-effort for the test environment
+		if (typeof (apiLib as any).getKollections !== 'function') {
+			(apiLib as any).getKollections = jest.fn(() => Promise.resolve({ items: [] }));
+		}
 	}
+} catch {
+	// ignore - best-effort for the test environment
+}
 
-	try {
-		const appApi = await import('./app/api');
-		if (appApi) {
-			if (typeof (appApi as any).fetchJson !== 'function') {
-				(appApi as any).fetchJson = jest.fn(() => Promise.resolve({}));
-			}
-			if (typeof (appApi as any).getKollections !== 'function') {
-				(appApi as any).getKollections = jest.fn(() => Promise.resolve({ items: [] }));
-			}
+try {
+	// eslint-disable-next-line @typescript-eslint/no-var-requires
+	// @ts-ignore
+	const appApi = require('./app/api');
+	if (appApi) {
+		if (typeof (appApi as any).fetchJson !== 'function') {
+			(appApi as any).fetchJson = jest.fn(() => Promise.resolve({}));
 		}
-	} catch {
-		// ignore - best-effort
+		if (typeof (appApi as any).getKollections !== 'function') {
+			(appApi as any).getKollections = jest.fn(() => Promise.resolve({ items: [] }));
+		}
 	}
-})();
+} catch {
+	// ignore - best-effort
+}

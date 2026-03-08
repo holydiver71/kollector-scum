@@ -165,12 +165,6 @@ namespace KollectorScum.Api.Services
         public async Task SeedFormatsAsync()
         {
             var filePath = Path.Combine(_dataPath, "formats.json");
-            
-            if (!File.Exists(filePath))
-            {
-                _logger.LogWarning("Formats JSON file not found at: {FilePath}", filePath);
-                return;
-            }
 
             // Check if data already exists
             if (await _context.Formats.AnyAsync())
@@ -179,26 +173,45 @@ namespace KollectorScum.Api.Services
                 return;
             }
 
-            _logger.LogInformation("Seeding formats from: {FilePath}", filePath);
-
-            var jsonContent = await File.ReadAllTextAsync(filePath);
-            var container = JsonSerializer.Deserialize<FormatsJsonContainer>(jsonContent, new JsonSerializerOptions
+            if (File.Exists(filePath))
             {
-                PropertyNameCaseInsensitive = true
-            });
+                _logger.LogInformation("Seeding formats from: {FilePath}", filePath);
 
-            if (container?.Formats != null)
-            {
-                var formats = container.Formats.Select(dto => new Format
+                var jsonContent = await File.ReadAllTextAsync(filePath);
+                var container = JsonSerializer.Deserialize<FormatsJsonContainer>(jsonContent, new JsonSerializerOptions
                 {
-                    Id = dto.Id,
-                    Name = dto.Name
-                }).ToList();
+                    PropertyNameCaseInsensitive = true
+                });
 
-                await _context.Formats.AddRangeAsync(formats);
+                if (container?.Formats != null)
+                {
+                    var formats = container.Formats.Select(dto => new Format
+                    {
+                        Id = dto.Id,
+                        Name = dto.Name
+                    }).ToList();
+
+                    await _context.Formats.AddRangeAsync(formats);
+                    await _context.SaveChangesAsync();
+
+                    _logger.LogInformation("Seeded {Count} formats", formats.Count);
+                }
+            }
+            else
+            {
+                // Fallback: ensure EP and Boxset exist as canonical formats when no JSON seed file is present
+                _logger.LogWarning("Formats JSON file not found at: {FilePath}. Seeding fallback formats (EP, Boxset).", filePath);
+
+                var fallback = new List<Format>
+                {
+                    new Format { Name = "EP" },
+                    new Format { Name = "Boxset" }
+                };
+
+                await _context.Formats.AddRangeAsync(fallback);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Seeded {Count} formats", formats.Count);
+                _logger.LogInformation("Seeded {Count} fallback formats", fallback.Count);
             }
         }
 

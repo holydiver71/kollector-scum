@@ -44,6 +44,8 @@ const mockFormats = {
   items: [
     { id: 1, name: 'Vinyl', description: '12" LP' },
     { id: 2, name: 'CD', description: 'Compact Disc' },
+    { id: 3, name: 'EP', description: 'Extended Play' },
+    { id: 4, name: 'Boxset', description: 'Box Set' },
   ],
 };
 
