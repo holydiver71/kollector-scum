@@ -1,6 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import { LoadingSpinner } from "./LoadingComponents";
+import { GoogleSignIn } from "./GoogleSignIn";
 
 export const IntroPage = ({ loading }: { loading?: boolean }) => {
   return (
@@ -62,7 +63,10 @@ export const IntroPage = ({ loading }: { loading?: boolean }) => {
             ) : (
               <>
                 <h2 className="text-2xl font-bold text-white mb-4">Ready to spin?</h2>
-                <p className="text-gray-400 mb-6">Sign in with Google using the button in the top right corner to get started.</p>
+                <p className="text-gray-400 mb-6">Sign in with Google to get started and manage your music collection.</p>
+                <div className="flex justify-center">
+                  <GoogleSignIn />
+                </div>
               </>
             )}
           </div>
