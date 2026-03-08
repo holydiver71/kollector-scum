@@ -12,6 +12,7 @@ import { DeleteReleaseButton } from "../../components/DeleteReleaseButton";
 import { EditReleaseButton } from "../../components/EditReleaseButton";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { AddToListDialog } from "../../components/AddToListDialog";
+import { FormatIcon } from "../../components/FormatIcon";
 import { Play, Check, X, List, ChevronLeft } from "lucide-react";
 
 // Type definitions for detailed music release
@@ -449,7 +450,7 @@ export default function ReleaseDetailPage() {
                   release.country?.name && ["Country", release.country.name],
                   release.upc && ["Barcode", release.upc],
                   (release.lengthInSeconds && release.lengthInSeconds > 0) && ["Duration", formatDuration(release.lengthInSeconds) || ""],
-                ].filter(Boolean) as [string, string][],
+                ].filter(Boolean) as [string, React.ReactNode][],
               },
               ...(release.purchaseInfo ? [{
                 title: "Purchase Info",
@@ -462,7 +463,7 @@ export default function ReleaseDetailPage() {
                   ],
                   release.purchaseInfo.purchaseDate && ["Date", new Date(release.purchaseInfo.purchaseDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })],
                   release.purchaseInfo.notes && ["Notes", release.purchaseInfo.notes],
-                ].filter(Boolean) as [string, string][],
+                ].filter(Boolean) as [string, React.ReactNode][],
               }] : []),
               {
                 title: "Collection Data",
@@ -470,13 +471,13 @@ export default function ReleaseDetailPage() {
                   ["Added", new Date(release.dateAdded).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })],
                   ["Modified", new Date(release.lastModified).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })],
                   release.lastPlayedAt && ["Last Played", new Date(release.lastPlayedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })],
-                ].filter(Boolean) as [string, string][],
+                ].filter(Boolean) as [string, React.ReactNode][],
               },
             ].map(({ title, items }) => items.length > 0 && (
               <div key={title} className="bg-[#13131F] rounded-xl p-4 border border-[#1C1C28] space-y-2">
                 <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">{title}</h3>
                 {items.map(([k, v]) => (
-                  <div key={k} className="flex justify-between text-sm">
+                  <div key={k} className="flex justify-between items-center text-sm">
                     <span className="text-gray-500">{k}</span>
                     <span className="text-white font-medium text-right max-w-[60%] break-words">{v}</span>
                   </div>
@@ -534,25 +535,29 @@ export default function ReleaseDetailPage() {
             {/* Title area */}
             <div>
               {release.artists && release.artists.length > 0 && (
-                <p className="text-[#8B5CF6] font-semibold text-sm mb-1">
+                <p className="text-[#8B5CF6] font-black text-4xl tracking-tight leading-tight mb-1">
                   {release.artists.map((a, i) => (
                     <span key={a.id}>
-                      <Link href={`/collection?artistId=${a.id}`} className="hover:text-[#A78BFA] transition-colors">{a.name}</Link>
+                      <Link href={`/collection?artistId=${a.id}&showAdvanced=true&sortBy=title&sortOrder=asc`} className="hover:text-[#A78BFA] transition-colors">{a.name}</Link>
                       {release.artists && i < release.artists.length - 1 && " & "}
                     </span>
                   ))}
                 </p>
               )}
-              <h1 className="text-4xl font-black tracking-tight leading-tight text-white">{release.title}</h1>
-              <div className="flex flex-wrap gap-2 mt-2">
+              <div className="flex items-center gap-3">
                 {release.format?.name && (
-                  <span className="text-xs bg-[#8B5CF6] text-white px-2 py-1 rounded font-semibold">{release.format.name}</span>
+                  <div className="flex-shrink-0" title={release.format.name}>
+                    <FormatIcon formatName={release.format.name} className="w-10 h-10 drop-shadow-md" />
+                  </div>
                 )}
+                <h1 className="text-3xl font-black tracking-tight leading-tight text-white">{release.title}</h1>
+              </div>
+              <div className="flex flex-wrap gap-2 mt-2 items-center">
                 {release.live && (
                   <span className="text-xs bg-red-600/20 text-red-400 px-2 py-1 rounded font-semibold">Live Recording</span>
                 )}
                 {release.genres?.map((g) => (
-                  <Link key={g.id} href={`/collection?genreId=${g.id}`} className="text-xs bg-[#8B5CF6]/15 text-[#A78BFA] px-2 py-1 rounded hover:bg-[#8B5CF6]/25 transition-colors">{g.name}</Link>
+                  <Link key={g.id} href={`/collection?genreId=${g.id}&showAdvanced=true&sortBy=title&sortOrder=asc`} className="text-xs bg-[#8B5CF6]/15 text-[#A78BFA] px-2 py-1 rounded hover:bg-[#8B5CF6]/25 transition-colors">{g.name}</Link>
                 ))}
               </div>
             </div>
