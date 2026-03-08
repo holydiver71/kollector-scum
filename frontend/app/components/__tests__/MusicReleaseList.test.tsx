@@ -63,10 +63,10 @@ describe('MusicReleaseCard Component', () => {
     expect(screen.getByText('Artist 1, Artist 2, Artist 3')).toBeInTheDocument();
   });
 
-  it('displays year and format information', () => {
+  it('displays year and label information', () => {
     render(<MusicReleaseCard release={mockRelease} />);
     expect(screen.getByText(/1986/)).toBeInTheDocument();
-    expect(screen.getByText(/Vinyl/)).toBeInTheDocument();
+    expect(screen.getByText(/Elektra/)).toBeInTheDocument();
   });
 
   it('renders links to release details page', () => {
