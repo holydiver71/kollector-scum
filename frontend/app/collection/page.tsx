@@ -25,8 +25,46 @@ interface SearchFilters {
 export default function CollectionPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [filters, setFilters] = useState<SearchFilters>({});
   const isUpdatingUrl = useRef(false);
+  
+  // Initialize state directly from URL to avoid flashing empty filters on first render
+  const [filters, setFilters] = useState<SearchFilters>(() => {
+    const urlFilters: SearchFilters = {};
+    if (!searchParams) return urlFilters;
+
+    const search = searchParams.get('search');
+    const artistId = searchParams.get('artistId');
+    const genreId = searchParams.get('genreId');
+    const labelId = searchParams.get('labelId');
+    const countryId = searchParams.get('countryId');
+    const formatId = searchParams.get('formatId');
+    const live = searchParams.get('live');
+    const yearFrom = searchParams.get('yearFrom');
+    const yearTo = searchParams.get('yearTo');
+    const sortBy = searchParams.get('sortBy') || 'title';
+    const sortOrder = searchParams.get('sortOrder') || 'asc';
+    let kollectionId = searchParams.get('kollectionId');
+
+    if (!kollectionId && typeof window !== 'undefined') {
+      try { kollectionId = localStorage.getItem('kollectionId'); } catch {}
+    }
+
+    if (search) urlFilters.search = search;
+    if (artistId) urlFilters.artistId = parseInt(artistId);
+    if (genreId) urlFilters.genreId = parseInt(genreId);
+    if (labelId) urlFilters.labelId = parseInt(labelId);
+    if (countryId) urlFilters.countryId = parseInt(countryId);
+    if (formatId) urlFilters.formatId = parseInt(formatId);
+    if (live) urlFilters.live = live === 'true';
+    if (yearFrom) urlFilters.yearFrom = parseInt(yearFrom);
+    if (yearTo) urlFilters.yearTo = parseInt(yearTo);
+    if (sortBy) urlFilters.sortBy = sortBy;
+    if (sortOrder) urlFilters.sortOrder = sortOrder;
+    if (kollectionId) urlFilters.kollectionId = parseInt(kollectionId);
+
+    return urlFilters;
+  });
+
   // Initialize immediately in tests to avoid timing issues where useEffect
   // updates state after mount. This keeps the UI stable for unit tests.
   const [isInitialized, setIsInitialized] = useState(true);
@@ -45,18 +83,20 @@ export default function CollectionPage() {
     // meaningful changed. Only update filters when the parsed values differ.
     // If the URL does not include a kollectionId but the user previously selected
     // one, restore it from localStorage so the selection persists across visits.
+    let localKollectionId: string | null = null;
     try {
       if (searchParams && !isUpdatingUrl.current) {
         const existing = searchParams.get('kollectionId');
         if (!existing) {
           const stored = typeof window !== 'undefined' ? localStorage.getItem('kollectionId') : null;
           if (stored) {
+            localKollectionId = stored;
             const params = new URLSearchParams(Array.from(searchParams.entries()));
             params.set('kollectionId', stored);
             const newUrl = params.toString() ? `/collection?${params.toString()}` : '/collection';
-            isUpdatingUrl.current = true;
+            // We replace without locking so the next render (or this loop) will naturally pick it up,
+            // or we just process it directly below.
             router.replace(newUrl, { scroll: false });
-            return; // wait for next effect run which will pick up kollectionId
           }
         }
       }
@@ -74,9 +114,9 @@ export default function CollectionPage() {
       const live = searchParams.get('live');
       const yearFrom = searchParams.get('yearFrom');
       const yearTo = searchParams.get('yearTo');
-      const sortBy = searchParams.get('sortBy');
-      const sortOrder = searchParams.get('sortOrder');
-      const kollectionId = searchParams.get('kollectionId');
+      const sortBy = searchParams.get('sortBy') || 'title';
+      const sortOrder = searchParams.get('sortOrder') || 'asc';
+      const kollectionId = searchParams.get('kollectionId') || localKollectionId;
 
       if (search) urlFilters.search = search;
       if (artistId) urlFilters.artistId = parseInt(artistId);
@@ -167,7 +207,7 @@ export default function CollectionPage() {
               <SearchAndFilter
                 onFiltersChange={handleFiltersChange}
                 initialFilters={filters}
-                enableUrlSync={true}
+                enableUrlSync={false}
               />
             </div>
             {/* Only render the SearchAndFilter panel when the advanced filters are visible

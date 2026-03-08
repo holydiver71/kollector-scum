@@ -29,7 +29,7 @@ const Footer: React.FC = () => {
         <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
           {/* Left side - Copyright */}
           <div className="text-sm text-gray-600">
-            © {currentYear} Kollector Sküm. Music Collection Manager.
+            © {currentYear} Kollector-Sküm. Music Collection Manager.
           </div>
 
           {/* Right side - Links and status indicators */}

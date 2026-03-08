@@ -11,6 +11,7 @@ import { Play, Check, User, Clock, Calendar, Disc3, Eye, List } from "lucide-rea
 
 import { AddToListDialog } from "./AddToListDialog";
 import { SearchAndFilter } from "./SearchAndFilter";
+import { FormatIcon } from "./FormatIcon";
 
 // Type definitions for music releases
 interface MusicRelease {
@@ -127,6 +128,8 @@ export const MusicReleaseCard = React.memo(function MusicReleaseCard({ release }
           </div>
         )}
 
+        <FormatIcon formatName={release.formatName} />
+
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100 p-2">
           <div className="flex gap-2 flex-wrap justify-center">
             <Link 
@@ -176,11 +179,11 @@ export const MusicReleaseCard = React.memo(function MusicReleaseCard({ release }
           {release.title}
         </Link>
       </div>
-      <div className="text-xs text-gray-400 truncate" title={release.artistNames?.join(", ")}>
+      <div className="text-xs text-[#A78BFA] truncate font-medium" title={release.artistNames?.join(", ")}>
         {release.artistNames?.join(", ") || "Unknown Artist"}
       </div>
-      <div className="text-xs text-gray-600 truncate">
-        {releaseYear} {release.formatName ? `· ${release.formatName}` : ''}
+      <div className="text-xs text-[#A78BFA]/70 truncate">
+        {releaseYear}{origReleaseYear && origReleaseYear !== releaseYear ? ` (${origReleaseYear})` : ''} {release.labelName ? `· ${release.labelName}` : ''}
       </div>
     </div>
   );
