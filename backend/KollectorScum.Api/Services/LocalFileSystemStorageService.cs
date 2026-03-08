@@ -178,7 +178,7 @@ namespace KollectorScum.Api.Services
             }
 
             Stream? stream = File.OpenRead(filePath);
-            return Task.FromResult(stream);
+            return Task.FromResult<Stream?>(stream);
         }
     }
 }
