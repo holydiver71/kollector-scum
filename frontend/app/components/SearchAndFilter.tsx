@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef, useLayoutEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { CountryDropdown, GenreDropdown, ArtistDropdown, LabelDropdown, FormatDropdown, LookupDropdown } from "./LookupComponents";
 import { getSearchSuggestions, SearchSuggestion } from '../lib/api';
