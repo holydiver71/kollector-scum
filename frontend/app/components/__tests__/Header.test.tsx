@@ -3,6 +3,8 @@ import Header from '../Header';
 
 jest.mock('../../lib/api', () => ({
   getPagedCount: jest.fn().mockResolvedValue(1234),
+  getKollections: jest.fn().mockResolvedValue({ items: [] }),
+  fetchJson: jest.fn().mockResolvedValue({}),
 }));
 
 // Provide simple next/navigation mocks used by Header
@@ -68,4 +70,43 @@ describe('Header shrink-on-scroll', () => {
     });
   });
 });
+
+describe('Header authentication visibility', () => {
+  afterEach(() => {
+    // Restore the auth token so other tests are unaffected
+    window.localStorage.setItem('auth_token', 'test-token');
+    jest.clearAllMocks();
+  });
+
+  it('does not render the header when the user is unauthenticated', async () => {
+    window.localStorage.removeItem('auth_token');
+    const { container } = render(<Header />);
+    // Flush effects so the auth check runs
+    await act(async () => {});
+    expect(container.querySelector('header')).toBeNull();
+  });
+
+  it('renders the header when the user is authenticated', async () => {
+    window.localStorage.setItem('auth_token', 'test-token');
+    await act(async () => render(<Header />));
+    expect(document.querySelector('header')).toBeTruthy();
+  });
+
+  it('hides the header when an authChanged event clears the token', async () => {
+    window.localStorage.setItem('auth_token', 'test-token');
+    await act(async () => render(<Header />));
+    expect(document.querySelector('header')).toBeTruthy();
+
+    // Simulate sign-out: clear token and fire authChanged
+    await act(async () => {
+      window.localStorage.removeItem('auth_token');
+      window.dispatchEvent(new Event('authChanged'));
+    });
+
+    await waitFor(() => {
+      expect(document.querySelector('header')).toBeNull();
+    });
+  });
+});
 // (Other header integration/unit tests live elsewhere in the repo.)
+
