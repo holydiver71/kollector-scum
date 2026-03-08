@@ -36,7 +36,7 @@ describe('IntroPage', () => {
   });
 
   it('renders the Google Sign-in button centered below the description text', () => {
-    const { container } = render(<IntroPage />);
+    render(<IntroPage />);
     const signInBtn = screen.getByTestId('google-sign-in-btn');
     expect(signInBtn).toBeInTheDocument();
 
@@ -46,7 +46,7 @@ describe('IntroPage', () => {
   });
 
   it('renders the Sign-in button before the feature highlights grid', () => {
-    const { container } = render(<IntroPage />);
+    render(<IntroPage />);
     const signInBtn = screen.getByTestId('google-sign-in-btn');
     const featureHeading = screen.getByText(/Track Everything/i);
 
