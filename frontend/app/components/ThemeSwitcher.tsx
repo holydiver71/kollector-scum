@@ -64,19 +64,19 @@ export default function ThemeSwitcher({ onSaveSuccess, onSaveError }: ThemeSwitc
             aria-pressed={pendingTheme === option.name}
             className={`text-left p-4 rounded-lg border-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500 ${
               pendingTheme === option.name
-                ? "border-blue-600 bg-blue-50"
-                : "border-gray-200 bg-white hover:border-gray-400"
+                ? "border-blue-500 bg-blue-900/20"
+                : "border-gray-700 bg-[#1C1C28] hover:border-gray-500"
             }`}
           >
-            <span className="block font-semibold text-gray-900 mb-1">
+            <span className="block font-semibold text-white mb-1">
               {option.label}
               {pendingTheme === option.name && (
-                <span className="ml-2 text-xs font-medium text-blue-600 uppercase tracking-wide">
+                <span className="ml-2 text-xs font-medium text-blue-400 uppercase tracking-wide">
                   Active
                 </span>
               )}
             </span>
-            <span className="text-sm text-gray-600">{option.description}</span>
+            <span className="text-sm text-gray-400">{option.description}</span>
           </button>
         ))}
       </div>
