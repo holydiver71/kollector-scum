@@ -729,7 +729,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
 
           <div>
             <label htmlFor="labelNumber" className="block text-sm font-medium text-gray-700 mb-1">
-              Catalog Number
+              Catalogue Number
             </label>
             <input
               type="text"

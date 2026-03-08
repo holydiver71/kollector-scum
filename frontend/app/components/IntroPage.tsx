@@ -27,7 +27,7 @@ export const IntroPage = ({ loading }: { loading?: boolean }) => {
         </p>
         
         <p className="text-lg md:text-xl text-gray-400 mb-8 max-w-2xl mx-auto leading-relaxed">
-          Organize, discover, and track your music collection. Whether you are spinning vinyl, popping in cassettes, or curating CDs—elevate your obsession.
+          Organise, discover, and track your music collection. Whether you are spinning vinyl, popping in cassettes, or curating CDs—elevate your obsession.
         </p>
 
         {/* Sign-in CTA */}
@@ -53,13 +53,13 @@ export const IntroPage = ({ loading }: { loading?: boolean }) => {
           <div className="bg-[#13131F]/80 backdrop-blur border border-[#1C1C28] p-6 rounded-2xl hover:border-[#3B82F6]/50 transition-colors">
             <div className="text-4xl mb-4">📊</div>
             <h3 className="text-white font-bold text-xl mb-2">Deep Insights</h3>
-            <p className="text-gray-400">Analyze your collection with beautiful statistics. Discover patterns in genres, formats, and decades.</p>
+            <p className="text-gray-400">Analyse your collection with beautiful statistics. Discover patterns in genres, formats, and decades.</p>
           </div>
           
           <div className="bg-[#13131F]/80 backdrop-blur border border-[#1C1C28] p-6 rounded-2xl hover:border-pink-500/50 transition-colors">
             <div className="text-4xl mb-4">🪐</div>
             <h3 className="text-white font-bold text-xl mb-2">Dark & Sleek</h3>
-            <p className="text-gray-400">Experience a modern, Midnight-themed interface optimized for fast navigation and immersion.</p>
+            <p className="text-gray-400">Experience a modern, Midnight-themed interface optimised for fast navigation and immersion.</p>
           </div>
         </div>
       </div>

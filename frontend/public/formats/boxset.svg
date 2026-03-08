@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" aria-labelledby="title desc" role="img">
+  <title id="title">Boxset</title>
+  <desc id="desc">High-contrast boxset icon: stacked box with visible edges and tape.</desc>
+
+  <!-- Dark rounded background for visibility -->
+  <rect x="4" y="4" width="56" height="56" rx="8" fill="#071022" />
+
+  <!-- Back box (slightly elevated) -->
+  <g transform="translate(8,8)">
+    <rect x="6" y="2" width="36" height="28" rx="3" fill="#ffffff" stroke="#071022" stroke-width="1.6" />
+    <rect x="8" y="4" width="32" height="24" rx="2" fill="#f1f5f9" />
+  </g>
+
+  <!-- Front box (prominent) -->
+  <g transform="translate(14,20)">
+    <rect x="0" y="0" width="36" height="28" rx="3" fill="#ffffff" stroke="#071022" stroke-width="1.6" />
+    <rect x="2" y="2" width="32" height="24" rx="2" fill="#ffffff" />
+
+    <!-- Bold tape across the middle for visual cue -->
+    <rect x="0" y="10" width="36" height="6" fill="#06b6d4" />
+    <rect x="2" y="11" width="32" height="4" fill="#7dd3fc" />
+
+    <!-- Label/sticker on spine to indicate boxset -->
+    <rect x="0" y="2" width="8" height="6" rx="1" fill="#7C3AED" />
+  </g>
+
+  <!-- Drop shadow to lift the front box -->
+  <ellipse cx="34" cy="52" rx="16" ry="4" fill="#000" opacity="0.25" />
+</svg>
