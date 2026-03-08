@@ -7,7 +7,7 @@ import { fetchJson, createNowPlaying, ApiError } from "../lib/api";
 import { clearAuthToken } from "../lib/auth";
  
 import { VinylSpinner } from "./VinylSpinner";
-import { Play, Check, User, Clock, Calendar, Disc3, Eye, List } from "lucide-react";
+import { Play, Check, Disc3, Eye, List } from "lucide-react";
 
 import { AddToListDialog } from "./AddToListDialog";
 import { SearchAndFilter } from "./SearchAndFilter";
@@ -196,8 +196,7 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
-  const [iconAnimating, setIconAnimating] = useState(false);
-  const [showSortOpen, setShowSortOpen] = useState<boolean>(false);
+  
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -235,95 +234,11 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
 
   // Keep a small local state for the open state so the middle button updates visually
   // immediately when clicked (router.replace updates searchParams asynchronously).
-  useEffect(() => {
-    setShowSortOpen(searchParams?.get('showSort') === 'true');
-  }, [searchParams]);
+  // (showSort state intentionally omitted — URL param is read directly where needed)
 
   // order matches the SortPanel button order (left-to-right)
 
-  const getSortLabel = (sortBy?: string, sortOrder?: string) => {
-    const order = sortOrder === 'asc' ? 'asc' : 'desc';
-    switch (sortBy) {
-      case 'title':
-        return order === 'asc' ? 'Title (A-Z)' : 'Title (Z-A)';
-      case 'artist':
-        return order === 'asc' ? 'Artist (A-Z)' : 'Artist (Z-A)';
-      case 'dateadded':
-        return order === 'desc' ? 'Recently Added (Newest first)' : 'Oldest First';
-      case 'origreleaseyear':
-        return order === 'desc' ? 'Original Release Year (Newest First)' : 'Original Release Year (Oldest First)';
-      default:
-        return 'Sort';
-    }
-  };
-
-  const renderSortIcon = () => {
-    const order = effectiveFilters.sortOrder === 'asc' ? 'asc' : 'desc';
-    switch (effectiveFilters.sortBy) {
-      case 'title':
-        return (
-          <div className="flex items-center gap-1">
-            <Disc3 className="w-5 h-5 text-white" />
-            {order === 'asc' ? (
-              <svg className="w-4 h-4 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                <polygon points="6,10 2.5,5 4.2,5 4.2,2 7.8,2 7.8,5 9.5,5" />
-              </svg>
-            ) : (
-              <svg className="w-4 h-4 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                <polygon points="6,2 9.5,7 7.8,7 7.8,10 4.2,10 4.2,7 2.5,7" />
-              </svg>
-            )}
-          </div>
-        );
-      case 'artist':
-        return (
-          <div className="flex items-center gap-1">
-            <User className="w-5 h-5 text-white" />
-            {order === 'asc' ? (
-              <svg className="w-4 h-4 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                <polygon points="6,10 2.5,5 4.2,5 4.2,2 7.8,2 7.8,5 9.5,5" />
-              </svg>
-            ) : (
-              <svg className="w-4 h-4 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                <polygon points="6,2 9.5,7 7.8,7 7.8,10 4.2,10 4.2,7 2.5,7" />
-              </svg>
-            )}
-          </div>
-        );
-      case 'dateadded':
-        return (
-          <div className="flex items-center gap-1">
-            <Clock className="w-5 h-5 text-white" />
-            {order === 'asc' ? (
-              <svg className="w-4 h-4 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                <polygon points="6,2 9.5,7 7.8,7 7.8,10 4.2,10 4.2,7 2.5,7" />
-              </svg>
-            ) : (
-              <svg className="w-4 h-4 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                <polygon points="6,10 2.5,5 4.2,5 4.2,2 7.8,2 7.8,5 9.5,5" />
-              </svg>
-            )}
-          </div>
-        );
-      case 'origreleaseyear':
-        return (
-          <div className="flex items-center gap-1">
-            <Calendar className="w-5 h-5 text-white" />
-            {order === 'asc' ? (
-              <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                <polygon points="6,2 9.5,7 7.8,7 7.8,10 4.2,10 4.2,7 2.5,7" />
-              </svg>
-            ) : (
-              <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                <polygon points="6,10 2.5,5 4.2,5 4.2,2 7.8,2 7.8,5 9.5,5" />
-              </svg>
-            )}
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
+  // getSortLabel and renderSortIcon removed — kept codebase simpler until these UI pieces are reintroduced
 
   const applySortChange = (newSort: { sortBy?: string; sortOrder?: string }) => {
     // If a parent handler exists, defer to it
@@ -457,11 +372,7 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
   }, [filters, pageSize]);
 
   // trigger a tiny animation when the selected sort changes
-  useEffect(() => {
-    setIconAnimating(true);
-    const t = setTimeout(() => setIconAnimating(false), 220);
-    return () => clearTimeout(t);
-  }, [filters.sortBy, filters.sortOrder]);
+  // icon animation intentionally removed (no-op) to avoid unused state
 
   const handlePageChange = (page: number) => {
     if (page < 1 || page > totalPages) {
