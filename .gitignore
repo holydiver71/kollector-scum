@@ -47,6 +47,17 @@ obj/
 ehthumbs.db
 Thumbs.db
 
+# Runtime PID files
+*.pid
+
+# Database dumps and large data exports
+*.dump
+*.sql.gz
+staging_data.sql
+
+# Temp scan output files
+dump_scan*.txt
+
 # Logs
 logs
 *.log
@@ -72,6 +83,5 @@ backend/KollectorScum.Tests/obj/Debug/net8.0/KollectorScum.Tests.AssemblyInfoInp
 backend/KollectorScum.Tests/obj/Debug/net8.0/KollectorScum.Tests.assets.cache
 backend/KollectorScum.Tests/obj/Debug/net8.0/KollectorScum.Tests.csproj.AssemblyReference.cache
 TestResults/_andy-Latitude-E7440_2025-10-08_21_49_49.trx
-kollectorscum_backup.dump
 frontend/.npmrc
 .npm-cache

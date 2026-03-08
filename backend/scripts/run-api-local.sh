@@ -140,6 +140,20 @@ case "$MODE" in
   --local)
     # Use appsettings.* default connection string
     export Database__Target="local"
+
+    # Load Google OAuth credentials from .env if present
+    if [[ -f "$ENV_FILE" ]]; then
+      if google_client_id="$(read_dotenv_value "Google__ClientId" "$ENV_FILE" 2>/dev/null || true)"; then
+        if [[ -n "$google_client_id" ]]; then
+          export Google__ClientId="$google_client_id"
+        fi
+      fi
+      if google_client_secret="$(read_dotenv_value "Google__ClientSecret" "$ENV_FILE" 2>/dev/null || true)"; then
+        if [[ -n "$google_client_secret" ]]; then
+          export Google__ClientSecret="$google_client_secret"
+        fi
+      fi
+    fi
     ;;
   --staging)
     if [[ ! -f "$ENV_FILE" ]]; then
