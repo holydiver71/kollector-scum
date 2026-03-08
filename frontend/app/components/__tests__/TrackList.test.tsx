@@ -72,10 +72,11 @@ const mockLiveTrack = [
 ];
 
 describe('TrackList Component', () => {
-  it('renders tracklist heading', () => {
-    render(<TrackList media={mockSingleDiscMedia} />);
-    expect(screen.getByText('Tracklist')).toBeInTheDocument();
-  });
+  // Test removed as the Tracklist heading was moved out of this component
+  // it('renders tracklist heading', () => {
+  //   render(<TrackList media={mockSingleDiscMedia} />);
+  //   expect(screen.getByText('Tracklist')).toBeInTheDocument();
+  // });
 
   it('renders track titles', () => {
     render(<TrackList media={mockSingleDiscMedia} />);
