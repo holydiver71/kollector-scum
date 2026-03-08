@@ -57,9 +57,9 @@ describe('Dashboard Page', () => {
 
     const { container } = render(<Dashboard />);
     
-    // Should show loading skeletons with animate-pulse class
-    const skeletons = container.querySelectorAll('.animate-pulse');
-    expect(skeletons.length).toBeGreaterThan(0);
+    // Should show loading spinner using animate-spin class instead of old skeleton pulse
+    const spinner = container.querySelectorAll('.animate-spin');
+    expect(spinner.length).toBeGreaterThan(0);
   });
 
   it('loads and displays health data and stats', async () => {
@@ -116,7 +116,7 @@ describe('Dashboard Page', () => {
     };
 
     (api.getHealth as jest.Mock).mockResolvedValue(mockHealth);
-    (api.getPagedCount as jest.Mock).mockResolvedValue(0);
+    (api.getPagedCount as jest.Mock).mockResolvedValue(1);
 
     render(<Dashboard />);
 
@@ -141,9 +141,10 @@ describe('Dashboard Page', () => {
 
     render(<Dashboard />);
 
-    // Current behavior shows the landing sign-in when auth/profile checks
+    // Now correctly displays Connection Error instead of reverting to sign-in page
     await waitFor(() => {
-      expect(screen.getByText('Please sign in to access your collection')).toBeInTheDocument();
+      expect(screen.getByText('Connection Error')).toBeInTheDocument();
+      expect(screen.getByText('API connection failed')).toBeInTheDocument();
     });
   });
 
@@ -159,7 +160,7 @@ describe('Dashboard Page', () => {
     render(<Dashboard />);
 
     await waitFor(() => {
-      expect(screen.getByText('Please sign in to access your collection')).toBeInTheDocument();
+      expect(screen.getByText('Reload SKÜM')).toBeInTheDocument();
     });
   });
 
@@ -178,9 +179,10 @@ describe('Dashboard Page', () => {
 
     render(<Dashboard />);
 
-    // Current behavior shows landing sign-in when auth/profile checks
+    // Renders Connection Error including URL
     await waitFor(() => {
-      expect(screen.getByText('Please sign in to access your collection')).toBeInTheDocument();
+      expect(screen.getByText('Connection Error')).toBeInTheDocument();
+      expect(screen.getByText('Failed to fetch -> http://localhost:5000/api/health')).toBeInTheDocument();
     });
   });
 
@@ -221,8 +223,10 @@ describe('Dashboard Page', () => {
 
     render(<Dashboard />);
 
+    // The dashboard no longer shows the hero "Online" text; ensure the
+    // main stats rendered instead which indicates the app loaded successfully.
     await waitFor(() => {
-      expect(screen.getByText('Online')).toBeInTheDocument();
+      expect(screen.getByText('Releases')).toBeInTheDocument();
     });
   });
 
@@ -235,7 +239,7 @@ describe('Dashboard Page', () => {
     };
 
     (api.getHealth as jest.Mock).mockResolvedValue(mockHealth);
-    (api.getPagedCount as jest.Mock).mockResolvedValue(0);
+    (api.getPagedCount as jest.Mock).mockResolvedValue(1);
 
     render(<Dashboard />);
 

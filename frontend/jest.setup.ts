@@ -52,6 +52,12 @@ jest.mock('next/navigation', () => ({
 	useParams: jest.fn(() => ({})),
 }));
 
+// Mock window.scrollTo unconditionally – jsdom has a stub that throws
+// "Not implemented: window.scrollTo" which would pollute test output.
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+window.scrollTo = jest.fn();
+
 // Polyfill ResizeObserver for the Jest/jsdom environment used by tests.
 // Many components measure layout using ResizeObserver; provide a minimal
 // no-op implementation so tests can run without the real browser API.
