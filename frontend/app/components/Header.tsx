@@ -25,6 +25,26 @@ export default function Header() {
   const [/* headerQuery removed - unused */, setHeaderQuery] = React.useState('');
   const [kollections, setKollections] = React.useState<KollectionDto[]>([]);
   const [loadingKollections, setLoadingKollections] = React.useState(true);
+  const [isLoggedIn, setIsLoggedIn] = React.useState(() => {
+    // Initialise synchronously so the header renders immediately when the user
+    // is already authenticated (avoids a flash of null on the first paint).
+    if (typeof window === 'undefined') return false;
+    return isAuthenticated();
+  });
+
+  // Track auth state to conditionally render the header
+  React.useEffect(() => {
+    setIsLoggedIn(isAuthenticated());
+
+    const handleAuthChange = () => {
+      setIsLoggedIn(isAuthenticated());
+    };
+
+    window.addEventListener('authChanged', handleAuthChange);
+    return () => {
+      window.removeEventListener('authChanged', handleAuthChange);
+    };
+  }, []);
 
   // Load kollections
   React.useEffect(() => {
@@ -131,6 +151,9 @@ export default function Header() {
       ro.disconnect();
     };
   }, []);
+
+  // Don't render the header on the pre-login page (unauthenticated state)
+  if (!isLoggedIn) return null;
 
   return (
     <header
