@@ -133,19 +133,17 @@ export function FormatIcon({ formatName, className }: { formatName?: string; cla
     );
   }
 
-    // EP (Extended Play): smaller vinyl feel, amber label, "EP" text so it can't be confused with LP
+    // EP (Extended Play): green label, 4 grooves
     if (name === "ep" || name.includes("ep") || name.includes("extended play") || name.includes("mini-album")) {
       return (
         <div className={wrapperStyle} title={formatName}>
-          <svg viewBox="0 0 100 100" className="w-full h-full">
-            {/* Disc – slightly smaller than LP to hint at shorter play time */}
-            <circle cx="50" cy="50" r="46" fill="#111" stroke="#444" strokeWidth="1.5"/>
-            {/* Fewer grooves than LP */}
-            <circle cx="50" cy="50" r="38" fill="transparent" stroke="#2a2a2a" strokeWidth="1"/>
-            <circle cx="50" cy="50" r="28" fill="transparent" stroke="#2a2a2a" strokeWidth="1"/>
-            {/* Amber label – clearly different from LP green */}
-            <circle cx="50" cy="50" r="18" fill="#FFB400" />
-            {/* Centre hole */}
+          <svg viewBox="0 0 100 100" className="w-full h-full text-transparent">
+            <circle cx="50" cy="50" r="48" fill="#111" stroke="#333" strokeWidth="1"/>
+            <circle cx="50" cy="50" r="42" fill="transparent" stroke="#222" strokeWidth="0.5"/>
+            <circle cx="50" cy="50" r="36" fill="transparent" stroke="#222" strokeWidth="0.5"/>
+            <circle cx="50" cy="50" r="30" fill="transparent" stroke="#222" strokeWidth="0.5"/>
+            <circle cx="50" cy="50" r="24" fill="transparent" stroke="#222" strokeWidth="0.5"/>
+            <circle cx="50" cy="50" r="16" fill="#10b981" />
             <circle cx="50" cy="50" r="3" fill="#13131F" />
           </svg>
         </div>
@@ -176,17 +174,27 @@ export function FormatIcon({ formatName, className }: { formatName?: string; cla
       );
     }
 
-  // LP / standard Vinyl
+  // LP / standard Vinyl: purple label, iridescent shimmer on disc, 3 grooves
   if (name.includes("lp") || name.includes("vinyl") || name.includes("album")) {
     return (
       <div className={wrapperStyle} title={formatName}>
-        <svg viewBox="0 0 100 100" className="w-full h-full text-transparent">
-          <circle cx="50" cy="50" r="48" fill="#111" stroke="#333" strokeWidth="1"/>
-          <circle cx="50" cy="50" r="42" fill="transparent" stroke="#222" strokeWidth="0.5"/>
-          <circle cx="50" cy="50" r="36" fill="transparent" stroke="#222" strokeWidth="0.5"/>
-          <circle cx="50" cy="50" r="30" fill="transparent" stroke="#222" strokeWidth="0.5"/>
-          <circle cx="50" cy="50" r="24" fill="transparent" stroke="#222" strokeWidth="0.5"/>
-          <circle cx="50" cy="50" r="16" fill="#10b981" />
+        <svg viewBox="0 0 100 100" className="w-full h-full">
+          <defs>
+            <radialGradient id="lp-disc-shine" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#1e1a2e" />
+              <stop offset="50%" stopColor="#111118" />
+              <stop offset="100%" stopColor="#0d0d14" />
+            </radialGradient>
+            <radialGradient id="lp-label" cx="40%" cy="35%" r="70%">
+              <stop offset="0%" stopColor="#c084fc" />
+              <stop offset="100%" stopColor="#7e22ce" />
+            </radialGradient>
+          </defs>
+          <circle cx="50" cy="50" r="48" fill="url(#lp-disc-shine)" stroke="#9333ea" strokeWidth="1"/>
+          <circle cx="50" cy="50" r="42" fill="transparent" stroke="#9333ea" strokeWidth="0.5" strokeOpacity="0.25"/>
+          <circle cx="50" cy="50" r="34" fill="transparent" stroke="#9333ea" strokeWidth="0.5" strokeOpacity="0.2"/>
+          <circle cx="50" cy="50" r="26" fill="transparent" stroke="#9333ea" strokeWidth="0.5" strokeOpacity="0.15"/>
+          <circle cx="50" cy="50" r="18" fill="url(#lp-label)" />
           <circle cx="50" cy="50" r="3" fill="#13131F" />
         </svg>
       </div>
