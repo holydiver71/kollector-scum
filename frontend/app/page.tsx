@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { LoadingSpinner } from "./components/LoadingComponents";
+// LoadingSpinner import removed (not used in this page)
 import { WelcomeScreen } from "./components/WelcomeScreen";
 import { RecentlyPlayed } from "./components/RecentlyPlayed";
 import { IntroPage } from "./components/IntroPage";
@@ -15,7 +15,7 @@ interface HealthData { status: string; timestamp: string; service: string; versi
 interface CollectionStats { totalReleases: number; totalArtists: number; totalGenres: number; totalLabels: number; }
 
 export default function Dashboard() {
-  const [health, setHealth] = useState<HealthData | null>(null);
+  const [/*health*/, /*setHealth*/] = useState<HealthData | null>(null);
   const [stats, setStats] = useState<CollectionStats | null>(null);
 
   const [loading, setLoading] = useState(true);
@@ -52,7 +52,7 @@ export default function Dashboard() {
         setIsLoggedIn(true);
 
         // Now fetch stats in parallel
-        const [healthJson, totalReleases, totalArtists, totalGenres, totalLabels] = await Promise.all([
+        const [, totalReleases, totalArtists, totalGenres, totalLabels] = await Promise.all([
           getHealth(),
           getPagedCount('/api/musicreleases'),
           getPagedCount('/api/artists'),
@@ -60,7 +60,7 @@ export default function Dashboard() {
           getPagedCount('/api/labels')
         ]);
 
-        setHealth(healthJson);
+        // health data is fetched for future use; not currently displayed
         setStats({ totalReleases, totalArtists, totalGenres, totalLabels });
         
         // Update collection context and show welcome screen for empty collections
