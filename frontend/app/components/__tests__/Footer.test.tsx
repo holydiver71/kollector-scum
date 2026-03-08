@@ -30,7 +30,7 @@ describe('Footer Component', () => {
 
   it('displays app name in copyright', () => {
     render(<Footer />);
-    expect(screen.getByText(/Kollector Sküm/)).toBeInTheDocument();
+    expect(screen.getByText(/Kollector[- ]Sküm/)).toBeInTheDocument();
   });
 
   it('renders About link', () => {
