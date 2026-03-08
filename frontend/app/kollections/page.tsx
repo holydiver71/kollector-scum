@@ -281,7 +281,7 @@ export default function KollectionsPage() {
           <div className="bg-[#13131F] border border-[#1C1C28] rounded-lg p-12 text-center">
             <p className="text-gray-400 text-lg mb-4">You haven&apos;t created any lists yet.</p>
             <p className="text-gray-500 mb-8">
-              Create Kollections to organize your music collection genre!
+              Create Kollections to organise your music collection genre!
             </p>
             {!showForm && (
               <button

@@ -100,14 +100,14 @@ export function WelcomeScreen({ onDismiss, onStartFresh }: WelcomeScreenProps) {
             <div className="grid sm:grid-cols-3 gap-6">
               <div className="text-center">
                 <div className="text-3xl mb-3">🎵</div>
-                <h4 className="font-bold text-gray-900 mb-2">Organize</h4>
+                <h4 className="font-bold text-gray-900 mb-2">Organise</h4>
                 <p className="text-sm text-gray-600 font-medium">
-                  Catalog your physical music collection with detailed metadata
+                  Catalogue your physical music collection with detailed metadata
                 </p>
               </div>
               <div className="text-center">
                 <div className="text-3xl mb-3">📊</div>
-                <h4 className="font-bold text-gray-900 mb-2">Analyze</h4>
+                <h4 className="font-bold text-gray-900 mb-2">Analyse</h4>
                 <p className="text-sm text-gray-600 font-medium">
                   View statistics and insights about your collection
                 </p>
