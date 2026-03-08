@@ -385,14 +385,7 @@ describe('AddReleaseForm - Edit Mode', () => {
     });
   });
 
-  it('handles validation errors from backend', async () => {
-    const mockUpdateRelease = api.updateRelease as jest.MockedFunction<typeof api.updateRelease>;
-    mockUpdateRelease.mockRejectedValue({
-      errors: {
-        Title: ['Title is required'],
-      },
-    });
-
+  it('shows field-level error when title is empty on submit', async () => {
     const initialData = {
       title: '',
       artistIds: [1],
@@ -403,15 +396,407 @@ describe('AddReleaseForm - Edit Mode', () => {
     render(<AddReleaseForm initialData={initialData} releaseId={123} />);
 
     await waitFor(() => {
-      const submitButton = screen.getByRole('button', { name: /update release/i });
-      expect(submitButton).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /update release/i })).toBeInTheDocument();
     });
 
-    const submitButton = screen.getByRole('button', { name: /update release/i });
-    fireEvent.click(submitButton);
+    fireEvent.click(screen.getByRole('button', { name: /update release/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/title is required/i)).toBeInTheDocument();
+      // The error alert banner should mention the specific problem
+      const alert = screen.getByRole('alert');
+      expect(alert).toHaveTextContent(/title is required/i);
+    });
+
+    // Field-level validation error should also appear under the title input
+    expect(screen.getByText('Title is required')).toBeInTheDocument();
+  });
+
+  it('shows artist validation error when no artist is selected', async () => {
+    const initialData = {
+      title: 'Test Album',
+      artistIds: [] as number[],
+      artistNames: [] as string[],
+      genreIds: [1],
+      live: false,
+    };
+
+    render(<AddReleaseForm initialData={initialData} releaseId={123} />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /update release/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /update release/i }));
+
+    await waitFor(() => {
+      const alert = screen.getByRole('alert');
+      expect(alert).toHaveTextContent(/at least one artist is required/i);
+    });
+  });
+
+  it('shows validation error for empty track title', async () => {
+    const initialData = {
+      title: 'Test Album',
+      artistIds: [1],
+      genreIds: [1],
+      live: false,
+      media: [
+        {
+          name: 'CD 1',
+          tracks: [
+            { title: 'Valid Track', index: 1, artists: [], genres: [], live: false },
+            { title: '', index: 2, artists: [], genres: [], live: false }, // empty title
+          ],
+        },
+      ],
+    };
+
+    render(<AddReleaseForm initialData={initialData} releaseId={123} />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /update release/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /update release/i }));
+
+    await waitFor(() => {
+      const alert = screen.getByRole('alert');
+      expect(alert).toHaveTextContent(/track title is required/i);
+    });
+  });
+
+  it('shows combined validation errors for multiple invalid fields', async () => {
+    const initialData = {
+      title: '',
+      artistIds: [] as number[],
+      artistNames: [] as string[],
+      genreIds: [1],
+      live: false,
+    };
+
+    render(<AddReleaseForm initialData={initialData} releaseId={123} />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /update release/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /update release/i }));
+
+    await waitFor(() => {
+      const alert = screen.getByRole('alert');
+      // Both errors should appear in the combined banner
+      expect(alert).toHaveTextContent(/title is required/i);
+      expect(alert).toHaveTextContent(/at least one artist is required/i);
+    });
+  });
+
+  it('does not call updateRelease when frontend validation fails', async () => {
+    const mockUpdateRelease = api.updateRelease as jest.MockedFunction<typeof api.updateRelease>;
+
+    const initialData = {
+      title: '',
+      artistIds: [] as number[],
+      artistNames: [] as string[],
+      genreIds: [1],
+      live: false,
+    };
+
+    render(<AddReleaseForm initialData={initialData} releaseId={123} />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /update release/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /update release/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toBeInTheDocument();
+    });
+
+    expect(mockUpdateRelease).not.toHaveBeenCalled();
+  });
+
+  it('displays backend API validation errors on submit', async () => {
+    const mockUpdateRelease = api.updateRelease as jest.MockedFunction<typeof api.updateRelease>;
+    mockUpdateRelease.mockRejectedValue({
+      message: 'Validation failed',
+      status: 400,
+      details: JSON.stringify({
+        errors: {
+          Title: ['Title must be at most 200 characters'],
+          ArtistIds: ['At least one artist is required'],
+        },
+      }),
+    });
+
+    const initialData = {
+      title: 'Test Album',
+      artistIds: [1],
+      genreIds: [1],
+      live: false,
+    };
+
+    render(<AddReleaseForm initialData={initialData} releaseId={123} />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /update release/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /update release/i }));
+
+    await waitFor(() => {
+      const alert = screen.getByRole('alert');
+      expect(alert).toHaveTextContent(/validation failed/i);
+    });
+  });
+
+  it('displays a generic error message when updateRelease throws an unknown error', async () => {
+    const mockUpdateRelease = api.updateRelease as jest.MockedFunction<typeof api.updateRelease>;
+    mockUpdateRelease.mockRejectedValue(new Error('Network error'));
+
+    const initialData = {
+      title: 'Test Album',
+      artistIds: [1],
+      genreIds: [1],
+      live: false,
+    };
+
+    render(<AddReleaseForm initialData={initialData} releaseId={123} />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /update release/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /update release/i }));
+
+    await waitFor(() => {
+      const alert = screen.getByRole('alert');
+      expect(alert).toHaveTextContent(/network error/i);
+    });
+  });
+
+  it('calls onSuccess with releaseId after successful update', async () => {
+    const mockOnSuccess = jest.fn();
+    const mockUpdateRelease = api.updateRelease as jest.MockedFunction<typeof api.updateRelease>;
+    mockUpdateRelease.mockResolvedValue({});
+
+    const initialData = {
+      title: 'Test Album',
+      artistIds: [1],
+      genreIds: [1],
+      live: false,
+    };
+
+    render(
+      <AddReleaseForm
+        initialData={initialData}
+        releaseId={42}
+        onSuccess={mockOnSuccess}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /update release/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /update release/i }));
+
+    await waitFor(() => {
+      // onSuccess should be called with the original releaseId (42), not a response field
+      expect(mockOnSuccess).toHaveBeenCalledWith(42);
+    });
+  });
+
+  it('sends releaseYear as ISO string when bare year is provided', async () => {
+    const mockUpdateRelease = api.updateRelease as jest.MockedFunction<typeof api.updateRelease>;
+    mockUpdateRelease.mockResolvedValue({});
+
+    const initialData = {
+      title: 'Test Album',
+      artistIds: [1],
+      genreIds: [1],
+      live: false,
+      releaseYear: '1983',
+    };
+
+    render(<AddReleaseForm initialData={initialData} releaseId={123} />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /update release/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /update release/i }));
+
+    await waitFor(() => {
+      expect(mockUpdateRelease).toHaveBeenCalledWith(123, expect.objectContaining({
+        releaseYear: '1983-01-01T00:00:00.000Z',
+      }));
+    });
+  });
+
+  it('handles full ISO releaseYear from backend without crashing (RangeError regression)', async () => {
+    // This tests the specific bug where the backend returns "2023-01-01T00:00:00"
+    // and the user clicks Update without modifying the year.
+    // Previously this caused: RangeError: Invalid time value at Date.toISOString
+    const mockUpdateRelease = api.updateRelease as jest.MockedFunction<typeof api.updateRelease>;
+    mockUpdateRelease.mockResolvedValue({});
+
+    const initialData = {
+      title: 'Test Album',
+      artistIds: [1],
+      genreIds: [1],
+      live: false,
+      releaseYear: '2023-01-01T00:00:00',    // full ISO from backend
+      origReleaseYear: '2020-01-01T00:00:00', // full ISO from backend
+    };
+
+    render(<AddReleaseForm initialData={initialData} releaseId={979} />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /update release/i })).toBeInTheDocument();
+    });
+
+    // Should not throw – this was the bug
+    fireEvent.click(screen.getByRole('button', { name: /update release/i }));
+
+    await waitFor(() => {
+      expect(mockUpdateRelease).toHaveBeenCalledWith(979, expect.objectContaining({
+        releaseYear: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
+        origReleaseYear: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
+      }));
+    });
+  });
+
+  it('handles YYYY-MM-DD releaseYear from date picker correctly', async () => {
+    const mockUpdateRelease = api.updateRelease as jest.MockedFunction<typeof api.updateRelease>;
+    mockUpdateRelease.mockResolvedValue({});
+
+    const initialData = {
+      title: 'Test Album',
+      artistIds: [1],
+      genreIds: [1],
+      live: false,
+      releaseYear: '1983-06-15', // from HTML date input change
+    };
+
+    render(<AddReleaseForm initialData={initialData} releaseId={123} />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /update release/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /update release/i }));
+
+    await waitFor(() => {
+      expect(mockUpdateRelease).toHaveBeenCalledWith(123, expect.objectContaining({
+        releaseYear: '1983-06-15T00:00:00.000Z',
+      }));
+    });
+  });
+
+  it('omits releaseYear from payload when it is not set', async () => {
+    const mockUpdateRelease = api.updateRelease as jest.MockedFunction<typeof api.updateRelease>;
+    mockUpdateRelease.mockResolvedValue({});
+
+    const initialData = {
+      title: 'Test Album',
+      artistIds: [1],
+      genreIds: [1],
+      live: false,
+    };
+
+    render(<AddReleaseForm initialData={initialData} releaseId={123} />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /update release/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /update release/i }));
+
+    await waitFor(() => {
+      const payload = mockUpdateRelease.mock.calls[0][1] as Record<string, unknown>;
+      expect(payload.releaseYear).toBeUndefined();
+    });
+  });
+
+  it('omits empty links array from payload', async () => {
+    const mockUpdateRelease = api.updateRelease as jest.MockedFunction<typeof api.updateRelease>;
+    mockUpdateRelease.mockResolvedValue({});
+
+    const initialData = {
+      title: 'Test Album',
+      artistIds: [1],
+      genreIds: [1],
+      live: false,
+      links: [],
+    };
+
+    render(<AddReleaseForm initialData={initialData} releaseId={123} />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /update release/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /update release/i }));
+
+    await waitFor(() => {
+      const payload = mockUpdateRelease.mock.calls[0][1] as Record<string, unknown>;
+      expect(payload.links).toBeUndefined();
+    });
+  });
+
+  it('allows submitting a link URL without a type selected (type is optional)', async () => {
+    const mockUpdateRelease = api.updateRelease as jest.MockedFunction<typeof api.updateRelease>;
+    mockUpdateRelease.mockResolvedValue({});
+
+    const initialData = {
+      title: 'Test Album',
+      artistIds: [1],
+      genreIds: [1],
+      live: false,
+      links: [{ url: 'https://example.com', type: '', description: '' }],
+    };
+
+    render(<AddReleaseForm initialData={initialData} releaseId={123} />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /update release/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /update release/i }));
+
+    // Should succeed – no validation error for missing type
+    await waitFor(() => {
+      expect(mockUpdateRelease).toHaveBeenCalledWith(123, expect.objectContaining({
+        links: expect.arrayContaining([
+          expect.objectContaining({ url: 'https://example.com' }),
+        ]),
+      }));
+    });
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('still validates that a link URL must be a valid URL format', async () => {
+    const initialData = {
+      title: 'Test Album',
+      artistIds: [1],
+      genreIds: [1],
+      live: false,
+      links: [{ url: 'http://', type: 'Official', description: '' }], // missing host – always invalid
+    };
+
+    render(<AddReleaseForm initialData={initialData} releaseId={123} />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /update release/i })).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /update release/i }));
+
+    await waitFor(() => {
+      const alert = screen.getByRole('alert');
+      expect(alert).toHaveTextContent(/invalid url format/i);
     });
   });
 

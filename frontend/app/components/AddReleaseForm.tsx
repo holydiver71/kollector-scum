@@ -235,7 +235,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
     }
   };
 
-  const validateForm = (): boolean => {
+  const validateForm = (): Record<string, string> => {
     const errors: Record<string, string> = {};
 
     // Required fields
@@ -244,7 +244,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
     }
 
     // Check if at least one artist is selected OR new artist names are provided
-    if (formData.artistIds.length === 0 && (!formData.artistNames || formData.artistNames.length === 0)) {
+    if ((!formData.artistIds || formData.artistIds.length === 0) && (!formData.artistNames || formData.artistNames.length === 0)) {
       errors.artists = "At least one artist is required";
     }
 
@@ -253,39 +253,41 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
       if (link.url && !validateUrl(link.url)) {
         errors[`link${index}`] = "Invalid URL format";
       }
-      if (link.url && !link.type) {
-        errors[`linkType${index}`] = "Link type is required when URL is provided";
-      }
     });
 
     // Validate purchase info
-    if (formData.purchaseInfo?.price !== undefined) {
+    if (formData.purchaseInfo?.price !== undefined && formData.purchaseInfo?.price !== null) {
       if (formData.purchaseInfo.price < 0) {
         errors.price = "Price cannot be negative";
       }
       // Require currency when price is provided
       if (!formData.purchaseInfo.currency || !formData.purchaseInfo.currency.trim()) {
-        errors.currency = "Currency is required when price is specified";
+        // Default to USD if they didn't select it but price is provided
+        formData.purchaseInfo.currency = "USD";
       }
     }
 
     // Validate tracks
     formData.media?.forEach((disc, discIndex) => {
-      disc.tracks.forEach((track, trackIndex) => {
-        if (!track.title.trim()) {
+      disc.tracks?.forEach((track, trackIndex) => {
+        if (!track.title || !track.title.trim()) {
           errors[`track${discIndex}_${trackIndex}`] = "Track title is required";
         }
       });
     });
 
     setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
+    return errors;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) {
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      const errorList = Object.values(errors).join(" | ");
+      setError(`Please fix the validation errors before submitting: ${errorList}`);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
@@ -293,22 +295,35 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
     setError(null);
 
     try {
+      // Normalise a year/date string to a full UTC ISO string for the backend.
+      // Handles three shapes that can arrive here:
+      //   1. "1983"                  – bare 4-digit year
+      //   2. "2023-06-01"            – YYYY-MM-DD from the HTML date picker
+      //   3. "2023-01-01T00:00:00"   – existing ISO value from the backend
+      //      that was never changed by the user (no "T" suffix should be added)
+      const toBackendDate = (value: string): string => {
+        // Shape 1: bare year
+        if (/^\d{4}$/.test(value)) {
+          return `${value}-01-01T00:00:00.000Z`;
+        }
+        // Shape 2: YYYY-MM-DD only (from <input type="date">)
+        if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+          return `${value}T00:00:00.000Z`;
+        }
+        // Shape 3 (and any other valid ISO/date string): parse and re-serialise
+        const d = new Date(value);
+        if (!isNaN(d.getTime())) {
+          return d.toISOString();
+        }
+        // Fallback – return as-is rather than crashing
+        return value;
+      };
+
       // Clean up the data before sending - remove empty arrays and convert years to DateTime
       const cleanedData = {
         ...formData,
-        // Convert year strings to ISO DateTime strings expected by the backend.
-        // Handles bare 4-digit years (e.g. "1983") and full YYYY-MM-DD strings from
-        // the date picker. Appending "T00:00:00Z" before parsing ensures UTC midnight.
-        releaseYear: formData.releaseYear
-          ? (/^\d{4}$/.test(formData.releaseYear)
-              ? `${formData.releaseYear}-01-01T00:00:00.000Z`
-              : new Date(`${formData.releaseYear}T00:00:00Z`).toISOString())
-          : undefined,
-        origReleaseYear: formData.origReleaseYear
-          ? (/^\d{4}$/.test(formData.origReleaseYear)
-              ? `${formData.origReleaseYear}-01-01T00:00:00.000Z`
-              : new Date(`${formData.origReleaseYear}T00:00:00Z`).toISOString())
-          : undefined,
+        releaseYear: formData.releaseYear ? toBackendDate(formData.releaseYear) : undefined,
+        origReleaseYear: formData.origReleaseYear ? toBackendDate(formData.origReleaseYear) : undefined,
         // Only send lengthInSeconds if it's a positive number
         lengthInSeconds: formData.lengthInSeconds && formData.lengthInSeconds > 0 
           ? formData.lengthInSeconds 
@@ -484,7 +499,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+        <div role="alert" className="bg-red-50 border border-red-200 rounded-md p-4">
           <p className="text-sm text-red-800">{error}</p>
         </div>
       )}
@@ -988,7 +1003,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
                       URL
                     </label>
                     <input
-                      type="url"
+                      type="text"
                       value={link.url}
                       onChange={(e) => {
                         const newLinks = [...(formData.links || [])];
@@ -1001,7 +1016,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Type
+                      Type (Optional)
                     </label>
                     <select
                       value={link.type}

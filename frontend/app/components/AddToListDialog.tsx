@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { X, Plus, Check } from "lucide-react";
-import { getLists, addReleaseToList, createList, getListsForRelease, type ListSummaryDto } from "../lib/api";
+import { getLists, addReleaseToList, removeReleaseFromList, createList, getListsForRelease, type ListSummaryDto } from "../lib/api";
 
 interface AddToListDialogProps {
   releaseId: number;
@@ -62,13 +62,18 @@ export function AddToListDialog({ releaseId, releaseTitle, isOpen, onClose }: Ad
   }, []);
  
 
-  const handleAddToList = async (listId: number) => {
+  const handleToggleList = async (listId: number, isInList: boolean) => {
     try {
       setAddingToList(listId);
-      await addReleaseToList(listId, releaseId);
-      setReleaseLists(prev => [...prev, listId]);
+      if (isInList) {
+        await removeReleaseFromList(listId, releaseId);
+        setReleaseLists(prev => prev.filter(id => id !== listId));
+      } else {
+        await addReleaseToList(listId, releaseId);
+        setReleaseLists(prev => [...prev, listId]);
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to add release to list");
+      setError(err instanceof Error ? err.message : `Failed to ${isInList ? 'remove release from' : 'add release to'} list`);
     } finally {
       setAddingToList(null);
     }
@@ -211,26 +216,29 @@ export function AddToListDialog({ releaseId, releaseTitle, isOpen, onClose }: Ad
                   return (
                     <button
                       key={list.id}
-                      onClick={() => !isInList && !isAdding && handleAddToList(list.id)}
-                      disabled={isInList || isAdding}
+                      onClick={() => !isAdding && handleToggleList(list.id, isInList)}
+                      disabled={isAdding}
                       className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all duration-200 group ${
                         isInList
-                          ? "bg-green-50 border-green-200 cursor-default"
-                          : "bg-white border-gray-100 hover:border-[#D93611] hover:shadow-md hover:-translate-y-0.5"
+                          ? "bg-green-50 border-green-200 hover:border-red-200 hover:bg-red-50/50"
+                          : "bg-white border-gray-100 hover:border-[#D93611] hover:bg-[#D93611]/5"
                       } ${isAdding ? "opacity-70 cursor-wait" : ""}`}
                     >
                       <div className="flex-1 text-left">
-                        <p className={`font-bold ${isInList ? "text-green-800" : "text-gray-900 group-hover:text-[#D93611] transition-colors"}`}>{list.name}</p>
-                        <p className={`text-xs ${isInList ? "text-green-600" : "text-gray-500"}`}>
+                        <p className={`font-bold transition-colors ${isInList ? "text-green-800 group-hover:text-red-700" : "text-gray-900 group-hover:text-[#D93611]"}`}>{list.name}</p>
+                        <p className={`text-xs ${isInList ? "text-green-600 group-hover:text-red-600" : "text-gray-500"}`}>
                           {list.releaseCount} {list.releaseCount === 1 ? "release" : "releases"}
                         </p>
                       </div>
-                      {isInList ? (
-                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                          <Check className="w-5 h-5 text-green-600" />
+                      {isAdding ? (
+                        <div className="flex items-center justify-center w-8 h-8">
+                          <div className="w-5 h-5 border-2 border-[#D93611] border-t-transparent rounded-full animate-spin" />
                         </div>
-                      ) : isAdding ? (
-                        <div className="w-5 h-5 border-2 border-[#D93611] border-t-transparent rounded-full animate-spin flex-shrink-0 mr-1.5" />
+                      ) : isInList ? (
+                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center group-hover:bg-red-100 transition-colors">
+                          <Check className="w-5 h-5 text-green-600 group-hover:hidden" />
+                          <X className="w-5 h-5 text-red-600 hidden group-hover:block" />
+                        </div>
                       ) : (
                         <div className="w-8 h-8 bg-gray-50 rounded-full flex items-center justify-center group-hover:bg-[#D93611] transition-colors">
                           <Plus className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
