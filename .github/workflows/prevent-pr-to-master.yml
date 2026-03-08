@@ -1,7 +1,7 @@
 name: Prevent PRs Targeting Master
 
 on:
-  pull_request:
+  pull_request: {}
 
 jobs:
   block-master:
