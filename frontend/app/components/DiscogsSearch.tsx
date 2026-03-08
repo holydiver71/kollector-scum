@@ -19,7 +19,7 @@ export default function DiscogsSearch({ onResultsFound, onError }: DiscogsSearch
     e.preventDefault();
 
     if (!catalogNumber.trim()) {
-      onError("Please enter a catalog number");
+      onError("Please enter a catalogue number");
       return;
     }
 
@@ -37,7 +37,7 @@ export default function DiscogsSearch({ onResultsFound, onError }: DiscogsSearch
       const results = await searchDiscogs(request);
       
       if (results.length === 0) {
-        onError(`No results found for catalog number "${catalogNumber}"`);
+        onError(`No results found for catalogue number "${catalogNumber}"`);
       } else {
         onResultsFound(results);
       }
@@ -65,7 +65,7 @@ export default function DiscogsSearch({ onResultsFound, onError }: DiscogsSearch
       <form onSubmit={handleSearch} className="space-y-4">
         <div>
           <label htmlFor="catalogNumber" className="block text-sm font-medium text-gray-700 mb-1">
-            Catalog Number <span className="text-red-500">*</span>
+            Catalogue Number <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
@@ -77,7 +77,7 @@ export default function DiscogsSearch({ onResultsFound, onError }: DiscogsSearch
             disabled={isSearching}
           />
           <p className="mt-1 text-sm text-gray-500">
-            Enter the catalog number from the release (usually found on the spine or back cover)
+            Enter the catalogue number from the release (usually found on the spine or back cover)
           </p>
         </div>
 

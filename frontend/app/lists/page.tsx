@@ -128,7 +128,7 @@ export default function ListsPage() {
           <div>
             <h1 className="text-3xl font-bold text-gray-900">My Lists</h1>
             <p className="mt-2 text-gray-600">
-              Organize your music collection by theme or style
+              Organise your music collection by theme or style
             </p>
           </div>
           {!showCreateForm && (

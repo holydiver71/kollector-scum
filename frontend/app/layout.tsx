@@ -18,7 +18,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "KOLLECTOR SKÜM - Music Collection Manager",
-  description: "Manage and organize your music collection with comprehensive tracking and search capabilities.",
+  description: "Manage and organise your music collection with comprehensive tracking and search capabilities.",
   keywords: ["music", "collection", "vinyl", "CD", "discography", "catalog"],
   icons: {
     icon: '/favicon.ico',
