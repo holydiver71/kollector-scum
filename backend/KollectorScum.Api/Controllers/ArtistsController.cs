@@ -54,16 +54,15 @@ namespace KollectorScum.Api.Controllers
                 {
                     if (startsWith == "0-9")
                     {
-                        letterFilter = a => a.Name != null && (
-                            a.Name.StartsWith("0") || a.Name.StartsWith("1") || a.Name.StartsWith("2") ||
-                            a.Name.StartsWith("3") || a.Name.StartsWith("4") || a.Name.StartsWith("5") ||
-                            a.Name.StartsWith("6") || a.Name.StartsWith("7") || a.Name.StartsWith("8") ||
-                            a.Name.StartsWith("9"));
+                        // Filter artists whose name begins with any digit (0–9)
+                        letterFilter = a => a.Name != null && a.Name.Length > 0
+                            && a.Name[0] >= '0' && a.Name[0] <= '9';
                     }
                     else
                     {
-                        var letter = startsWith.ToLowerInvariant();
-                        letterFilter = a => a.Name != null && a.Name.ToLower().StartsWith(letter);
+                        var letter = startsWith;
+                        letterFilter = a => a.Name != null
+                            && a.Name.StartsWith(letter, StringComparison.OrdinalIgnoreCase);
                     }
                 }
 
