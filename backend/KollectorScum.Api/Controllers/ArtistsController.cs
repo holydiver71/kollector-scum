@@ -26,6 +26,7 @@ namespace KollectorScum.Api.Controllers
         [ProducesResponseType(400)]
         public async Task<ActionResult<PagedResult<ArtistDto>>> GetArtists(
             [FromQuery] string? search = null,
+            [FromQuery] string? startsWith = null,
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 50)
         {
@@ -34,9 +35,39 @@ namespace KollectorScum.Api.Controllers
                 var validationError = ValidatePaginationParameters(page, pageSize);
                 if (validationError != null) return validationError;
 
-                LogOperation("GetArtists", new { search, page, pageSize });
+                // Validate startsWith: must be a single letter A-Z (case-insensitive) or the literal "0-9"
+                if (!string.IsNullOrWhiteSpace(startsWith))
+                {
+                    var trimmed = startsWith.Trim();
+                    if (trimmed != "0-9" && (trimmed.Length != 1 || !char.IsLetter(trimmed[0])))
+                    {
+                        return BadRequest("startsWith must be a single letter A-Z or '0-9'");
+                    }
+                    startsWith = trimmed;
+                }
 
-                var result = await _artistService.GetAllAsync(page, pageSize, search);
+                LogOperation("GetArtists", new { search, startsWith, page, pageSize });
+
+                // Build optional starts-with letter filter
+                System.Linq.Expressions.Expression<Func<Models.Artist, bool>>? letterFilter = null;
+                if (!string.IsNullOrWhiteSpace(startsWith))
+                {
+                    if (startsWith == "0-9")
+                    {
+                        letterFilter = a => a.Name != null && (
+                            a.Name.StartsWith("0") || a.Name.StartsWith("1") || a.Name.StartsWith("2") ||
+                            a.Name.StartsWith("3") || a.Name.StartsWith("4") || a.Name.StartsWith("5") ||
+                            a.Name.StartsWith("6") || a.Name.StartsWith("7") || a.Name.StartsWith("8") ||
+                            a.Name.StartsWith("9"));
+                    }
+                    else
+                    {
+                        var letter = startsWith.ToLowerInvariant();
+                        letterFilter = a => a.Name != null && a.Name.ToLower().StartsWith(letter);
+                    }
+                }
+
+                var result = await _artistService.GetAllAsync(page, pageSize, search, letterFilter);
                 return Ok(result);
             }
             catch (Exception ex)
