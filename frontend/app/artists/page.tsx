@@ -12,10 +12,17 @@ const PAGE_SIZE = 48;
 /** Debounce delay in milliseconds for search input */
 const SEARCH_DEBOUNCE_MS = 300;
 
+/** All available letter filter options: '0-9' for numeric names, then A-Z. */
+const LETTER_FILTERS = [
+  "0-9",
+  "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
+  "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
+];
+
 /**
- * Artists page – displays a searchable, paginated grid of all artists in the
- * collection. Each artist card links through to the collection filtered by
- * that artist.
+ * Artists page – displays a searchable, filterable, paginated grid of all
+ * artists in the collection. Each artist card links through to the collection
+ * filtered by that artist.
  */
 export default function ArtistsPage() {
   const [artists, setArtists] = useState<ArtistItem[]>([]);
@@ -23,17 +30,27 @@ export default function ArtistsPage() {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [letterFilter, setLetterFilter] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  /** Load artists from the API whenever the page or debounced search term changes. */
-  const loadArtists = useCallback(async (currentPage: number, searchTerm: string) => {
+  /** Load artists from the API whenever the page, debounced search, or letter filter changes. */
+  const loadArtists = useCallback(async (
+    currentPage: number,
+    searchTerm: string,
+    letter: string | null
+  ) => {
     try {
       setLoading(true);
       setError(null);
-      const data = await getArtists(searchTerm || undefined, currentPage, PAGE_SIZE);
+      const data = await getArtists(
+        searchTerm || undefined,
+        currentPage,
+        PAGE_SIZE,
+        letter || undefined
+      );
       setArtists(data.items);
       setTotalCount(data.totalCount);
       setTotalPages(data.totalPages);
@@ -44,10 +61,10 @@ export default function ArtistsPage() {
     }
   }, []);
 
-  // Reload when page or search term changes
+  // Reload when page, search term, or letter filter changes
   useEffect(() => {
-    loadArtists(page, debouncedSearch);
-  }, [page, debouncedSearch, loadArtists]);
+    loadArtists(page, debouncedSearch, letterFilter);
+  }, [page, debouncedSearch, letterFilter, loadArtists]);
 
   /** Clear the debounce timer on unmount to prevent memory leaks. */
   useEffect(() => {
@@ -70,6 +87,29 @@ export default function ArtistsPage() {
     }, SEARCH_DEBOUNCE_MS);
   };
 
+  /**
+   * Toggle the given letter filter. Selecting the active letter resets to
+   * show all artists; selecting a new letter replaces the current filter.
+   */
+  const handleLetterButtonClick = (letter: string) => {
+    setLetterFilter(prev => (prev === letter ? null : letter));
+    setPage(1);
+  };
+
+  /** Handle the dropdown selector used on small screens. */
+  const handleLetterDropdownChange = (value: string) => {
+    setLetterFilter(value || null);
+    setPage(1);
+  };
+
+  /** Clear all active filters and return to the default all-artists view. */
+  const handleClearFilters = () => {
+    setSearch("");
+    setDebouncedSearch("");
+    setLetterFilter(null);
+    setPage(1);
+  };
+
   /** Navigate to previous page. */
   const handlePreviousPage = () => {
     if (page > 1) setPage(p => p - 1);
@@ -79,6 +119,14 @@ export default function ArtistsPage() {
   const handleNextPage = () => {
     if (page < totalPages) setPage(p => p + 1);
   };
+
+  /** Build a human-readable description of the active filters for empty states. */
+  const activeFilterDescription = (() => {
+    const parts: string[] = [];
+    if (debouncedSearch) parts.push(`matching "${debouncedSearch}"`);
+    if (letterFilter) parts.push(`starting with "${letterFilter}"`);
+    return parts.length > 0 ? `No artists found ${parts.join(" ")}` : "No artists in your collection yet";
+  })();
 
   return (
     <div className="min-h-screen bg-transparent">
@@ -95,7 +143,7 @@ export default function ArtistsPage() {
         </div>
 
         {/* Search bar */}
-        <div className="relative mb-6">
+        <div className="relative mb-4">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
           <input
             type="text"
@@ -105,6 +153,42 @@ export default function ArtistsPage() {
             aria-label="Search artists"
             className="w-full bg-[#13131F] border border-[#1C1C28] rounded-lg pl-10 pr-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-[#8B5CF6] focus:ring-1 focus:ring-[#8B5CF6] transition-colors"
           />
+        </div>
+
+        {/* A-Z letter filter bar */}
+        <div className="mb-6">
+          {/* Dropdown selector – shown only on extra-small screens */}
+          <div className="sm:hidden">
+            <select
+              value={letterFilter ?? ""}
+              onChange={e => handleLetterDropdownChange(e.target.value)}
+              aria-label="Filter artists by letter"
+              className="w-full bg-[#13131F] border border-[#1C1C28] rounded-lg px-3 py-2 text-white focus:outline-none focus:border-[#8B5CF6] focus:ring-1 focus:ring-[#8B5CF6] transition-colors"
+            >
+              <option value="">All artists</option>
+              {LETTER_FILTERS.map(l => (
+                <option key={l} value={l}>{l}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Button bar – shown on sm and above, wraps to rows as needed */}
+          <div className="hidden sm:flex flex-wrap gap-1" role="group" aria-label="Filter artists by letter">
+            {LETTER_FILTERS.map(l => (
+              <button
+                key={l}
+                onClick={() => handleLetterButtonClick(l)}
+                aria-pressed={letterFilter === l}
+                className={`min-w-[2.25rem] px-2 py-1 text-xs font-medium rounded transition-colors focus:outline-none focus:ring-1 focus:ring-[#8B5CF6] ${
+                  letterFilter === l
+                    ? "bg-[#8B5CF6] text-white border border-[#8B5CF6]"
+                    : "bg-[#13131F] border border-[#1C1C28] text-gray-400 hover:text-white hover:border-[#8B5CF6]/50"
+                }`}
+              >
+                {l}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Error state */}
@@ -124,20 +208,14 @@ export default function ArtistsPage() {
           <div className="bg-[#13131F] rounded-xl border border-[#1C1C28] p-12 text-center">
             <Music className="h-12 w-12 text-gray-600 mx-auto mb-4" />
             <p className="text-gray-400 text-lg font-medium">
-              {debouncedSearch
-                ? `No artists found matching "${debouncedSearch}"`
-                : "No artists in your collection yet"}
+              {activeFilterDescription}
             </p>
-            {debouncedSearch && (
+            {(debouncedSearch || letterFilter) && (
               <button
-                onClick={() => {
-                  setSearch("");
-                  setDebouncedSearch("");
-                  setPage(1);
-                }}
+                onClick={handleClearFilters}
                 className="mt-4 text-[#8B5CF6] hover:text-[#A78BFA] text-sm transition-colors"
               >
-                Clear search
+                Clear filters
               </button>
             )}
           </div>

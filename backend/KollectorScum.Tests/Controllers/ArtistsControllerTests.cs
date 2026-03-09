@@ -51,7 +51,7 @@ namespace KollectorScum.Tests.Controllers
                 .ReturnsAsync(pagedResult);
 
             // Act
-            var result = await _controller.GetArtists(null, 1, 50);
+            var result = await _controller.GetArtists(null, null, 1, 50);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result.Result);
@@ -80,7 +80,7 @@ namespace KollectorScum.Tests.Controllers
                 .ReturnsAsync(pagedResult);
 
             // Act
-            var result = await _controller.GetArtists("beatles", 1, 50);
+            var result = await _controller.GetArtists("beatles", null, 1, 50);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result.Result);
@@ -93,7 +93,7 @@ namespace KollectorScum.Tests.Controllers
         public async Task GetArtists_InvalidPage_ReturnsBadRequest()
         {
             // Act
-            var result = await _controller.GetArtists(null, 0, 50);
+            var result = await _controller.GetArtists(null, null, 0, 50);
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result.Result);
@@ -105,7 +105,7 @@ namespace KollectorScum.Tests.Controllers
         public async Task GetArtists_InvalidPageSize_ReturnsBadRequest()
         {
             // Act
-            var result = await _controller.GetArtists(null, 1, 0);
+            var result = await _controller.GetArtists(null, null, 1, 0);
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result.Result);
@@ -121,11 +121,96 @@ namespace KollectorScum.Tests.Controllers
                 .ThrowsAsync(new Exception("Database error"));
 
             // Act
-            var result = await _controller.GetArtists(null, 1, 50);
+            var result = await _controller.GetArtists(null, null, 1, 50);
 
             // Assert
             var statusCodeResult = Assert.IsType<ObjectResult>(result.Result);
             Assert.Equal(500, statusCodeResult.StatusCode);
+        }
+
+        [Fact]
+        public async Task GetArtists_WithValidLetterFilter_ReturnsFilteredResults()
+        {
+            // Arrange
+            var pagedResult = new PagedResult<ArtistDto>
+            {
+                Items = new List<ArtistDto>
+                {
+                    new ArtistDto { Id = 1, Name = "Adele" },
+                    new ArtistDto { Id = 2, Name = "ABBA" }
+                },
+                TotalCount = 2,
+                Page = 1,
+                PageSize = 50,
+                TotalPages = 1
+            };
+
+            _mockService.Setup(s => s.GetAllAsync(
+                    1, 50, null,
+                    It.IsAny<System.Linq.Expressions.Expression<Func<Artist, bool>>>(),
+                    null))
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetArtists(null, "A", 1, 50);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var returnValue = Assert.IsType<PagedResult<ArtistDto>>(okResult.Value);
+            Assert.Equal(2, returnValue.TotalCount);
+        }
+
+        [Fact]
+        public async Task GetArtists_WithNumericFilter_ReturnsFilteredResults()
+        {
+            // Arrange
+            var pagedResult = new PagedResult<ArtistDto>
+            {
+                Items = new List<ArtistDto>
+                {
+                    new ArtistDto { Id = 3, Name = "10cc" }
+                },
+                TotalCount = 1,
+                Page = 1,
+                PageSize = 50,
+                TotalPages = 1
+            };
+
+            _mockService.Setup(s => s.GetAllAsync(
+                    1, 50, null,
+                    It.IsAny<System.Linq.Expressions.Expression<Func<Artist, bool>>>(),
+                    null))
+                .ReturnsAsync(pagedResult);
+
+            // Act
+            var result = await _controller.GetArtists(null, "0-9", 1, 50);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var returnValue = Assert.IsType<PagedResult<ArtistDto>>(okResult.Value);
+            Assert.Equal(1, returnValue.TotalCount);
+        }
+
+        [Fact]
+        public async Task GetArtists_WithInvalidStartsWith_ReturnsBadRequest()
+        {
+            // Act
+            var result = await _controller.GetArtists(null, "AB", 1, 50);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result.Result);
+            Assert.Contains("startsWith", badRequestResult.Value?.ToString());
+        }
+
+        [Fact]
+        public async Task GetArtists_WithNumericStartsWith_ReturnsBadRequest()
+        {
+            // Act – "1" is a digit, not a letter, and is not the special "0-9" value
+            var result = await _controller.GetArtists(null, "1", 1, 50);
+
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result.Result);
+            Assert.Contains("startsWith", badRequestResult.Value?.ToString());
         }
 
         #endregion
