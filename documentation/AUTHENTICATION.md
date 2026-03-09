@@ -1,14 +1,16 @@
 # Authentication System
 
-This document describes the JWT-based authentication system with Google Sign-In integration and invitation-only access control.
+This document describes the JWT-based authentication system with Google and Facebook Sign-In integration and invitation-only access control.
 
 ## Overview
 
-The authentication system allows users to sign in with their Google account and persist their preferences (e.g., selected kollection) across devices. Access to the application is restricted to invited users only, with admin users having the ability to manage invitations and user access.
+The authentication system allows users to sign in with their Google or Facebook account and persist their preferences (e.g., selected kollection) across devices. Access to the application is restricted to invited users only, with admin users having the ability to manage invitations and user access.
 
 ## Features
 
 - **Google Sign-In Integration**: Users authenticate using their Google account
+- **Facebook Sign-In Integration**: Users authenticate using their Facebook account as an alternative to Google
+- **Account Linking**: If a Facebook user's email matches an existing Google account, the Facebook identity is automatically linked to that account
 - **Invitation-Only Access**: New users must be invited by an admin to access the application
 - **Admin Management**: Admin users can invite new users, revoke invitations, and manage user access
 - **Role-Based Access Control**: Admin users have additional privileges for managing the application
@@ -16,7 +18,9 @@ The authentication system allows users to sign in with their Google account and 
 ## Backend Components
 
 ### Models
-- **ApplicationUser**: Represents an authenticated user with Google credentials
+- **ApplicationUser**: Represents an authenticated user with Google or Facebook credentials
+  - `GoogleSub`: Optional Google subject identifier (null for Facebook-only users)
+  - `FacebookSub`: Optional Facebook user identifier (null for Google-only users)
   - `IsAdmin`: Boolean flag indicating if the user has admin privileges
 - **UserProfile**: Stores user preferences including selected kollection
 - **UserInvitation**: Represents an email invitation for accessing the application
@@ -26,7 +30,11 @@ The authentication system allows users to sign in with their Google account and 
   - `UsedAt`: When the invitation was used
 
 ### Controllers
-- **AuthController** (`/api/auth/google`): Authenticates users via Google ID token
+- **AuthController** (`/api/auth`): Authenticates users via Google or Facebook OAuth
+  - `GET /api/auth/google/login`: Initiates Google OAuth authorization code flow
+  - `GET /api/auth/google/callback`: Handles Google OAuth callback
+  - `GET /api/auth/facebook/login`: Initiates Facebook OAuth authorization code flow
+  - `GET /api/auth/facebook/callback`: Handles Facebook OAuth callback
   - Validates user email against invitations before allowing access
   - Automatically marks invitations as used when a new user signs in
 - **ProfileController** (`/api/profile`): Manages user profile data (requires authentication)
@@ -56,7 +64,14 @@ Add the following to `appsettings.json` or environment variables:
     "ExpiryMinutes": "60"
   },
   "Google": {
-    "ClientId": "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+    "ClientId": "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com",
+    "ClientSecret": "YOUR_GOOGLE_CLIENT_SECRET",
+    "RedirectUri": "https://<your-backend>/api/auth/google/callback"
+  },
+  "Facebook": {
+    "AppId": "YOUR_FACEBOOK_APP_ID",
+    "AppSecret": "YOUR_FACEBOOK_APP_SECRET",
+    "RedirectUri": "https://<your-backend>/api/auth/facebook/callback"
   }
 }
 ```
@@ -66,6 +81,11 @@ Add the following to `appsettings.json` or environment variables:
 For production, set these as environment variables:
 - `Jwt__Key`: Secure signing key (min 32 characters)
 - `Google__ClientId`: Your Google OAuth client ID
+- `Google__ClientSecret`: Your Google OAuth client secret
+- `Google__RedirectUri`: Callback URL registered in Google Cloud Console
+- `Facebook__AppId`: Your Facebook App ID
+- `Facebook__AppSecret`: Your Facebook App Secret
+- `Facebook__RedirectUri`: Callback URL registered in Meta for Developers
 
 ### Google Cloud Console Setup
 
@@ -74,7 +94,19 @@ For production, set these as environment variables:
 3. Enable Google+ API
 4. Create OAuth 2.0 credentials (Web application)
 5. Add authorized JavaScript origins (e.g., `http://localhost:3000`)
-6. Copy the Client ID to configuration
+6. Add authorized redirect URIs (e.g., `http://localhost:5072/api/auth/google/callback`)
+7. Copy the Client ID and Secret to configuration
+
+### Meta for Developers (Facebook) Setup
+
+1. Go to [Meta for Developers](https://developers.facebook.com/)
+2. Create a new app (select "Consumer" or "Business" type)
+3. Add the "Facebook Login" product
+4. Under Facebook Login → Settings, add valid OAuth redirect URIs:
+   - Development: `http://localhost:5072/api/auth/facebook/callback`
+   - Staging/Production: `https://<your-backend>.onrender.com/api/auth/facebook/callback`
+5. Under App Settings → Basic, copy the App ID and App Secret to configuration
+6. **Important**: The Facebook account must have a verified email address. Users without a verified email on their Facebook account will be unable to sign in.
 
 ## Frontend Integration
 
@@ -83,13 +115,12 @@ For production, set these as environment variables:
 The frontend components are already included:
 - `app/lib/auth.ts`: Authentication helpers
 - `app/lib/api.ts`: Updated to include JWT bearer token
-- `app/components/GoogleSignIn.tsx`: Google Sign-In button component
+- `app/components/GoogleSignIn.tsx`: Sign-In buttons component (Google + Facebook)
 
 ### Environment Variables
 
 Add to `.env.local`:
 ```
-NEXT_PUBLIC_GOOGLE_CLIENT_ID=YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com
 NEXT_PUBLIC_API_BASE_URL=http://localhost:5072
 ```
 
@@ -134,7 +165,7 @@ dotnet ef database update
 ```
 
 This creates:
-- `ApplicationUsers` table
+- `ApplicationUsers` table (with `GoogleSub` and `FacebookSub` columns)
 - `UserProfiles` table
 - `UserInvitations` table
 - Indexes and foreign keys
@@ -147,8 +178,20 @@ The migration also automatically:
 
 ### Authentication Endpoints
 
+#### GET /api/auth/google/login
+Initiates the Google OAuth authorization code flow. Redirects the browser to Google's consent screen.
+
+#### GET /api/auth/google/callback
+Handles the callback from Google after user consent. Creates/updates the user and redirects to `/auth/callback?token=<jwt>` on the frontend.
+
+#### GET /api/auth/facebook/login
+Initiates the Facebook OAuth authorization code flow. Redirects the browser to Facebook's consent screen.
+
+#### GET /api/auth/facebook/callback
+Handles the callback from Facebook after user consent. Creates/updates the user (or links the Facebook identity to an existing Google account with the same email) and redirects to `/auth/callback?token=<jwt>` on the frontend.
+
 #### POST /api/auth/google
-Authenticate with Google ID token.
+Authenticate with Google ID token (legacy / direct token flow).
 
 **Request:**
 ```json

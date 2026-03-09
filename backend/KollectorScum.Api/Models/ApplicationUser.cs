@@ -14,11 +14,16 @@ namespace KollectorScum.Api.Models
         public Guid Id { get; set; }
 
         /// <summary>
-        /// Gets or sets the Google subject identifier (unique per user)
+        /// Gets or sets the Google subject identifier (unique per user, null for Facebook-only users)
         /// </summary>
-        [Required]
         [MaxLength(255)]
-        public string GoogleSub { get; set; } = string.Empty;
+        public string? GoogleSub { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Facebook user identifier (unique per user, null for Google-only users)
+        /// </summary>
+        [MaxLength(255)]
+        public string? FacebookSub { get; set; }
 
         /// <summary>
         /// Gets or sets the user's email address

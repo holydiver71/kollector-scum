@@ -311,7 +311,14 @@ namespace KollectorScum.Api.Data
             modelBuilder.Entity<Models.ApplicationUser>()
                 .HasIndex(u => u.GoogleSub)
                 .IsUnique()
+                .HasFilter("\"GoogleSub\" IS NOT NULL")
                 .HasDatabaseName("IX_ApplicationUsers_GoogleSub");
+
+            modelBuilder.Entity<Models.ApplicationUser>()
+                .HasIndex(u => u.FacebookSub)
+                .IsUnique()
+                .HasFilter("\"FacebookSub\" IS NOT NULL")
+                .HasDatabaseName("IX_ApplicationUsers_FacebookSub");
 
             modelBuilder.Entity<Models.ApplicationUser>()
                 .HasIndex(u => u.Email)

@@ -213,5 +213,64 @@ namespace KollectorScum.Tests.Controllers
             var forbidResult = Assert.IsType<ObjectResult>(result.Result);
             Assert.Equal(403, forbidResult.StatusCode);
         }
+        [Fact]
+        public void FacebookLogin_WhenConfigured_RedirectsToFacebook()
+        {
+            // Arrange
+            var mockSection = new Mock<IConfigurationSection>();
+            _mockConfiguration.Setup(x => x["Facebook:AppId"]).Returns("test-app-id");
+            _mockConfiguration.Setup(x => x["Facebook:RedirectUri"]).Returns("http://localhost:5072/api/auth/facebook/callback");
+
+            // Act
+            var result = _controller.FacebookLogin();
+
+            // Assert
+            var redirectResult = Assert.IsType<RedirectResult>(result);
+            Assert.StartsWith("https://www.facebook.com/v19.0/dialog/oauth", redirectResult.Url);
+            Assert.Contains("client_id=test-app-id", redirectResult.Url);
+        }
+
+        [Fact]
+        public void FacebookLogin_WhenNotConfigured_Returns500()
+        {
+            // Arrange
+            _mockConfiguration.Setup(x => x["Facebook:AppId"]).Returns((string?)null);
+            _mockConfiguration.Setup(x => x["Facebook:RedirectUri"]).Returns((string?)null);
+
+            // Act
+            var result = _controller.FacebookLogin();
+
+            // Assert
+            var statusResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(500, statusResult.StatusCode);
+        }
+
+        [Fact]
+        public async Task FacebookCallback_WhenErrorParam_RedirectsWithError()
+        {
+            // Arrange
+            _mockConfiguration.Setup(x => x["Frontend:Origins"]).Returns("http://localhost:3000");
+
+            // Act
+            var result = await _controller.FacebookCallback(null, "access_denied");
+
+            // Assert
+            var redirectResult = Assert.IsType<RedirectResult>(result);
+            Assert.Contains("error=facebook_auth_failed", redirectResult.Url);
+        }
+
+        [Fact]
+        public async Task FacebookCallback_WhenNoCode_RedirectsWithError()
+        {
+            // Arrange
+            _mockConfiguration.Setup(x => x["Frontend:Origins"]).Returns("http://localhost:3000");
+
+            // Act
+            var result = await _controller.FacebookCallback(null, null);
+
+            // Assert
+            var redirectResult = Assert.IsType<RedirectResult>(result);
+            Assert.Contains("error=facebook_auth_failed", redirectResult.Url);
+        }
     }
 }

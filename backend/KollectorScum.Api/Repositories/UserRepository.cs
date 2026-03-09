@@ -26,6 +26,14 @@ namespace KollectorScum.Api.Repositories
         }
 
         /// <inheritdoc />
+        public async Task<ApplicationUser?> FindByFacebookSubAsync(string facebookSub)
+        {
+            return await _context.ApplicationUsers
+                .Include(u => u.UserProfile)
+                .FirstOrDefaultAsync(u => u.FacebookSub == facebookSub);
+        }
+
+        /// <inheritdoc />
         public async Task<ApplicationUser?> FindByEmailAsync(string email)
         {
             return await _context.ApplicationUsers

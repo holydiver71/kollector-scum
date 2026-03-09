@@ -15,6 +15,13 @@ namespace KollectorScum.Api.Interfaces
         Task<ApplicationUser?> FindByGoogleSubAsync(string googleSub);
 
         /// <summary>
+        /// Finds a user by their Facebook user identifier
+        /// </summary>
+        /// <param name="facebookSub">The Facebook user identifier</param>
+        /// <returns>The user if found, null otherwise</returns>
+        Task<ApplicationUser?> FindByFacebookSubAsync(string facebookSub);
+
+        /// <summary>
         /// Finds a user by their email address
         /// </summary>
         /// <param name="email">The email address</param>

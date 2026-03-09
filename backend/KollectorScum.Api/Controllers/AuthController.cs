@@ -350,6 +350,202 @@ namespace KollectorScum.Api.Controllers
         }
 
         /// <summary>
+        /// Initiates Facebook OAuth authorization code flow.
+        /// Redirects the browser to Facebook's consent screen.
+        /// </summary>
+        [HttpGet("facebook/login")]
+        [ProducesResponseType(StatusCodes.Status302Found)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public IActionResult FacebookLogin()
+        {
+            var appId = _configuration["Facebook:AppId"];
+            var redirectUri = _configuration["Facebook:RedirectUri"];
+
+            if (string.IsNullOrEmpty(appId) || string.IsNullOrEmpty(redirectUri))
+            {
+                _logger.LogError("Facebook:AppId or Facebook:RedirectUri is not configured");
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Facebook OAuth is not configured on the server." });
+            }
+
+            var authUrl = "https://www.facebook.com/v19.0/dialog/oauth" +
+                $"?client_id={Uri.EscapeDataString(appId)}" +
+                $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
+                "&response_type=code" +
+                $"&scope={Uri.EscapeDataString("email,public_profile")}";
+
+            _logger.LogInformation("Redirecting to Facebook OAuth consent screen");
+            return Redirect(authUrl);
+        }
+
+        /// <summary>
+        /// Handles the OAuth callback from Facebook.
+        /// Exchanges the authorization code for an access token, retrieves the user profile,
+        /// creates/updates the user, generates a JWT and redirects to the frontend callback page.
+        /// </summary>
+        [HttpGet("facebook/callback")]
+        [ProducesResponseType(StatusCodes.Status302Found)]
+        public async Task<IActionResult> FacebookCallback([FromQuery] string? code, [FromQuery] string? error)
+        {
+            var frontendOrigin = GetFrontendOrigin();
+
+            if (!string.IsNullOrEmpty(error) || string.IsNullOrEmpty(code))
+            {
+                _logger.LogWarning("Facebook OAuth callback error: {Error}", error ?? "no code");
+                return Redirect($"{frontendOrigin}/?error=facebook_auth_failed");
+            }
+
+            try
+            {
+                // Exchange authorization code for access token and retrieve user profile
+                var (facebookSub, email, displayName) = await ExchangeCodeForFacebookProfileAsync(code);
+
+                // Check / create user (same invitation logic as Google)
+                var existingUser = await _userRepository.FindByFacebookSubAsync(facebookSub);
+
+                if (existingUser == null)
+                {
+                    // Also check whether this email already has a Google account — link it if so
+                    existingUser = await _userRepository.FindByEmailAsync(email);
+                    if (existingUser != null)
+                    {
+                        // Link Facebook identity to the existing account
+                        existingUser.FacebookSub = facebookSub;
+                        await _userRepository.UpdateAsync(existingUser);
+                    }
+                    else
+                    {
+                        var invitation = await _userInvitationRepository.FindByEmailAsync(email);
+                        if (invitation == null)
+                        {
+                            _logger.LogWarning("Access denied for uninvited Facebook user: {Email}", email);
+                            return Redirect($"{frontendOrigin}/?error=not_invited");
+                        }
+
+                        var userByEmail = await _userRepository.FindByEmailAsync(email);
+                        if (userByEmail == null && invitation.IsUsed)
+                        {
+                            _logger.LogWarning("Access denied for deactivated Facebook user: {Email}", email);
+                            return Redirect($"{frontendOrigin}/?error=access_deactivated");
+                        }
+
+                        _logger.LogInformation("Creating new user for invited Facebook user {Email}", email);
+                        existingUser = new ApplicationUser
+                        {
+                            Id = Guid.NewGuid(),
+                            FacebookSub = facebookSub,
+                            Email = email,
+                            DisplayName = displayName
+                        };
+                        existingUser = await _userRepository.CreateAsync(existingUser);
+
+                        var profile = new UserProfile
+                        {
+                            UserId = existingUser.Id,
+                            SelectedKollectionId = null
+                        };
+                        await _userProfileRepository.CreateAsync(profile);
+
+                        invitation.IsUsed = true;
+                        invitation.UsedAt = DateTime.UtcNow;
+                        await _userInvitationRepository.UpdateAsync(invitation);
+                    }
+                }
+                else
+                {
+                    // Update user info if changed
+                    if (existingUser.Email != email || existingUser.DisplayName != displayName)
+                    {
+                        existingUser.Email = email;
+                        existingUser.DisplayName = displayName;
+                        await _userRepository.UpdateAsync(existingUser);
+                    }
+                }
+
+                var jwt = _tokenService.GenerateToken(existingUser);
+
+                _logger.LogInformation("Facebook OAuth callback succeeded for {Email}", email);
+                return Redirect($"{frontendOrigin}/auth/callback?token={Uri.EscapeDataString(jwt)}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during Facebook OAuth callback");
+                return Redirect($"{frontendOrigin}/?error=auth_failed");
+            }
+        }
+
+        /// <summary>
+        /// Exchanges a Facebook authorization code for an access token and retrieves the user's profile.
+        /// </summary>
+        /// <param name="code">The authorization code returned by Facebook</param>
+        /// <returns>A tuple containing the Facebook user ID, email, and display name</returns>
+        private async Task<(string FacebookSub, string Email, string? DisplayName)> ExchangeCodeForFacebookProfileAsync(string code)
+        {
+            var appId = _configuration["Facebook:AppId"];
+            var appSecret = _configuration["Facebook:AppSecret"];
+            var redirectUri = _configuration["Facebook:RedirectUri"];
+
+            if (string.IsNullOrEmpty(appId) || string.IsNullOrEmpty(appSecret) || string.IsNullOrEmpty(redirectUri))
+            {
+                throw new InvalidOperationException("Facebook OAuth configuration is incomplete (AppId, AppSecret or RedirectUri missing).");
+            }
+
+            using var client = _httpClientFactory.CreateClient();
+
+            // Exchange code for access token
+            var tokenUrl = "https://graph.facebook.com/v19.0/oauth/access_token" +
+                $"?client_id={Uri.EscapeDataString(appId)}" +
+                $"&redirect_uri={Uri.EscapeDataString(redirectUri)}" +
+                $"&client_secret={Uri.EscapeDataString(appSecret)}" +
+                $"&code={Uri.EscapeDataString(code)}";
+
+            var tokenResponse = await client.GetAsync(tokenUrl);
+            var tokenBody = await tokenResponse.Content.ReadAsStringAsync();
+
+            if (!tokenResponse.IsSuccessStatusCode)
+            {
+                _logger.LogError("Facebook token exchange failed ({Status}): {Body}", tokenResponse.StatusCode, tokenBody);
+                throw new UnauthorizedAccessException("Failed to exchange Facebook authorization code for access token.");
+            }
+
+            var tokenData = JsonSerializer.Deserialize<FacebookTokenResponse>(tokenBody)
+                ?? throw new InvalidOperationException("Failed to deserialize Facebook token response.");
+
+            if (string.IsNullOrEmpty(tokenData.AccessToken))
+            {
+                throw new InvalidOperationException("Facebook token response did not contain an access_token.");
+            }
+
+            // Retrieve user profile from the Graph API
+            var profileUrl = "https://graph.facebook.com/v19.0/me" +
+                $"?fields=id,email,name" +
+                $"&access_token={Uri.EscapeDataString(tokenData.AccessToken)}";
+
+            var profileResponse = await client.GetAsync(profileUrl);
+            var profileBody = await profileResponse.Content.ReadAsStringAsync();
+
+            if (!profileResponse.IsSuccessStatusCode)
+            {
+                _logger.LogError("Facebook profile request failed ({Status}): {Body}", profileResponse.StatusCode, profileBody);
+                throw new UnauthorizedAccessException("Failed to retrieve Facebook user profile.");
+            }
+
+            var profileData = JsonSerializer.Deserialize<FacebookProfileResponse>(profileBody)
+                ?? throw new InvalidOperationException("Failed to deserialize Facebook profile response.");
+
+            if (string.IsNullOrEmpty(profileData.Id))
+            {
+                throw new InvalidOperationException("Facebook profile response did not contain a user ID.");
+            }
+
+            if (string.IsNullOrEmpty(profileData.Email))
+            {
+                throw new UnauthorizedAccessException("Facebook account does not have a verified email address. Please ensure your Facebook account has a verified email.");
+            }
+
+            return (profileData.Id, profileData.Email, profileData.Name);
+        }
+
+        /// <summary>
         /// Temporary bootstrap endpoint to capture Google sub and create mapping to UserId.
         /// Dev-only: gated by environment and feature flag.
         /// </summary>
@@ -418,7 +614,7 @@ namespace KollectorScum.Api.Controllers
                 var response = new BootstrapResponse
                 {
                     UserId = user.Id,
-                    GoogleSub = user.GoogleSub
+                    GoogleSub = user.GoogleSub ?? string.Empty
                 };
 
                 return Ok(response);
@@ -433,6 +629,33 @@ namespace KollectorScum.Api.Controllers
                 _logger.LogError(ex, "Error during bootstrap");
                 return BadRequest(new { message = "Bootstrap failed" });
             }
+        }
+
+        /// <summary>
+        /// Minimal DTO for deserializing Facebook's token endpoint response.
+        /// </summary>
+        private sealed class FacebookTokenResponse
+        {
+            [JsonPropertyName("access_token")]
+            public string? AccessToken { get; init; }
+
+            [JsonPropertyName("token_type")]
+            public string? TokenType { get; init; }
+        }
+
+        /// <summary>
+        /// Minimal DTO for deserializing Facebook Graph API user profile response.
+        /// </summary>
+        private sealed class FacebookProfileResponse
+        {
+            [JsonPropertyName("id")]
+            public string? Id { get; init; }
+
+            [JsonPropertyName("email")]
+            public string? Email { get; init; }
+
+            [JsonPropertyName("name")]
+            public string? Name { get; init; }
         }
     }
 }
