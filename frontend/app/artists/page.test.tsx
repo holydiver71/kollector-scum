@@ -113,7 +113,10 @@ describe('ArtistsPage', () => {
     render(<ArtistsPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('A')).toBeInTheDocument();
+      // The avatar is inside a specific element; use getAllByText since the A-Z
+      // filter bar also contains an 'A' button.
+      const allA = screen.getAllByText('A');
+      expect(allA.length).toBeGreaterThan(0);
     });
   });
 
@@ -179,7 +182,7 @@ describe('ArtistsPage', () => {
     act(() => jest.advanceTimersByTime(400));
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /clear search/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /clear filters/i })).toBeInTheDocument();
     });
   });
 
@@ -201,7 +204,7 @@ describe('ArtistsPage', () => {
 
     await waitFor(() => screen.getByText('No artists found matching "xyz"'));
 
-    fireEvent.click(screen.getByRole('button', { name: /clear search/i }));
+    fireEvent.click(screen.getByRole('button', { name: /clear filters/i }));
 
     await waitFor(() => {
       expect(screen.getByText('Radiohead')).toBeInTheDocument();
@@ -224,7 +227,7 @@ describe('ArtistsPage', () => {
     act(() => jest.advanceTimersByTime(400));
 
     await waitFor(() => {
-      expect(api.getArtists).toHaveBeenCalledWith('Radio', 1, 48);
+      expect(api.getArtists).toHaveBeenCalledWith('Radio', 1, 48, undefined);
     });
   });
 
@@ -281,7 +284,7 @@ describe('ArtistsPage', () => {
       expect(screen.getByText('Portishead')).toBeInTheDocument();
     });
 
-    expect(api.getArtists).toHaveBeenCalledWith(undefined, 2, 48);
+    expect(api.getArtists).toHaveBeenCalledWith(undefined, 2, 48, undefined);
   });
 
   it('does not show pagination when there is only one page', async () => {
