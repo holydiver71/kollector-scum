@@ -258,6 +258,15 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
     }
   };
 
+  // Determine the current sort for the UI control. Prefer URL params for
+  // immediate visual feedback after a user changes the control; fall back
+  // to the `filters` prop when URL params are not present.
+  const rawSortBy = (searchParams?.get('sortBy') as string) || (filters.sortBy as string) || 'dateadded';
+  const rawSortOrder = (searchParams?.get('sortOrder') as string) || (filters.sortOrder as string) || 'desc';
+  // Map backend key `origreleaseyear` back to the UI `year` option
+  const currentSortBy = rawSortBy.toLowerCase() === 'origreleaseyear' ? 'year' : rawSortBy.toLowerCase();
+  const currentSortOrder = rawSortOrder.toLowerCase();
+
   // cycleSort removed: prev/next sort controls no longer present; sort panel toggles visibility instead
 
   const fetchReleases = async (page: number = 1) => {
@@ -454,19 +463,26 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
             
             <select 
               className="bg-[#13131F] border border-[#1C1C28] rounded-xl px-4 py-3 text-gray-300 text-sm focus:outline-none focus:border-[#8B5CF6] cursor-pointer"
-              value={`${filters.sortBy || 'DateAdded'}_${filters.sortOrder || 'desc'}`}
+              value={`${currentSortBy}_${currentSortOrder}`}
               onChange={(e) => {
-                const [by, order] = e.target.value.split('_');
+                const [byRaw, orderRaw] = e.target.value.split('_');
+                // normalize to backend keys
+                let by = byRaw.toString().toLowerCase();
+                const order = orderRaw.toString().toLowerCase();
+
+                // frontend label "Year" maps to backend "origreleaseyear"
+                if (by === 'year') by = 'origreleaseyear';
+
                 applySortChange({ sortBy: by, sortOrder: order });
               }}
             >
-              <option value="DateAdded_desc">Sort: Date Added</option>
-              <option value="Title_asc">Title (A-Z)</option>
-              <option value="Title_desc">Title (Z-A)</option>
-              <option value="Artist_asc">Artist (A-Z)</option>
-              <option value="Artist_desc">Artist (Z-A)</option>
-              <option value="Year_desc">Year (Newest)</option>
-              <option value="Year_asc">Year (Oldest)</option>
+              <option value="dateadded_desc">Sort: Date Added</option>
+              <option value="title_asc">Title (A-Z)</option>
+              <option value="title_desc">Title (Z-A)</option>
+              <option value="artist_asc">Artist (A-Z)</option>
+              <option value="artist_desc">Artist (Z-A)</option>
+              <option value="year_desc">Year (Newest)</option>
+              <option value="year_asc">Year (Oldest)</option>
             </select>
 
             <button
