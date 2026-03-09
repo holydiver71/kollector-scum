@@ -421,8 +421,9 @@ namespace KollectorScum.Api.Controllers
                             return Redirect($"{frontendOrigin}/?error=not_invited");
                         }
 
-                        var userByEmail = await _userRepository.FindByEmailAsync(email);
-                        if (userByEmail == null && invitation.IsUsed)
+                        // At this point we know no user exists with this email (checked above).
+                        // If the invitation is already used, the account was deactivated.
+                        if (invitation.IsUsed)
                         {
                             _logger.LogWarning("Access denied for deactivated Facebook user: {Email}", email);
                             return Redirect($"{frontendOrigin}/?error=access_deactivated");
