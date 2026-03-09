@@ -230,22 +230,27 @@ export interface PagedArtistsResponse {
 }
 
 /**
- * Gets a paginated list of artists with optional search filtering
+ * Gets a paginated list of artists with optional search and letter filtering
  * @param search - Optional search term to filter artists by name
  * @param page - Page number (default 1)
  * @param pageSize - Number of artists per page (default 50)
+ * @param startsWith - Optional letter filter: a single letter A-Z or '0-9' for numeric artists
  * @returns Paged list of artists
  */
 export async function getArtists(
   search?: string,
   page: number = 1,
-  pageSize: number = 50
+  pageSize: number = 50,
+  startsWith?: string
 ): Promise<PagedArtistsResponse> {
   const params = new URLSearchParams();
   params.append('page', page.toString());
   params.append('pageSize', pageSize.toString());
   if (search) {
     params.append('search', search);
+  }
+  if (startsWith) {
+    params.append('startsWith', startsWith);
   }
   return fetchJson<PagedArtistsResponse>(`/api/artists?${params.toString()}`);
 }
