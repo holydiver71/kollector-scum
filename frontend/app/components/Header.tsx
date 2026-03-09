@@ -224,11 +224,11 @@ export default function Header() {
                     id="kollection-select"
                     value={selectedKollectionId || 'all'}
                     onChange={(e) => handleKollectionChange(e.target.value)}
-                    className="w-40 md:w-48 px-3 py-2 bg-white/10 backdrop-blur-sm text-white border border-white/20 rounded-md focus:outline-none focus:ring-2 focus:ring-white/50"
+                    className="w-40 md:w-48 px-3 py-2 bg-[#13131F] border border-[#1C1C28] text-[#A78BFA] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#8B5CF6]/30"
                   >
-                    <option value="all" className="text-gray-900">All Music</option>
+                    <option value="all">All Music</option>
                     {kollections.map((kollection) => (
-                      <option key={kollection.id} value={kollection.id} className="text-gray-900">
+                      <option key={kollection.id} value={kollection.id}>
                         {kollection.name}
                       </option>
                     ))}
