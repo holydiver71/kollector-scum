@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using KollectorScum.Api.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using KollectorScum.Api.DTOs;
 
 namespace KollectorScum.Api.Controllers
@@ -62,7 +63,7 @@ namespace KollectorScum.Api.Controllers
                     {
                         var letter = startsWith;
                         letterFilter = a => a.Name != null
-                            && a.Name.StartsWith(letter, StringComparison.OrdinalIgnoreCase);
+                            && EF.Functions.ILike(a.Name, letter + "%");
                     }
                 }
 
