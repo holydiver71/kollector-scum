@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using KollectorScum.Api.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using KollectorScum.Api.DTOs;
 
 namespace KollectorScum.Api.Controllers
@@ -26,6 +27,7 @@ namespace KollectorScum.Api.Controllers
         [ProducesResponseType(400)]
         public async Task<ActionResult<PagedResult<ArtistDto>>> GetArtists(
             [FromQuery] string? search = null,
+            [FromQuery] string? startsWith = null,
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 50)
         {
@@ -34,9 +36,38 @@ namespace KollectorScum.Api.Controllers
                 var validationError = ValidatePaginationParameters(page, pageSize);
                 if (validationError != null) return validationError;
 
-                LogOperation("GetArtists", new { search, page, pageSize });
+                // Validate startsWith: must be a single letter A-Z (case-insensitive) or the literal "0-9"
+                if (!string.IsNullOrWhiteSpace(startsWith))
+                {
+                    var trimmed = startsWith.Trim();
+                    if (trimmed != "0-9" && (trimmed.Length != 1 || !char.IsLetter(trimmed[0])))
+                    {
+                        return BadRequest("startsWith must be a single letter A-Z or '0-9'");
+                    }
+                    startsWith = trimmed;
+                }
 
-                var result = await _artistService.GetAllAsync(page, pageSize, search);
+                LogOperation("GetArtists", new { search, startsWith, page, pageSize });
+
+                // Build optional starts-with letter filter
+                System.Linq.Expressions.Expression<Func<Models.Artist, bool>>? letterFilter = null;
+                if (!string.IsNullOrWhiteSpace(startsWith))
+                {
+                    if (startsWith == "0-9")
+                    {
+                        // Filter artists whose name begins with any digit (0–9)
+                        letterFilter = a => a.Name != null && a.Name.Length > 0
+                            && a.Name[0] >= '0' && a.Name[0] <= '9';
+                    }
+                    else
+                    {
+                        var letter = startsWith;
+                        letterFilter = a => a.Name != null
+                            && EF.Functions.ILike(a.Name, letter + "%");
+                    }
+                }
+
+                var result = await _artistService.GetAllAsync(page, pageSize, search, letterFilter);
                 return Ok(result);
             }
             catch (Exception ex)
