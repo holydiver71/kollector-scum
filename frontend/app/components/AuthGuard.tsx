@@ -15,9 +15,10 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const isLandingPage = pathname === '/';
   // Auth callback page must be accessible without a token so it can store the
   // JWT returned by the backend Google OAuth flow before redirecting to '/'.
+  // Magic link page must also be public so unauthenticated users can verify their token.
   // Mockup pages are also public for local design review.
   const isMockupRoute = pathname.startsWith('/mockup/');
-  const isPublicRoute = isLandingPage || pathname === '/auth/callback' || isMockupRoute;
+  const isPublicRoute = isLandingPage || pathname === '/auth/callback' || pathname === '/auth/magic-link' || isMockupRoute;
 
   useEffect(() => {
     let cancelled = false;

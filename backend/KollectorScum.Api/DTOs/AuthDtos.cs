@@ -29,4 +29,30 @@ namespace KollectorScum.Api.DTOs
         /// </summary>
         public UserProfileDto Profile { get; set; } = new();
     }
+
+    /// <summary>
+    /// Request DTO for initiating passwordless magic link authentication
+    /// </summary>
+    public class MagicLinkRequestDto
+    {
+        /// <summary>
+        /// Gets or sets the email address to send the magic link to
+        /// </summary>
+        [Required]
+        [EmailAddress]
+        [MaxLength(255)]
+        public string Email { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// Request DTO for verifying a magic link token
+    /// </summary>
+    public class MagicLinkVerifyDto
+    {
+        /// <summary>
+        /// Gets or sets the magic link token to verify
+        /// </summary>
+        [Required]
+        public string Token { get; set; } = string.Empty;
+    }
 }
