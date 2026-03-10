@@ -1,23 +1,30 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Mail;
+using System.Text;
+using System.Text.Json;
 using KollectorScum.Api.Interfaces;
 
 namespace KollectorScum.Api.Services
 {
     /// <summary>
-    /// Email service implementation using SMTP.
-    /// When <c>Email:SmtpHost</c> is not configured the magic link is logged to the console
-    /// instead of being sent, which is convenient for local development without an SMTP server.
+    /// Email service implementation that supports both standard SMTP and the Resend HTTP API.
+    /// When <c>Email:SmtpHost</c> is <c>smtp.resend.com</c> the Resend REST API is used instead
+    /// of raw SMTP (cloud hosts such as Render block outbound SMTP ports).
+    /// When <c>Email:SmtpHost</c> is not configured at all the magic link is logged to the
+    /// console, which is convenient for local development without an email provider.
     /// </summary>
     public class SmtpEmailService : IEmailService
     {
         private readonly IConfiguration _configuration;
         private readonly ILogger<SmtpEmailService> _logger;
+        private readonly IHttpClientFactory _httpClientFactory;
 
-        public SmtpEmailService(IConfiguration configuration, ILogger<SmtpEmailService> logger)
+        public SmtpEmailService(IConfiguration configuration, ILogger<SmtpEmailService> logger, IHttpClientFactory httpClientFactory)
         {
             _configuration = configuration;
             _logger = logger;
+            _httpClientFactory = httpClientFactory;
         }
 
         /// <inheritdoc />
@@ -38,15 +45,23 @@ namespace KollectorScum.Api.Services
                 return;
             }
 
+            var subject = "Your Kollector Scum Sign-In Link";
+            var body = BuildEmailBody(magicLink);
+
+            // Resend's SMTP endpoint blocks on cloud providers; use their HTTP API instead.
+            if (smtpHost.Equals("smtp.resend.com", StringComparison.OrdinalIgnoreCase))
+            {
+                var apiKey = emailSection["SmtpPassword"];
+                await SendViaResendApiAsync(toEmail, fromAddress, fromName, subject, body, apiKey);
+                return;
+            }
+
             if (!int.TryParse(smtpPortStr, out var smtpPort))
             {
                 smtpPort = 587;
             }
 
             bool.TryParse(enableSslStr, out var enableSsl);
-
-            var subject = "Your Kollector Scum Sign-In Link";
-            var body = BuildEmailBody(magicLink);
 
             using var message = new MailMessage
             {
@@ -85,6 +100,49 @@ namespace KollectorScum.Api.Services
                 // Re-throw so the caller knows delivery failed.
                 throw;
             }
+        }
+
+        /// <summary>
+        /// Sends the magic link email via the Resend REST API (HTTPS port 443).
+        /// Used in preference to SMTP when the configured host is smtp.resend.com, because
+        /// cloud providers commonly block outbound connections on SMTP ports.
+        /// </summary>
+        private async Task SendViaResendApiAsync(
+            string toEmail, string fromAddress, string fromName,
+            string subject, string htmlBody, string? apiKey)
+        {
+            if (string.IsNullOrWhiteSpace(apiKey))
+            {
+                throw new InvalidOperationException(
+                    "Resend API key (Email:SmtpPassword) is not configured.");
+            }
+
+            var payload = new
+            {
+                from = $"{fromName} <{fromAddress}>",
+                to = new[] { toEmail },
+                subject,
+                html = htmlBody
+            };
+
+            var json = JsonSerializer.Serialize(payload);
+            using var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            using var client = _httpClientFactory.CreateClient();
+            client.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", apiKey);
+            client.Timeout = TimeSpan.FromSeconds(15);
+
+            var response = await client.PostAsync("https://api.resend.com/emails", content);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                throw new HttpRequestException(
+                    $"Resend API returned {(int)response.StatusCode}: {body}");
+            }
+
+            _logger.LogInformation("Magic link email sent to {Email} via Resend API", toEmail);
         }
 
         /// <summary>

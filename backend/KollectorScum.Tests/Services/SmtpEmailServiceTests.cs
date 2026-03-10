@@ -1,3 +1,4 @@
+using System.Net.Http;
 using System.Threading.Tasks;
 using KollectorScum.Api.Services;
 using Microsoft.Extensions.Configuration;
@@ -9,6 +10,15 @@ namespace KollectorScum.Tests.Services
 {
     public class SmtpEmailServiceTests
     {
+        /// <summary>Creates a mock IHttpClientFactory (unused in dev-fallback path).</summary>
+        private static Mock<IHttpClientFactory> MockHttpClientFactory()
+        {
+            var mock = new Mock<IHttpClientFactory>();
+            mock.Setup(x => x.CreateClient(It.IsAny<string>()))
+                .Returns(new HttpClient());
+            return mock;
+        }
+
         [Fact]
         public async Task SendMagicLinkEmailAsync_WhenSmtpHostNotConfigured_LogsWarningAndReturns()
         {
@@ -29,7 +39,7 @@ namespace KollectorScum.Tests.Services
 
             var mockLogger = new Mock<ILogger<SmtpEmailService>>();
 
-            var service = new SmtpEmailService(mockConfig.Object, mockLogger.Object);
+            var service = new SmtpEmailService(mockConfig.Object, mockLogger.Object, MockHttpClientFactory().Object);
 
             // Act
             var ex = await Record.ExceptionAsync(() => service.SendMagicLinkEmailAsync("user@example.com", "https://app.example.com/auth/magic-link?token=abc"));
