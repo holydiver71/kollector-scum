@@ -1,4 +1,4 @@
-// Authentication helper for Google Sign-In and JWT management
+// Authentication helper for Google Sign-In, JWT management, and magic link authentication
 
 import { fetchJson } from './api';
 
@@ -68,6 +68,42 @@ export async function exchangeGoogleIdToken(idToken: string): Promise<AuthRespon
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ idToken }),
+  });
+
+  // Store the token
+  setAuthToken(response.token);
+
+  return response;
+}
+
+/**
+ * Requests a magic link to be sent to the provided email address.
+ * Only invited users will actually receive an email; the response is
+ * deliberately vague to prevent email enumeration.
+ * @param email The email address to send the magic link to
+ */
+export async function requestMagicLink(email: string): Promise<void> {
+  await fetchJson<{ message: string }>('/api/auth/magic-link/request', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email }),
+  });
+}
+
+/**
+ * Verifies a magic link token and signs the user in.
+ * @param token The token from the magic link URL
+ * @returns Authentication response with JWT token and user profile
+ */
+export async function verifyMagicLink(token: string): Promise<AuthResponse> {
+  const response = await fetchJson<AuthResponse>('/api/auth/magic-link/verify', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ token }),
   });
 
   // Store the token

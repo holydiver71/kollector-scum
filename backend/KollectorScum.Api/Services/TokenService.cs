@@ -48,7 +48,7 @@ namespace KollectorScum.Api.Services
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim("googleSub", user.GoogleSub),
+                new Claim("googleSub", user.GoogleSub ?? string.Empty),
                 new Claim("IsAdmin", user.IsAdmin.ToString())
             };
 
