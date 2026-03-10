@@ -51,9 +51,22 @@ namespace KollectorScum.Api.Services
             var created = await _tokenRepository.CreateAsync(magicLinkToken);
 
             var magicLink = $"{frontendOrigin}/auth/magic-link?token={Uri.EscapeDataString(tokenValue)}";
-            await _emailService.SendMagicLinkEmailAsync(email, magicLink);
 
-            _logger.LogInformation("Magic link token created for {Email}, expires in {Minutes} minutes", email, expiryMinutes);
+            try
+            {
+                await _emailService.SendMagicLinkEmailAsync(email, magicLink);
+                _logger.LogInformation("Magic link token created and emailed for {Email}, expires in {Minutes} minutes", email, expiryMinutes);
+            }
+            catch (Exception ex)
+            {
+                // Email delivery failed (e.g. SMTP not configured on staging).
+                // The token is already persisted — log the full magic link so it can be
+                // retrieved from server logs and used manually during testing.
+                _logger.LogError(ex,
+                    "Email delivery failed for {Email}. Token is valid for {Minutes} minutes. " +
+                    "Manual sign-in link: {MagicLink}",
+                    email, expiryMinutes, magicLink);
+            }
 
             return created;
         }
