@@ -262,8 +262,11 @@ builder.Services.AddScoped<IUnitOfWork, KollectorScum.Api.Repositories.UnitOfWor
 builder.Services.AddScoped<IUserRepository, KollectorScum.Api.Repositories.UserRepository>();
 builder.Services.AddScoped<IUserProfileRepository, KollectorScum.Api.Repositories.UserProfileRepository>();
 builder.Services.AddScoped<IUserInvitationRepository, KollectorScum.Api.Repositories.UserInvitationRepository>();
+builder.Services.AddScoped<IMagicLinkTokenRepository, KollectorScum.Api.Repositories.MagicLinkTokenRepository>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IGoogleTokenValidator, GoogleTokenValidator>();
+builder.Services.AddScoped<IEmailService, SmtpEmailService>();
+builder.Services.AddScoped<IMagicLinkService, MagicLinkService>();
 
 // Register generic CRUD services
 builder.Services.AddScoped<IGenericCrudService<KollectorScum.Api.Models.Artist, KollectorScum.Api.DTOs.ArtistDto>, ArtistService>();

@@ -93,6 +93,11 @@ namespace KollectorScum.Api.Data
         public DbSet<Models.UserInvitation> UserInvitations { get; set; }
 
         /// <summary>
+        /// Gets or sets the MagicLinkTokens DbSet
+        /// </summary>
+        public DbSet<Models.MagicLinkToken> MagicLinkTokens { get; set; }
+
+        /// <summary>
         /// Configure the database model and relationships
         /// </summary>
         /// <param name="modelBuilder">The model builder</param>
@@ -311,6 +316,7 @@ namespace KollectorScum.Api.Data
             modelBuilder.Entity<Models.ApplicationUser>()
                 .HasIndex(u => u.GoogleSub)
                 .IsUnique()
+                .HasFilter("\"GoogleSub\" IS NOT NULL")
                 .HasDatabaseName("IX_ApplicationUsers_GoogleSub");
 
             modelBuilder.Entity<Models.ApplicationUser>()
@@ -344,6 +350,20 @@ namespace KollectorScum.Api.Data
             modelBuilder.Entity<Models.UserInvitation>()
                 .HasIndex(ui => ui.CreatedAt)
                 .HasDatabaseName("IX_UserInvitations_CreatedAt");
+
+            // Configure MagicLinkToken indexes
+            modelBuilder.Entity<Models.MagicLinkToken>()
+                .HasIndex(t => t.Token)
+                .IsUnique()
+                .HasDatabaseName("IX_MagicLinkTokens_Token");
+
+            modelBuilder.Entity<Models.MagicLinkToken>()
+                .HasIndex(t => t.Email)
+                .HasDatabaseName("IX_MagicLinkTokens_Email");
+
+            modelBuilder.Entity<Models.MagicLinkToken>()
+                .HasIndex(t => t.ExpiresAt)
+                .HasDatabaseName("IX_MagicLinkTokens_ExpiresAt");
         }
     }
 }

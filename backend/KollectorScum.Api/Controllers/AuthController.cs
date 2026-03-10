@@ -19,6 +19,7 @@ namespace KollectorScum.Api.Controllers
         private readonly IUserProfileRepository _userProfileRepository;
         private readonly IUserInvitationRepository _userInvitationRepository;
         private readonly ITokenService _tokenService;
+        private readonly IMagicLinkService _magicLinkService;
         private readonly IConfiguration _configuration;
         private readonly IHostEnvironment _env;
         private readonly ILogger<AuthController> _logger;
@@ -30,6 +31,7 @@ namespace KollectorScum.Api.Controllers
             IUserProfileRepository userProfileRepository,
             IUserInvitationRepository userInvitationRepository,
             ITokenService tokenService,
+            IMagicLinkService magicLinkService,
             IConfiguration configuration,
             IHostEnvironment env,
             ILogger<AuthController> logger,
@@ -40,6 +42,7 @@ namespace KollectorScum.Api.Controllers
             _userProfileRepository = userProfileRepository;
             _userInvitationRepository = userInvitationRepository;
             _tokenService = tokenService;
+            _magicLinkService = magicLinkService;
             _configuration = configuration;
             _env = env;
             _logger = logger;
@@ -350,6 +353,136 @@ namespace KollectorScum.Api.Controllers
         }
 
         /// <summary>
+        /// Initiates passwordless authentication by sending a magic link to the provided email address.
+        /// Only invited users can request a magic link. The response is deliberately vague (always HTTP 200)
+        /// to prevent email enumeration — callers cannot determine whether a given email is registered.
+        /// </summary>
+        /// <param name="request">The magic link request containing the email address</param>
+        /// <returns>200 OK with a generic message regardless of whether the email is on the invite list</returns>
+        [HttpPost("magic-link/request")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> RequestMagicLink([FromBody] MagicLinkRequestDto request)
+        {
+            try
+            {
+                var email = request.Email.ToLowerInvariant();
+
+                // Check if the email is on the invitation list
+                var invitation = await _userInvitationRepository.FindByEmailAsync(email);
+                if (invitation == null)
+                {
+                    _logger.LogWarning("Magic link requested for uninvited email: {Email}", email);
+                    // Return 200 to avoid email enumeration (don't reveal whether email is registered)
+                    return Ok(new { message = "If your email is registered, you will receive a sign-in link shortly." });
+                }
+
+                var frontendOrigin = GetFrontendOrigin();
+                await _magicLinkService.CreateAndSendTokenAsync(email, frontendOrigin);
+
+                return Ok(new { message = "If your email is registered, you will receive a sign-in link shortly." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing magic link request");
+                return BadRequest(new { message = "Failed to process request. Please try again." });
+            }
+        }
+
+        /// <summary>
+        /// Verifies a magic link token and returns a JWT for the authenticated user.
+        /// The token must not have expired and must not have been used before (single-use enforcement).
+        /// On first sign-in, a new user account and default profile are automatically created.
+        /// The token is marked as used immediately upon successful verification to prevent replay attacks.
+        /// </summary>
+        /// <param name="request">The verify request containing the token</param>
+        /// <returns>Authentication response with JWT token and user profile</returns>
+        [HttpPost("magic-link/verify")]
+        [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<ActionResult<AuthResponse>> VerifyMagicLink([FromBody] MagicLinkVerifyDto request)
+        {
+            try
+            {
+                // Validate the token and retrieve the associated email
+                var email = await _magicLinkService.ValidateTokenAsync(request.Token);
+                if (email == null)
+                {
+                    _logger.LogWarning("Magic link token validation failed");
+                    return Unauthorized(new { message = "Invalid or expired sign-in link. Please request a new one." });
+                }
+
+                // Find or create the user
+                var user = await _userRepository.FindByEmailAsync(email);
+                if (user == null)
+                {
+                    // Check the invitation is still valid before creating the user
+                    var invitation = await _userInvitationRepository.FindByEmailAsync(email);
+                    if (invitation == null)
+                    {
+                        _logger.LogWarning("Magic link verification denied: no invitation for {Email}", email);
+                        return StatusCode(StatusCodes.Status403Forbidden, new { message = "Access is by invitation only. Please contact the administrator." });
+                    }
+
+                    _logger.LogInformation("Creating new user via magic link for {Email}", email);
+                    user = new ApplicationUser
+                    {
+                        Id = Guid.NewGuid(),
+                        GoogleSub = null,
+                        Email = email,
+                        DisplayName = email
+                    };
+                    user = await _userRepository.CreateAsync(user);
+
+                    var profile = new UserProfile
+                    {
+                        UserId = user.Id,
+                        SelectedKollectionId = null
+                    };
+                    await _userProfileRepository.CreateAsync(profile);
+
+                    // Mark invitation as used
+                    invitation.IsUsed = true;
+                    invitation.UsedAt = DateTime.UtcNow;
+                    await _userInvitationRepository.UpdateAsync(invitation);
+                }
+
+                // Mark the token as used (single-use enforcement)
+                await _magicLinkService.MarkTokenAsUsedAsync(request.Token);
+
+                // Generate JWT token
+                var jwt = _tokenService.GenerateToken(user);
+
+                // Get user profile
+                var userProfile = await _userProfileRepository.GetByUserIdAsync(user.Id);
+
+                var profileDto = new UserProfileDto
+                {
+                    UserId = user.Id,
+                    Email = user.Email,
+                    DisplayName = user.DisplayName,
+                    SelectedKollectionId = userProfile?.SelectedKollectionId,
+                    IsAdmin = user.IsAdmin
+                };
+
+                _logger.LogInformation("Magic link authentication successful for {Email}", email);
+
+                return Ok(new AuthResponse
+                {
+                    Token = jwt,
+                    Profile = profileDto
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error verifying magic link token");
+                return BadRequest(new { message = "Authentication failed. Please try again." });
+            }
+        }
+
+        /// <summary>
         /// Temporary bootstrap endpoint to capture Google sub and create mapping to UserId.
         /// Dev-only: gated by environment and feature flag.
         /// </summary>
@@ -418,7 +551,7 @@ namespace KollectorScum.Api.Controllers
                 var response = new BootstrapResponse
                 {
                     UserId = user.Id,
-                    GoogleSub = user.GoogleSub
+                    GoogleSub = user.GoogleSub ?? string.Empty
                 };
 
                 return Ok(response);
