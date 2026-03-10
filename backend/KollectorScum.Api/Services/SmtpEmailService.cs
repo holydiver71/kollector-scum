@@ -60,7 +60,8 @@ namespace KollectorScum.Api.Services
             using var client = new SmtpClient(smtpHost, smtpPort)
             {
                 EnableSsl = enableSsl,
-                DeliveryMethod = SmtpDeliveryMethod.Network
+                DeliveryMethod = SmtpDeliveryMethod.Network,
+                Timeout = 15_000 // 15 seconds — prevents long hangs on unreachable hosts
             };
 
             if (!string.IsNullOrWhiteSpace(smtpUsername))
@@ -68,8 +69,22 @@ namespace KollectorScum.Api.Services
                 client.Credentials = new NetworkCredential(smtpUsername, smtpPassword);
             }
 
-            await client.SendMailAsync(message);
-            _logger.LogInformation("Magic link email sent to {Email}", toEmail);
+            try
+            {
+                await client.SendMailAsync(message);
+                _logger.LogInformation("Magic link email sent to {Email}", toEmail);
+            }
+            catch (Exception ex)
+            {
+                // Log the magic link so it is recoverable from server logs (useful during staging
+                // when SMTP may not be fully configured).
+                _logger.LogError(ex,
+                    "Failed to send magic link email to {Email} via {Host}:{Port}. " +
+                    "Magic link (use for manual testing): {MagicLink}",
+                    toEmail, smtpHost, smtpPort, magicLink);
+                // Re-throw so the caller knows delivery failed.
+                throw;
+            }
         }
 
         /// <summary>
