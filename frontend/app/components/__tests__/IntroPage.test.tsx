@@ -40,9 +40,9 @@ describe('IntroPage', () => {
     const signInBtn = screen.getByTestId('google-sign-in-btn');
     expect(signInBtn).toBeInTheDocument();
 
-    // The button should be wrapped in a flex justify-center container
+    // The button should be wrapped in a flex column that centres its children
     const wrapper = signInBtn.parentElement;
-    expect(wrapper).toHaveClass('flex', 'justify-center');
+    expect(wrapper).toHaveClass('flex', 'flex-col', 'items-center');
   });
 
   it('renders the Sign-in button before the feature highlights grid', () => {
