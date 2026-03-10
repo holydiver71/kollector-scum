@@ -2,6 +2,7 @@ import React from "react";
 import Image from "next/image";
 import { LoadingSpinner } from "./LoadingComponents";
 import { GoogleSignIn } from "./GoogleSignIn";
+import { MagicLinkLoginForm } from "./MagicLinkLoginForm";
 
 export const IntroPage = ({ loading }: { loading?: boolean }) => {
   return (
@@ -37,8 +38,19 @@ export const IntroPage = ({ loading }: { loading?: boolean }) => {
             <p className="text-gray-400 font-medium">Loading your experience...</p>
           </div>
         ) : (
-          <div className="flex justify-center mb-12">
+          <div className="flex flex-col items-center gap-4 mb-12 w-full max-w-sm">
+            {/* Google Sign-In */}
             <GoogleSignIn />
+
+            {/* Divider */}
+            <div className="flex items-center gap-3 w-full">
+              <div className="flex-1 border-t border-[#1C1C28]" />
+              <span className="text-xs text-gray-500 uppercase tracking-wider">or</span>
+              <div className="flex-1 border-t border-[#1C1C28]" />
+            </div>
+
+            {/* Passwordless Email Sign-In */}
+            <MagicLinkLoginForm />
           </div>
         )}
 
