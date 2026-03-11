@@ -153,13 +153,26 @@ export async function updateUserProfile(
 }
 
 /**
- * Signs out the user
+ * Signs out the user.
+ * Clears all user-specific localStorage data, notifies listeners via the
+ * 'authChanged' event, then redirects to the home page.
  */
 export function signOut(): void {
   clearAuthToken();
-  // Clear other user-specific localStorage items
   if (typeof window !== 'undefined') {
-    localStorage.removeItem('kollectionId');
-    window.location.reload();
+    // Clear all user-specific data so a subsequent sign-in as a different
+    // user never sees stale cache from the previous session.
+    const userKeys = [
+      'kollectionId',
+      'user_profile',
+    ];
+    userKeys.forEach((key) => localStorage.removeItem(key));
+
+    // Notify all listeners (CollectionContext, Header, Dashboard, etc.) that
+    // the auth state has changed BEFORE navigating so they can reset cleanly.
+    window.dispatchEvent(new Event('authChanged'));
+
+    // Hard-navigate to root so the entire React tree remounts fresh.
+    window.location.href = '/';
   }
 }
