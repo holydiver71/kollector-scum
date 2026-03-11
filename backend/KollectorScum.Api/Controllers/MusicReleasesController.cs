@@ -54,7 +54,7 @@ namespace KollectorScum.Api.Controllers
         /// <returns>Paginated list of music release summaries</returns>
         [HttpGet]
         [ProducesResponseType(typeof(PagedResult<MusicReleaseSummaryDto>), 200)]
-        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "*" })]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Client, VaryByQueryKeys = new[] { "*" })]
         public async Task<ActionResult<PagedResult<MusicReleaseSummaryDto>>> GetMusicReleases(
             [FromQuery] MusicReleaseQueryParameters? parameters)
         {
