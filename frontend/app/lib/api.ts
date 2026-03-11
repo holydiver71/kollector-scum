@@ -55,6 +55,9 @@ export async function fetchJson<T = unknown>(path: string, options: FetchJsonOpt
   };
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
+    // Prevent the browser from serving a previous user's cached response
+    headers['Cache-Control'] = 'no-store';
+    headers['Pragma'] = 'no-cache';
   }
 
   try {
