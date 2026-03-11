@@ -1,7 +1,6 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { isAuthenticated } from '../lib/auth';
 
 interface CollectionContextType {
   hasCollection: boolean | null; // null = loading, true = has releases, false = empty
@@ -20,12 +19,11 @@ export function CollectionProvider({ children }: { children: React.ReactNode }) 
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // Reset when auth changes
+    // Reset collection state on every auth change so a subsequent sign-in as
+    // a different user never inherits the previous user's collection state.
     const handleAuthChange = () => {
-      if (!isAuthenticated()) {
-        setHasCollection(null);
-        setIsReady(false);
-      }
+      setHasCollection(null);
+      setIsReady(false);
     };
 
     window.addEventListener('authChanged', handleAuthChange);

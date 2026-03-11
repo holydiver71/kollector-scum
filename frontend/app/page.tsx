@@ -38,6 +38,10 @@ export default function Dashboard() {
       try {
         setLoading(true);
         setError(null);
+        // Reset stale data immediately so the previous user's numbers are
+        // never visible while the fresh fetch is in flight.
+        setStats(null);
+        setShowWelcome(false);
 
         // Validate profile first before querying collection data
         const profile = await getUserProfile();

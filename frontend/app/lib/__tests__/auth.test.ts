@@ -1,4 +1,4 @@
-import { requestMagicLink, verifyMagicLink, getAuthToken, clearAuthToken } from '../auth';
+import { requestMagicLink, verifyMagicLink, getAuthToken, clearAuthToken, signOut, setAuthToken } from '../auth';
 
 // Mock the api module
 jest.mock('../api', () => ({
@@ -117,5 +117,61 @@ describe('Magic Link Auth', () => {
 
       expect(getAuthToken()).toBeNull();
     });
+  });
+});
+
+describe('signOut', () => {
+  let assignSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    localStorage.clear();
+    // JSDOM doesn't allow redefining window.location, so we delete it and
+    // replace with a plain object that Jest can spy on.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (window as any).location;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as any).location = { href: '' };
+  });
+
+  it('clears auth_token from localStorage', () => {
+    setAuthToken('some-token');
+    expect(getAuthToken()).toBe('some-token');
+
+    signOut();
+
+    expect(getAuthToken()).toBeNull();
+  });
+
+  it('clears kollectionId from localStorage', () => {
+    localStorage.setItem('kollectionId', '42');
+
+    signOut();
+
+    expect(localStorage.getItem('kollectionId')).toBeNull();
+  });
+
+  it('clears user_profile from localStorage', () => {
+    localStorage.setItem('user_profile', JSON.stringify({ userId: 'abc' }));
+
+    signOut();
+
+    expect(localStorage.getItem('user_profile')).toBeNull();
+  });
+
+  it('dispatches the authChanged event before navigating', () => {
+    const listener = jest.fn();
+    window.addEventListener('authChanged', listener);
+
+    signOut();
+
+    expect(listener).toHaveBeenCalledTimes(1);
+    window.removeEventListener('authChanged', listener);
+  });
+
+  it('navigates to the home page', () => {
+    signOut();
+
+    // JSDOM resolves relative URLs to absolute; check that it navigates to root.
+    expect(window.location.href).toMatch(/^http:\/\/localhost\/?$|^\/$/);
   });
 });

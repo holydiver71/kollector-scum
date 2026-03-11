@@ -69,9 +69,8 @@ export function GoogleSignIn({ className }: GoogleSignInProps) {
   }, []);
 
   const handleSignOut = () => {
-    signOut();
     setProfile(null);
-    window.location.href = "/";
+    signOut(); // clears localStorage, dispatches authChanged, and navigates to '/'
   };
 
   const handleSignIn = () => {
