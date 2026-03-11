@@ -22,6 +22,7 @@ export default function Dashboard() {
   const [error, setError] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const { setHasCollection } = useCollection();
 
   useEffect(() => {
@@ -54,6 +55,7 @@ export default function Dashboard() {
 
         // We have a valid user profile, they are indeed logged in
         setIsLoggedIn(true);
+        setCurrentUserId(profile.userId);
 
         // Now fetch stats in parallel
         const [, totalReleases, totalArtists, totalGenres, totalLabels] = await Promise.all([
@@ -66,10 +68,19 @@ export default function Dashboard() {
 
         // health data is fetched for future use; not currently displayed
         setStats({ totalReleases, totalArtists, totalGenres, totalLabels });
-        
+
+        // Persist a per-user flag so the welcome screen is never shown to
+        // users who have (or previously had) items in their collection.
+        const collectionFlagKey = `has_collection_${profile.userId}`;
+        if (totalReleases > 0) {
+          localStorage.setItem(collectionFlagKey, '1');
+        }
+
+        const hadCollectionBefore = localStorage.getItem(collectionFlagKey) === '1';
+
         // Update collection context and show welcome screen for empty collections
-        setHasCollection(totalReleases > 0);
-        if (totalReleases === 0) {
+        setHasCollection(totalReleases > 0 || hadCollectionBefore);
+        if (totalReleases === 0 && !hadCollectionBefore) {
           setShowWelcome(true);
         }
       } catch (e) {
@@ -125,6 +136,10 @@ export default function Dashboard() {
 
   const handleStartFresh = () => {
     // Mark that user has chosen to start fresh (allow access to app)
+    // and persist the flag so they don't see the welcome screen again.
+    if (currentUserId) {
+      localStorage.setItem(`has_collection_${currentUserId}`, '1');
+    }
     setHasCollection(true);
   };
 
