@@ -10,6 +10,8 @@ import AuthGuard from "./components/AuthGuard";
 import { CollectionProvider } from "./contexts/CollectionContext";
 import { CollectionGuard } from "./components/CollectionGuard";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { ImpersonationProvider } from "./contexts/ImpersonationContext";
+import ImpersonationBanner from "./components/ImpersonationBanner";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -35,29 +37,32 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans antialiased`}>
         <ErrorBoundary>
           <ThemeProvider>
-            <AuthGuard>
-              <CollectionProvider>
-                <CollectionGuard>
-                  <div className="min-h-screen flex">
-                    <Sidebar />
-                    <div
-                      className="flex-1 flex flex-col transition-all duration-300 overflow-y-auto app-scroll-container"
-                      style={{ marginLeft: 'var(--sidebar-offset, 64px)' }}
-                    >
-                      <Suspense fallback={<div />}>
-                        <Header />
-                      </Suspense>
-                      <main className="flex-1">
+            <ImpersonationProvider>
+              <AuthGuard>
+                <CollectionProvider>
+                  <CollectionGuard>
+                    <ImpersonationBanner />
+                    <div className="min-h-screen flex">
+                      <Sidebar />
+                      <div
+                        className="flex-1 flex flex-col transition-all duration-300 overflow-y-auto app-scroll-container"
+                        style={{ marginLeft: 'var(--sidebar-offset, 64px)' }}
+                      >
                         <Suspense fallback={<div />}>
-                          {children}
+                          <Header />
                         </Suspense>
-                      </main>
-                      <Footer />
+                        <main className="flex-1">
+                          <Suspense fallback={<div />}>
+                            {children}
+                          </Suspense>
+                        </main>
+                        <Footer />
+                      </div>
                     </div>
-                  </div>
-                </CollectionGuard>
-              </CollectionProvider>
-            </AuthGuard>
+                  </CollectionGuard>
+                </CollectionProvider>
+              </AuthGuard>
+            </ImpersonationProvider>
           </ThemeProvider>
         </ErrorBoundary>
       </body>
