@@ -65,6 +65,20 @@ namespace KollectorScum.Api.Services
                 _logger.LogWarning("Admin provided invalid GUID in X-Admin-Act-As header: {HeaderValue}", actAsHeader);
             }
 
+            // Check cookie (so server-side requests can honour impersonation)
+            var actAsCookie = _httpContextAccessor.HttpContext?.Request.Cookies["impersonation_userId"];
+
+            if (!string.IsNullOrEmpty(actAsCookie) && IsAdmin())
+            {
+                if (Guid.TryParse(actAsCookie, out var actAsUserId))
+                {
+                    _logger.LogWarning("Admin impersonation via cookie: AdminId={AdminId} acting as UserId={TargetUserId} Path={Path}", GetUserId(), actAsUserId, path);
+                    return actAsUserId;
+                }
+
+                _logger.LogWarning("Admin provided invalid GUID in impersonation_userId cookie: {CookieValue}", actAsCookie);
+            }
+
             // Check if admin is impersonating via query parameter
             var actAsQuery = _httpContextAccessor.HttpContext?.Request.Query["userId"].FirstOrDefault();
 

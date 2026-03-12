@@ -54,6 +54,14 @@ export function ImpersonationProvider({ children }: { children: React.ReactNode 
    * and redirects to /dashboard.
    */
   const startImpersonation = (user: ImpersonationUser) => {
+    // Set a cookie so server-side renders can detect impersonation during SSR.
+    // Cookie is non-httpOnly (accessible to client) and scoped to path '/'.
+    try {
+      const secureFlag = typeof window !== 'undefined' && window.location?.protocol === 'https:' ? '; Secure' : '';
+      document.cookie = `impersonation_userId=${user.userId}; Path=/; SameSite=Lax${secureFlag}`;
+    } catch (err) {
+      // ignore cookie errors in environments where document isn't available
+    }
     localStorage.setItem(IMPERSONATION_USER_ID_KEY, user.userId);
     localStorage.setItem(IMPERSONATION_EMAIL_KEY, user.email);
     if (user.displayName) {
@@ -74,6 +82,12 @@ export function ImpersonationProvider({ children }: { children: React.ReactNode 
    * and redirects to /admin.
    */
   const endImpersonation = () => {
+    // Clear cookie used for server-side detection as well as localStorage keys
+    try {
+      document.cookie = 'impersonation_userId=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    } catch (err) {
+      // ignore
+    }
     localStorage.removeItem(IMPERSONATION_USER_ID_KEY);
     localStorage.removeItem(IMPERSONATION_EMAIL_KEY);
     localStorage.removeItem(IMPERSONATION_DISPLAY_NAME_KEY);
