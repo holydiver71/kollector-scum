@@ -439,5 +439,157 @@ namespace KollectorScum.Tests.Controllers
             // Assert
             Assert.IsType<BadRequestObjectResult>(result.Result);
         }
+
+        // ─── ImpersonateUser ────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Adds an admin user to the in-memory DB and sets HttpContext claims to that user.
+        /// </summary>
+        private ApplicationUser SetupAdminUser()
+        {
+            var admin = new ApplicationUser
+            {
+                Id = _adminUserId,
+                Email = "admin@example.com",
+                IsAdmin = true,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.ApplicationUsers.Add(admin);
+            _context.SaveChanges();
+
+            _mockUserRepository
+                .Setup(x => x.FindByIdAsync(_adminUserId))
+                .ReturnsAsync(admin);
+
+            return admin;
+        }
+
+        [Fact]
+        public async Task ImpersonateUser_AsAdmin_WithValidNonAdminUser_Returns200WithUserInfo()
+        {
+            // Arrange
+            SetupAdminUser();
+
+            var targetUserId = Guid.NewGuid();
+            var targetUser = new ApplicationUser
+            {
+                Id = targetUserId,
+                Email = "regular@example.com",
+                DisplayName = "Regular User",
+                IsAdmin = false,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _mockUserRepository
+                .Setup(x => x.FindByIdAsync(targetUserId))
+                .ReturnsAsync(targetUser);
+
+            // Act
+            var result = await _controller.ImpersonateUser(targetUserId);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var dto = Assert.IsType<ImpersonationDto>(okResult.Value);
+            Assert.Equal(targetUserId, dto.UserId);
+            Assert.Equal("regular@example.com", dto.Email);
+            Assert.Equal("Regular User", dto.DisplayName);
+        }
+
+        [Fact]
+        public async Task ImpersonateUser_AsNonAdmin_ReturnsForbidden()
+        {
+            // Arrange — non-admin user returned for the caller
+            var regularUser = new ApplicationUser
+            {
+                Id = _adminUserId,
+                Email = "user@example.com",
+                IsAdmin = false
+            };
+            _mockUserRepository
+                .Setup(x => x.FindByIdAsync(_adminUserId))
+                .ReturnsAsync(regularUser);
+
+            // Act
+            var result = await _controller.ImpersonateUser(Guid.NewGuid());
+
+            // Assert
+            Assert.IsType<ForbidResult>(result.Result);
+        }
+
+        [Fact]
+        public async Task ImpersonateUser_UserNotFound_ReturnsNotFound()
+        {
+            // Arrange
+            SetupAdminUser();
+
+            var missingId = Guid.NewGuid();
+            _mockUserRepository
+                .Setup(x => x.FindByIdAsync(missingId))
+                .ReturnsAsync((ApplicationUser?)null);
+
+            // Act
+            var result = await _controller.ImpersonateUser(missingId);
+
+            // Assert
+            Assert.IsType<NotFoundObjectResult>(result.Result);
+        }
+
+        [Fact]
+        public async Task ImpersonateUser_TargetUserIsAdmin_ReturnsBadRequest()
+        {
+            // Arrange
+            SetupAdminUser();
+
+            var otherAdminId = Guid.NewGuid();
+            var otherAdmin = new ApplicationUser
+            {
+                Id = otherAdminId,
+                Email = "otheradmin@example.com",
+                IsAdmin = true
+            };
+            _mockUserRepository
+                .Setup(x => x.FindByIdAsync(otherAdminId))
+                .ReturnsAsync(otherAdmin);
+
+            // Act
+            var result = await _controller.ImpersonateUser(otherAdminId);
+
+            // Assert
+            Assert.IsType<BadRequestObjectResult>(result.Result);
+        }
+
+        [Fact]
+        public async Task ImpersonateUser_AdminImpersonatingSelf_ReturnsBadRequest()
+        {
+            // Arrange
+            SetupAdminUser();
+
+            // Act
+            var result = await _controller.ImpersonateUser(_adminUserId);
+
+            // Assert
+            Assert.IsType<BadRequestObjectResult>(result.Result);
+        }
+
+        [Fact]
+        public async Task ImpersonateUser_WhenUnauthenticated_ReturnsForbidden()
+        {
+            // Arrange — no claims on the controller context (unauthenticated)
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal() }
+            };
+
+            // IsUserAdminAsync will get null userId and return false → Forbid
+            _mockUserRepository
+                .Setup(x => x.FindByIdAsync(It.IsAny<Guid>()))
+                .ReturnsAsync((ApplicationUser?)null);
+
+            // Act
+            var result = await _controller.ImpersonateUser(Guid.NewGuid());
+
+            // Assert
+            Assert.IsType<ForbidResult>(result.Result);
+        }
     }
 }
