@@ -91,7 +91,8 @@ describe('ImpersonationContext', () => {
       result.current.startImpersonation({ userId: 'user-1', email: 'user@example.com' });
     });
 
-    expect(mockPush).toHaveBeenCalledWith('/dashboard');
+    // Navigation includes userId query param so SSR can honour impersonation
+    expect(mockPush).toHaveBeenCalledWith('/dashboard?userId=user-1');
   });
 
   it('endImpersonation_clearsAllImpersonationLocalStorageKeys', () => {
