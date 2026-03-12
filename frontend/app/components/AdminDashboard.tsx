@@ -8,9 +8,11 @@ import {
   activateInvitation,
   getUsers,
   revokeUserAccess,
+  impersonateUser,
   type UserInvitation,
   type UserAccess,
 } from '../lib/admin';
+import { useImpersonation } from '../contexts/ImpersonationContext';
 
 export default function AdminDashboard() {
   const [invitations, setInvitations] = useState<UserInvitation[]>([]);
@@ -19,6 +21,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const { startImpersonation } = useImpersonation();
 
   useEffect(() => {
     loadData();
@@ -107,6 +110,17 @@ export default function AdminDashboard() {
       await loadData();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to activate registration';
+      setError(message);
+    }
+  };
+
+  const handleImpersonate = async (userId: string) => {
+    try {
+      setError(null);
+      const user = await impersonateUser(userId);
+      startImpersonation(user);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to impersonate user';
       setError(message);
     }
   };
@@ -284,12 +298,21 @@ export default function AdminDashboard() {
                     </td>
                     <td className="py-3 px-4 text-right">
                       {!user.isAdmin && (
-                        <button
-                          onClick={() => handleRevokeAccess(user.userId, user.email)}
-                          className="text-red-400 hover:text-red-300 text-sm"
-                        >
-                          Deactivate
-                        </button>
+                        <div className="flex justify-end gap-4">
+                          <button
+                            onClick={() => handleImpersonate(user.userId)}
+                            className="text-blue-400 hover:text-blue-300 text-sm font-medium"
+                            disabled={loading}
+                          >
+                            Impersonate
+                          </button>
+                          <button
+                            onClick={() => handleRevokeAccess(user.userId, user.email)}
+                            className="text-red-400 hover:text-red-300 text-sm"
+                          >
+                            Deactivate
+                          </button>
+                        </div>
                       )}
                     </td>
                   </tr>

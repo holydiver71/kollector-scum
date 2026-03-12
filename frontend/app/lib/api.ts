@@ -38,6 +38,14 @@ function getAuthToken(): string | null {
   return localStorage.getItem('auth_token');
 }
 
+/**
+ * Gets the impersonated user ID from localStorage for admin impersonation
+ */
+function getImpersonatedUserId(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('impersonation_userId');
+}
+
 export async function fetchJson<T = unknown>(path: string, options: FetchJsonOptions = {}): Promise<T> {
   const { timeoutMs = DEFAULT_TIMEOUT_MS, parse = true, ...init } = options;
   const controller = new AbortController();
@@ -58,6 +66,12 @@ export async function fetchJson<T = unknown>(path: string, options: FetchJsonOpt
     // Prevent the browser from serving a previous user's cached response
     headers['Cache-Control'] = 'no-store';
     headers['Pragma'] = 'no-cache';
+  }
+
+  // Add impersonation header if admin is impersonating a user
+  const impersonatedUserId = getImpersonatedUserId();
+  if (impersonatedUserId) {
+    headers['X-Admin-Act-As'] = impersonatedUserId;
   }
 
   try {

@@ -507,6 +507,45 @@ namespace KollectorScum.Api.Controllers
             });
         }
 
+        /// <summary>
+        /// Initiates impersonation of a non-admin user (admin only)
+        /// </summary>
+        /// <param name="userId">The ID of the user to impersonate</param>
+        /// <returns>Basic user info for the impersonated user</returns>
+        [HttpPost("impersonate/{userId}")]
+        [ProducesResponseType(typeof(ImpersonationDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ImpersonationDto>> ImpersonateUser(Guid userId)
+        {
+            if (!await IsUserAdminAsync())
+                return Forbid();
+
+            var adminId = GetUserIdFromClaims();
+
+            // Prevent self-impersonation
+            if (adminId == userId)
+                return BadRequest(new { message = "Cannot impersonate yourself" });
+
+            var targetUser = await _userRepository.FindByIdAsync(userId);
+            if (targetUser == null)
+                return NotFound(new { message = "User not found" });
+
+            if (targetUser.IsAdmin)
+                return BadRequest(new { message = "Cannot impersonate an admin user" });
+
+            _logger.LogWarning("Admin {AdminId} initiated impersonation of user {TargetId} ({TargetEmail})", adminId, userId, targetUser.Email);
+
+            return Ok(new ImpersonationDto
+            {
+                UserId = targetUser.Id,
+                Email = targetUser.Email,
+                DisplayName = targetUser.DisplayName
+            });
+        }
+
         private async Task<bool> IsUserAdminAsync()
         {
             var userId = GetUserIdFromClaims();
