@@ -73,3 +73,19 @@ export async function revokeUserAccess(userId: string): Promise<void> {
     parse: false, // DELETE returns 204 No Content, no JSON body to parse
   });
 }
+
+export interface ImpersonationUser {
+  userId: string;
+  email: string;
+  displayName?: string;
+}
+
+/**
+ * Initiates admin impersonation of a non-admin user.
+ * Returns the user's basic info for display in the impersonation banner.
+ */
+export async function impersonateUser(userId: string): Promise<ImpersonationUser> {
+  return fetchJson<ImpersonationUser>(`/api/admin/impersonate/${userId}`, {
+    method: 'POST',
+  });
+}

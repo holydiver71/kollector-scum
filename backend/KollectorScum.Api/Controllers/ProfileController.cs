@@ -17,15 +17,22 @@ namespace KollectorScum.Api.Controllers
         private readonly IUserRepository _userRepository;
         private readonly IUserProfileRepository _userProfileRepository;
         private readonly ILogger<ProfileController> _logger;
+        private readonly IUserContext _userContext;
 
+        /// <param name="userRepository">Repository for user data access</param>
+        /// <param name="userProfileRepository">Repository for user profile data access</param>
+        /// <param name="logger">Logger instance</param>
+        /// <param name="userContext">The user context service for resolving the acting user ID (supports admin impersonation)</param>
         public ProfileController(
             IUserRepository userRepository,
             IUserProfileRepository userProfileRepository,
-            ILogger<ProfileController> logger)
+            ILogger<ProfileController> logger,
+            IUserContext userContext)
         {
             _userRepository = userRepository;
             _userProfileRepository = userProfileRepository;
             _logger = logger;
+            _userContext = userContext;
         }
 
         /// <summary>
@@ -38,7 +45,7 @@ namespace KollectorScum.Api.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<UserProfileDto>> GetProfile()
         {
-            var userId = GetUserIdFromClaims();
+            var userId = _userContext.GetActingUserId();
             if (userId == null)
             {
                 return Unauthorized(new { message = "Invalid user ID in token" });
@@ -75,7 +82,7 @@ namespace KollectorScum.Api.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<UserProfileDto>> UpdateProfile([FromBody] UpdateProfileRequest request)
         {
-            var userId = GetUserIdFromClaims();
+            var userId = _userContext.GetActingUserId();
             if (userId == null)
             {
                 return Unauthorized(new { message = "Invalid user ID in token" });
