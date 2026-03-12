@@ -53,7 +53,7 @@ export function ImpersonationProvider({ children }: { children: React.ReactNode 
    * Starts impersonating a user. Stores state in localStorage, fires authChanged event,
    * and redirects to /dashboard.
    */
-  const startImpersonation = async (user: ImpersonationUser) => {
+  const startImpersonation = (user: ImpersonationUser) => {
     // Set a cookie so server-side renders can detect impersonation during SSR.
     // Cookie is non-httpOnly (accessible to client) and scoped to path '/'.
     try {
@@ -77,13 +77,12 @@ export function ImpersonationProvider({ children }: { children: React.ReactNode 
     // Navigate with acting userId in query so server-side rendering on different hosts
     // can honour impersonation even when cookies are not forwarded between domains.
     const target = `/dashboard?userId=${encodeURIComponent(user.userId)}`;
-    await router.push(target);
-    // Clean the URL to remove the query param without triggering a full reload.
-    // Use shallow replace to keep client state.
+    router.push(target);
+    // Clean the query param from the URL without triggering a navigation/re-render.
     try {
-      await router.replace('/dashboard', undefined, { shallow: true });
+      window.history.replaceState(null, '', '/dashboard');
     } catch (err) {
-      // ignore — replace may fail in older router implementations
+      // ignore in environments where history API is unavailable
     }
   };
 
