@@ -15,7 +15,8 @@ export default function ImpersonationBanner() {
 
   return (
     <div
-      className="fixed top-0 left-0 right-0 z-50 bg-amber-500 text-black px-4 py-2 flex items-center justify-between shadow-lg"
+      className="fixed top-0 right-0 z-40 bg-amber-500 text-black px-4 py-2 flex items-center justify-between shadow-lg"
+      style={{ left: 'var(--sidebar-offset, 64px)' }}
       role="alert"
       aria-live="polite"
     >
