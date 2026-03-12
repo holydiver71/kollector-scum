@@ -18,6 +18,7 @@ namespace KollectorScum.Tests.Controllers
         private readonly Mock<IUserRepository> _mockUserRepository;
         private readonly Mock<IUserProfileRepository> _mockUserProfileRepository;
         private readonly Mock<ILogger<ProfileController>> _mockLogger;
+        private readonly Mock<IUserContext> _mockUserContext;
         private readonly ProfileController _controller;
 
         public ProfileControllerTests()
@@ -25,11 +26,13 @@ namespace KollectorScum.Tests.Controllers
             _mockUserRepository = new Mock<IUserRepository>();
             _mockUserProfileRepository = new Mock<IUserProfileRepository>();
             _mockLogger = new Mock<ILogger<ProfileController>>();
+            _mockUserContext = new Mock<IUserContext>();
 
             _controller = new ProfileController(
                 _mockUserRepository.Object,
                 _mockUserProfileRepository.Object,
-                _mockLogger.Object
+                _mockLogger.Object,
+                _mockUserContext.Object
             );
         }
 
@@ -46,6 +49,8 @@ namespace KollectorScum.Tests.Controllers
             {
                 HttpContext = new DefaultHttpContext { User = user }
             };
+
+            _mockUserContext.Setup(x => x.GetActingUserId()).Returns(userId);
         }
 
         [Fact]
