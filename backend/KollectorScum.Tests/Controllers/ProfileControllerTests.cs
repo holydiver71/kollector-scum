@@ -353,5 +353,153 @@ namespace KollectorScum.Tests.Controllers
         }
 
         #endregion
+
+        #region Admin Impersonation Tests
+
+        [Fact]
+        public async Task GetProfile_AdminImpersonatingNonAdminUser_ReturnsImpersonatedProfile()
+        {
+            // Arrange
+            var targetUserId = Guid.NewGuid();
+            var targetUser = new ApplicationUser
+            {
+                Id = targetUserId,
+                Email = "target@example.com",
+                DisplayName = "Target User",
+                IsAdmin = false
+            };
+
+            var targetProfile = new UserProfile
+            {
+                Id = 2,
+                UserId = targetUserId,
+                SelectedKollectionId = 7
+            };
+
+            // GetActingUserId returns the target (impersonated) user's ID
+            _mockUserContext.Setup(x => x.GetActingUserId()).Returns(targetUserId);
+
+            _mockUserRepository
+                .Setup(x => x.FindByIdAsync(targetUserId))
+                .ReturnsAsync(targetUser);
+
+            _mockUserProfileRepository
+                .Setup(x => x.GetByUserIdAsync(targetUserId))
+                .ReturnsAsync(targetProfile);
+
+            // Act
+            var result = await _controller.GetProfile();
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var dto = Assert.IsType<UserProfileDto>(okResult.Value);
+            Assert.Equal(targetUserId, dto.UserId);
+            Assert.Equal("target@example.com", dto.Email);
+            Assert.Equal("Target User", dto.DisplayName);
+            Assert.Equal(7, dto.SelectedKollectionId);
+        }
+
+        [Fact]
+        public async Task GetProfile_AdminWithNoImpersonation_ReturnsAdminOwnProfile()
+        {
+            // Arrange
+            var adminUserId = Guid.NewGuid();
+            var adminUser = new ApplicationUser
+            {
+                Id = adminUserId,
+                Email = "admin@example.com",
+                DisplayName = "Admin User",
+                IsAdmin = true
+            };
+
+            var adminProfile = new UserProfile
+            {
+                Id = 1,
+                UserId = adminUserId,
+                SelectedKollectionId = 3
+            };
+
+            _mockUserContext.Setup(x => x.GetActingUserId()).Returns(adminUserId);
+
+            _mockUserRepository
+                .Setup(x => x.FindByIdAsync(adminUserId))
+                .ReturnsAsync(adminUser);
+
+            _mockUserProfileRepository
+                .Setup(x => x.GetByUserIdAsync(adminUserId))
+                .ReturnsAsync(adminProfile);
+
+            // Act
+            var result = await _controller.GetProfile();
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var dto = Assert.IsType<UserProfileDto>(okResult.Value);
+            Assert.Equal(adminUserId, dto.UserId);
+            Assert.Equal("admin@example.com", dto.Email);
+            Assert.True(dto.IsAdmin);
+        }
+
+        [Fact]
+        public async Task GetProfile_NonAdminUser_ReturnsOwnProfile()
+        {
+            // Arrange
+            var userId = Guid.NewGuid();
+            var user = new ApplicationUser
+            {
+                Id = userId,
+                Email = "regular@example.com",
+                DisplayName = "Regular User",
+                IsAdmin = false
+            };
+
+            var profile = new UserProfile
+            {
+                Id = 3,
+                UserId = userId,
+                SelectedKollectionId = 1
+            };
+
+            _mockUserContext.Setup(x => x.GetActingUserId()).Returns(userId);
+
+            _mockUserRepository
+                .Setup(x => x.FindByIdAsync(userId))
+                .ReturnsAsync(user);
+
+            _mockUserProfileRepository
+                .Setup(x => x.GetByUserIdAsync(userId))
+                .ReturnsAsync(profile);
+
+            // Act
+            var result = await _controller.GetProfile();
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var dto = Assert.IsType<UserProfileDto>(okResult.Value);
+            Assert.Equal(userId, dto.UserId);
+            Assert.Equal("regular@example.com", dto.Email);
+            Assert.False(dto.IsAdmin);
+        }
+
+        [Fact]
+        public async Task GetProfile_ImpersonatedUserNotFound_ReturnsNotFound()
+        {
+            // Arrange
+            var missingUserId = Guid.NewGuid();
+
+            _mockUserContext.Setup(x => x.GetActingUserId()).Returns(missingUserId);
+
+            _mockUserRepository
+                .Setup(x => x.FindByIdAsync(missingUserId))
+                .ReturnsAsync((ApplicationUser?)null);
+
+            // Act
+            var result = await _controller.GetProfile();
+
+            // Assert
+            Assert.IsType<NotFoundObjectResult>(result.Result);
+        }
+
+        #endregion
     }
 }
