@@ -80,8 +80,8 @@ namespace KollectorScum.Api.Services
                     "Label,Country,Format"
                 );
 
-                // Map to DTOs
-                var allDtos = await Task.Run(() => allFilteredReleases.Select(mr => _mapper.MapToSummaryDto(mr)).ToList());
+                // Map to DTOs using batch method to avoid N+1 queries
+                var allDtos = await _mapper.MapToSummaryDtosAsync(allFilteredReleases);
 
                 // Sort by artist name
                 var sortOrder = parameters.SortOrder?.ToLower();
@@ -118,8 +118,8 @@ namespace KollectorScum.Api.Services
                 "Label,Country,Format"
             );
 
-            // Map to DTOs
-            var summaryDtos = await Task.Run(() => pagedResult.Items.Select(mr => _mapper.MapToSummaryDto(mr)).ToList());
+            // Map to DTOs using batch method to avoid N+1 queries
+            var summaryDtos = await _mapper.MapToSummaryDtosAsync(pagedResult.Items);
 
             return new PagedResult<MusicReleaseSummaryDto>
             {
