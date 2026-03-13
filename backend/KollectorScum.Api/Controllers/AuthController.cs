@@ -4,6 +4,7 @@ using KollectorScum.Api.DTOs;
 using KollectorScum.Api.Interfaces;
 using KollectorScum.Api.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace KollectorScum.Api.Controllers
 {
@@ -55,6 +56,7 @@ namespace KollectorScum.Api.Controllers
         /// <param name="request">The Google authentication request</param>
         /// <returns>An authentication response with JWT token and profile</returns>
         [HttpPost("google")]
+        [EnableRateLimiting("auth")]
         [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -162,6 +164,7 @@ namespace KollectorScum.Api.Controllers
         /// Redirects the browser to Google's consent screen.
         /// </summary>
         [HttpGet("google/login")]
+        [EnableRateLimiting("auth")]
         [ProducesResponseType(StatusCodes.Status302Found)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public IActionResult GoogleLogin()
@@ -193,6 +196,7 @@ namespace KollectorScum.Api.Controllers
         /// generates a JWT and redirects the browser to the frontend callback page.
         /// </summary>
         [HttpGet("google/callback")]
+        [EnableRateLimiting("auth")]
         [ProducesResponseType(StatusCodes.Status302Found)]
         public async Task<IActionResult> GoogleCallback([FromQuery] string? code, [FromQuery] string? error)
         {
@@ -360,6 +364,7 @@ namespace KollectorScum.Api.Controllers
         /// <param name="request">The magic link request containing the email address</param>
         /// <returns>200 OK with a generic message regardless of whether the email is on the invite list</returns>
         [HttpPost("magic-link/request")]
+        [EnableRateLimiting("auth")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> RequestMagicLink([FromBody] MagicLinkRequestDto request)
@@ -398,6 +403,7 @@ namespace KollectorScum.Api.Controllers
         /// <param name="request">The verify request containing the token</param>
         /// <returns>Authentication response with JWT token and user profile</returns>
         [HttpPost("magic-link/verify")]
+        [EnableRateLimiting("auth")]
         [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]

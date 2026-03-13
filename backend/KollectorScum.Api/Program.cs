@@ -4,6 +4,7 @@
 
 
 using System.Text;
+using System.Threading.RateLimiting;
 using KollectorScum.Api.Middleware;
 using KollectorScum.Api.Data;
 using KollectorScum.Api.DTOs;
@@ -15,6 +16,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 
 
@@ -97,6 +99,44 @@ builder.Services.AddResponseCaching(options =>
 // Add in-memory cache for lookup data (artists, genres, labels, etc.)
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<ICacheService, MemoryCacheService>();
+
+// ── Phase 1.2: Rate Limiting (OWASP A04 – Insecure Design) ──────────────────
+// Global policy: 100 requests per minute per IP (applied to all endpoints automatically)
+// Auth policy  : 10 requests per minute per IP (brute-force / enumeration protection)
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    // Global limiter applied to every request before named policies.
+    // Keyed per remote IP address using a fixed-window algorithm.
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+    {
+        var remoteIp = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        return RateLimitPartition.GetFixedWindowLimiter(remoteIp, _ => new FixedWindowRateLimiterOptions
+        {
+            Window = TimeSpan.FromMinutes(1),
+            PermitLimit = 100,
+            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+            QueueLimit = 0,
+        });
+    });
+
+    // Stricter named policy for authentication endpoints (login, magic link, Google OAuth)
+    options.AddFixedWindowLimiter("auth", limiterOptions =>
+    {
+        limiterOptions.Window = TimeSpan.FromMinutes(1);
+        limiterOptions.PermitLimit = 10;
+        limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        limiterOptions.QueueLimit = 0;
+    });
+
+    // Return Retry-After header so clients know when to retry
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.Headers["Retry-After"] = "60";
+        await Task.CompletedTask;
+    };
+});
 
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<KollectorScumDbContext>("database");
@@ -335,6 +375,19 @@ builder.Logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", Micr
 
 var app = builder.Build();
 
+// ── Phase 1.1: Security Headers (OWASP A05) ─────────────────────────────────
+// Must be early in the pipeline so all responses receive the headers.
+app.UseSecurityHeaders();
+
+// ── Phase 1.4: HTTPS Enforcement (OWASP A05) ────────────────────────────────
+// HSTS and HTTPS redirection are only meaningful on non-Development environments
+// where TLS is terminated at the server or a reverse proxy.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+    app.UseHttpsRedirection();
+}
+
 // Add global error handling middleware
 app.UseMiddleware<ErrorHandlingMiddleware>();
 
@@ -355,6 +408,9 @@ if (app.Environment.IsDevelopment())
 
 // Add CORS for frontend integration
 app.UseCors("FrontendCorsPolicy");
+
+// ── Phase 1.2: Rate Limiting (OWASP A04) ────────────────────────────────────
+app.UseRateLimiter();
 
 // Enable response caching
 app.UseResponseCaching();
