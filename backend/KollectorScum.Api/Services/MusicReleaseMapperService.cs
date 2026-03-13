@@ -139,6 +139,119 @@ namespace KollectorScum.Api.Services
             };
         }
 
+        public async Task<List<MusicReleaseSummaryDto>> MapToSummaryDtosAsync(IEnumerable<MusicRelease> musicReleases)
+        {
+            var releaseList = musicReleases.ToList();
+            if (releaseList.Count == 0)
+                return new List<MusicReleaseSummaryDto>();
+
+            // Collect all unique artist and genre IDs across all releases in one pass
+            var allArtistIds = new HashSet<int>();
+            var allGenreIds = new HashSet<int>();
+
+            var parsedArtists = new Dictionary<int, List<int>?>(releaseList.Count);
+            var parsedGenres = new Dictionary<int, List<int>?>(releaseList.Count);
+            var parsedImages = new Dictionary<int, MusicReleaseImageDto?>(releaseList.Count);
+
+            foreach (var release in releaseList)
+            {
+                List<int>? artistIds = null;
+                try
+                {
+                    if (!string.IsNullOrEmpty(release.Artists))
+                        artistIds = JsonSerializer.Deserialize<List<int>>(release.Artists);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to deserialize Artists JSON for release {Id}", release.Id);
+                }
+
+                List<int>? genreIds = null;
+                try
+                {
+                    if (!string.IsNullOrEmpty(release.Genres))
+                        genreIds = JsonSerializer.Deserialize<List<int>>(release.Genres);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to deserialize Genres JSON for release {Id}", release.Id);
+                }
+
+                MusicReleaseImageDto? images = null;
+                try
+                {
+                    if (!string.IsNullOrEmpty(release.Images))
+                        images = JsonSerializer.Deserialize<MusicReleaseImageDto>(release.Images);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to deserialize Images JSON for release {Id}", release.Id);
+                }
+
+                parsedArtists[release.Id] = artistIds;
+                parsedGenres[release.Id] = genreIds;
+                parsedImages[release.Id] = images;
+
+                if (artistIds != null)
+                {
+                    foreach (var id in artistIds)
+                    {
+                        allArtistIds.Add(id);
+                    }
+                }
+
+                if (genreIds != null)
+                {
+                    foreach (var id in genreIds)
+                    {
+                        allGenreIds.Add(id);
+                    }
+                }
+            }
+
+            // Batch load all required artists and genres in a single query each
+            Dictionary<int, string> artistLookup = new();
+            if (allArtistIds.Count > 0)
+            {
+                var artists = await _artistRepository.GetAsync(a => allArtistIds.Contains(a.Id));
+                artistLookup = artists.ToDictionary(a => a.Id, a => a.Name);
+            }
+
+            Dictionary<int, string> genreLookup = new();
+            if (allGenreIds.Count > 0)
+            {
+                var genres = await _genreRepository.GetAsync(g => allGenreIds.Contains(g.Id));
+                genreLookup = genres.ToDictionary(g => g.Id, g => g.Name);
+            }
+
+            // Map all releases using the pre-loaded lookups (no additional DB queries)
+            var result = new List<MusicReleaseSummaryDto>(releaseList.Count);
+            foreach (var release in releaseList)
+            {
+                var artistIds = parsedArtists[release.Id];
+                var genreIds = parsedGenres[release.Id];
+                var images = parsedImages[release.Id];
+                images = ResolveImageUrls(images, release.UserId);
+
+                result.Add(new MusicReleaseSummaryDto
+                {
+                    Id = release.Id,
+                    Title = release.Title,
+                    ReleaseYear = release.ReleaseYear,
+                    OrigReleaseYear = release.OrigReleaseYear,
+                    ArtistNames = artistIds?.Select(id => artistLookup.TryGetValue(id, out var n) ? n : $"Artist {id}").ToList(),
+                    GenreNames = genreIds?.Select(id => genreLookup.TryGetValue(id, out var n) ? n : $"Genre {id}").ToList(),
+                    LabelName = release.Label?.Name,
+                    FormatName = release.Format?.Name,
+                    CountryName = release.Country?.Name,
+                    CoverImageUrl = images?.CoverFront ?? images?.Thumbnail,
+                    DateAdded = release.DateAdded
+                });
+            }
+
+            return result;
+        }
+
         public async Task<MusicReleaseDto> MapToFullDtoAsync(MusicRelease musicRelease)
         {
             List<int>? artistIds = null;
