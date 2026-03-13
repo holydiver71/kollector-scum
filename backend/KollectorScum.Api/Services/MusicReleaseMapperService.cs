@@ -192,8 +192,21 @@ namespace KollectorScum.Api.Services
                 parsedGenres[release.Id] = genreIds;
                 parsedImages[release.Id] = images;
 
-                if (artistIds != null) foreach (var id in artistIds) allArtistIds.Add(id);
-                if (genreIds != null) foreach (var id in genreIds) allGenreIds.Add(id);
+                if (artistIds != null)
+                {
+                    foreach (var id in artistIds)
+                    {
+                        allArtistIds.Add(id);
+                    }
+                }
+
+                if (genreIds != null)
+                {
+                    foreach (var id in genreIds)
+                    {
+                        allGenreIds.Add(id);
+                    }
+                }
             }
 
             // Batch load all required artists and genres in a single query each
