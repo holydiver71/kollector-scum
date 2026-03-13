@@ -45,6 +45,8 @@ jest.mock('../lib/auth', () => ({
 describe('Dashboard Page', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Clear the per-user collection flag so tests don't bleed state into each other
+    localStorage.removeItem('has_collection_user-1');
     // Default mock for getRecentlyPlayed returns empty array
     (api.getRecentlyPlayed as jest.Mock).mockResolvedValue([]);
   });

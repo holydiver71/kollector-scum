@@ -69,9 +69,8 @@ export function GoogleSignIn({ className }: GoogleSignInProps) {
   }, []);
 
   const handleSignOut = () => {
-    signOut();
     setProfile(null);
-    window.location.href = "/";
+    signOut(); // clears localStorage, dispatches authChanged, and navigates to '/'
   };
 
   const handleSignIn = () => {
@@ -107,9 +106,9 @@ export function GoogleSignIn({ className }: GoogleSignInProps) {
   }
 
   return (
-    <div className={className}>
+    <div className={`flex flex-col items-center ${className || ""}`}>
       {error && (
-        <div className="text-sm text-red-400 bg-red-900/50 border border-red-600 px-3 py-2 rounded-md mb-2">
+        <div className="text-center text-sm text-red-400 bg-red-900/50 border border-red-600 px-3 py-2 rounded-md mb-2">
           {error}
         </div>
       )}
