@@ -14,6 +14,12 @@ namespace KollectorScum.Api.Interfaces
         MusicReleaseSummaryDto MapToSummaryDto(MusicRelease musicRelease);
 
         /// <summary>
+        /// Maps a collection of MusicRelease entities to summary DTOs in a single batch operation.
+        /// Loads all required artists and genres in bulk to avoid N+1 database queries.
+        /// </summary>
+        Task<List<MusicReleaseSummaryDto>> MapToSummaryDtosAsync(IEnumerable<MusicRelease> musicReleases);
+
+        /// <summary>
         /// Maps a MusicRelease entity to a full DTO with all related data
         /// </summary>
         Task<MusicReleaseDto> MapToFullDtoAsync(MusicRelease musicRelease);

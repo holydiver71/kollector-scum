@@ -309,5 +309,166 @@ namespace KollectorScum.Tests.Services
         }
 
         #endregion
+
+        #region Caching Tests
+
+        [Fact]
+        public async Task GetAllAsync_WithCacheService_ReturnsCachedResultOnSecondCall()
+        {
+            // Arrange
+            var cacheService = new Mock<ICacheService>();
+            var cachedResult = new PagedResult<ArtistDto>
+            {
+                Items = new List<ArtistDto> { new ArtistDto { Id = 1, Name = "Cached Artist" } },
+                TotalCount = 1, Page = 1, PageSize = 50, TotalPages = 1
+            };
+
+            var serviceWithCache = new ArtistService(
+                _mockRepository.Object, _mockUnitOfWork.Object, _mockLogger.Object, _mockUserContext.Object,
+                cacheService.Object);
+
+            // First call - cache miss
+            cacheService.Setup(c => c.Get<PagedResult<ArtistDto>>(It.IsAny<string>()))
+                .Returns((PagedResult<ArtistDto>?)null);
+
+            var pagedResult = new PagedResult<Artist>
+            {
+                Items = new List<Artist> { new Artist { Id = 1, Name = "Cached Artist", UserId = _userId } },
+                TotalCount = 1, Page = 1, PageSize = 50, TotalPages = 1
+            };
+            _mockRepository.Setup(r => r.GetPagedAsync(1, 50, It.IsAny<Expression<Func<Artist, bool>>>(),
+                It.IsAny<Func<IQueryable<Artist>, IOrderedQueryable<Artist>>>(), ""))
+                .ReturnsAsync(pagedResult);
+
+            // Act - first call
+            await serviceWithCache.GetAllAsync(1, 50);
+
+            // Assert - cache was set
+            cacheService.Verify(c => c.Set(
+                It.IsAny<string>(),
+                It.IsAny<PagedResult<ArtistDto>>(),
+                It.IsAny<TimeSpan>(),
+                It.IsAny<string>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetAllAsync_WithCacheHit_DoesNotCallRepository()
+        {
+            // Arrange
+            var cacheService = new Mock<ICacheService>();
+            var cachedResult = new PagedResult<ArtistDto>
+            {
+                Items = new List<ArtistDto> { new ArtistDto { Id = 1, Name = "Cached Artist" } },
+                TotalCount = 1, Page = 1, PageSize = 50, TotalPages = 1
+            };
+
+            cacheService.Setup(c => c.Get<PagedResult<ArtistDto>>(It.IsAny<string>()))
+                .Returns(cachedResult);
+
+            var serviceWithCache = new ArtistService(
+                _mockRepository.Object, _mockUnitOfWork.Object, _mockLogger.Object, _mockUserContext.Object,
+                cacheService.Object);
+
+            // Act
+            var result = await serviceWithCache.GetAllAsync(1, 50);
+
+            // Assert - repository was NOT called
+            _mockRepository.Verify(r => r.GetPagedAsync(
+                It.IsAny<int>(), It.IsAny<int>(),
+                It.IsAny<Expression<Func<Artist, bool>>>(),
+                It.IsAny<Func<IQueryable<Artist>, IOrderedQueryable<Artist>>>(),
+                It.IsAny<string>()), Times.Never);
+
+            Assert.Equal("Cached Artist", result.Items.First().Name);
+        }
+
+        [Fact]
+        public async Task CreateAsync_WithCacheService_InvalidatesCache()
+        {
+            // Arrange
+            var cacheService = new Mock<ICacheService>();
+            var serviceWithCache = new ArtistService(
+                _mockRepository.Object, _mockUnitOfWork.Object, _mockLogger.Object, _mockUserContext.Object,
+                cacheService.Object);
+
+            var dto = new ArtistDto { Name = "New Artist" };
+            var artist = new Artist { Id = 1, Name = dto.Name, UserId = _userId };
+            _mockRepository.Setup(r => r.AddAsync(It.IsAny<Artist>())).ReturnsAsync(artist);
+            _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+
+            // Act
+            await serviceWithCache.CreateAsync(dto);
+
+            // Assert - cache group was invalidated
+            cacheService.Verify(c => c.InvalidateGroup(It.IsAny<string>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task DeleteAsync_WithCacheService_InvalidatesCache()
+        {
+            // Arrange
+            var cacheService = new Mock<ICacheService>();
+            var serviceWithCache = new ArtistService(
+                _mockRepository.Object, _mockUnitOfWork.Object, _mockLogger.Object, _mockUserContext.Object,
+                cacheService.Object);
+
+            var artist = new Artist { Id = 1, Name = "To Delete", UserId = _userId };
+            _mockRepository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(artist);
+            _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+
+            // Act
+            await serviceWithCache.DeleteAsync(1);
+
+            // Assert - cache group was invalidated and specific key removed
+            cacheService.Verify(c => c.InvalidateGroup(It.IsAny<string>()), Times.Once);
+            cacheService.Verify(c => c.Remove(It.IsAny<string>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetByIdAsync_WithCacheService_CachesResult()
+        {
+            // Arrange
+            var cacheService = new Mock<ICacheService>();
+            cacheService.Setup(c => c.Get<ArtistDto>(It.IsAny<string>())).Returns((ArtistDto?)null);
+
+            var serviceWithCache = new ArtistService(
+                _mockRepository.Object, _mockUnitOfWork.Object, _mockLogger.Object, _mockUserContext.Object,
+                cacheService.Object);
+
+            var artist = new Artist { Id = 1, Name = "Test Artist", UserId = _userId };
+            _mockRepository.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(artist);
+
+            // Act
+            await serviceWithCache.GetByIdAsync(1);
+
+            // Assert - cached the result
+            cacheService.Verify(c => c.Set(
+                It.IsAny<string>(),
+                It.IsAny<ArtistDto>(),
+                It.IsAny<TimeSpan>(),
+                It.IsAny<string?>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task GetByIdAsync_WithCacheHit_DoesNotCallRepository()
+        {
+            // Arrange
+            var cacheService = new Mock<ICacheService>();
+            var cachedDto = new ArtistDto { Id = 1, Name = "Cached Artist" };
+            cacheService.Setup(c => c.Get<ArtistDto>(It.IsAny<string>())).Returns(cachedDto);
+
+            var serviceWithCache = new ArtistService(
+                _mockRepository.Object, _mockUnitOfWork.Object, _mockLogger.Object, _mockUserContext.Object,
+                cacheService.Object);
+
+            // Act
+            var result = await serviceWithCache.GetByIdAsync(1);
+
+            // Assert - repository was NOT called
+            _mockRepository.Verify(r => r.GetByIdAsync(It.IsAny<int>()), Times.Never);
+            Assert.Equal("Cached Artist", result!.Name);
+        }
+
+        #endregion
     }
 }
