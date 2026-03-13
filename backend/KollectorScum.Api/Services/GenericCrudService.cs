@@ -18,18 +18,43 @@ namespace KollectorScum.Api.Services
         protected readonly IUnitOfWork _unitOfWork;
         protected readonly ILogger _logger;
         protected readonly IUserContext _userContext;
+        private readonly ICacheService? _cacheService;
+
+        /// <summary>
+        /// Cache duration for entity listings and lookups (5 minutes).
+        /// </summary>
+        private static readonly TimeSpan CacheExpiry = TimeSpan.FromMinutes(5);
 
         protected GenericCrudService(
             IRepository<TEntity> repository,
             IUnitOfWork unitOfWork,
             ILogger logger,
-            IUserContext userContext)
+            IUserContext userContext,
+            ICacheService? cacheService = null)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _userContext = userContext ?? throw new ArgumentNullException(nameof(userContext));
+            _cacheService = cacheService;
         }
+
+        /// <summary>
+        /// Builds the cache key prefix (invalidation group) for this entity type and user.
+        /// </summary>
+        private string GetCacheGroup(Guid userId) => $"{typeof(TEntity).Name}:all:{userId}";
+
+        /// <summary>
+        /// Builds a specific cache key for a paged listing.
+        /// </summary>
+        private string GetListCacheKey(Guid userId, int page, int pageSize, string? search) =>
+            $"{typeof(TEntity).Name}:all:{userId}:p{page}:s{pageSize}:{search ?? ""}";
+
+        /// <summary>
+        /// Builds a specific cache key for a single entity lookup.
+        /// </summary>
+        private string GetByIdCacheKey(Guid userId, int id) =>
+            $"{typeof(TEntity).Name}:id:{userId}:{id}";
 
         /// <summary>
         /// Gets all entities with pagination, filtering, and sorting
@@ -72,10 +97,38 @@ namespace KollectorScum.Api.Services
             // Default ordering if none provided
             orderBy ??= BuildDefaultOrdering();
 
+            // Serve from cache when no custom filter is applied (standard list calls only)
+            if (_cacheService != null && filter == null)
+            {
+                var cacheKey = GetListCacheKey(userId.Value, page, pageSize, search);
+                var cached = _cacheService.Get<PagedResult<TDto>>(cacheKey);
+                if (cached != null)
+                {
+                    _logger.LogDebug("Cache hit for {EntityType} list (user {UserId}, page {Page})", typeof(TEntity).Name, userId, page);
+                    return cached;
+                }
+
+                var result = await FetchPagedResultAsync(page, pageSize, combinedFilter, orderBy);
+                _cacheService.Set(cacheKey, result, CacheExpiry, GetCacheGroup(userId.Value));
+                return result;
+            }
+
+            return await FetchPagedResultAsync(page, pageSize, combinedFilter, orderBy);
+        }
+
+        /// <summary>
+        /// Fetches paged results from the repository and maps them to DTOs.
+        /// </summary>
+        private async Task<PagedResult<TDto>> FetchPagedResultAsync(
+            int page,
+            int pageSize,
+            Expression<Func<TEntity, bool>>? filter,
+            Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy)
+        {
             var pagedResult = await _repository.GetPagedAsync(
                 pageNumber: page,
                 pageSize: pageSize,
-                filter: combinedFilter,
+                filter: filter,
                 orderBy: orderBy);
 
             var dtos = pagedResult.Items.Select(entity => MapToDto(entity)).ToList();
@@ -103,6 +156,18 @@ namespace KollectorScum.Api.Services
 
             _logger.LogInformation("Getting {EntityType} by ID: {Id} for user {UserId}", typeof(TEntity).Name, id, userId);
 
+            // Check cache first
+            if (_cacheService != null)
+            {
+                var cacheKey = GetByIdCacheKey(userId.Value, id);
+                var cached = _cacheService.Get<TDto>(cacheKey);
+                if (cached != null)
+                {
+                    _logger.LogDebug("Cache hit for {EntityType} id {Id}", typeof(TEntity).Name, id);
+                    return cached;
+                }
+            }
+
             var entity = await _repository.GetByIdAsync(id);
             
             // Verify user owns the entity
@@ -116,8 +181,17 @@ namespace KollectorScum.Api.Services
                     return default;
                 }
             }
-            
-            return entity == null ? default : MapToDto(entity);
+
+            var dto = entity == null ? default : MapToDto(entity);
+
+            // Cache the result
+            if (_cacheService != null && dto != null)
+            {
+                var cacheKey = GetByIdCacheKey(userId.Value, id);
+                _cacheService.Set(cacheKey, dto, CacheExpiry);
+            }
+
+            return dto;
         }
 
         /// <summary>
@@ -145,6 +219,9 @@ namespace KollectorScum.Api.Services
             
             await _repository.AddAsync(entity);
             await _unitOfWork.SaveChangesAsync();
+
+            // Invalidate cache for this user's entity listings
+            _cacheService?.InvalidateGroup(GetCacheGroup(userId.Value));
 
             _logger.LogInformation("Created {EntityType} with ID: {Id} for user {UserId}", 
                 typeof(TEntity).Name, GetEntityId(entity), userId);
@@ -189,6 +266,10 @@ namespace KollectorScum.Api.Services
             _repository.Update(existingEntity);
             await _unitOfWork.SaveChangesAsync();
 
+            // Invalidate cache for this user's entity listings and by-id entry
+            _cacheService?.InvalidateGroup(GetCacheGroup(userId.Value));
+            _cacheService?.Remove(GetByIdCacheKey(userId.Value, id));
+
             _logger.LogInformation("Updated {EntityType} with ID: {Id} for user {UserId}", typeof(TEntity).Name, id, userId);
 
             return MapToDto(existingEntity);
@@ -227,6 +308,10 @@ namespace KollectorScum.Api.Services
 
             _repository.Delete(entity);
             await _unitOfWork.SaveChangesAsync();
+
+            // Invalidate cache for this user's entity listings and by-id entry
+            _cacheService?.InvalidateGroup(GetCacheGroup(userId.Value));
+            _cacheService?.Remove(GetByIdCacheKey(userId.Value, id));
 
             _logger.LogInformation("Deleted {EntityType} with ID: {Id} for user {UserId}", typeof(TEntity).Name, id, userId);
 
@@ -343,6 +428,9 @@ namespace KollectorScum.Api.Services
 
             await _repository.AddAsync(entity);
             await _unitOfWork.SaveChangesAsync();
+
+            // Invalidate cache for this user's entity listings
+            _cacheService?.InvalidateGroup(GetCacheGroup(userId.Value));
 
             _logger.LogInformation("Created {EntityType} with name '{Name}' and ID: {Id} for user {UserId}",
                 typeof(TEntity).Name, name, GetEntityId(entity), userId);
