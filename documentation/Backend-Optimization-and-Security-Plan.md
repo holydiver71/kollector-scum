@@ -2,9 +2,21 @@
 
 ## Overview
 
-This plan outlines the phased approach to reviewing, refactoring, and hardening the KollectorScum backend API. The goal is to improve code quality, performance, and security while maintaining backwards compatibility and comprehensive test coverage.
+The backend has grown organically with 30 services, 21 controllers, and a generic repository pattern. While the architecture is generally sound (CQRS for music releases, GenericCrudService for lookups), accumulated technical debt includes: bloated services violating SRP (DiscogsCollectionImportService at 700+ lines), critical security gaps, performance issues (sync-over-async, missing AsNoTracking, in-memory aggregation), inconsistent error handling, and dead code.
 
-The plan was initiated to address technical debt accumulated during incremental feature development, ensuring the backend is not only functional but also secure, maintainable, and performant.
+This plan systematically addresses these across 6 phases, ordered by severity.
+
+### Scope
+
+- **Included**: All 30 services, 21 controllers, 2 middleware, Program.cs, repository layer
+- **Excluded**: Frontend changes, database schema changes (indexes already good), migration rewrites, worker service, DataSeeder project
+
+### Approach
+
+- Each phase produces a working, testable application
+- Security first (OWASP risks), then performance, then refactoring
+- New branch per phase, following project conventions
+- All tests must pass after each phase; coverage must exceed 80%
 
 ---
 
@@ -13,12 +25,15 @@ The plan was initiated to address technical debt accumulated during incremental 
 | Phase | Title | Status |
 |-------|-------|--------|
 | Phase 1 | Security Hardening | ✅ Complete |
-| Phase 2 | Code Quality and Refactoring | ⏳ Pending |
-| Phase 3 | Performance Optimization | ✅ Complete (see Phase 3 - Performance Optimization Summary.md) |
+| Phase 2 | Performance Optimization | ⏳ In Progress |
+| Phase 3 | Service Layer Refactoring | ⏳ Pending |
+| Phase 4 | Dead Code & Cleanup | ⏳ Pending |
+| Phase 5 | Test Gap Coverage | ⏳ Pending |
+| Phase 6 | Documentation & Summary | ⏳ Pending |
 
 ---
 
-## Phase 1: Security Hardening (OWASP Top 10)
+## Phase 1: Security Hardening ✅ Complete
 
 **Goal**: Implement core security controls addressing OWASP Top 10 vulnerabilities.
 
@@ -54,57 +69,13 @@ The plan was initiated to address technical debt accumulated during incremental 
 - [x] Enable HTTPS redirection in non-development environments
 - [x] Register in `Program.cs`
 
----
+### Phase 1.5 – Deferred Security Items (carried to Phase 3)
 
-## Phase 2: Code Quality and Refactoring
+The following were identified during Phase 1 planning but deferred as lower priority:
 
-**Goal**: Reduce technical debt, remove duplicated code, and improve maintainability.
-
-### Phase 2.1 – Remove Deprecated Services
-
-- [ ] Remove `IMusicReleaseService` / `MusicReleaseService` (superseded by `IMusicReleaseCommandService` and `IMusicReleaseQueryService`)
-- [ ] Remove `IDataSeedingService` / `DataSeedingService` (superseded by `IDataSeedingOrchestrator`)
-- [ ] Remove `IMusicReleaseImportService` / `MusicReleaseImportService` (superseded by `IMusicReleaseImportOrchestrator`)
-- [ ] Update DI registrations in `Program.cs`
-- [ ] Update tests to remove references to deprecated services
-
-### Phase 2.2 – AutoMapper Integration
-
-- [ ] Add AutoMapper NuGet package
-- [ ] Create mapping profiles for all DTOs (MusicRelease, Artist, Genre, Label, etc.)
-- [ ] Replace manual property mapping in `MusicReleaseMapperService` and other services
-- [ ] Update tests to cover mapping profiles
-
-### Phase 2.3 – Specification Pattern for Queries
-
-- [ ] Create `ISpecification<T>` interface
-- [ ] Implement specifications for common queries (e.g., `MusicReleasesByUserSpecification`, `ArtistByNameSpecification`)
-- [ ] Update repository layer to accept specifications
-- [ ] Update `MusicReleaseQueryBuilder` to use specifications
-- [ ] Unit tests for specification implementations
-
-### Phase 2.4 – Consolidate Error Handling
-
-- [ ] Standardise error response format using `ProblemDetails` (RFC 7807)
-- [ ] Replace ad-hoc error returns in controllers with `ProblemDetails`
-- [ ] Update Swagger documentation to reflect standardised error responses
-- [ ] Update relevant controller tests
-
----
-
-## Phase 3: Performance Optimization ✅ Complete
-
-See [Phase 3 - Performance Optimization Summary.md](Phase%203%20-%20Performance%20Optimization%20Summary.md) for details.
-
-### Summary of Completed Work:
-- **Phase 3.2** – Response caching for lookup data (5-minute TTL, user-scoped, group invalidation)
-- **Phase 3.4** – N+1 query fix in music release listing (batch loading reducing ~150 queries to 2)
-
-### Remaining (Optional):
-- [ ] Phase 3.1 – AutoMapper to reduce manual mapping boilerplate (tracked in Phase 2.2)
-- [ ] Phase 3.3 – Specification pattern for composable query specs (tracked in Phase 2.3)
-- [ ] Distributed cache (Redis) for multi-instance deployments (future)
-- [ ] Cache warming on startup for frequently-accessed lookup data (future)
+- [ ] **Harden NaturalLanguageQuery SQL Execution** – `NaturalLanguageQueryService.cs` generates raw SQL from LLM output; consider read-only DB connection, row limits, query timeouts, and stronger `SqlValidationService` — **Files**: `Services/NaturalLanguageQueryService.cs`, `Services/SqlValidationService.cs`
+- [ ] **Remove Admin Impersonation via Query Parameter** – `UserContext.cs` allows impersonation via `userId` query param; keep header/cookie only — **Files**: `Services/UserContext.cs`
+- [ ] **Sanitize Sensitive Data in Logs** – Audit and redact user IDs, SQL queries, impersonation details in production logging — **Files**: `Middleware/ValidateUserMiddleware.cs`, `Services/UserContext.cs`, `Services/NaturalLanguageQueryService.cs`
 
 ---
 
@@ -122,3 +93,215 @@ See [Phase 3 - Performance Optimization Summary.md](Phase%203%20-%20Performance%
 | A08 – Software and Data Integrity | Tampered payloads | FluentValidation on all inputs, JWT signature validation |
 | A09 – Security Logging and Monitoring | Missing audit trail | Structured logging, suppressed verbose errors in production |
 | A10 – Server-Side Request Forgery | Internal service calls | HTTP client factory, no user-controlled URLs in outbound calls |
+
+---
+
+## Phase 2: Performance Optimization (HIGH)
+
+- [ ] **2.1 Add `.AsNoTracking()` to All Read-Only Queries**
+  - `Repository.cs` methods `GetAllAsync()`, `GetAsync()`, `GetFirstOrDefaultAsync()`, `GetPagedAsync()` all track entities unnecessarily for reads
+  - Add `.AsNoTracking()` to read-only repository methods or create `AsNoTracking` variants
+  - **Files**: `Repositories/Repository.cs`
+
+- [x] **2.2 Fix N+1 Queries in MusicReleaseMapperService** *(completed in PR #76)*
+  - ~~`MapToSummaryDto()` calls `GetArtistNameSync()` which does `.GetAwaiter().GetResult()` per artist — causes N blocking DB calls per release~~
+  - Added `MapToSummaryDtosAsync()` batch method — collects all unique artist/genre IDs, issues 2 queries total instead of ~150
+  - **Files**: `Services/MusicReleaseMapperService.cs`, `Interfaces/IMusicReleaseMapperService.cs`
+
+- [x] **2.3 Remove Unnecessary `Task.Run()` Wrappers in MusicReleaseQueryService** *(completed in PR #76)*
+  - ~~`MusicReleaseQueryService.cs` wrapped synchronous LINQ in `Task.Run()` unnecessarily~~
+  - Replaced with `MapToSummaryDtosAsync()` batch call
+  - **Files**: `Services/MusicReleaseQueryService.cs`
+
+- [ ] **2.4 Remove Unnecessary `Task.Run()` Wrappers in MusicReleaseService**
+  - `MusicReleaseService.cs` still wraps synchronous mapping in `Task.Run()` — context switch overhead with no benefit
+  - **Files**: `Services/MusicReleaseService.cs`
+
+- [ ] **2.5 Move CollectionStatistics Aggregation to Database**
+  - `CollectionStatisticsService.cs` loads ALL user releases into memory then iterates with foreach loops for counting
+  - Replace with database-side GROUP BY queries for artist counts, genre counts, format distribution, etc.
+  - **Files**: `Services/CollectionStatisticsService.cs`, possibly `Repositories/Repository.cs` (add aggregation method)
+
+- [ ] **2.6 Move Duplicate Detection to Database**
+  - `MusicReleaseDuplicateService.cs` loads all user releases then filters in-memory
+  - Replace with targeted database query using WHERE clause matching on title/artist/year
+  - **Files**: `Services/MusicReleaseDuplicateService.cs`
+
+- [ ] **2.7 Add CancellationToken Support**
+  - Add `CancellationToken` parameter to service interfaces and implementations
+  - Propagate to EF Core `ToListAsync(ct)`, `SaveChangesAsync(ct)`, `FirstOrDefaultAsync(ct)`
+  - Start with high-traffic paths: MusicReleaseQueryService, MusicReleaseCommandService
+  - **Files**: All service interfaces in `Interfaces/`, all service implementations in `Services/`, `Repositories/Repository.cs`
+
+- [ ] **2.8 Add Response Compression**
+  - Add explicit `AddResponseCompression()` with gzip/brotli for JSON responses
+  - **Files**: `Program.cs`
+
+- [x] **2.9 Add In-Memory Caching for Lookup Endpoints** *(completed in PR #76)*
+  - ~~Lookup data (artists, genres, labels, etc.) hit the DB on every request despite rarely changing~~
+  - Added `ICacheService` interface and `MemoryCacheService` (IMemoryCache-backed) with group-based invalidation via `CancellationChangeToken`
+  - `GenericCrudService` caches `GetAllAsync`/`GetByIdAsync` results with 5-min TTL, keyed by `{EntityType}:{userId}:...`
+  - Write operations (`Create`/`Update`/`Delete`) invalidate the relevant user+entity cache group automatically
+  - All 7 lookup services updated, registered as singleton in DI
+  - **Files**: New `Interfaces/ICacheService.cs`, new `Services/MemoryCacheService.cs`, `Services/GenericCrudService.cs`, `Program.cs`, all lookup services
+
+- [ ] **2.10 Add Caching for ValidateUserMiddleware**
+  - Currently queries DB on every authenticated request to check user still exists
+  - Add short-TTL in-memory cache (e.g., 5 minutes) for user existence checks
+  - **Files**: `Middleware/ValidateUserMiddleware.cs`, `Program.cs` (register IMemoryCache if not already)
+
+**Verification:**
+- Run full test suite
+- Performance test: compare response times before/after on collection endpoints with 500+ releases
+- Verify MapToSummaryDto no longer makes N+1 queries (check EF Core SQL logging)
+- Verify statistics endpoint uses GROUP BY (check generated SQL)
+
+---
+
+## Phase 3: Service Layer Refactoring (MEDIUM)
+
+- [ ] **3.1 Split DiscogsCollectionImportService (700+ lines)**
+  - Extract into:
+    - `DiscogsImportOrchestrator` — orchestrates pagination, rate limiting, overall flow
+    - `DiscogsEntityMapper` — maps Discogs DTOs to app entities, handles entity resolution/creation
+    - `DiscogsImageService` — handles image downloading and storage
+  - **Remove `TestImportLimit = 50` hardcoded constant** — silently truncates imports in production
+  - **Files**: `Services/DiscogsCollectionImportService.cs` → split into 3 new service files
+
+- [ ] **3.2 Refactor EntityResolverService to Use Generics**
+  - 6 nearly identical `ResolveOrCreate*Async` methods (~250 lines of duplication)
+  - Extract generic `ResolveOrCreateAsync<TEntity>` method
+  - **Files**: `Services/EntityResolverService.cs`
+
+- [ ] **3.3 Extract Business Logic from AdminController (649 lines)**
+  - Extract storage migration logic (lines 320-525) → `IStorageMigrationService`
+  - Extract user impersonation logic → `IUserImpersonationService`
+  - Extract email validation → use FluentValidation
+  - Keep controller thin — delegate only
+  - **Files**: `Controllers/AdminController.cs`, new service files
+
+- [ ] **3.4 Extract Business Logic from AuthController (550+ lines)**
+  - Extract user creation/update logic from Google auth flow → `IUserAuthenticationService`
+  - Controller should only handle HTTP concerns (request/response mapping, status codes)
+  - **Files**: `Controllers/AuthController.cs`, new `Services/UserAuthenticationService.cs`
+
+- [ ] **3.5 Standardize Error Response Format**
+  - Create unified `ApiErrorResponse` DTO with `message`, `errorCode`, optional `details` (dev only)
+  - Update all controllers to use consistent format (currently mix of `new { message }`, raw strings, `ModelState`)
+  - Update `ErrorHandlingMiddleware` to use this DTO
+  - Update `BaseApiController.HandleError()` to use this DTO
+  - **Files**: New `DTOs/ApiErrorResponse.cs`, `Middleware/ErrorHandlingMiddleware.cs`, `Controllers/BaseApiController.cs`, all controllers
+
+- [ ] **3.6 Fix Overly Broad Exception Handling**
+  - `MusicReleaseBatchProcessor.cs` — `catch (Exception)` with no logging
+  - `MusicReleaseService.cs` — swallows errors, returns null
+  - `MusicReleaseImportService.cs` — continues silently on failures
+  - Add specific exception types, proper logging, and consider returning `Result<T>` with error details
+  - **Files**: `Services/MusicReleaseBatchProcessor.cs`, `Services/MusicReleaseService.cs`, `Services/MusicReleaseImportService.cs`
+
+**Verification:**
+- All existing tests must pass (update mocks for new service interfaces)
+- New services must have unit tests (>80% coverage)
+- Verify Discogs import still works end-to-end after split
+- Verify admin operations work after extraction
+
+---
+
+## Phase 4: Dead Code & Cleanup (LOW)
+
+- [ ] **4.1 Remove Unused Repository Interfaces**
+  - 8 repository interfaces (`IArtistRepository`, `IFormatRepository`, `IGenreRepository`, `ILabelRepository`, `IPackagingRepository`, `ICountryRepository`, `IMusicReleaseRepository`, `IStoreRepository`) defined but never implemented
+  - UnitOfWork uses `Repository<T>` directly
+  - Remove dead interfaces or implement them properly
+  - **Files**: All files in `Interfaces/` that are unused
+
+- [ ] **4.2 Remove or Auto-Generate DatabaseSchemaService**
+  - Entire schema documentation hardcoded as strings — will drift from actual DB
+  - Either auto-generate from DbContext metadata or remove if unused
+  - **Files**: `Services/DatabaseSchemaService.cs`
+
+- [ ] **4.3 Remove Backward Compatibility Service Registrations**
+  - `Program.cs` has old import service registered alongside new one with "remove after testing" comment
+  - Verify new service is stable and remove old registration
+  - **Files**: `Program.cs`
+
+- [ ] **4.4 Standardize StatusCode Constants**
+  - Replace magic numbers (200, 500) with `StatusCodes.Status200OK` etc. across controllers
+  - **Files**: All controllers
+
+**Verification:**
+- Full test suite passes
+- No compilation errors after interface removal
+- Grep for removed interface names to ensure no references remain
+
+---
+
+## Phase 5: Test Gap Coverage (MEDIUM)
+
+- [ ] **5.1 Add Tests for Untested Controllers**
+  - 7 controllers with zero tests: ImportController, ImagesController, KollectionsController, ListsController, NowPlayingController, QueryController, SeedController
+  - **Files**: New test files in `KollectorScum.Tests/Controllers/`
+
+- [ ] **5.2 Add Repository Integration Tests**
+  - Only 1 repository test exists (UserProfileRepositoryTests)
+  - Add tests for `Repository<T>` generic methods — especially `GetPagedAsync`, `GetAsync` with filters and includes
+  - **Files**: New test files in `KollectorScum.Tests/Repositories/`
+
+- [ ] **5.3 Add Tests for New Services from Phase 3**
+  - All services extracted in Phase 3 need unit tests
+  - SecurityHeadersMiddleware needs integration test
+  - **Files**: New test files in `KollectorScum.Tests/Services/`, `KollectorScum.Tests/Middleware/`
+
+**Verification:**
+- Code coverage report exceeds 80%
+- All new tests pass
+
+---
+
+## Phase 6: Documentation & Summary
+
+- [ ] **6.1 Update API Documentation**
+  - Ensure Swagger annotations are complete on all endpoints
+  - Add `[ProducesResponseType]` attributes to any endpoints missing them
+
+- [ ] **6.2 Create Phase Summary Document**
+  - Document all changes made, decisions taken, and before/after metrics
+  - Place in `documentation/` folder per project convention
+
+---
+
+## Further Considerations
+
+These items are not in the current plan scope but should be considered for future work:
+
+- **Structured logging** — Currently console-only. Serilog would enable production observability, log querying, and proper redaction. Recommend adding but could be its own task.
+- **Distributed caching** — In-memory caching (added in Phase 2.9) is fine for single-instance, but if multi-instance deployment is planned, Redis should be considered.
+- **`GetAllAsync()` deprecation** — The base `Repository.GetAllAsync()` materializes all records with no pagination. Recommend deprecating with `[Obsolete]` and migrating callers to `GetPagedAsync()`.
+
+---
+
+## Progress Summary
+
+| Phase | Status | Tasks | Completed |
+|-------|--------|-------|-----------|
+| Phase 1: Security Hardening | ✅ Complete | 4 | 4 |
+| Phase 2: Performance Optimization | In progress | 10 | 3 |
+| Phase 3: Service Layer Refactoring | Not started | 6 | 0 |
+| Phase 4: Dead Code & Cleanup | Not started | 4 | 0 |
+| Phase 5: Test Gap Coverage | Not started | 3 | 0 |
+| Phase 6: Documentation & Summary | Not started | 2 | 0 |
+| **Total** | | **31** | **7** |
+
+### Completed Items
+
+**PR #76:**
+- ✅ 2.2 — Fix N+1 queries in MusicReleaseMapperService (batch `MapToSummaryDtosAsync`)
+- ✅ 2.3 — Remove `Task.Run()` wrappers in MusicReleaseQueryService
+- ✅ 2.9 — Add in-memory caching for lookup endpoints (`ICacheService`, `MemoryCacheService`, `GenericCrudService` caching)
+- 38 new tests added (817 total, 100% passing)
+
+**PR #77:**
+- ✅ 1.1 — Security Response Headers middleware (`SecurityHeadersMiddleware`)
+- ✅ 1.2 — Rate limiting (global + strict auth policies, `429 Too Many Requests`)
+- ✅ 1.3 — Error information disclosure fix (`ErrorHandlingMiddleware` production sanitization)
+- ✅ 1.4 — HTTPS enforcement via HSTS in non-development environments
