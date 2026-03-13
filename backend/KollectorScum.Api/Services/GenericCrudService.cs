@@ -108,44 +108,39 @@ namespace KollectorScum.Api.Services
                     return cached;
                 }
 
-                var pagedResult = await _repository.GetPagedAsync(
-                    pageNumber: page,
-                    pageSize: pageSize,
-                    filter: combinedFilter,
-                    orderBy: orderBy);
-
-                var dtos = pagedResult.Items.Select(entity => MapToDto(entity)).ToList();
-                var result = new PagedResult<TDto>
-                {
-                    Items = dtos,
-                    Page = pagedResult.Page,
-                    PageSize = pagedResult.PageSize,
-                    TotalCount = pagedResult.TotalCount,
-                    TotalPages = pagedResult.TotalPages
-                };
-
+                var result = await FetchPagedResultAsync(page, pageSize, combinedFilter, orderBy);
                 _cacheService.Set(cacheKey, result, CacheExpiry, GetCacheGroup(userId.Value));
                 return result;
             }
-            else
+
+            return await FetchPagedResultAsync(page, pageSize, combinedFilter, orderBy);
+        }
+
+        /// <summary>
+        /// Fetches paged results from the repository and maps them to DTOs.
+        /// </summary>
+        private async Task<PagedResult<TDto>> FetchPagedResultAsync(
+            int page,
+            int pageSize,
+            Expression<Func<TEntity, bool>>? filter,
+            Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy)
+        {
+            var pagedResult = await _repository.GetPagedAsync(
+                pageNumber: page,
+                pageSize: pageSize,
+                filter: filter,
+                orderBy: orderBy);
+
+            var dtos = pagedResult.Items.Select(entity => MapToDto(entity)).ToList();
+
+            return new PagedResult<TDto>
             {
-                var pagedResult = await _repository.GetPagedAsync(
-                    pageNumber: page,
-                    pageSize: pageSize,
-                    filter: combinedFilter,
-                    orderBy: orderBy);
-
-                var dtos = pagedResult.Items.Select(entity => MapToDto(entity)).ToList();
-
-                return new PagedResult<TDto>
-                {
-                    Items = dtos,
-                    Page = pagedResult.Page,
-                    PageSize = pagedResult.PageSize,
-                    TotalCount = pagedResult.TotalCount,
-                    TotalPages = pagedResult.TotalPages
-                };
-            }
+                Items = dtos,
+                Page = pagedResult.Page,
+                PageSize = pagedResult.PageSize,
+                TotalCount = pagedResult.TotalCount,
+                TotalPages = pagedResult.TotalPages
+            };
         }
 
         /// <summary>
