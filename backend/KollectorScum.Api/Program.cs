@@ -94,6 +94,10 @@ builder.Services.AddResponseCaching(options =>
     options.UseCaseSensitivePaths = false;
 });
 
+// Add in-memory cache for lookup data (artists, genres, labels, etc.)
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<ICacheService, MemoryCacheService>();
+
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<KollectorScumDbContext>("database");
 

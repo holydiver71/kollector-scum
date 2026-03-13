@@ -481,5 +481,239 @@ namespace KollectorScum.Tests.Services
         }
 
         #endregion
+
+        #region MapToSummaryDtosAsync Tests
+
+        [Fact]
+        public async Task MapToSummaryDtosAsync_WithEmptyCollection_ReturnsEmptyList()
+        {
+            // Act
+            var result = await _service.MapToSummaryDtosAsync(new List<MusicRelease>());
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Empty(result);
+        }
+
+        [Fact]
+        public async Task MapToSummaryDtosAsync_WithMultipleReleases_MapsAll()
+        {
+            // Arrange
+            var releases = new List<MusicRelease>
+            {
+                new MusicRelease { Id = 1, Title = "Album 1", Artists = "[1]", Genres = "[1]", DateAdded = DateTime.UtcNow, LastModified = DateTime.UtcNow },
+                new MusicRelease { Id = 2, Title = "Album 2", Artists = "[2]", Genres = "[2]", DateAdded = DateTime.UtcNow, LastModified = DateTime.UtcNow }
+            };
+
+            _mockArtistRepo.Setup(r => r.GetAsync(
+                It.IsAny<Expression<Func<Artist, bool>>>(),
+                It.IsAny<Func<IQueryable<Artist>, IOrderedQueryable<Artist>>>(),
+                It.IsAny<string>()))
+                .ReturnsAsync(new List<Artist>
+                {
+                    new Artist { Id = 1, Name = "Artist 1" },
+                    new Artist { Id = 2, Name = "Artist 2" }
+                });
+
+            _mockGenreRepo.Setup(r => r.GetAsync(
+                It.IsAny<Expression<Func<Genre, bool>>>(),
+                It.IsAny<Func<IQueryable<Genre>, IOrderedQueryable<Genre>>>(),
+                It.IsAny<string>()))
+                .ReturnsAsync(new List<Genre>
+                {
+                    new Genre { Id = 1, Name = "Rock" },
+                    new Genre { Id = 2, Name = "Pop" }
+                });
+
+            // Act
+            var result = await _service.MapToSummaryDtosAsync(releases);
+
+            // Assert
+            Assert.Equal(2, result.Count);
+            Assert.Equal("Album 1", result[0].Title);
+            Assert.Equal("Album 2", result[1].Title);
+            Assert.Contains("Artist 1", result[0].ArtistNames!);
+            Assert.Contains("Artist 2", result[1].ArtistNames!);
+            Assert.Contains("Rock", result[0].GenreNames!);
+            Assert.Contains("Pop", result[1].GenreNames!);
+        }
+
+        [Fact]
+        public async Task MapToSummaryDtosAsync_BatchLoadsArtistsInSingleQuery()
+        {
+            // Arrange
+            var releases = new List<MusicRelease>
+            {
+                new MusicRelease { Id = 1, Title = "Album 1", Artists = "[1,2]", DateAdded = DateTime.UtcNow, LastModified = DateTime.UtcNow },
+                new MusicRelease { Id = 2, Title = "Album 2", Artists = "[2,3]", DateAdded = DateTime.UtcNow, LastModified = DateTime.UtcNow }
+            };
+
+            _mockArtistRepo.Setup(r => r.GetAsync(
+                It.IsAny<Expression<Func<Artist, bool>>>(),
+                It.IsAny<Func<IQueryable<Artist>, IOrderedQueryable<Artist>>>(),
+                It.IsAny<string>()))
+                .ReturnsAsync(new List<Artist>
+                {
+                    new Artist { Id = 1, Name = "Artist 1" },
+                    new Artist { Id = 2, Name = "Artist 2" },
+                    new Artist { Id = 3, Name = "Artist 3" }
+                });
+
+            // Act
+            var result = await _service.MapToSummaryDtosAsync(releases);
+
+            // Assert - verify batch query was called exactly once (not once per release)
+            _mockArtistRepo.Verify(r => r.GetAsync(
+                It.IsAny<Expression<Func<Artist, bool>>>(),
+                It.IsAny<Func<IQueryable<Artist>, IOrderedQueryable<Artist>>>(),
+                It.IsAny<string>()),
+                Times.Once,
+                "Expected artist repository to be called only once for batch loading");
+
+            Assert.Equal(2, result.Count);
+        }
+
+        [Fact]
+        public async Task MapToSummaryDtosAsync_BatchLoadsGenresInSingleQuery()
+        {
+            // Arrange
+            var releases = new List<MusicRelease>
+            {
+                new MusicRelease { Id = 1, Title = "Album 1", Genres = "[1,2]", DateAdded = DateTime.UtcNow, LastModified = DateTime.UtcNow },
+                new MusicRelease { Id = 2, Title = "Album 2", Genres = "[2,3]", DateAdded = DateTime.UtcNow, LastModified = DateTime.UtcNow }
+            };
+
+            _mockGenreRepo.Setup(r => r.GetAsync(
+                It.IsAny<Expression<Func<Genre, bool>>>(),
+                It.IsAny<Func<IQueryable<Genre>, IOrderedQueryable<Genre>>>(),
+                It.IsAny<string>()))
+                .ReturnsAsync(new List<Genre>
+                {
+                    new Genre { Id = 1, Name = "Rock" },
+                    new Genre { Id = 2, Name = "Pop" },
+                    new Genre { Id = 3, Name = "Jazz" }
+                });
+
+            // Act
+            var result = await _service.MapToSummaryDtosAsync(releases);
+
+            // Assert - verify batch query was called exactly once (not once per release)
+            _mockGenreRepo.Verify(r => r.GetAsync(
+                It.IsAny<Expression<Func<Genre, bool>>>(),
+                It.IsAny<Func<IQueryable<Genre>, IOrderedQueryable<Genre>>>(),
+                It.IsAny<string>()),
+                Times.Once,
+                "Expected genre repository to be called only once for batch loading");
+        }
+
+        [Fact]
+        public async Task MapToSummaryDtosAsync_WithNullArtists_HandlesGracefully()
+        {
+            // Arrange
+            var releases = new List<MusicRelease>
+            {
+                new MusicRelease { Id = 1, Title = "Album 1", Artists = null, Genres = null, DateAdded = DateTime.UtcNow, LastModified = DateTime.UtcNow }
+            };
+
+            // Act
+            var result = await _service.MapToSummaryDtosAsync(releases);
+
+            // Assert
+            Assert.Single(result);
+            Assert.Null(result[0].ArtistNames);
+            Assert.Null(result[0].GenreNames);
+
+            // Verify no repository calls were made (no IDs to load)
+            _mockArtistRepo.Verify(r => r.GetAsync(
+                It.IsAny<Expression<Func<Artist, bool>>>(),
+                It.IsAny<Func<IQueryable<Artist>, IOrderedQueryable<Artist>>>(),
+                It.IsAny<string>()),
+                Times.Never);
+        }
+
+        [Fact]
+        public async Task MapToSummaryDtosAsync_WithSharedArtistIds_DeduplicatesIds()
+        {
+            // Arrange - two releases share the same artist
+            var releases = new List<MusicRelease>
+            {
+                new MusicRelease { Id = 1, Title = "Album 1", Artists = "[1]", DateAdded = DateTime.UtcNow, LastModified = DateTime.UtcNow },
+                new MusicRelease { Id = 2, Title = "Album 2", Artists = "[1]", DateAdded = DateTime.UtcNow, LastModified = DateTime.UtcNow }
+            };
+
+            _mockArtistRepo.Setup(r => r.GetAsync(
+                It.IsAny<Expression<Func<Artist, bool>>>(),
+                It.IsAny<Func<IQueryable<Artist>, IOrderedQueryable<Artist>>>(),
+                It.IsAny<string>()))
+                .ReturnsAsync(new List<Artist> { new Artist { Id = 1, Name = "Shared Artist" } });
+
+            // Act
+            var result = await _service.MapToSummaryDtosAsync(releases);
+
+            // Assert - repository should be called once even though both releases have the same artist
+            _mockArtistRepo.Verify(r => r.GetAsync(
+                It.IsAny<Expression<Func<Artist, bool>>>(),
+                It.IsAny<Func<IQueryable<Artist>, IOrderedQueryable<Artist>>>(),
+                It.IsAny<string>()),
+                Times.Once);
+
+            Assert.Contains("Shared Artist", result[0].ArtistNames!);
+            Assert.Contains("Shared Artist", result[1].ArtistNames!);
+        }
+
+        [Fact]
+        public async Task MapToSummaryDtosAsync_WithImages_MapsCoverImageUrl()
+        {
+            // Arrange
+            var images = new MusicReleaseImageDto { CoverFront = "cover.jpg", Thumbnail = "thumb.jpg" };
+            var releases = new List<MusicRelease>
+            {
+                new MusicRelease
+                {
+                    Id = 1,
+                    Title = "Album 1",
+                    Images = System.Text.Json.JsonSerializer.Serialize(images),
+                    DateAdded = DateTime.UtcNow,
+                    LastModified = DateTime.UtcNow
+                }
+            };
+
+            // Act
+            var result = await _service.MapToSummaryDtosAsync(releases);
+
+            // Assert
+            Assert.Single(result);
+            Assert.Equal("cover.jpg", result[0].CoverImageUrl);
+        }
+
+        [Fact]
+        public async Task MapToSummaryDtosAsync_WithRelatedEntities_MapsLabelFormatCountry()
+        {
+            // Arrange
+            var releases = new List<MusicRelease>
+            {
+                new MusicRelease
+                {
+                    Id = 1,
+                    Title = "Album 1",
+                    Label = new Label { Id = 1, Name = "Test Label" },
+                    Format = new Format { Id = 1, Name = "CD" },
+                    Country = new Country { Id = 1, Name = "UK" },
+                    DateAdded = DateTime.UtcNow,
+                    LastModified = DateTime.UtcNow
+                }
+            };
+
+            // Act
+            var result = await _service.MapToSummaryDtosAsync(releases);
+
+            // Assert
+            Assert.Single(result);
+            Assert.Equal("Test Label", result[0].LabelName);
+            Assert.Equal("CD", result[0].FormatName);
+            Assert.Equal("UK", result[0].CountryName);
+        }
+
+        #endregion
     }
 }
