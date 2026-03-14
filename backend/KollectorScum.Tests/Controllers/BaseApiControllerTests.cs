@@ -49,7 +49,8 @@ namespace KollectorScum.Tests.Controllers
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal("Invalid argument", badRequestResult.Value);
+            var errorResponse = Assert.IsType<KollectorScum.Api.DTOs.ApiErrorResponse>(badRequestResult.Value);
+            Assert.Equal("Invalid argument", errorResponse.Message);
         }
 
         [Fact]
@@ -63,7 +64,8 @@ namespace KollectorScum.Tests.Controllers
 
             // Assert
             var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
-            Assert.Equal("Entity not found", notFoundResult.Value);
+            var errorResponse = Assert.IsType<KollectorScum.Api.DTOs.ApiErrorResponse>(notFoundResult.Value);
+            Assert.Equal("Entity not found", errorResponse.Message);
         }
 
         [Fact]
@@ -77,7 +79,8 @@ namespace KollectorScum.Tests.Controllers
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Equal("Invalid operation", badRequestResult.Value);
+            var errorResponse = Assert.IsType<KollectorScum.Api.DTOs.ApiErrorResponse>(badRequestResult.Value);
+            Assert.Equal("Invalid operation", errorResponse.Message);
         }
 
         [Fact]
@@ -92,7 +95,9 @@ namespace KollectorScum.Tests.Controllers
             // Assert
             var statusCodeResult = Assert.IsType<ObjectResult>(result);
             Assert.Equal(500, statusCodeResult.StatusCode);
-            Assert.Equal("An error occurred while processing your request", statusCodeResult.Value);
+            var errorResponse = Assert.IsType<KollectorScum.Api.DTOs.ApiErrorResponse>(statusCodeResult.Value);
+            Assert.Equal("An error occurred while processing your request", errorResponse.Message);
+            Assert.Equal("INTERNAL_ERROR", errorResponse.ErrorCode);
         }
 
         [Fact]
