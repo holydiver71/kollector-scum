@@ -88,6 +88,13 @@ namespace KollectorScum.Api.Services
             var tableErrors = ValidateTableNames(sql);
             errors.AddRange(tableErrors);
 
+            // SELECT queries must have a LIMIT clause
+            if (trimmedSql.StartsWith("SELECT", StringComparison.OrdinalIgnoreCase) &&
+                !trimmedSql.Contains("LIMIT", StringComparison.OrdinalIgnoreCase))
+            {
+                errors.Add("SELECT queries must include a LIMIT clause");
+            }
+
             if (errors.Count > 0)
             {
                 return SqlValidationResult.Failure(errors);
@@ -119,8 +126,36 @@ namespace KollectorScum.Api.Services
                 sanitized = sanitized[..maxLength];
             }
 
+            // Ensure LIMIT is present and does not exceed 100
+            if (!sanitized.Contains("LIMIT", StringComparison.OrdinalIgnoreCase))
+            {
+                sanitized += " LIMIT 100";
+            }
+            else
+            {
+                sanitized = ClampLimitClause(sanitized, 100);
+            }
+
             return sanitized;
         }
+
+        /// <summary>
+        /// Clamps any LIMIT value in the SQL query to the specified maximum.
+        /// </summary>
+        private static string ClampLimitClause(string sql, int maxLimit)
+        {
+            return LimitClauseRegex().Replace(sql, match =>
+            {
+                if (int.TryParse(match.Groups[1].Value, out var limitValue) && limitValue > maxLimit)
+                {
+                    return $"LIMIT {maxLimit}";
+                }
+                return match.Value;
+            });
+        }
+
+        [System.Text.RegularExpressions.GeneratedRegex(@"\bLIMIT\s+(\d+)\b", System.Text.RegularExpressions.RegexOptions.IgnoreCase)]
+        private static partial System.Text.RegularExpressions.Regex LimitClauseRegex();
 
         private static bool ContainsMultipleStatements(string sql)
         {

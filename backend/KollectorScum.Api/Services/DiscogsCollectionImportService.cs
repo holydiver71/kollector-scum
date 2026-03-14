@@ -1,7 +1,5 @@
 using System.Diagnostics;
-using System.Text;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using KollectorScum.Api.DTOs;
 using KollectorScum.Api.Interfaces;
 using KollectorScum.Api.Models;
@@ -16,10 +14,7 @@ namespace KollectorScum.Api.Services
         private readonly IDiscogsService _discogsService;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<DiscogsCollectionImportService> _logger;
-        private readonly IConfiguration _configuration;
-        private readonly HttpClient _httpClient;
-        private readonly IStorageService _storageService;
-        private readonly string _bucketName;
+        private readonly IDiscogsImageService _imageService;
 
         // Cache for lookups created during import to avoid duplicates
         private Dictionary<string, int> _artistCache = new();
@@ -28,29 +23,16 @@ namespace KollectorScum.Api.Services
         private Dictionary<string, int> _labelCache = new();
         private Dictionary<string, int> _countryCache = new();
 
-        // Constants for filename sanitization
-        private const int MaxFilenameLength = 200;
-        
-        // TODO: Remove this limit after testing - currently limiting import to 50 albums for testing
-        private const int TestImportLimit = 50;
-
         public DiscogsCollectionImportService(
             IDiscogsService discogsService,
             IUnitOfWork unitOfWork,
             ILogger<DiscogsCollectionImportService> logger,
-            IConfiguration configuration,
-            HttpClient httpClient,
-            IStorageService storageService)
+            IDiscogsImageService imageService)
         {
             _discogsService = discogsService ?? throw new ArgumentNullException(nameof(discogsService));
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-            _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-            _storageService = storageService ?? throw new ArgumentNullException(nameof(storageService));
-            
-            // Get bucket name from configuration
-            _bucketName = _configuration["R2:BucketName"] ?? _configuration["R2__BucketName"] ?? "cover-art-staging";
+            _imageService = imageService ?? throw new ArgumentNullException(nameof(imageService));
         }
 
         /// <summary>
@@ -88,37 +70,20 @@ namespace KollectorScum.Api.Services
                 // Process first page
                 await ProcessReleasesAsync(firstPage.Releases, userId, result);
 
-                // TODO: Remove this check after testing
-                if (result.ImportedReleases >= TestImportLimit)
+                // Process remaining pages
+                var totalPages = firstPage.Pagination.Pages;
+                for (int page = 2; page <= totalPages; page++)
                 {
-                    _logger.LogWarning("Import limited to {Limit} albums for testing purposes", TestImportLimit);
-                    result.Errors.Add($"Import limited to {TestImportLimit} albums for testing");
-                }
-                else
-                {
-                    // Process remaining pages
-                    var totalPages = firstPage.Pagination.Pages;
-                    for (int page = 2; page <= totalPages; page++)
+                    _logger.LogInformation("Processing page {Page} of {TotalPages}", page, totalPages);
+                    
+                    var pageData = await _discogsService.GetUserCollectionAsync(username, page, 100);
+                    if (pageData?.Releases != null)
                     {
-                        _logger.LogInformation("Processing page {Page} of {TotalPages}", page, totalPages);
-                        
-                        var pageData = await _discogsService.GetUserCollectionAsync(username, page, 100);
-                        if (pageData?.Releases != null)
-                        {
-                            await ProcessReleasesAsync(pageData.Releases, userId, result);
-                        }
-
-                        // TODO: Remove this check after testing
-                        if (result.ImportedReleases >= TestImportLimit)
-                        {
-                            _logger.LogWarning("Import limit of {Limit} albums reached", TestImportLimit);
-                            result.Errors.Add($"Import limited to {TestImportLimit} albums for testing");
-                            break;
-                        }
-
-                        // Add small delay to respect rate limits
-                        await Task.Delay(1000);
+                        await ProcessReleasesAsync(pageData.Releases, userId, result);
                     }
+
+                    // Add small delay to respect rate limits
+                    await Task.Delay(1000);
                 }
 
                 // Import is only successful if at least one release was imported
@@ -159,13 +124,6 @@ namespace KollectorScum.Api.Services
             
             foreach (var release in releases)
             {
-                // TODO: Remove this check after testing
-                if (result.ImportedReleases >= TestImportLimit)
-                {
-                    _logger.LogWarning("Import limit of {Limit} albums reached, stopping", TestImportLimit);
-                    return;
-                }
-                
                 try
                 {
                     if (release == null)
@@ -260,7 +218,10 @@ namespace KollectorScum.Api.Services
                 string? coverImageFilename = null;
                 if (!string.IsNullOrEmpty(basicInfo.CoverImage))
                 {
-                    coverImageFilename = await DownloadCoverArtAsync(basicInfo.CoverImage, basicInfo, userId);
+                    var artist = basicInfo.Artists?.FirstOrDefault()?.Name ?? "Unknown";
+                    var year = basicInfo.Year?.ToString();
+                    coverImageFilename = await _imageService.DownloadAndStoreCoverArtAsync(
+                        basicInfo.CoverImage, artist, basicInfo.Title ?? "Unknown", year, userId);
                 }
 
                 // Extract notes
@@ -289,7 +250,7 @@ namespace KollectorScum.Api.Services
                 {
                     UserId = userId,
                     DiscogsId = basicInfo.Id,
-                    Title = basicInfo.Title,
+                    Title = basicInfo.Title ?? string.Empty,
                     ReleaseYear = releaseYear,
                     FormatId = formatId,
                     LabelId = labelId,
@@ -312,7 +273,7 @@ namespace KollectorScum.Api.Services
                 if (fullRelease != null && fullRelease.Tracklist != null && fullRelease.Tracklist.Count > 0)
                 {
                     _logger.LogInformation("Building tracklist for {Title} - {TrackCount} tracks found", basicInfo.Title, fullRelease.Tracklist.Count);
-                    var media = BuildMediaFromTracklist(fullRelease.Tracklist, basicInfo.Title, formatId, artistIds, genreIds, releaseYear);
+                    var media = BuildMediaFromTracklist(fullRelease.Tracklist, basicInfo.Title ?? string.Empty, formatId, artistIds, genreIds, releaseYear);
                     if (media != null)
                     {
                         musicRelease.Media = JsonSerializer.Serialize(media);
@@ -612,78 +573,6 @@ namespace KollectorScum.Api.Services
             }
 
             return genreIds;
-        }
-
-        private async Task<string?> DownloadCoverArtAsync(string imageUrl, DiscogsBasicInfoDto basicInfo, Guid userId)
-        {
-            try
-            {
-                // Sanitize filename: {Artist}-{Title}-{Year}.jpg
-                var artist = basicInfo.Artists?.FirstOrDefault()?.Name ?? "Unknown";
-                var title = basicInfo.Title ?? "Unknown";
-                var year = basicInfo.Year?.ToString() ?? "Unknown";
-                
-                var filename = SanitizeFilename($"{artist}-{title}-{year}.jpg");
-
-                // Download image from Discogs
-                _logger.LogDebug("Downloading cover art from: {Url}", imageUrl);
-                var response = await _httpClient.GetAsync(imageUrl);
-                
-                if (response.IsSuccessStatusCode)
-                {
-                    var imageBytes = await response.Content.ReadAsByteArrayAsync();
-                    var contentType = response.Content.Headers.ContentType?.MediaType ?? "image/jpeg";
-                    
-                    // Upload to R2 storage
-                    using var ms = new MemoryStream(imageBytes);
-                    var publicUrl = await _storageService.UploadFileAsync(_bucketName, userId.ToString(), filename, ms, contentType);
-                    
-                    _logger.LogDebug("Uploaded cover art to R2: {Filename} -> {Url}", filename, publicUrl);
-                    
-                    // Return just the filename - the mapper will resolve the full URL
-                    return filename;
-                }
-                else
-                {
-                    _logger.LogWarning("Failed to download cover art from {Url}: {StatusCode}", 
-                        imageUrl, response.StatusCode);
-                    return null;
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error downloading/uploading cover art from {Url}", imageUrl);
-                return null;
-            }
-        }
-
-        private string SanitizeFilename(string filename)
-        {
-            // Remove invalid characters
-            var invalidChars = Path.GetInvalidFileNameChars();
-            var sanitized = new StringBuilder();
-            
-            foreach (var c in filename)
-            {
-                if (!invalidChars.Contains(c))
-                {
-                    sanitized.Append(c);
-                }
-                else
-                {
-                    sanitized.Append('_');
-                }
-            }
-
-            // Limit length
-            var result = sanitized.ToString();
-            if (result.Length > MaxFilenameLength)
-            {
-                var extension = Path.GetExtension(result);
-                result = result.Substring(0, MaxFilenameLength - extension.Length) + extension;
-            }
-
-            return result;
         }
     }
 }
