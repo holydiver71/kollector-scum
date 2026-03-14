@@ -16,6 +16,10 @@ export interface ConfirmDialogProps {
  * Reusable confirmation dialog component with accessibility features
  * Supports keyboard navigation (Tab, Enter, Escape)
  */
+
+/** Opacity applied to body/message text to visually distinguish it from heading text */
+const DIALOG_MESSAGE_OPACITY = 0.8;
+
 export function ConfirmDialog({
   isOpen,
   title,
@@ -74,14 +78,19 @@ export function ConfirmDialog({
     >
       <div
         ref={dialogRef}
-        className="bg-gradient-to-br from-red-900 via-red-950 to-black rounded-lg border border-white/10 shadow-xl max-w-md w-full p-6 transform transition-all"
+        className="rounded-lg shadow-xl max-w-md w-full p-6 transform transition-all border"
+        style={{
+          backgroundColor: "var(--theme-card-bg)",
+          borderColor: "var(--theme-card-border)",
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Dialog Header */}
         <div className="mb-4">
           <h2
             id="dialog-title"
-            className="text-xl font-semibold text-white"
+            className="text-xl font-semibold"
+            style={{ color: "var(--theme-card-text)" }}
           >
             {title}
           </h2>
@@ -89,7 +98,11 @@ export function ConfirmDialog({
 
         {/* Dialog Content */}
         <div className="mb-6">
-          <p id="dialog-description" className="text-gray-300">
+          <p
+            id="dialog-description"
+            className="text-sm"
+            style={{ color: "var(--theme-card-text)", opacity: DIALOG_MESSAGE_OPACITY }}
+          >
             {message}
           </p>
         </div>
@@ -100,18 +113,31 @@ export function ConfirmDialog({
             ref={cancelButtonRef}
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 text-sm font-medium text-white bg-white/10 border border-white/20 rounded-md hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            className="px-4 py-2 text-sm font-medium rounded-md border focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-opacity hover:opacity-70"
+            style={{
+              color: "var(--theme-card-text)",
+              borderColor: "var(--theme-card-border)",
+              backgroundColor: "transparent",
+            }}
           >
             {cancelLabel}
           </button>
           <button
             type="button"
             onClick={onConfirm}
-            className={`px-4 py-2 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+            className={`px-4 py-2 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors ${
               isDangerous
-                ? "bg-red-600 hover:bg-red-700 focus:ring-red-500 shadow-lg shadow-red-900/50"
-                : "bg-blue-600 hover:bg-blue-700 focus:ring-blue-500"
+                ? "bg-red-600 hover:bg-red-700 focus:ring-red-500 shadow-lg"
+                : "focus:ring-2"
             }`}
+            style={
+              !isDangerous
+                ? {
+                    backgroundColor: "var(--theme-accent)",
+                    color: "var(--theme-foreground)",
+                  }
+                : undefined
+            }
           >
             {confirmLabel}
           </button>
