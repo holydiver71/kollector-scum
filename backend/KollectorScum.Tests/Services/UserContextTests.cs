@@ -111,9 +111,9 @@ namespace KollectorScum.Tests.Services
         }
 
         [Fact]
-        public void GetActingUserId_AdminWithQueryParam_ReturnsTargetUserId()
+        public void GetActingUserId_AdminWithQueryParam_ReturnsOwnIdNotQueryParam()
         {
-            // Arrange
+            // Arrange - query param impersonation has been removed for security
             var ownId = Guid.NewGuid();
             var targetId = Guid.NewGuid();
             var claims = new[]
@@ -121,14 +121,14 @@ namespace KollectorScum.Tests.Services
                 new Claim(ClaimTypes.NameIdentifier, ownId.ToString()),
                 new Claim("IsAdmin", "True")
             };
-            // No header, but userId query param present
+            // Only userId query param present (no header or cookie) — should be ignored
             var sut = CreateContext(claims, userIdQuery: targetId.ToString());
 
             // Act
             var result = sut.GetActingUserId();
 
-            // Assert
-            Assert.Equal(targetId, result);
+            // Assert — query param impersonation is not supported; returns own ID
+            Assert.Equal(ownId, result);
         }
 
         [Fact]
@@ -148,7 +148,7 @@ namespace KollectorScum.Tests.Services
             // Act
             var result = sut.GetActingUserId();
 
-            // Assert
+            // Assert — header should win; query param is ignored
             Assert.Equal(headerTargetId, result);
         }
 

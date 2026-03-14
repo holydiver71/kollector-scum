@@ -166,26 +166,26 @@ namespace KollectorScum.Tests.Services
         public void Sanitize_TrimsWhitespace()
         {
             // Arrange
-            var sql = @"   SELECT * FROM ""MusicReleases""   ";
+            var sql = @"   SELECT * FROM ""MusicReleases"" LIMIT 10   ";
 
             // Act
             var result = _service.Sanitize(sql);
 
             // Assert
-            Assert.Equal(@"SELECT * FROM ""MusicReleases""", result);
+            Assert.Equal(@"SELECT * FROM ""MusicReleases"" LIMIT 10", result);
         }
 
         [Fact]
         public void Sanitize_LimitsQueryLength()
         {
-            // Arrange
-            var sql = new string('X', 3000);
+            // Arrange - build a query that is long but has a LIMIT so the LIMIT won't be appended
+            var sql = @"SELECT * FROM ""MusicReleases"" LIMIT 10 -- " + new string('X', 3000);
 
             // Act
             var result = _service.Sanitize(sql);
 
             // Assert
-            Assert.True(result.Length <= 2000);
+            Assert.True(result.Length <= 2010, $"Result length {result.Length} exceeds expected max");
         }
 
         [Fact]

@@ -25,6 +25,7 @@ namespace KollectorScum.Api.Controllers
         private readonly IHostEnvironment _env;
         private readonly ILogger<AuthController> _logger;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IUserAuthenticationService _userAuthenticationService;
 
         public AuthController(
             IGoogleTokenValidator googleTokenValidator,
@@ -36,7 +37,8 @@ namespace KollectorScum.Api.Controllers
             IConfiguration configuration,
             IHostEnvironment env,
             ILogger<AuthController> logger,
-            IHttpClientFactory httpClientFactory)
+            IHttpClientFactory httpClientFactory,
+            IUserAuthenticationService userAuthenticationService)
         {
             _googleTokenValidator = googleTokenValidator;
             _userRepository = userRepository;
@@ -48,6 +50,7 @@ namespace KollectorScum.Api.Controllers
             _env = env;
             _logger = logger;
             _httpClientFactory = httpClientFactory;
+            _userAuthenticationService = userAuthenticationService;
         }
 
         /// <summary>
@@ -68,77 +71,30 @@ namespace KollectorScum.Api.Controllers
                 // Validate the Google ID token
                 var (googleSub, email, displayName) = await _googleTokenValidator.ValidateTokenAsync(request.IdToken);
 
-                // Check if user already exists
-                var existingUser = await _userRepository.FindByGoogleSubAsync(googleSub);
-                
-                // If user doesn't exist, check if they're invited
-                if (existingUser == null)
+                ApplicationUser user;
+                try
                 {
-                    // Check if email is invited
-                    var invitation = await _userInvitationRepository.FindByEmailAsync(email);
-                    if (invitation == null)
-                    {
-                        _logger.LogWarning("Access denied for uninvited user: {Email}", email);
-                        return StatusCode(StatusCodes.Status403Forbidden, new { message = "Access is by invitation only. Please contact the administrator for access." });
-                    }
-
-                    // Also check if user was previously registered but then deactivated
-                    // (their account was deleted but they're trying to sign in again)
-                    var userByEmail = await _userRepository.FindByEmailAsync(email);
-                    if (userByEmail == null && invitation.IsUsed)
-                    {
-                        _logger.LogWarning("Access denied for deactivated user: {Email}", email);
-                        return StatusCode(StatusCodes.Status403Forbidden, new { message = "Your access has been deactivated. Please contact the administrator." });
-                    }
-
-                    // Create new user
-                    _logger.LogInformation("Creating new user for invited email {Email}", email);
-                    existingUser = new ApplicationUser
-                    {
-                        Id = Guid.NewGuid(),
-                        GoogleSub = googleSub,
-                        Email = email,
-                        DisplayName = displayName
-                    };
-                    existingUser = await _userRepository.CreateAsync(existingUser);
-
-                    // Create a default user profile
-                    var profile = new UserProfile
-                    {
-                        UserId = existingUser.Id,
-                        SelectedKollectionId = null
-                    };
-                    await _userProfileRepository.CreateAsync(profile);
-
-                    // Mark invitation as used
-                    invitation.IsUsed = true;
-                    invitation.UsedAt = DateTime.UtcNow;
-                    await _userInvitationRepository.UpdateAsync(invitation);
+                    user = await _userAuthenticationService.FindOrCreateUserFromGoogleAsync(googleSub, email, displayName);
                 }
-                else
+                catch (UnauthorizedAccessException ex)
                 {
-                    // Update user info if changed
-                    if (existingUser.Email != email || existingUser.DisplayName != displayName)
-                    {
-                        existingUser.Email = email;
-                        existingUser.DisplayName = displayName;
-                        await _userRepository.UpdateAsync(existingUser);
-                    }
+                    _logger.LogWarning("Access denied during Google auth: {Message}", ex.Message);
+                    return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
                 }
 
                 // Generate JWT token
-                var token = _tokenService.GenerateToken(existingUser);
+                var token = _tokenService.GenerateToken(user);
 
                 // Get user profile
-                var userProfile = await _userProfileRepository.GetByUserIdAsync(existingUser.Id);
+                var userProfile = await _userProfileRepository.GetByUserIdAsync(user.Id);
 
                 var profileDto = new UserProfileDto
                 {
-                    UserId = existingUser.Id,
-                    Email = existingUser.Email,
-                    DisplayName = existingUser.DisplayName,
+                    UserId = user.Id,
+                    Email = user.Email,
+                    DisplayName = user.DisplayName,
                     SelectedKollectionId = userProfile?.SelectedKollectionId,
-                    IsAdmin = existingUser.IsAdmin
+                    IsAdmin = user.IsAdmin
                 };
 
                 return Ok(new AuthResponse
@@ -217,53 +173,16 @@ namespace KollectorScum.Api.Controllers
                 var (googleSub, email, displayName) = await _googleTokenValidator.ValidateTokenAsync(idToken);
 
                 // Check / create user (same logic as POST /api/auth/google)
-                var existingUser = await _userRepository.FindByGoogleSubAsync(googleSub);
-
-                if (existingUser == null)
+                ApplicationUser existingUser;
+                try
                 {
-                    var invitation = await _userInvitationRepository.FindByEmailAsync(email);
-                    if (invitation == null)
-                    {
-                        _logger.LogWarning("Access denied for uninvited user: {Email}", email);
-                        return Redirect($"{frontendOrigin}/?error=not_invited");
-                    }
-
-                    var userByEmail = await _userRepository.FindByEmailAsync(email);
-                    if (userByEmail == null && invitation.IsUsed)
-                    {
-                        _logger.LogWarning("Access denied for deactivated user: {Email}", email);
-                        return Redirect($"{frontendOrigin}/?error=access_deactivated");
-                    }
-
-                    _logger.LogInformation("Creating new user for invited email {Email}", email);
-                    existingUser = new ApplicationUser
-                    {
-                        Id = Guid.NewGuid(),
-                        GoogleSub = googleSub,
-                        Email = email,
-                        DisplayName = displayName
-                    };
-                    existingUser = await _userRepository.CreateAsync(existingUser);
-
-                    var profile = new UserProfile
-                    {
-                        UserId = existingUser.Id,
-                        SelectedKollectionId = null
-                    };
-                    await _userProfileRepository.CreateAsync(profile);
-
-                    invitation.IsUsed = true;
-                    invitation.UsedAt = DateTime.UtcNow;
-                    await _userInvitationRepository.UpdateAsync(invitation);
+                    existingUser = await _userAuthenticationService.FindOrCreateUserFromGoogleAsync(googleSub, email, displayName);
                 }
-                else
+                catch (UnauthorizedAccessException ex)
                 {
-                    if (existingUser.Email != email || existingUser.DisplayName != displayName)
-                    {
-                        existingUser.Email = email;
-                        existingUser.DisplayName = displayName;
-                        await _userRepository.UpdateAsync(existingUser);
-                    }
+                    _logger.LogWarning("Access denied in OAuth callback: {Message}", ex.Message);
+                    var errorParam = ex.Message.Contains("deactivated") ? "access_deactivated" : "not_invited";
+                    return Redirect($"{frontendOrigin}/?error={errorParam}");
                 }
 
                 var jwt = _tokenService.GenerateToken(existingUser);
@@ -421,38 +340,15 @@ namespace KollectorScum.Api.Controllers
                 }
 
                 // Find or create the user
-                var user = await _userRepository.FindByEmailAsync(email);
-                if (user == null)
+                ApplicationUser user;
+                try
                 {
-                    // Check the invitation is still valid before creating the user
-                    var invitation = await _userInvitationRepository.FindByEmailAsync(email);
-                    if (invitation == null)
-                    {
-                        _logger.LogWarning("Magic link verification denied: no invitation for {Email}", email);
-                        return StatusCode(StatusCodes.Status403Forbidden, new { message = "Access is by invitation only. Please contact the administrator." });
-                    }
-
-                    _logger.LogInformation("Creating new user via magic link for {Email}", email);
-                    user = new ApplicationUser
-                    {
-                        Id = Guid.NewGuid(),
-                        GoogleSub = null,
-                        Email = email,
-                        DisplayName = email
-                    };
-                    user = await _userRepository.CreateAsync(user);
-
-                    var profile = new UserProfile
-                    {
-                        UserId = user.Id,
-                        SelectedKollectionId = null
-                    };
-                    await _userProfileRepository.CreateAsync(profile);
-
-                    // Mark invitation as used
-                    invitation.IsUsed = true;
-                    invitation.UsedAt = DateTime.UtcNow;
-                    await _userInvitationRepository.UpdateAsync(invitation);
+                    user = await _userAuthenticationService.FindOrCreateUserFromEmailAsync(email);
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    _logger.LogWarning("Access denied during magic link verify: {Message}", ex.Message);
+                    return StatusCode(StatusCodes.Status403Forbidden, new { message = ex.Message });
                 }
 
                 // Mark the token as used (single-use enforcement)

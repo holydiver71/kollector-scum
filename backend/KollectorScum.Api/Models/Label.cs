@@ -5,7 +5,7 @@ namespace KollectorScum.Api.Models
     /// <summary>
     /// Represents a record label entity for music releases
     /// </summary>
-    public class Label : IUserOwnedEntity
+    public class Label : INamedUserOwnedEntity
     {
         /// <summary>
         /// Gets or sets the unique identifier for the label

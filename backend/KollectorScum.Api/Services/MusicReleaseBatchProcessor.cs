@@ -66,8 +66,9 @@ namespace KollectorScum.Api.Services
                 await _unitOfWork.CommitTransactionAsync();
                 return importedCount;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Transaction failed during batch import");
                 await _unitOfWork.RollbackTransactionAsync();
                 throw;
             }
@@ -122,8 +123,9 @@ namespace KollectorScum.Api.Services
                     updatedCount, skippedCount, notFoundCount, releases.Count);
                 return updatedCount;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Transaction failed during UPC batch update");
                 await _unitOfWork.RollbackTransactionAsync();
                 throw;
             }
