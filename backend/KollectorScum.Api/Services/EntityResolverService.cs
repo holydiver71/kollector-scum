@@ -50,7 +50,7 @@ namespace KollectorScum.Api.Services
             CreatedEntitiesDto createdEntities)
         {
             var userId = RequireUserId();
-            var resolvedIds = new List<int>(artistIds ?? (IEnumerable<int>)Array.Empty<int>());
+            var resolvedIds = artistIds?.ToList() ?? new List<int>();
 
             if (artistNames != null)
             {
@@ -80,7 +80,7 @@ namespace KollectorScum.Api.Services
             CreatedEntitiesDto createdEntities)
         {
             var userId = RequireUserId();
-            var resolvedIds = new List<int>(genreIds ?? (IEnumerable<int>)Array.Empty<int>());
+            var resolvedIds = genreIds?.ToList() ?? new List<int>();
 
             if (genreNames != null)
             {
