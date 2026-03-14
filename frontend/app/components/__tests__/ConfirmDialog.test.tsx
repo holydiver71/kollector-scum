@@ -62,7 +62,9 @@ describe('ConfirmDialog', () => {
       render(<ConfirmDialog {...defaultProps} isDangerous={false} />);
       
       const confirmButton = screen.getByRole('button', { name: /confirm/i });
-      expect(confirmButton).toHaveClass('bg-blue-600');
+      // Non-dangerous confirm button uses theme accent via inline style, not a hardcoded class
+      expect(confirmButton).not.toHaveClass('bg-red-600');
+      expect(confirmButton.style.backgroundColor).toBe('var(--theme-accent)');
     });
   });
 
