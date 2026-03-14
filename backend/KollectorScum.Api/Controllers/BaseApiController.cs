@@ -1,3 +1,4 @@
+using KollectorScum.Api.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace KollectorScum.Api.Controllers
@@ -26,10 +27,10 @@ namespace KollectorScum.Api.Controllers
 
             return ex switch
             {
-                ArgumentException => BadRequest(ex.Message),
-                KeyNotFoundException => NotFound(ex.Message),
-                InvalidOperationException => BadRequest(ex.Message),
-                _ => StatusCode(500, "An error occurred while processing your request")
+                ArgumentException => BadRequest(new ApiErrorResponse(ex.Message)),
+                KeyNotFoundException => NotFound(new ApiErrorResponse(ex.Message)),
+                InvalidOperationException => BadRequest(new ApiErrorResponse(ex.Message)),
+                _ => StatusCode(500, new ApiErrorResponse("An error occurred while processing your request", "INTERNAL_ERROR"))
             };
         }
 

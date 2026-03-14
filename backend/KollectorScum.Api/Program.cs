@@ -366,8 +366,12 @@ builder.Services.Configure<DiscogsSettings>(builder.Configuration.GetSection("Di
 builder.Services.AddHttpClient<IDiscogsHttpClient, DiscogsHttpClient>();
 builder.Services.AddScoped<IDiscogsResponseMapper, DiscogsResponseMapper>();
 builder.Services.AddScoped<IDiscogsService, DiscogsService>();
-builder.Services.AddHttpClient<DiscogsCollectionImportService>();
+builder.Services.AddHttpClient<DiscogsImageService>();
+builder.Services.AddScoped<IDiscogsImageService, DiscogsImageService>();
 builder.Services.AddScoped<IDiscogsCollectionImportService, DiscogsCollectionImportService>();
+builder.Services.AddScoped<IStorageMigrationService, StorageMigrationService>();
+builder.Services.AddScoped<IUserImpersonationService, UserImpersonationService>();
+builder.Services.AddScoped<IUserAuthenticationService, UserAuthenticationService>();
 
 // Register Natural Language Query services
 builder.Services.AddSingleton<IDatabaseSchemaService, DatabaseSchemaService>();

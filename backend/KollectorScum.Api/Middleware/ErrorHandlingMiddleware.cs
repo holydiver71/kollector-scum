@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json;
+using KollectorScum.Api.DTOs;
 
 namespace KollectorScum.Api.Middleware
 {
@@ -81,11 +82,7 @@ namespace KollectorScum.Api.Middleware
             // In all other environments return a generic message to prevent information disclosure.
             string? details = isDevelopment ? exception.Message : null;
 
-            var response = new
-            {
-                message = "An error occurred while processing your request.",
-                details
-            };
+            var response = new ApiErrorResponse("An error occurred while processing your request.", details: details);
 
             var jsonResponse = JsonSerializer.Serialize(response);
             await context.Response.WriteAsync(jsonResponse);

@@ -49,8 +49,6 @@ namespace KollectorScum.Api.Services
         /// <inheritdoc />
         public Guid? GetActingUserId()
         {
-            var path = _httpContextAccessor.HttpContext?.Request.Path.Value;
-
             // Check if admin is impersonating another user via header
             var actAsHeader = _httpContextAccessor.HttpContext?.Request.Headers["X-Admin-Act-As"].FirstOrDefault();
 
@@ -58,7 +56,7 @@ namespace KollectorScum.Api.Services
             {
                 if (Guid.TryParse(actAsHeader, out var actAsUserId))
                 {
-                    _logger.LogWarning("Admin impersonation via header: AdminId={AdminId} acting as UserId={TargetUserId} Path={Path}", GetUserId(), actAsUserId, path);
+                    _logger.LogWarning("Admin impersonation via header: AdminId={AdminId} acting as UserId={TargetUserId}", GetUserId(), actAsUserId);
                     return actAsUserId;
                 }
 
@@ -72,25 +70,11 @@ namespace KollectorScum.Api.Services
             {
                 if (Guid.TryParse(actAsCookie, out var actAsUserId))
                 {
-                    _logger.LogWarning("Admin impersonation via cookie: AdminId={AdminId} acting as UserId={TargetUserId} Path={Path}", GetUserId(), actAsUserId, path);
+                    _logger.LogWarning("Admin impersonation via cookie: AdminId={AdminId} acting as UserId={TargetUserId}", GetUserId(), actAsUserId);
                     return actAsUserId;
                 }
 
                 _logger.LogWarning("Admin provided invalid GUID in impersonation_userId cookie: {CookieValue}", actAsCookie);
-            }
-
-            // Check if admin is impersonating via query parameter
-            var actAsQuery = _httpContextAccessor.HttpContext?.Request.Query["userId"].FirstOrDefault();
-
-            if (!string.IsNullOrEmpty(actAsQuery) && IsAdmin())
-            {
-                if (Guid.TryParse(actAsQuery, out var actAsUserId))
-                {
-                    _logger.LogWarning("Admin impersonation via query param: AdminId={AdminId} acting as UserId={TargetUserId} Path={Path}", GetUserId(), actAsUserId, path);
-                    return actAsUserId;
-                }
-
-                _logger.LogWarning("Admin provided invalid GUID in userId query param: {QueryValue}", actAsQuery);
             }
 
             // Return the current user's ID
