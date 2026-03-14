@@ -5,29 +5,37 @@ import '@testing-library/jest-dom'
 // call fetch in useEffect during mount. Individual tests can override this mock
 // when they need specific behavior.
 if (typeof globalThis.fetch === 'undefined') {
-	globalThis.fetch = jest.fn((input: any) => {
-		const url = typeof input === 'string' ? input : input?.url ?? '';
+	const fetchMock: typeof fetch = async (input: RequestInfo | URL) => {
+		const url =
+			typeof input === 'string'
+				? input
+				: input instanceof URL
+					? input.toString()
+					: input.url;
 		// Return a sensible default profile for components that validate
 		// authentication during mount. Individual tests can override this
 		// mock when they need specific behavior.
 		if (url.includes('/api/profile')) {
-			return Promise.resolve({
-				ok: true,
-				json: async () => ({
+			return new Response(
+				JSON.stringify({
 					email: 'test@example.com',
 					name: 'Test User',
 					hasCollection: true,
 				}),
-				headers: { get: () => 'application/json' },
-			});
+				{
+					status: 200,
+					headers: { 'Content-Type': 'application/json' },
+				},
+			);
 		}
 
-		return Promise.resolve({
-			ok: true,
-			json: async () => ({}),
-			headers: { get: () => 'application/json' },
+		return new Response(JSON.stringify({}), {
+			status: 200,
+			headers: { 'Content-Type': 'application/json' },
 		});
-	});
+	};
+
+	globalThis.fetch = jest.fn(fetchMock) as unknown as typeof fetch;
 }
 
 // Mock Next App Router navigation hooks used by components. This prevents the
