@@ -102,7 +102,6 @@ export default function ComboBox({
       window.removeEventListener("scroll", updateDropdownPosition, true);
       window.removeEventListener("resize", updateDropdownPosition);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   const handleSelect = (itemId: number) => {

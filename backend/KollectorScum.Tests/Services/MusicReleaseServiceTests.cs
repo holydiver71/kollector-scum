@@ -226,6 +226,46 @@ namespace KollectorScum.Tests.Services
             Assert.Single(result.Items);
         }
 
+        [Fact]
+        public async Task GetMusicReleasesAsync_WhenMapperThrows_PropagatesOriginalException()
+        {
+            // Arrange
+            var pagedResult = new PagedResult<MusicRelease>
+            {
+                Items = new List<MusicRelease>
+                {
+                    new MusicRelease
+                    {
+                        Id = 1,
+                        Title = "Broken Mapping Album",
+                        DateAdded = DateTime.UtcNow
+                    }
+                },
+                Page = 1,
+                PageSize = 10,
+                TotalCount = 1,
+                TotalPages = 1
+            };
+
+            _mockMusicReleaseRepo.Setup(r => r.GetPagedAsync(
+                It.IsAny<int>(),
+                It.IsAny<int>(),
+                It.IsAny<Expression<Func<MusicRelease, bool>>?>(),
+                It.IsAny<Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>>?>(),
+                It.IsAny<string>()))
+                .ReturnsAsync(pagedResult);
+
+            _mockMapper.Setup(m => m.MapToSummaryDto(It.IsAny<MusicRelease>()))
+                .Throws(new InvalidOperationException("Mapping failed"));
+
+            // Act
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                _service.GetMusicReleasesAsync(null, null, null, null, null, null, null, null, null, 1, 10));
+
+            // Assert
+            Assert.Equal("Mapping failed", exception.Message);
+        }
+
         #endregion
 
         #region GetMusicReleaseAsync Tests

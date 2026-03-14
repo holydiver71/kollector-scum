@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using KollectorScum.Api.DTOs;
+using System.Threading;
 
 namespace KollectorScum.Api.Interfaces
 {
@@ -28,6 +29,20 @@ namespace KollectorScum.Api.Interfaces
             string includeProperties = "");
 
         /// <summary>
+        /// Gets entities with optional filtering, ordering, and includes
+        /// </summary>
+        /// <param name="filter">Optional filter expression</param>
+        /// <param name="orderBy">Optional ordering function</param>
+        /// <param name="includeProperties">Optional navigation properties to include</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Collection of entities</returns>
+        Task<IEnumerable<T>> GetAsync(
+            Expression<Func<T, bool>>? filter,
+            Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy,
+            string includeProperties,
+            CancellationToken cancellationToken);
+
+        /// <summary>
         /// Gets an entity by its ID asynchronously
         /// </summary>
         /// <param name="id">Entity ID</param>
@@ -41,6 +56,15 @@ namespace KollectorScum.Api.Interfaces
         /// <param name="includeProperties">Navigation properties to include</param>
         /// <returns>Entity or null if not found</returns>
         Task<T?> GetByIdAsync(int id, string includeProperties);
+
+        /// <summary>
+        /// Gets an entity by its ID asynchronously with includes
+        /// </summary>
+        /// <param name="id">Entity ID</param>
+        /// <param name="includeProperties">Navigation properties to include</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Entity or null if not found</returns>
+        Task<T?> GetByIdAsync(int id, string includeProperties, CancellationToken cancellationToken);
 
         /// <summary>
         /// Gets the first entity matching the filter
@@ -58,6 +82,14 @@ namespace KollectorScum.Api.Interfaces
         /// <param name="entity">Entity to add</param>
         /// <returns>Added entity</returns>
         Task<T> AddAsync(T entity);
+
+        /// <summary>
+        /// Adds a new entity
+        /// </summary>
+        /// <param name="entity">Entity to add</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Added entity</returns>
+        Task<T> AddAsync(T entity, CancellationToken cancellationToken);
 
         /// <summary>
         /// Adds multiple entities
@@ -111,6 +143,20 @@ namespace KollectorScum.Api.Interfaces
         Task<int> CountAsync(Expression<Func<T, bool>>? filter = null);
 
         /// <summary>
+        /// Counts entities matching the filter
+        /// </summary>
+        /// <param name="filter">Optional filter expression</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Count of entities</returns>
+        Task<int> CountAsync(Expression<Func<T, bool>>? filter, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Returns a composable query for the entity set.
+        /// </summary>
+        /// <returns>Queryable entity set</returns>
+        IQueryable<T> Query();
+
+        /// <summary>
         /// Checks if an entity exists by ID
         /// </summary>
         /// <param name="id">Entity ID</param>
@@ -132,5 +178,23 @@ namespace KollectorScum.Api.Interfaces
             Expression<Func<T, bool>>? filter = null,
             Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null,
             string includeProperties = "");
+
+        /// <summary>
+        /// Gets paginated results
+        /// </summary>
+        /// <param name="pageNumber">Page number (1-based)</param>
+        /// <param name="pageSize">Page size</param>
+        /// <param name="filter">Optional filter expression</param>
+        /// <param name="orderBy">Optional ordering function</param>
+        /// <param name="includeProperties">Optional navigation properties to include</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Paginated results</returns>
+        Task<PagedResult<T>> GetPagedAsync(
+            int pageNumber,
+            int pageSize,
+            Expression<Func<T, bool>>? filter,
+            Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy,
+            string includeProperties,
+            CancellationToken cancellationToken);
     }
 }

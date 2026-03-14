@@ -2,6 +2,7 @@ using KollectorScum.Api.DTOs;
 using KollectorScum.Api.Interfaces;
 using KollectorScum.Api.Models;
 using KollectorScum.Api.Models.ValueObjects;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
@@ -49,94 +50,47 @@ namespace KollectorScum.Api.Services
             }
 
             var statistics = new CollectionStatisticsDto();
-            var allReleases = await _musicReleaseRepository.GetAsync(r => r.UserId == userId.Value);
-            var releasesList = allReleases.ToList();
+            var userReleasesQuery = _musicReleaseRepository
+                .Query()
+                .AsNoTracking()
+                .Where(r => r.UserId == userId.Value);
 
-            statistics.TotalReleases = releasesList.Count;
+            statistics.TotalReleases = await userReleasesQuery.CountAsync();
             
-            // Count unique artists
-            statistics.TotalArtists = CountUniqueArtists(releasesList);
+            var artistJsonList = await userReleasesQuery
+                .Where(r => !string.IsNullOrEmpty(r.Artists))
+                .Select(r => r.Artists!)
+                .ToListAsync();
 
-            // Count unique genres
-            statistics.TotalGenres = CountUniqueGenres(releasesList);
+            var genreJsonList = await userReleasesQuery
+                .Where(r => !string.IsNullOrEmpty(r.Genres))
+                .Select(r => r.Genres!)
+                .ToListAsync();
 
-            // Count unique labels
-            statistics.TotalLabels = releasesList
-                .Where(r => r.LabelId.HasValue)
-                .Select(r => r.LabelId)
-                .Distinct()
-                .Count();
+            var purchaseReleases = await userReleasesQuery
+                .Where(r => !string.IsNullOrEmpty(r.PurchaseInfo))
+                .ToListAsync();
 
-            // Releases by year
-            statistics.ReleasesByYear = CalculateReleasesByYear(releasesList);
-
-            // Releases by format
-            statistics.ReleasesByFormat = await CalculateReleasesByFormatAsync(releasesList, statistics.TotalReleases);
-
-            // Releases by country
-            statistics.ReleasesByCountry = await CalculateReleasesByCountryAsync(releasesList, statistics.TotalReleases);
-
-            // Releases by genre
-            statistics.ReleasesByGenre = await CalculateReleasesByGenreAsync(releasesList, statistics.TotalReleases);
-
-            // Calculate collection value
-            CalculateCollectionValue(releasesList, statistics);
-
-            // Recently added releases
-            statistics.RecentlyAdded = releasesList
+            var recentReleases = await userReleasesQuery
                 .OrderByDescending(r => r.DateAdded)
                 .Take(10)
-                .Select(r => _mapperService.MapToSummaryDto(r))
-                .ToList();
+                .ToListAsync();
 
-            return statistics;
-        }
+            // Count unique artists
+            statistics.TotalArtists = CountUniqueIds(artistJsonList);
 
-        private int CountUniqueArtists(List<MusicRelease> releases)
-        {
-            var uniqueArtistIds = new HashSet<int>();
-            foreach (var release in releases.Where(r => !string.IsNullOrEmpty(r.Artists)))
-            {
-                try
-                {
-                    var artistIds = JsonSerializer.Deserialize<List<int>>(release.Artists!);
-                    if (artistIds != null)
-                    {
-                        foreach (var id in artistIds)
-                        {
-                            uniqueArtistIds.Add(id);
-                        }
-                    }
-                }
-                catch { }
-            }
-            return uniqueArtistIds.Count;
-        }
+            // Count unique genres
+            statistics.TotalGenres = CountUniqueIds(genreJsonList);
 
-        private int CountUniqueGenres(List<MusicRelease> releases)
-        {
-            var uniqueGenreIds = new HashSet<int>();
-            foreach (var release in releases.Where(r => !string.IsNullOrEmpty(r.Genres)))
-            {
-                try
-                {
-                    var genreIds = JsonSerializer.Deserialize<List<int>>(release.Genres!);
-                    if (genreIds != null)
-                    {
-                        foreach (var id in genreIds)
-                        {
-                            uniqueGenreIds.Add(id);
-                        }
-                    }
-                }
-                catch { }
-            }
-            return uniqueGenreIds.Count;
-        }
+            // Count unique labels
+            statistics.TotalLabels = await userReleasesQuery
+                .Where(r => r.LabelId.HasValue)
+                .Select(r => r.LabelId!.Value)
+                .Distinct()
+                .CountAsync();
 
-        private List<YearStatisticDto> CalculateReleasesByYear(List<MusicRelease> releases)
-        {
-            return releases
+            // Releases by year
+            statistics.ReleasesByYear = await userReleasesQuery
                 .Where(r => r.ReleaseYear.HasValue)
                 .GroupBy(r => r.ReleaseYear!.Value.Year)
                 .Select(g => new YearStatisticDto
@@ -145,14 +99,54 @@ namespace KollectorScum.Api.Services
                     Count = g.Count()
                 })
                 .OrderBy(y => y.Year)
+                .ToListAsync();
+
+            // Releases by format
+            statistics.ReleasesByFormat = await CalculateReleasesByFormatAsync(userReleasesQuery, statistics.TotalReleases);
+
+            // Releases by country
+            statistics.ReleasesByCountry = await CalculateReleasesByCountryAsync(userReleasesQuery, statistics.TotalReleases);
+
+            // Releases by genre
+            statistics.ReleasesByGenre = await CalculateReleasesByGenreAsync(genreJsonList, statistics.TotalReleases);
+
+            // Calculate collection value
+            CalculateCollectionValue(purchaseReleases, statistics);
+
+            // Recently added releases
+            statistics.RecentlyAdded = recentReleases
+                .Select(r => _mapperService.MapToSummaryDto(r))
                 .ToList();
+
+            return statistics;
+        }
+
+        private int CountUniqueIds(List<string> serializedIds)
+        {
+            var uniqueIds = new HashSet<int>();
+            foreach (var serializedValue in serializedIds)
+            {
+                try
+                {
+                    var ids = JsonSerializer.Deserialize<List<int>>(serializedValue);
+                    if (ids != null)
+                    {
+                        foreach (var id in ids)
+                        {
+                            uniqueIds.Add(id);
+                        }
+                    }
+                }
+                catch { }
+            }
+            return uniqueIds.Count;
         }
 
         private async Task<List<FormatStatisticDto>> CalculateReleasesByFormatAsync(
-            List<MusicRelease> releases, 
+            IQueryable<MusicRelease> userReleasesQuery,
             int totalReleases)
         {
-            var releasesByFormat = releases
+            var releasesByFormat = await userReleasesQuery
                 .Where(r => r.FormatId.HasValue)
                 .GroupBy(r => r.FormatId!.Value)
                 .Select(g => new
@@ -160,7 +154,7 @@ namespace KollectorScum.Api.Services
                     FormatId = g.Key,
                     Count = g.Count()
                 })
-                .ToList();
+                .ToListAsync();
 
             var formats = await _formatRepository.GetAllAsync();
             var formatDict = formats.ToDictionary(f => f.Id, f => f.Name);
@@ -178,10 +172,10 @@ namespace KollectorScum.Api.Services
         }
 
         private async Task<List<CountryStatisticDto>> CalculateReleasesByCountryAsync(
-            List<MusicRelease> releases, 
+            IQueryable<MusicRelease> userReleasesQuery,
             int totalReleases)
         {
-            var releasesByCountry = releases
+            var releasesByCountry = await userReleasesQuery
                 .Where(r => r.CountryId.HasValue)
                 .GroupBy(r => r.CountryId!.Value)
                 .Select(g => new
@@ -189,7 +183,7 @@ namespace KollectorScum.Api.Services
                     CountryId = g.Key,
                     Count = g.Count()
                 })
-                .ToList();
+                .ToListAsync();
 
             var countries = await _countryRepository.GetAllAsync();
             var countryDict = countries.ToDictionary(c => c.Id, c => c.Name);
@@ -208,15 +202,15 @@ namespace KollectorScum.Api.Services
         }
 
         private async Task<List<GenreStatisticDto>> CalculateReleasesByGenreAsync(
-            List<MusicRelease> releases, 
+            List<string> genreJsonList,
             int totalReleases)
         {
             var genreCountMap = new Dictionary<int, int>();
-            foreach (var release in releases.Where(r => !string.IsNullOrEmpty(r.Genres)))
+            foreach (var serializedGenres in genreJsonList)
             {
                 try
                 {
-                    var genreIds = JsonSerializer.Deserialize<List<int>>(release.Genres!);
+                    var genreIds = JsonSerializer.Deserialize<List<int>>(serializedGenres);
                     if (genreIds != null)
                     {
                         foreach (var genreId in genreIds)
@@ -249,7 +243,7 @@ namespace KollectorScum.Api.Services
         private void CalculateCollectionValue(List<MusicRelease> releases, CollectionStatisticsDto statistics)
         {
             var releasesWithPurchaseInfo = new List<(MusicRelease release, decimal price)>();
-            foreach (var release in releases.Where(r => !string.IsNullOrEmpty(r.PurchaseInfo)))
+            foreach (var release in releases)
             {
                 try
                 {

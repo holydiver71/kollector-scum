@@ -1,13 +1,10 @@
 // Learn more: https://github.com/testing-library/jest-dom
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import '@testing-library/jest-dom'
 
 // Provide a harmless global fetch mock for tests that render components which
 // call fetch in useEffect during mount. Individual tests can override this mock
 // when they need specific behavior.
 if (typeof globalThis.fetch === 'undefined') {
-	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-	// @ts-ignore - Jest test environment global
 	globalThis.fetch = jest.fn((input: any) => {
 		const url = typeof input === 'string' ? input : input?.url ?? '';
 		// Return a sensible default profile for components that validate
@@ -36,8 +33,6 @@ if (typeof globalThis.fetch === 'undefined') {
 // Mock Next App Router navigation hooks used by components. This prevents the
 // "invariant expected app router to be mounted" errors in Jest where the
 // Next app router isn't available. Tests can override these mocks if needed.
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
 jest.mock('next/navigation', () => ({
 	__esModule: true,
 	useRouter: jest.fn(() => ({
@@ -54,15 +49,11 @@ jest.mock('next/navigation', () => ({
 
 // Mock window.scrollTo unconditionally – jsdom has a stub that throws
 // "Not implemented: window.scrollTo" which would pollute test output.
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
 window.scrollTo = jest.fn();
 
 // Polyfill ResizeObserver for the Jest/jsdom environment used by tests.
 // Many components measure layout using ResizeObserver; provide a minimal
 // no-op implementation so tests can run without the real browser API.
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
 global.ResizeObserver = global.ResizeObserver || class {
 	cb: any;
 	constructor(cb: any) { this.cb = cb; }
@@ -78,19 +69,13 @@ try {
 	// Ensure we set the auth token using the jsdom `window.localStorage` when
 	// running under Jest. Accessing the top-level `localStorage` may be
 	// undefined in some environments, so prefer `window` or `globalThis`.
-	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-	// @ts-ignore
 	if (typeof window !== 'undefined' && window.localStorage) {
-		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-		// @ts-ignore
 		window.localStorage.setItem('auth_token', 'test-token');
 	} else if (typeof globalThis !== 'undefined' && (globalThis as any).localStorage) {
 		(globalThis as any).localStorage.setItem('auth_token', 'test-token');
 	}
 } catch {}
 try {
-	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-	// @ts-ignore
 	if (typeof window !== 'undefined' && window.localStorage) {
 		 
 		console.log('[jest.setup] auth_token =', window.localStorage.getItem('auth_token'));
@@ -101,11 +86,7 @@ try {
 // treat the environment as authenticated unless the test explicitly clears it.
 beforeEach(() => {
 	try {
-		// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-		// @ts-ignore
 		if (typeof window !== 'undefined' && window.localStorage) {
-			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-			// @ts-ignore
 			window.localStorage.setItem('auth_token', 'test-token');
 			 
 			console.log('[jest.setup.beforeEach] auth_token =', window.localStorage.getItem('auth_token'));
@@ -142,8 +123,6 @@ console.error = (...args: any[]) => {
 // Use synchronous `require()` here so the mocks are installed before any
 // component mounts during tests (dynamic import caused timing issues).
 try {
-	// eslint-disable-next-line @typescript-eslint/no-var-requires
-	// @ts-ignore
 	const apiLib = require('./app/lib/api');
 	if (apiLib) {
 		if (typeof (apiLib as any).fetchJson !== 'function') {
@@ -158,8 +137,6 @@ try {
 }
 
 try {
-	// eslint-disable-next-line @typescript-eslint/no-var-requires
-	// @ts-ignore
 	const appApi = require('./app/api');
 	if (appApi) {
 		if (typeof (appApi as any).fetchJson !== 'function') {

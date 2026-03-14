@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using KollectorScum.Api.Interfaces;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace KollectorScum.Api.Middleware
 {
@@ -9,13 +10,21 @@ namespace KollectorScum.Api.Middleware
     /// </summary>
     public class ValidateUserMiddleware
     {
+        private const string UserExistsCacheKeyPrefix = "validate-user-exists:";
+        private static readonly TimeSpan UserExistsCacheTtl = TimeSpan.FromMinutes(5);
+
         private readonly RequestDelegate _next;
         private readonly ILogger<ValidateUserMiddleware> _logger;
+        private readonly IMemoryCache _memoryCache;
 
-        public ValidateUserMiddleware(RequestDelegate next, ILogger<ValidateUserMiddleware> logger)
+        public ValidateUserMiddleware(
+            RequestDelegate next,
+            ILogger<ValidateUserMiddleware> logger,
+            IMemoryCache memoryCache)
         {
             _next = next;
             _logger = logger;
+            _memoryCache = memoryCache;
         }
 
         public async Task InvokeAsync(HttpContext context, IUserRepository userRepository)
@@ -27,10 +36,9 @@ namespace KollectorScum.Api.Middleware
                 
                 if (!string.IsNullOrEmpty(userIdClaim) && Guid.TryParse(userIdClaim, out var userId))
                 {
-                    // Check if user still exists in database
-                    var user = await userRepository.FindByIdAsync(userId);
-                    
-                    if (user == null)
+                    var userExists = await GetOrCacheUserExistsAsync(userId, userRepository);
+
+                    if (!userExists)
                     {
                         _logger.LogWarning("Authenticated request rejected: User {UserId} no longer exists (deactivated)", userId);
                         
@@ -46,6 +54,24 @@ namespace KollectorScum.Api.Middleware
             }
 
             await _next(context);
+        }
+
+        private async Task<bool> GetOrCacheUserExistsAsync(Guid userId, IUserRepository userRepository)
+        {
+            var cacheKey = $"{UserExistsCacheKeyPrefix}{userId}";
+            if (_memoryCache.TryGetValue(cacheKey, out bool cachedExists))
+            {
+                return cachedExists;
+            }
+
+            var user = await userRepository.FindByIdAsync(userId);
+            var exists = user != null;
+            _memoryCache.Set(cacheKey, exists, new MemoryCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = UserExistsCacheTtl
+            });
+
+            return exists;
         }
     }
 

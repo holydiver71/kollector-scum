@@ -1,5 +1,6 @@
 using KollectorScum.Api.DTOs;
 using KollectorScum.Api.Models;
+using System.Threading;
 
 namespace KollectorScum.Api.Interfaces
 {
@@ -15,15 +16,33 @@ namespace KollectorScum.Api.Interfaces
         Task<Result<CreateMusicReleaseResponseDto>> CreateMusicReleaseAsync(CreateMusicReleaseDto createDto);
 
         /// <summary>
+        /// Creates a new music release with validation and duplicate checking
+        /// Returns a Result indicating success or failure with appropriate error information
+        /// </summary>
+        Task<Result<CreateMusicReleaseResponseDto>> CreateMusicReleaseAsync(CreateMusicReleaseDto createDto, CancellationToken cancellationToken = default);
+
+        /// <summary>
         /// Updates an existing music release with validation
         /// Returns a Result indicating success or failure with appropriate error information
         /// </summary>
         Task<Result<MusicReleaseDto>> UpdateMusicReleaseAsync(int id, UpdateMusicReleaseDto updateDto);
 
         /// <summary>
+        /// Updates an existing music release with validation
+        /// Returns a Result indicating success or failure with appropriate error information
+        /// </summary>
+        Task<Result<MusicReleaseDto>> UpdateMusicReleaseAsync(int id, UpdateMusicReleaseDto updateDto, CancellationToken cancellationToken = default);
+
+        /// <summary>
         /// Deletes a music release by ID
         /// Returns a Result indicating success or failure with appropriate error information
         /// </summary>
         Task<Result<bool>> DeleteMusicReleaseAsync(int id);
+
+        /// <summary>
+        /// Deletes a music release by ID
+        /// Returns a Result indicating success or failure with appropriate error information
+        /// </summary>
+        Task<Result<bool>> DeleteMusicReleaseAsync(int id, CancellationToken cancellationToken = default);
     }
 }

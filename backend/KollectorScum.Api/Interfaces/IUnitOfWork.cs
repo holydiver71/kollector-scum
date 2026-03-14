@@ -1,4 +1,5 @@
 using KollectorScum.Api.Models;
+using System.Threading;
 
 namespace KollectorScum.Api.Interfaces
 {
@@ -54,10 +55,23 @@ namespace KollectorScum.Api.Interfaces
         Task<int> SaveChangesAsync();
 
         /// <summary>
+        /// Saves all changes to the database
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Number of state entries written to the database</returns>
+        Task<int> SaveChangesAsync(CancellationToken cancellationToken);
+
+        /// <summary>
         /// Begins a new database transaction
         /// </summary>
         /// <returns>Database transaction</returns>
         Task BeginTransactionAsync();
+
+        /// <summary>
+        /// Begins a new database transaction
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation token</param>
+        Task BeginTransactionAsync(CancellationToken cancellationToken);
 
         /// <summary>
         /// Commits the current transaction
@@ -65,9 +79,21 @@ namespace KollectorScum.Api.Interfaces
         Task CommitTransactionAsync();
 
         /// <summary>
+        /// Commits the current transaction
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation token</param>
+        Task CommitTransactionAsync(CancellationToken cancellationToken);
+
+        /// <summary>
         /// Rolls back the current transaction
         /// </summary>
         Task RollbackTransactionAsync();
+
+        /// <summary>
+        /// Rolls back the current transaction
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation token</param>
+        Task RollbackTransactionAsync(CancellationToken cancellationToken);
 
         /// <summary>
         /// Gets a generic repository for any entity type

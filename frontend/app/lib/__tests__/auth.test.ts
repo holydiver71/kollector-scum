@@ -121,15 +121,11 @@ describe('Magic Link Auth', () => {
 });
 
 describe('signOut', () => {
-  let assignSpy: jest.SpyInstance;
-
   beforeEach(() => {
     localStorage.clear();
     // JSDOM doesn't allow redefining window.location, so we delete it and
     // replace with a plain object that Jest can spy on.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (window as any).location;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (window as any).location = { href: '' };
   });
 

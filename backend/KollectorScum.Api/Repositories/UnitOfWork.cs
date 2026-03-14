@@ -2,6 +2,7 @@ using KollectorScum.Api.Data;
 using KollectorScum.Api.Interfaces;
 using KollectorScum.Api.Models;
 using Microsoft.EntityFrameworkCore.Storage;
+using System.Threading;
 
 namespace KollectorScum.Api.Repositories
 {
@@ -119,27 +120,36 @@ namespace KollectorScum.Api.Repositories
         /// </summary>
         /// <returns>Number of state entries written to the database</returns>
         public async Task<int> SaveChangesAsync()
+            => await SaveChangesAsync(CancellationToken.None);
+
+        public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
         {
-            return await _context.SaveChangesAsync();
+            return await _context.SaveChangesAsync(cancellationToken);
         }
 
         /// <summary>
         /// Begins a new database transaction
         /// </summary>
         public async Task BeginTransactionAsync()
+            => await BeginTransactionAsync(CancellationToken.None);
+
+        public async Task BeginTransactionAsync(CancellationToken cancellationToken)
         {
             if (_currentTransaction != null)
             {
                 throw new InvalidOperationException("A transaction is already in progress.");
             }
 
-            _currentTransaction = await _context.Database.BeginTransactionAsync();
+            _currentTransaction = await _context.Database.BeginTransactionAsync(cancellationToken);
         }
 
         /// <summary>
         /// Commits the current transaction
         /// </summary>
         public async Task CommitTransactionAsync()
+            => await CommitTransactionAsync(CancellationToken.None);
+
+        public async Task CommitTransactionAsync(CancellationToken cancellationToken)
         {
             if (_currentTransaction == null)
             {
@@ -148,12 +158,12 @@ namespace KollectorScum.Api.Repositories
 
             try
             {
-                await SaveChangesAsync();
-                await _currentTransaction.CommitAsync();
+                await SaveChangesAsync(cancellationToken);
+                await _currentTransaction.CommitAsync(cancellationToken);
             }
             catch
             {
-                await RollbackTransactionAsync();
+                await RollbackTransactionAsync(cancellationToken);
                 throw;
             }
             finally
@@ -167,6 +177,9 @@ namespace KollectorScum.Api.Repositories
         /// Rolls back the current transaction
         /// </summary>
         public async Task RollbackTransactionAsync()
+            => await RollbackTransactionAsync(CancellationToken.None);
+
+        public async Task RollbackTransactionAsync(CancellationToken cancellationToken)
         {
             if (_currentTransaction == null)
             {
@@ -175,7 +188,7 @@ namespace KollectorScum.Api.Repositories
 
             try
             {
-                await _currentTransaction.RollbackAsync();
+                await _currentTransaction.RollbackAsync(cancellationToken);
             }
             finally
             {

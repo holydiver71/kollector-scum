@@ -1,5 +1,6 @@
 using KollectorScum.Api.DTOs;
 using KollectorScum.Api.Models;
+using System.Threading;
 
 namespace KollectorScum.Api.Interfaces
 {
@@ -14,9 +15,19 @@ namespace KollectorScum.Api.Interfaces
         Task<PagedResult<MusicReleaseSummaryDto>> GetMusicReleasesAsync(MusicReleaseQueryParameters parameters);
 
         /// <summary>
+        /// Gets paginated music releases with optional filters using query parameters object
+        /// </summary>
+        Task<PagedResult<MusicReleaseSummaryDto>> GetMusicReleasesAsync(MusicReleaseQueryParameters parameters, CancellationToken cancellationToken = default);
+
+        /// <summary>
         /// Gets a single music release by ID with full details
         /// </summary>
         Task<MusicReleaseDto?> GetMusicReleaseAsync(int id);
+
+        /// <summary>
+        /// Gets a single music release by ID with full details
+        /// </summary>
+        Task<MusicReleaseDto?> GetMusicReleaseAsync(int id, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Gets search suggestions for autocomplete
@@ -24,14 +35,30 @@ namespace KollectorScum.Api.Interfaces
         Task<List<SearchSuggestionDto>> GetSearchSuggestionsAsync(string query, int limit);
 
         /// <summary>
+        /// Gets search suggestions for autocomplete
+        /// </summary>
+        Task<List<SearchSuggestionDto>> GetSearchSuggestionsAsync(string query, int limit, CancellationToken cancellationToken = default);
+
+        /// <summary>
         /// Gets collection statistics (delegated to statistics service)
         /// </summary>
         Task<CollectionStatisticsDto> GetCollectionStatisticsAsync();
+
+        /// <summary>
+        /// Gets collection statistics (delegated to statistics service)
+        /// </summary>
+        Task<CollectionStatisticsDto> GetCollectionStatisticsAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Gets the ID of a random music release from the collection
         /// </summary>
         /// <returns>Random release ID or null if collection is empty</returns>
         Task<int?> GetRandomReleaseIdAsync();
+
+        /// <summary>
+        /// Gets the ID of a random music release from the collection
+        /// </summary>
+        /// <returns>Random release ID or null if collection is empty</returns>
+        Task<int?> GetRandomReleaseIdAsync(CancellationToken cancellationToken = default);
     }
 }

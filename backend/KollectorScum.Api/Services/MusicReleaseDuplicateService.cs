@@ -1,5 +1,6 @@
 using KollectorScum.Api.Interfaces;
 using KollectorScum.Api.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
@@ -63,13 +64,14 @@ namespace KollectorScum.Api.Services
         private async Task<List<MusicRelease>> CheckByCatalogNumberAsync(string labelNumber, int? excludeReleaseId, Guid userId)
         {
             var normalizedCatalog = labelNumber.Trim().ToLower();
-            var catalogMatches = await _musicReleaseRepository.GetAsync(
-                filter: r => r.UserId == userId && r.LabelNumber != null && r.LabelNumber.ToLower() == normalizedCatalog);
-
-            if (excludeReleaseId.HasValue)
-            {
-                catalogMatches = catalogMatches.Where(r => r.Id != excludeReleaseId.Value).ToList();
-            }
+            var catalogMatches = await _musicReleaseRepository
+                .Query()
+                .AsNoTracking()
+                .Where(r => r.UserId == userId &&
+                            r.LabelNumber != null &&
+                            r.LabelNumber.ToLower() == normalizedCatalog &&
+                            (!excludeReleaseId.HasValue || r.Id != excludeReleaseId.Value))
+                .ToListAsync();
 
             if (catalogMatches.Any())
             {
@@ -90,25 +92,20 @@ namespace KollectorScum.Api.Services
             Guid userId)
         {
             var normalizedTitle = title.Trim().ToLower();
-            var allReleases = await _musicReleaseRepository.GetAsync(r => r.UserId == userId);
-            
-            var titleArtistMatches = allReleases.Where(r =>
+            var titleCandidates = await _musicReleaseRepository
+                .Query()
+                .AsNoTracking()
+                .Where(r => r.UserId == userId &&
+                            r.Artists != null &&
+                            r.Title.ToLower() == normalizedTitle &&
+                            (!excludeReleaseId.HasValue || r.Id != excludeReleaseId.Value))
+                .ToListAsync();
+
+            var titleArtistMatches = titleCandidates.Where(r =>
             {
-                // Exclude the current release if updating
-                if (excludeReleaseId.HasValue && r.Id == excludeReleaseId.Value)
-                    return false;
-
-                // Check title match
-                if (r.Title.Trim().ToLower() != normalizedTitle)
-                    return false;
-
-                // Check artist match
-                if (string.IsNullOrEmpty(r.Artists))
-                    return false;
-
                 try
                 {
-                    var releaseArtistIds = JsonSerializer.Deserialize<List<int>>(r.Artists);
+                    var releaseArtistIds = JsonSerializer.Deserialize<List<int>>(r.Artists!);
                     return releaseArtistIds != null && releaseArtistIds.Intersect(artistIds).Any();
                 }
                 catch (JsonException ex)
