@@ -3,30 +3,24 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using KollectorScum.Api.Controllers;
-using KollectorScum.Api.Data;
 using KollectorScum.Api.DTOs;
 using KollectorScum.Api.Interfaces;
 using KollectorScum.Api.Models;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
 namespace KollectorScum.Tests.Controllers
 {
-    public class AdminControllerTests : IDisposable
+    public class AdminControllerTests
     {
         private readonly Mock<IUserRepository> _mockUserRepository;
         private readonly Mock<IUserInvitationRepository> _mockInvitationRepository;
         private readonly Mock<ILogger<AdminController>> _mockLogger;
-        private readonly Mock<IStorageService> _mockStorageService;
-        private readonly Mock<IWebHostEnvironment> _mockEnvironment;
-        private readonly Mock<IConfiguration> _mockConfiguration;
-        private readonly KollectorScumDbContext _context;
+        private readonly Mock<IStorageMigrationService> _mockStorageMigrationService;
+        private readonly Mock<IUserImpersonationService> _mockUserImpersonationService;
         private readonly AdminController _controller;
         private readonly Guid _adminUserId = Guid.NewGuid();
 
@@ -35,24 +29,15 @@ namespace KollectorScum.Tests.Controllers
             _mockUserRepository = new Mock<IUserRepository>();
             _mockInvitationRepository = new Mock<IUserInvitationRepository>();
             _mockLogger = new Mock<ILogger<AdminController>>();
-            _mockStorageService = new Mock<IStorageService>();
-            _mockEnvironment = new Mock<IWebHostEnvironment>();
-            _mockConfiguration = new Mock<IConfiguration>();
-
-            // Create in-memory database
-            var options = new DbContextOptionsBuilder<KollectorScumDbContext>()
-                .UseInMemoryDatabase(databaseName: $"TestDb_{Guid.NewGuid()}")
-                .Options;
-            _context = new KollectorScumDbContext(options);
+            _mockStorageMigrationService = new Mock<IStorageMigrationService>();
+            _mockUserImpersonationService = new Mock<IUserImpersonationService>();
 
             _controller = new AdminController(
                 _mockUserRepository.Object,
                 _mockInvitationRepository.Object,
                 _mockLogger.Object,
-                _context,
-                _mockStorageService.Object,
-                _mockEnvironment.Object,
-                _mockConfiguration.Object
+                _mockStorageMigrationService.Object,
+                _mockUserImpersonationService.Object
             );
 
             // Set up authenticated admin user
@@ -66,12 +51,6 @@ namespace KollectorScum.Tests.Controllers
             {
                 HttpContext = new DefaultHttpContext { User = claimsPrincipal }
             };
-        }
-
-        public void Dispose()
-        {
-            _context.Database.EnsureDeleted();
-            _context.Dispose();
         }
 
         [Fact]
@@ -443,7 +422,7 @@ namespace KollectorScum.Tests.Controllers
         // ─── ImpersonateUser ────────────────────────────────────────────────────────
 
         /// <summary>
-        /// Adds an admin user to the in-memory DB and sets HttpContext claims to that user.
+        /// Adds an admin user and sets up the mock to return it for the claims identity.
         /// </summary>
         private ApplicationUser SetupAdminUser()
         {
@@ -454,8 +433,6 @@ namespace KollectorScum.Tests.Controllers
                 IsAdmin = true,
                 CreatedAt = DateTime.UtcNow
             };
-            _context.ApplicationUsers.Add(admin);
-            _context.SaveChanges();
 
             _mockUserRepository
                 .Setup(x => x.FindByIdAsync(_adminUserId))
@@ -471,18 +448,14 @@ namespace KollectorScum.Tests.Controllers
             SetupAdminUser();
 
             var targetUserId = Guid.NewGuid();
-            var targetUser = new ApplicationUser
-            {
-                Id = targetUserId,
-                Email = "regular@example.com",
-                DisplayName = "Regular User",
-                IsAdmin = false,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            _mockUserRepository
-                .Setup(x => x.FindByIdAsync(targetUserId))
-                .ReturnsAsync(targetUser);
+            _mockUserImpersonationService
+                .Setup(s => s.ImpersonateUserAsync(_adminUserId, targetUserId))
+                .ReturnsAsync(new ImpersonationDto
+                {
+                    UserId = targetUserId,
+                    Email = "regular@example.com",
+                    DisplayName = "Regular User"
+                });
 
             // Act
             var result = await _controller.ImpersonateUser(targetUserId);
@@ -523,9 +496,9 @@ namespace KollectorScum.Tests.Controllers
             SetupAdminUser();
 
             var missingId = Guid.NewGuid();
-            _mockUserRepository
-                .Setup(x => x.FindByIdAsync(missingId))
-                .ReturnsAsync((ApplicationUser?)null);
+            _mockUserImpersonationService
+                .Setup(s => s.ImpersonateUserAsync(_adminUserId, missingId))
+                .ReturnsAsync((ImpersonationDto?)null);
 
             // Act
             var result = await _controller.ImpersonateUser(missingId);
@@ -541,15 +514,9 @@ namespace KollectorScum.Tests.Controllers
             SetupAdminUser();
 
             var otherAdminId = Guid.NewGuid();
-            var otherAdmin = new ApplicationUser
-            {
-                Id = otherAdminId,
-                Email = "otheradmin@example.com",
-                IsAdmin = true
-            };
-            _mockUserRepository
-                .Setup(x => x.FindByIdAsync(otherAdminId))
-                .ReturnsAsync(otherAdmin);
+            _mockUserImpersonationService
+                .Setup(s => s.ImpersonateUserAsync(_adminUserId, otherAdminId))
+                .ThrowsAsync(new InvalidOperationException("Cannot impersonate an admin user"));
 
             // Act
             var result = await _controller.ImpersonateUser(otherAdminId);
@@ -563,6 +530,10 @@ namespace KollectorScum.Tests.Controllers
         {
             // Arrange
             SetupAdminUser();
+
+            _mockUserImpersonationService
+                .Setup(s => s.ImpersonateUserAsync(_adminUserId, _adminUserId))
+                .ThrowsAsync(new InvalidOperationException("Cannot impersonate yourself"));
 
             // Act
             var result = await _controller.ImpersonateUser(_adminUserId);
@@ -580,7 +551,6 @@ namespace KollectorScum.Tests.Controllers
                 HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal() }
             };
 
-            // IsUserAdminAsync will get null userId and return false → Forbid
             _mockUserRepository
                 .Setup(x => x.FindByIdAsync(It.IsAny<Guid>()))
                 .ReturnsAsync((ApplicationUser?)null);
