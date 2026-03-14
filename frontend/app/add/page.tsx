@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import AddReleaseForm, { type CreateMusicReleaseDto } from "../components/AddReleaseForm";
+import AddReleaseWizard from "../components/wizard/AddReleaseWizard";
+import type { CreateMusicReleaseDto } from "../components/AddReleaseForm";
 import DiscogsSearch from "../components/DiscogsSearch";
 import DiscogsSearchResults from "../components/DiscogsSearchResults";
 import DiscogsReleasePreview from "../components/DiscogsReleasePreview";
@@ -453,7 +454,7 @@ export default function AddReleasePage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8 text-[var(--theme-foreground)] space-y-6">
+    <div className="max-w-4xl mx-auto px-4 py-8 text-[var(--theme-foreground)] space-y-6">
       <div>
         <h1 className="text-2xl font-black text-[var(--theme-foreground)]">Add Release</h1>
         <p className="text-gray-400 mt-1 text-sm">Add a new music release to your collection</p>
@@ -532,9 +533,9 @@ export default function AddReleasePage() {
       )}
 
       {activeTab === "manual" && (
-        <AddReleaseForm 
-          onSuccess={handleFormSuccess} 
-          onCancel={handleCancel} 
+        <AddReleaseWizard
+          onSuccess={handleFormSuccess}
+          onCancel={handleCancel}
           initialData={discogsFormData}
         />
       )}
