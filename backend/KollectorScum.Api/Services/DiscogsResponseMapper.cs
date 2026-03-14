@@ -348,7 +348,11 @@ namespace KollectorScum.Api.Services
             public string? Catno { get; set; }
             public string? Country { get; set; }
             public string? Thumb { get; set; }
+
+            [JsonPropertyName("cover_image")]
             public string? CoverImage { get; set; }
+
+            [JsonPropertyName("resource_url")]
             public string? ResourceUrl { get; set; }
         }
 
@@ -358,8 +362,13 @@ namespace KollectorScum.Api.Services
             public string? Title { get; set; }
             public int? Year { get; set; }
             public string? Country { get; set; }
+
+            [JsonPropertyName("released_formatted")]
             public string? ReleasedFormatted { get; set; }
+
+            [JsonPropertyName("resource_url")]
             public string? ResourceUrl { get; set; }
+
             public string? Uri { get; set; }
             public string? Notes { get; set; }
             public List<string>? Genres { get; set; }
@@ -376,6 +385,8 @@ namespace KollectorScum.Api.Services
         {
             public string? Name { get; set; }
             public long? Id { get; set; }
+
+            [JsonPropertyName("resource_url")]
             public string? ResourceUrl { get; set; }
         }
 
@@ -384,6 +395,8 @@ namespace KollectorScum.Api.Services
             public string? Name { get; set; }
             public string? Catno { get; set; }
             public long? Id { get; set; }
+
+            [JsonPropertyName("resource_url")]
             public string? ResourceUrl { get; set; }
         }
 
@@ -398,8 +411,13 @@ namespace KollectorScum.Api.Services
         {
             public string? Type { get; set; }
             public string? Uri { get; set; }
+
+            [JsonPropertyName("uri150")]
             public string? Uri150 { get; set; }
+
+            [JsonPropertyName("resource_url")]
             public string? ResourceUrl { get; set; }
+
             public int? Width { get; set; }
             public int? Height { get; set; }
         }
