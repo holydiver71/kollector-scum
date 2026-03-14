@@ -421,7 +421,7 @@ export default function AddReleasePage() {
   if (showSuccess && newReleaseId) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-8">
-        <div className="bg-[#13131F] border border-emerald-600/30 rounded-2xl p-8 text-center">
+        <div className="bg-[var(--theme-card-bg)] border border-emerald-600/30 rounded-2xl p-8 text-center">
           <svg
             className="mx-auto h-16 w-16 text-emerald-400 mb-4"
             fill="none"
@@ -435,7 +435,7 @@ export default function AddReleasePage() {
               d="M5 13l4 4L19 7"
             />
           </svg>
-          <h2 className="text-2xl font-black text-white mb-2">
+          <h2 className="text-2xl font-black text-[var(--theme-foreground)] mb-2">
             Release Added Successfully!
           </h2>
           <p className="text-gray-400 mb-4">
@@ -443,7 +443,7 @@ export default function AddReleasePage() {
           </p>
           <button
             onClick={() => router.push(`/releases/${newReleaseId}`)}
-            className="text-[#8B5CF6] hover:text-[#A78BFA] underline transition-colors"
+            className="text-[var(--theme-accent)] hover:text-[var(--theme-accent-light)] underline transition-colors"
           >
             View Now
           </button>
@@ -453,20 +453,20 @@ export default function AddReleasePage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8 text-white space-y-6">
+    <div className="max-w-3xl mx-auto px-4 py-8 text-[var(--theme-foreground)] space-y-6">
       <div>
-        <h1 className="text-2xl font-black text-white">Add Release</h1>
+        <h1 className="text-2xl font-black text-[var(--theme-foreground)]">Add Release</h1>
         <p className="text-gray-400 mt-1 text-sm">Add a new music release to your collection</p>
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex gap-1 bg-[#13131F] p-1 rounded-xl border border-[#1C1C28] w-fit">
+      <div className="flex gap-1 bg-[var(--theme-card-bg)] p-1 rounded-xl border border-[var(--theme-card-border)] w-fit">
         <button
           onClick={() => setActiveTab("discogs")}
           className={`px-5 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${
             activeTab === "discogs"
-              ? "bg-[#8B5CF6] text-white"
-              : "text-gray-400 hover:text-white"
+              ? "bg-[var(--theme-accent)] text-white"
+              : "text-gray-400 hover:text-[var(--theme-foreground)]"
           }`}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -478,8 +478,8 @@ export default function AddReleasePage() {
           onClick={() => setActiveTab("manual")}
           className={`px-5 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${
             activeTab === "manual"
-              ? "bg-[#8B5CF6] text-white"
-              : "text-gray-400 hover:text-white"
+              ? "bg-[var(--theme-accent)] text-white"
+              : "text-gray-400 hover:text-[var(--theme-foreground)]"
           }`}
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
