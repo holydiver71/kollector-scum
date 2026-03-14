@@ -4,6 +4,7 @@ using KollectorScum.Api.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using System.Text.Json;
+using System.Threading;
 
 namespace KollectorScum.Api.Services
 {
@@ -45,9 +46,10 @@ namespace KollectorScum.Api.Services
             _storageService = storageService ?? throw new ArgumentNullException(nameof(storageService));
         }
 
-        public async Task<Result<CreateMusicReleaseResponseDto>> CreateMusicReleaseAsync(CreateMusicReleaseDto createDto)
+        public async Task<Result<CreateMusicReleaseResponseDto>> CreateMusicReleaseAsync(CreateMusicReleaseDto createDto, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Creating music release: {Title}", createDto.Title);
+            cancellationToken.ThrowIfCancellationRequested();
 
             var createdEntities = new CreatedEntitiesDto();
             await _unitOfWork.BeginTransactionAsync();
@@ -157,9 +159,13 @@ namespace KollectorScum.Api.Services
             }
         }
 
-        public async Task<Result<MusicReleaseDto>> UpdateMusicReleaseAsync(int id, UpdateMusicReleaseDto updateDto)
+        public async Task<Result<CreateMusicReleaseResponseDto>> CreateMusicReleaseAsync(CreateMusicReleaseDto createDto)
+            => await CreateMusicReleaseAsync(createDto, CancellationToken.None);
+
+        public async Task<Result<MusicReleaseDto>> UpdateMusicReleaseAsync(int id, UpdateMusicReleaseDto updateDto, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Updating music release: {Id}", id);
+            cancellationToken.ThrowIfCancellationRequested();
 
             try
             {
@@ -290,9 +296,13 @@ namespace KollectorScum.Api.Services
             }
         }
 
-        public async Task<Result<bool>> DeleteMusicReleaseAsync(int id)
+        public async Task<Result<MusicReleaseDto>> UpdateMusicReleaseAsync(int id, UpdateMusicReleaseDto updateDto)
+            => await UpdateMusicReleaseAsync(id, updateDto, CancellationToken.None);
+
+        public async Task<Result<bool>> DeleteMusicReleaseAsync(int id, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Deleting music release: {Id}", id);
+            cancellationToken.ThrowIfCancellationRequested();
 
             try
             {
@@ -326,6 +336,9 @@ namespace KollectorScum.Api.Services
                 return Result<bool>.Failure($"An error occurred while deleting the music release: {ex.Message}", ErrorType.DatabaseError);
             }
         }
+
+        public async Task<Result<bool>> DeleteMusicReleaseAsync(int id)
+            => await DeleteMusicReleaseAsync(id, CancellationToken.None);
 
         /// <summary>
         /// Deletes image files associated with a music release

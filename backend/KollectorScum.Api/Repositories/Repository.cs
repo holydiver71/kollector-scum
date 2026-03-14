@@ -3,6 +3,7 @@ using KollectorScum.Api.DTOs;
 using KollectorScum.Api.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using System.Threading;
 
 namespace KollectorScum.Api.Repositories
 {
@@ -31,7 +32,9 @@ namespace KollectorScum.Api.Repositories
         /// <returns>Collection of entities</returns>
         public virtual async Task<IEnumerable<T>> GetAllAsync()
         {
-            return await _dbSet.ToListAsync();
+            return await _dbSet
+                .AsNoTracking()
+                .ToListAsync();
         }
 
         /// <summary>
@@ -45,8 +48,15 @@ namespace KollectorScum.Api.Repositories
             Expression<Func<T, bool>>? filter = null,
             Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null,
             string includeProperties = "")
+            => await GetAsync(filter, orderBy, includeProperties, CancellationToken.None);
+
+        public virtual async Task<IEnumerable<T>> GetAsync(
+            Expression<Func<T, bool>>? filter,
+            Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy,
+            string includeProperties,
+            CancellationToken cancellationToken)
         {
-            IQueryable<T> query = _dbSet;
+            IQueryable<T> query = _dbSet.AsNoTracking();
 
             if (filter != null)
             {
@@ -61,11 +71,11 @@ namespace KollectorScum.Api.Repositories
 
             if (orderBy != null)
             {
-                return await orderBy(query).ToListAsync();
+                return await orderBy(query).ToListAsync(cancellationToken);
             }
             else
             {
-                return await query.ToListAsync();
+                return await query.ToListAsync(cancellationToken);
             }
         }
 
@@ -86,6 +96,9 @@ namespace KollectorScum.Api.Repositories
         /// <param name="includeProperties">Navigation properties to include</param>
         /// <returns>Entity or null if not found</returns>
         public virtual async Task<T?> GetByIdAsync(int id, string includeProperties)
+            => await GetByIdAsync(id, includeProperties, CancellationToken.None);
+
+        public virtual async Task<T?> GetByIdAsync(int id, string includeProperties, CancellationToken cancellationToken)
         {
             IQueryable<T> query = _dbSet;
 
@@ -95,7 +108,7 @@ namespace KollectorScum.Api.Repositories
                 query = query.Include(includeProperty.Trim());
             }
 
-            return await query.FirstOrDefaultAsync(e => EF.Property<int>(e, "Id") == id);
+            return await query.FirstOrDefaultAsync(e => EF.Property<int>(e, "Id") == id, cancellationToken);
         }
 
         /// <summary>
@@ -108,7 +121,7 @@ namespace KollectorScum.Api.Repositories
             Expression<Func<T, bool>> filter,
             string includeProperties = "")
         {
-            IQueryable<T> query = _dbSet;
+            IQueryable<T> query = _dbSet.AsNoTracking();
 
             foreach (var includeProperty in includeProperties.Split
                 (new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
@@ -125,11 +138,14 @@ namespace KollectorScum.Api.Repositories
         /// <param name="entity">Entity to add</param>
         /// <returns>Added entity</returns>
         public virtual async Task<T> AddAsync(T entity)
+            => await AddAsync(entity, CancellationToken.None);
+
+        public virtual async Task<T> AddAsync(T entity, CancellationToken cancellationToken)
         {
             if (entity == null)
                 throw new ArgumentNullException(nameof(entity));
 
-            await _dbSet.AddAsync(entity);
+            await _dbSet.AddAsync(entity, cancellationToken);
             return entity;
         }
 
@@ -228,12 +244,24 @@ namespace KollectorScum.Api.Repositories
         /// <param name="filter">Optional filter expression</param>
         /// <returns>Count of entities</returns>
         public virtual async Task<int> CountAsync(Expression<Func<T, bool>>? filter = null)
+            => await CountAsync(filter, CancellationToken.None);
+
+        public virtual async Task<int> CountAsync(Expression<Func<T, bool>>? filter, CancellationToken cancellationToken)
         {
             if (filter != null)
             {
-                return await _dbSet.CountAsync(filter);
+                return await _dbSet.CountAsync(filter, cancellationToken);
             }
-            return await _dbSet.CountAsync();
+            return await _dbSet.CountAsync(cancellationToken);
+        }
+
+        /// <summary>
+        /// Returns a composable query for the entity set
+        /// </summary>
+        /// <returns>Queryable entity set</returns>
+        public virtual IQueryable<T> Query()
+        {
+            return _dbSet.AsQueryable();
         }
 
         /// <summary>
@@ -251,11 +279,20 @@ namespace KollectorScum.Api.Repositories
             Expression<Func<T, bool>>? filter = null,
             Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null,
             string includeProperties = "")
+            => await GetPagedAsync(pageNumber, pageSize, filter, orderBy, includeProperties, CancellationToken.None);
+
+        public virtual async Task<PagedResult<T>> GetPagedAsync(
+            int pageNumber,
+            int pageSize,
+            Expression<Func<T, bool>>? filter,
+            Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy,
+            string includeProperties,
+            CancellationToken cancellationToken)
         {
             if (pageNumber < 1) pageNumber = 1;
             if (pageSize < 1) pageSize = 10;
 
-            IQueryable<T> query = _dbSet;
+            IQueryable<T> query = _dbSet.AsNoTracking();
 
             if (filter != null)
             {
@@ -267,7 +304,7 @@ namespace KollectorScum.Api.Repositories
             {
                 // Capture SQL for debugging (EF Core exposes the query string)
                 try { sql = query.ToQueryString(); } catch { /* ignore if not available */ }
-                var totalCount = await query.CountAsync();
+                var totalCount = await query.CountAsync(cancellationToken);
 
                 foreach (var includeProperty in includeProperties.Split
                     (new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
@@ -283,7 +320,7 @@ namespace KollectorScum.Api.Repositories
                 var items = await query
                     .Skip((pageNumber - 1) * pageSize)
                     .Take(pageSize)
-                    .ToListAsync();
+                    .ToListAsync(cancellationToken);
 
                 var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
 
