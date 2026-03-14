@@ -5,6 +5,7 @@ using KollectorScum.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Linq.Expressions;
+using System.Threading;
 
 namespace KollectorScum.Api.Services
 {
@@ -44,7 +45,8 @@ namespace KollectorScum.Api.Services
         }
 
         public async Task<PagedResult<MusicReleaseSummaryDto>> GetMusicReleasesAsync(
-            MusicReleaseQueryParameters parameters)
+            MusicReleaseQueryParameters parameters,
+            CancellationToken cancellationToken = default)
         {
             if (parameters == null)
                 throw new ArgumentNullException(nameof(parameters));
@@ -130,6 +132,9 @@ namespace KollectorScum.Api.Services
                 TotalPages = pagedResult.TotalPages
             };
         }
+
+        public async Task<PagedResult<MusicReleaseSummaryDto>> GetMusicReleasesAsync(MusicReleaseQueryParameters parameters)
+            => await GetMusicReleasesAsync(parameters, CancellationToken.None);
 
         /// <summary>
         /// Builds a sort expression from query parameters
@@ -335,7 +340,7 @@ namespace KollectorScum.Api.Services
             return lambda;
         }
 
-        public async Task<MusicReleaseDto?> GetMusicReleaseAsync(int id)
+        public async Task<MusicReleaseDto?> GetMusicReleaseAsync(int id, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Getting music release by ID: {Id}", id);
 
@@ -362,12 +367,15 @@ namespace KollectorScum.Api.Services
                 .Where(np => np.MusicReleaseId == id)
                 .OrderByDescending(np => np.PlayedAt)
                 .Select(np => (DateTime?)np.PlayedAt)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(cancellationToken);
 
             return dto;
         }
 
-        public async Task<List<SearchSuggestionDto>> GetSearchSuggestionsAsync(string query, int limit)
+        public async Task<MusicReleaseDto?> GetMusicReleaseAsync(int id)
+            => await GetMusicReleaseAsync(id, CancellationToken.None);
+
+        public async Task<List<SearchSuggestionDto>> GetSearchSuggestionsAsync(string query, int limit, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(query) || query.Length < 2)
             {
@@ -432,12 +440,18 @@ namespace KollectorScum.Api.Services
                 .ToList();
         }
 
-        public async Task<CollectionStatisticsDto> GetCollectionStatisticsAsync()
+        public async Task<List<SearchSuggestionDto>> GetSearchSuggestionsAsync(string query, int limit)
+            => await GetSearchSuggestionsAsync(query, limit, CancellationToken.None);
+
+        public async Task<CollectionStatisticsDto> GetCollectionStatisticsAsync(CancellationToken cancellationToken = default)
         {
             return await _statisticsService.GetCollectionStatisticsAsync();
         }
 
-        public async Task<int?> GetRandomReleaseIdAsync()
+        public async Task<CollectionStatisticsDto> GetCollectionStatisticsAsync()
+            => await GetCollectionStatisticsAsync(CancellationToken.None);
+
+        public async Task<int?> GetRandomReleaseIdAsync(CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Getting random music release ID");
 
@@ -471,5 +485,8 @@ namespace KollectorScum.Api.Services
             
             return randomRelease?.Id;
         }
+
+        public async Task<int?> GetRandomReleaseIdAsync()
+            => await GetRandomReleaseIdAsync(CancellationToken.None);
     }
 }

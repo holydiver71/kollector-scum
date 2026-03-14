@@ -59,7 +59,7 @@ export function ImpersonationProvider({ children }: { children: React.ReactNode 
     try {
       const secureFlag = typeof window !== 'undefined' && window.location?.protocol === 'https:' ? '; Secure' : '';
       document.cookie = `impersonation_userId=${user.userId}; Path=/; SameSite=Lax${secureFlag}`;
-    } catch (err) {
+    } catch {
       // ignore cookie errors in environments where document isn't available
     }
     localStorage.setItem(IMPERSONATION_USER_ID_KEY, user.userId);
@@ -81,7 +81,7 @@ export function ImpersonationProvider({ children }: { children: React.ReactNode 
     // Clean the query param from the URL without triggering a navigation/re-render.
     try {
       window.history.replaceState(null, '', '/dashboard');
-    } catch (err) {
+    } catch {
       // ignore in environments where history API is unavailable
     }
   };
@@ -94,7 +94,7 @@ export function ImpersonationProvider({ children }: { children: React.ReactNode 
     // Clear cookie used for server-side detection as well as localStorage keys
     try {
       document.cookie = 'impersonation_userId=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT';
-    } catch (err) {
+    } catch {
       // ignore
     }
     localStorage.removeItem(IMPERSONATION_USER_ID_KEY);

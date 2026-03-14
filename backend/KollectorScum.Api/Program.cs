@@ -17,6 +17,7 @@ using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.IdentityModel.Tokens;
 
 
@@ -94,6 +95,27 @@ builder.Services.AddResponseCaching(options =>
 {
     options.MaximumBodySize = 1024 * 1024 * 10; // 10MB cache size
     options.UseCaseSensitivePaths = false;
+});
+
+// Add response compression (Phase 2.8) for API JSON responses.
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.Providers.Add<GzipCompressionProvider>();
+    options.MimeTypes = ResponseCompressionDefaults.MimeTypes
+        .Concat(new[] { "application/json" })
+        .Distinct(StringComparer.OrdinalIgnoreCase);
+});
+
+builder.Services.Configure<BrotliCompressionProviderOptions>(options =>
+{
+    options.Level = System.IO.Compression.CompressionLevel.Fastest;
+});
+
+builder.Services.Configure<GzipCompressionProviderOptions>(options =>
+{
+    options.Level = System.IO.Compression.CompressionLevel.Fastest;
 });
 
 // Add in-memory cache for lookup data (artists, genres, labels, etc.)
@@ -411,6 +433,9 @@ app.UseCors("FrontendCorsPolicy");
 
 // ── Phase 1.2: Rate Limiting (OWASP A04) ────────────────────────────────────
 app.UseRateLimiter();
+
+// Enable response compression for API responses.
+app.UseResponseCompression();
 
 // Enable response caching
 app.UseResponseCaching();

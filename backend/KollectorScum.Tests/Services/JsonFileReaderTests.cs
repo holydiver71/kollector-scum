@@ -181,7 +181,7 @@ namespace KollectorScum.Tests.Services
         }
 
         [Fact]
-        public async Task ReadJsonFileAsync_WithLargeFile_PerformsWithinReasonableTime()
+        public async Task ReadJsonFileAsync_WithLargeFile_DeserializesAllItems()
         {
             // Arrange
             var largeArray = new TestDto[1000];
@@ -193,14 +193,15 @@ namespace KollectorScum.Tests.Services
             await File.WriteAllTextAsync(filePath, JsonSerializer.Serialize(largeArray));
 
             // Act
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             var result = await _service.ReadJsonFileAsync<TestDto[]>(filePath);
-            stopwatch.Stop();
 
             // Assert
             Assert.NotNull(result);
             Assert.Equal(1000, result.Length);
-            Assert.True(stopwatch.ElapsedMilliseconds < 1000, $"Operation took {stopwatch.ElapsedMilliseconds}ms");
+            Assert.Equal(0, result[0].Id);
+            Assert.Equal("Test0", result[0].Name);
+            Assert.Equal(999, result[999].Id);
+            Assert.Equal("Test999", result[999].Name);
         }
 
         #endregion

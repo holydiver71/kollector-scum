@@ -112,7 +112,9 @@ namespace KollectorScum.Api.Services
                 "Label,Country,Format"
             );
 
-            var summaryDtos = await Task.Run(() => pagedResult.Items.Select(mr => _mapper.MapToSummaryDto(mr)).ToList());
+            var summaryDtos = pagedResult.Items
+                .Select(mr => _mapper.MapToSummaryDto(mr))
+                .ToList();
 
             return new PagedResult<MusicReleaseSummaryDto>
             {
