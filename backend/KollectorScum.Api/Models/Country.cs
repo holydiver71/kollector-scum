@@ -5,7 +5,7 @@ namespace KollectorScum.Api.Models
     /// <summary>
     /// Represents a country entity for music release origins
     /// </summary>
-    public class Country : IUserOwnedEntity
+    public class Country : INamedUserOwnedEntity
     {
         /// <summary>
         /// Gets or sets the unique identifier for the country

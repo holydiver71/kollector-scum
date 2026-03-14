@@ -1,12 +1,9 @@
 using System.Security.Claims;
-using System.Text.Json;
-using KollectorScum.Api.Data;
 using KollectorScum.Api.DTOs;
 using KollectorScum.Api.Interfaces;
 using KollectorScum.Api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace KollectorScum.Api.Controllers
 {
@@ -21,27 +18,21 @@ namespace KollectorScum.Api.Controllers
         private readonly IUserRepository _userRepository;
         private readonly IUserInvitationRepository _userInvitationRepository;
         private readonly ILogger<AdminController> _logger;
-        private readonly KollectorScumDbContext _context;
-        private readonly IStorageService _storageService;
-        private readonly IWebHostEnvironment _environment;
-        private readonly IConfiguration _configuration;
+        private readonly IStorageMigrationService _storageMigrationService;
+        private readonly IUserImpersonationService _userImpersonationService;
 
         public AdminController(
             IUserRepository userRepository,
             IUserInvitationRepository userInvitationRepository,
             ILogger<AdminController> logger,
-            KollectorScumDbContext context,
-            IStorageService storageService,
-            IWebHostEnvironment environment,
-            IConfiguration configuration)
+            IStorageMigrationService storageMigrationService,
+            IUserImpersonationService userImpersonationService)
         {
             _userRepository = userRepository;
             _userInvitationRepository = userInvitationRepository;
             _logger = logger;
-            _context = context;
-            _storageService = storageService;
-            _environment = environment;
-            _configuration = configuration;
+            _storageMigrationService = storageMigrationService;
+            _userImpersonationService = userImpersonationService;
         }
 
         /// <summary>
@@ -283,45 +274,7 @@ namespace KollectorScum.Api.Controllers
         }
 
         /// <summary>
-        /// Debug endpoint to test file existence check
-        /// </summary>
-        [HttpGet("debug-file-check/{releaseId}")]
-        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
-        public async Task<IActionResult> DebugFileCheck(int releaseId)
-        {
-            var release = await _context.MusicReleases.FindAsync(releaseId);
-            if (release == null)
-            {
-                return NotFound(new { Message = "Release not found" });
-            }
-
-            var imagesPath = _configuration["ImagesPath"] ?? "/home/andy/music-images";
-            var oldCoverArtPath = Path.Combine(imagesPath, "covers");
-
-            var imagesObject = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(release.Images ?? "{}");
-            var hasCoverFront = imagesObject?.ContainsKey("CoverFront") ?? false;
-            var coverFrontValue = hasCoverFront ? imagesObject!["CoverFront"].GetString() : null;
-            var fullPath = coverFrontValue != null ? Path.Combine(oldCoverArtPath, coverFrontValue) : null;
-            var fileExists = fullPath != null ? System.IO.File.Exists(fullPath) : false;
-
-            return Ok(new
-            {
-                ReleaseId = release.Id,
-                Title = release.Title,
-                ImagesJson = release.Images,
-                ConfiguredImagesPath = imagesPath,
-                OldCoverArtPath = oldCoverArtPath,
-                CoverFrontValue = coverFrontValue,
-                FullPath = fullPath,
-                FileExists = fileExists,
-                DirectoryExists = System.IO.Directory.Exists(oldCoverArtPath)
-            });
-        }
-
-        /// <summary>
-        /// Migrates existing cover art from flat file structure to multi-tenant structure
-        /// This endpoint copies files from wwwroot/cover-art/{filename} to wwwroot/cover-art/{userId}/{filename}
-        /// Only processes releases that have flat-path URLs and valid UserIds
+        /// Migrates existing cover art from flat file structure to multi-tenant structure.
         /// </summary>
         [HttpPost("migrate-local-storage/{releaseId?}")]
         [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
@@ -337,173 +290,21 @@ namespace KollectorScum.Api.Controllers
             var currentUserId = GetUserIdFromClaims();
             _logger.LogInformation("Admin {AdminId} initiated local storage migration", currentUserId);
 
-            List<Models.MusicRelease> releasesToMigrate;
+            var result = await _storageMigrationService.MigrateLocalStorageAsync(releaseId);
 
-            if (releaseId.HasValue)
+            if (result.TotalConsidered == 0)
             {
-                var single = await _context.MusicReleases.FindAsync(releaseId.Value);
-                if (single == null)
-                {
-                    return NotFound(new { Message = "Release not found", ReleaseId = releaseId.Value });
-                }
-
-                releasesToMigrate = new List<Models.MusicRelease> { single };
+                return Ok(new { Message = "No local images to migrate.", result.TotalConsidered, result.MigratedCount });
             }
-            else
-            {
-                // Find all releases with Images JSON field (they contain just filenames that need migration)
-                // The Images field contains JSON like: {"CoverFront":"filename.jpg","CoverBack":null,"Thumbnail":"..."}
-                releasesToMigrate = await _context.MusicReleases
-                    .Where(r => r.Images != null && r.Images.Contains("CoverFront"))
-                    .ToListAsync();
-            }
-
-            if (!releasesToMigrate.Any())
-            {
-                _logger.LogInformation("No releases found with cover art to migrate");
-                return Ok(new { Message = "No local images to migrate.", TotalConsidered = 0, MigratedCount = 0 });
-            }
-
-            var migratedCount = 0;
-            var skippedCount = 0;
-            var errors = new List<string>();
-            
-            // Get the old images path from configuration (where images are currently stored)
-            var imagesPath = _configuration["ImagesPath"] ?? "/home/andy/music-images";
-            var oldCoverArtPath = Path.Combine(imagesPath, "covers");
-            
-            _logger.LogInformation("Migrating cover art from {OldPath} to wwwroot/cover-art/{{userId}}", oldCoverArtPath);
-
-            foreach (var release in releasesToMigrate)
-            {
-                try
-                {
-                    // Skip releases without a valid UserId
-                    if (release.UserId == Guid.Empty)
-                    {
-                        _logger.LogWarning("Skipping release {ReleaseId} '{Title}' due to missing UserId", 
-                            release.Id, release.Title);
-                        skippedCount++;
-                        continue;
-                    }
-
-                    // Parse the Images JSON to extract cover art URLs
-                    if (string.IsNullOrWhiteSpace(release.Images))
-                    {
-                        continue;
-                    }
-
-                    var imagesObject = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(release.Images);
-                    if (imagesObject == null || !imagesObject.ContainsKey("CoverFront"))
-                    {
-                        continue;
-                    }
-
-                    var coverFrontElement = imagesObject["CoverFront"];
-                    if (coverFrontElement.ValueKind == JsonValueKind.Null || coverFrontElement.ValueKind == JsonValueKind.Undefined)
-                    {
-                        continue;
-                    }
-                    
-                    var coverFrontValue = coverFrontElement.GetString();
-                    if (string.IsNullOrWhiteSpace(coverFrontValue))
-                    {
-                        continue;
-                    }
-
-                    // Skip if already migrated (contains /cover-art/ URL pattern)
-                    if (coverFrontValue.StartsWith("/cover-art/"))
-                    {
-                        continue;
-                    }
-
-                    // The value is just a filename (e.g., "GirlschoolScreamingBlueMu9701_f.jpeg")
-                    // These files exist in /home/andy/music-images/covers/
-                    var fileName = coverFrontValue;
-                    
-                    _logger.LogInformation("Processing release {ReleaseId} '{Title}' with filename: '{FileName}'", 
-                        release.Id, release.Title, fileName);
-                    
-                    // Skip if it's already a full path or URL
-                    if (fileName.Contains("/") || fileName.StartsWith("http"))
-                    {
-                        _logger.LogWarning("Skipping release {ReleaseId} - unexpected URL format: {Url}", 
-                            release.Id, fileName);
-                        skippedCount++;
-                        continue;
-                    }
-
-                    // Check if old file exists
-                    var oldFilePath = Path.Combine(oldCoverArtPath, fileName);
-                    _logger.LogInformation("Checking file existence at: {FilePath}", oldFilePath);
-                    
-                    if (!System.IO.File.Exists(oldFilePath))
-                    {
-                        _logger.LogWarning("File not found for release {ReleaseId}: {FilePath}", release.Id, oldFilePath);
-                        skippedCount++;
-                        continue;
-                    }
-                    
-                    _logger.LogInformation("File found, proceeding with migration for release {ReleaseId}", release.Id);
-
-                    // Copy file using storage service
-                    using (var fileStream = System.IO.File.OpenRead(oldFilePath))
-                    {
-                        // Determine content type from file extension
-                        var extension = Path.GetExtension(fileName).ToLowerInvariant();
-                        var contentType = extension switch
-                        {
-                            ".jpg" or ".jpeg" => "image/jpeg",
-                            ".png" => "image/png",
-                            ".webp" => "image/webp",
-                            ".gif" => "image/gif",
-                            _ => "image/jpeg"
-                        };
-
-                        var newUrl = await _storageService.UploadFileAsync(
-                            "cover-art",
-                            release.UserId.ToString(),
-                            fileName,
-                            fileStream,
-                            contentType
-                        );
-
-                        // Update the Images JSON with the new URL
-                        imagesObject["CoverFront"] = JsonDocument.Parse($"\"{newUrl}\"").RootElement;
-                        release.Images = System.Text.Json.JsonSerializer.Serialize(imagesObject);
-                        
-                        // Mark the entity as modified so EF Core tracks the change
-                        _context.Entry(release).Property(r => r.Images).IsModified = true;
-                        
-                        migratedCount++;
-                        _logger.LogInformation(
-                            "Migrated cover art for release {ReleaseId} '{Title}': {OldFilename} -> {NewUrl}",
-                            release.Id, release.Title, fileName, newUrl);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    var error = $"Failed to migrate release {release.Id} '{release.Title}': {ex.Message}";
-                    _logger.LogError(ex, "Failed to migrate cover art for release {ReleaseId}", release.Id);
-                    errors.Add(error);
-                }
-            }
-
-            // Save all changes
-            await _context.SaveChangesAsync();
-
-            _logger.LogInformation(
-                "Local storage migration completed: {MigratedCount} migrated, {SkippedCount} skipped, {ErrorCount} errors",
-                migratedCount, skippedCount, errors.Count);
 
             return Ok(new
             {
                 Message = "Local storage migration completed",
-                TotalConsidered = releasesToMigrate.Count,
-                MigratedCount = migratedCount,
-                SkippedCount = skippedCount,
-                ErrorCount = errors.Count,
-                Errors = errors.Take(10).ToList() // Return first 10 errors only
+                result.TotalConsidered,
+                result.MigratedCount,
+                result.SkippedCount,
+                ErrorCount = result.Errors.Count,
+                Errors = result.Errors.Take(10).ToList()
             });
         }
 
@@ -525,25 +326,18 @@ namespace KollectorScum.Api.Controllers
 
             var adminId = GetUserIdFromClaims();
 
-            // Prevent self-impersonation
-            if (adminId == userId)
-                return BadRequest(new { message = "Cannot impersonate yourself" });
-
-            var targetUser = await _userRepository.FindByIdAsync(userId);
-            if (targetUser == null)
-                return NotFound(new { message = "User not found" });
-
-            if (targetUser.IsAdmin)
-                return BadRequest(new { message = "Cannot impersonate an admin user" });
-
-            _logger.LogWarning("Admin {AdminId} initiated impersonation of user {TargetId} ({TargetEmail})", adminId, userId, targetUser.Email);
-
-            return Ok(new ImpersonationDto
+            try
             {
-                UserId = targetUser.Id,
-                Email = targetUser.Email,
-                DisplayName = targetUser.DisplayName
-            });
+                var dto = await _userImpersonationService.ImpersonateUserAsync(adminId!.Value, userId);
+                if (dto == null)
+                    return NotFound(new { message = "User not found" });
+
+                return Ok(dto);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         private async Task<bool> IsUserAdminAsync()
