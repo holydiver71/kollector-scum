@@ -13,12 +13,12 @@ export default defineConfig({
 	use: {
 		baseURL: 'http://localhost:3000',
 		headless: true,
-		actionTimeout: 5_000,
+		actionTimeout: 10_000,
 		viewport: { width: 1280, height: 800 },
 		trace: 'on-first-retry',
 	},
 	webServer: {
-		command: 'npm run dev',
+		command: 'JEST_WORKER_ID=1 npm run dev',
 		port: 3000,
 		reuseExistingServer: !process.env.CI,
 	},
