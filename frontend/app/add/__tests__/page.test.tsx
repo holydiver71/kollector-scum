@@ -56,7 +56,7 @@ describe('AddReleasePage', () => {
   it('has proper page structure', () => {
     const { container } = render(<AddReleasePage />);
     
-    expect(container.querySelector('.max-w-3xl')).toBeInTheDocument();
+    expect(container.querySelector('.max-w-4xl')).toBeInTheDocument();
     expect(container.querySelector('.space-y-6')).toBeInTheDocument();
   });
 });
