@@ -86,17 +86,19 @@ describe("toCreateDto", () => {
   it("maps classification IDs and names correctly", () => {
     const dto = toCreateDto(BASE_DATA);
     expect(dto.formatId).toBe(3);
-    expect(dto.formatName).toBe("LP");
+    // When ID is set the name is omitted — backend validator rejects both
+    expect(dto.formatName).toBeUndefined();
     expect(dto.packagingId).toBe(4);
-    expect(dto.packagingName).toBe("Gatefold");
+    expect(dto.packagingName).toBeUndefined();
     expect(dto.countryId).toBe(5);
-    expect(dto.countryName).toBe("United Kingdom");
+    expect(dto.countryName).toBeUndefined();
   });
 
   it("maps label info correctly", () => {
     const dto = toCreateDto(BASE_DATA);
     expect(dto.labelId).toBe(6);
-    expect(dto.labelName).toBe("EMI");
+    // When ID is set the name is omitted — backend validator rejects both
+    expect(dto.labelName).toBeUndefined();
     expect(dto.labelNumber).toBe("EMC 3400");
     expect(dto.upc).toBe("077774681116");
   });

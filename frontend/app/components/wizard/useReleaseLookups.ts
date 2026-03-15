@@ -38,10 +38,10 @@ const EMPTY: ReleaseLookups = {
 
 /**
  * Fetches a single lookup endpoint with exponential back-off on 429 / 5xx.
- * Returns an empty array on unrecoverable failure so one bad endpoint does
- * not prevent the rest of the wizard from loading.
+ * Returns an empty array on success, or null on unrecoverable failure so the
+ * caller can surface an error while still leaving the list empty.
  */
-async function fetchLookup(path: string): Promise<LookupItem[]> {
+async function fetchLookup(path: string): Promise<LookupItem[] | null> {
   const maxAttempts = 3;
   let attempt = 0;
   while (attempt < maxAttempts) {
@@ -51,10 +51,11 @@ async function fetchLookup(path: string): Promise<LookupItem[]> {
       return res?.items ?? [];
     } catch (err) {
       const apiErr = err as ApiError;
-      const isRetryable = !apiErr?.status || apiErr.status === 429 || apiErr.status >= 500;
+      // Only retry on known HTTP status codes — plain errors (no status) are not retried
+      const isRetryable = apiErr?.status === 429 || (!!apiErr?.status && apiErr.status >= 500);
       if (!isRetryable || attempt >= maxAttempts) {
         console.warn(`useReleaseLookups: giving up on ${path} after ${attempt} attempt(s):`, err);
-        return [];
+        return null;
       }
       const delayMs = apiErr.status === 429 && apiErr.retryAfter
         ? apiErr.retryAfter * 1000
@@ -62,7 +63,7 @@ async function fetchLookup(path: string): Promise<LookupItem[]> {
       await new Promise(r => setTimeout(r, delayMs));
     }
   }
-  return [];
+  return null;
 }
 
 /**
@@ -113,20 +114,28 @@ export function useReleaseLookups(currentStep: number = 3): UseReleaseLookupsRes
     const fetchGroups = async () => {
       setLoading(true);
 
+      let anyFailed = false;
+
       await Promise.all(
         groupsToFetch.map(async ({ step, entries }) => {
           const results = await Promise.all(entries.map(e => fetchLookup(e.path)));
           if (cancelled) return;
           fetchedGroups.current.add(step);
+          if (results.some(r => r === null)) anyFailed = true;
           setLookups(prev => {
             const next = { ...prev };
-            entries.forEach((e, i) => { next[e.key] = results[i]; });
+            entries.forEach((e, i) => { next[e.key] = results[i] ?? []; });
             return next;
           });
         })
       );
 
-      if (!cancelled) setLoading(false);
+      if (!cancelled) {
+        if (anyFailed) {
+          setError("Some lookup lists could not be loaded. You can still proceed but autocomplete options may be limited.");
+        }
+        setLoading(false);
+      }
     };
 
     fetchGroups().catch(err => {
