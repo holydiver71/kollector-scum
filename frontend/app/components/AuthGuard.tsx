@@ -48,8 +48,17 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       const profile = await getUserProfile();
       if (!cancelled) {
         if (!profile) {
-          setValidated(false);
-          router.replace('/');
+          // Only redirect if the auth token was actually revoked/cleared.
+          // fetchJson clears auth_token from localStorage on a genuine 401.
+          // Transient failures (429 rate-limit, 5xx, network errors) leave the
+          // token intact, so we should NOT redirect in those cases.
+          if (!isAuthenticated()) {
+            setValidated(false);
+            router.replace('/');
+            return;
+          }
+          // Token still present but profile fetch failed transiently – keep validated.
+          setValidated(true);
           return;
         }
         setValidated(true);
