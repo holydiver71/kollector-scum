@@ -1,61 +1,95 @@
+/**
+ * Tests for the AddReleasePage source-selection screen.
+ *
+ * The page now renders a flow-selection card instead of tabs, delegating to
+ * DiscogsAddReleaseWizard or AddReleaseWizard based on the user's choice.
+ * Both child wizards are mocked here so these tests focus on the page shell.
+ */
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import AddReleasePage from '../page';
 
-// Mock next/navigation hooks used by this page
+// Mock next/navigation
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
   useSearchParams: () => new URLSearchParams(),
   usePathname: () => '/add',
 }));
 
-describe('AddReleasePage', () => {
-  beforeEach(() => {
-    // Mock global.fetch so the page's lookup effect doesn't throw in Node (jsdom env)
-    // Return empty arrays by default for any lookup endpoints.
-    // Tests that require different fetch behavior can override this.
-    // Keep fetch unresolved for these tests to prevent async state updates from running
-    // (we only assert the static page UI here). Individual tests can override the mock.
-    (global as any).fetch = jest.fn().mockImplementation(() => new Promise(() => {}));
-  });
+// Mock the wizard components so they don't need API access
+jest.mock('../../components/wizard/discogs/DiscogsAddReleaseWizard', () => ({
+  __esModule: true,
+  default: function MockDiscogsWizard() {
+    return <div data-testid="discogs-wizard">Discogs Wizard</div>;
+  },
+}));
 
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
-  it('renders the page header', () => {
+jest.mock('../../components/wizard/AddReleaseWizard', () => ({
+  __esModule: true,
+  default: function MockManualWizard() {
+    return <div data-testid="manual-wizard">Manual Wizard</div>;
+  },
+}));
+
+describe('AddReleasePage – source selection', () => {
+  it('renders the page heading', () => {
     render(<AddReleasePage />);
-    
-    expect(screen.getByRole('heading', { name: 'Add Release', level: 1 })).toBeInTheDocument();
-    expect(screen.getByText('Add a new music release to your collection')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /add release/i, level: 1 })).toBeInTheDocument();
   });
 
-  it('renders the tab navigation', () => {
+  it('renders the page description', () => {
     render(<AddReleasePage />);
-
-    // Page should include the two primary tab options
-    const discogsBtns = screen.getAllByRole('button', { name: /Search Discogs/i });
-    expect(discogsBtns.length).toBeGreaterThan(0);
-    expect(screen.getByRole('button', { name: /Manual Entry/i })).toBeInTheDocument();
+    expect(screen.getByText(/add a new music release to your collection/i)).toBeInTheDocument();
   });
 
-  it('displays the page description', () => {
+  it('shows the Search Discogs and Manual Entry flow cards', () => {
     render(<AddReleasePage />);
-
-    expect(screen.getByText(/Add a new music release to your collection/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /search discogs/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /manual entry/i })).toBeInTheDocument();
   });
 
-  it('renders the plus icon SVG', () => {
+  it('does not render either wizard on the selection screen', () => {
+    render(<AddReleasePage />);
+    expect(screen.queryByTestId('discogs-wizard')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('manual-wizard')).not.toBeInTheDocument();
+  });
+
+  it('shows the Discogs wizard after clicking Search Discogs', async () => {
+    const user = userEvent.setup();
+    render(<AddReleasePage />);
+    await user.click(screen.getByRole('button', { name: /search discogs/i }));
+    expect(screen.getByTestId('discogs-wizard')).toBeInTheDocument();
+    expect(screen.queryByTestId('manual-wizard')).not.toBeInTheDocument();
+  });
+
+  it('shows the Manual wizard after clicking Manual Entry', async () => {
+    const user = userEvent.setup();
+    render(<AddReleasePage />);
+    await user.click(screen.getByRole('button', { name: /manual entry/i }));
+    expect(screen.getByTestId('manual-wizard')).toBeInTheDocument();
+    expect(screen.queryByTestId('discogs-wizard')).not.toBeInTheDocument();
+  });
+
+  it('shows a "Change method" link when a wizard is active', async () => {
+    const user = userEvent.setup();
+    render(<AddReleasePage />);
+    await user.click(screen.getByRole('button', { name: /search discogs/i }));
+    expect(screen.getByRole('button', { name: /change method/i })).toBeInTheDocument();
+  });
+
+  it('returns to the selection screen when Change method is clicked', async () => {
+    const user = userEvent.setup();
+    render(<AddReleasePage />);
+    await user.click(screen.getByRole('button', { name: /search discogs/i }));
+    await user.click(screen.getByRole('button', { name: /change method/i }));
+    // Should be back on the selection screen
+    expect(screen.getByRole('button', { name: /search discogs/i })).toBeInTheDocument();
+    expect(screen.queryByTestId('discogs-wizard')).not.toBeInTheDocument();
+  });
+
+  it('has correct outer container classes', () => {
     const { container } = render(<AddReleasePage />);
-    
-    const svg = container.querySelector('svg');
-    expect(svg).toBeInTheDocument();
-    // Ensure there's an SVG icon present
-    expect(svg).toBeTruthy();
-  });
-
-  it('has proper page structure', () => {
-    const { container } = render(<AddReleasePage />);
-    
     expect(container.querySelector('.max-w-4xl')).toBeInTheDocument();
     expect(container.querySelector('.space-y-6')).toBeInTheDocument();
   });
