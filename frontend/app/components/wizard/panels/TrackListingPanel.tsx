@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { WizardFormData, WizardMedia, WizardTrack, ValidationErrors } from "../types";
 
 interface Props {
@@ -9,24 +10,174 @@ interface Props {
   onChange: (updates: Partial<WizardFormData>) => void;
   /** Per-field validation errors (keyed as "track{discIndex}_{trackIndex}") */
   errors: ValidationErrors;
+  /**
+   * Called whenever the panel's local validation state changes so the wizard
+   * shell can disable the Next button while invalid durations exist.
+   */
+  onErrors?: (errors: ValidationErrors) => void;
 }
 
-/** Format seconds as M:SS */
+/** Format seconds as M:SS (e.g. 3 → "0:03", 207 → "3:27") */
 function formatDuration(seconds?: number): string {
-  if (!seconds) return "";
+  if (seconds == null) return "";
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-/** Parse a M:SS string into seconds */
+/**
+ * Parse a 1–2 digit minute + exactly 2 digit second string into seconds.
+ * Returns undefined when the format is wrong or seconds ≥ 60.
+ */
 function parseDuration(value: string): number | undefined {
   if (!value.trim()) return undefined;
-  const parts = value.split(":").map(Number);
-  if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
-    return parts[0] * 60 + parts[1];
+  const match = value.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return undefined;
+  const mins = parseInt(match[1], 10);
+  const secs = parseInt(match[2], 10);
+  if (secs >= 60) return undefined;
+  return mins * 60 + secs;
+}
+
+/**
+ * Apply the M:SS mask to a raw string and the previous display value.
+ * Rules:
+ * - Only digits and `:` are kept.
+ * - Minutes: max 2 digits. Colon is auto-inserted after the 2nd minute digit
+ *   when the user is adding characters (not deleting).
+ * - Seconds: max 2 digits after the colon.
+ * - User may also type `:` manually after 1 minute digit.
+ */
+function applyDurationMask(raw: string, prevDisplay: string): string {
+  const clean = raw.replace(/[^\d:]/g, "");
+  const colonIdx = clean.indexOf(":");
+
+  if (colonIdx === -1) {
+    const digits = clean.slice(0, 2);
+    // Auto-insert colon only when the user is typing (not deleting)
+    if (digits.length === 2 && raw.length > prevDisplay.length) {
+      return `${digits}:`;
+    }
+    return digits;
   }
-  return undefined;
+
+  const mins = clean.slice(0, colonIdx).slice(0, 2);
+  const secs = clean.slice(colonIdx + 1).replace(/\D/g, "").slice(0, 2);
+  return `${mins}:${secs}`;
+}
+
+/**
+ * Masked M:SS duration input.
+ *
+ * Typing behaviour:
+ * - Filters to digits and `:` only.
+ * - Colon is auto-inserted after the 2nd minute digit.
+ * - Backspacing over an auto-inserted colon removes the preceding minute digit
+ *   so the cursor doesn't appear stuck.
+ * - Max: 2 minute digits + `:` + 2 second digits.
+ *
+ * Blur behaviour:
+ * - Empty → valid (duration is optional).
+ * - Complete `M:SS` / `MM:SS` with seconds 0–59 → normalises and commits.
+ * - Anything else → red border + tooltip, calls onValidityChange(true).
+ */
+function DurationInput({
+  value,
+  onChange,
+  onValidityChange,
+}: {
+  value?: number;
+  onChange: (seconds?: number) => void;
+  onValidityChange: (isInvalid: boolean) => void;
+}) {
+  const [display, setDisplay] = useState(() =>
+    value != null ? formatDuration(value) : ""
+  );
+  const [invalid, setInvalid] = useState(false);
+
+  // Sync display when the stored value is updated externally (e.g. Discogs pre-fill)
+  useEffect(() => {
+    setDisplay(value != null ? formatDuration(value) : "");
+    setInvalid(false);
+  }, [value]);
+
+  const clearError = () => {
+    if (invalid) {
+      setInvalid(false);
+      onValidityChange(false);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+
+    // Special case: user backspaced over an auto-inserted colon.
+    // display = "34:"  →  raw = "34"  →  step back one more minute digit.
+    if (display.endsWith(":") && !raw.includes(":") && raw === display.slice(0, -1)) {
+      setDisplay(raw.slice(0, -1));
+      clearError();
+      return;
+    }
+
+    setDisplay(applyDurationMask(raw, display));
+    clearError();
+  };
+
+  const validate = () => {
+    if (!display.trim()) {
+      onChange(undefined);
+      setInvalid(false);
+      onValidityChange(false);
+      return;
+    }
+    const parsed = parseDuration(display);
+    if (parsed !== undefined) {
+      onChange(parsed);
+      setDisplay(formatDuration(parsed));
+      setInvalid(false);
+      onValidityChange(false);
+    } else {
+      setInvalid(true);
+      onValidityChange(true);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      validate();
+      e.currentTarget.blur();
+    }
+  };
+
+  return (
+    <div className="relative">
+      <input
+        type="text"
+        inputMode="numeric"
+        value={display}
+        onChange={handleChange}
+        onBlur={validate}
+        onKeyDown={handleKeyDown}
+        placeholder="M:SS"
+        title={
+          invalid
+            ? "Invalid duration – use M:SS format with seconds 0–59 (e.g. 3:47)"
+            : undefined
+        }
+        className={`w-16 bg-[#0F0F1A] border rounded px-2 py-1 text-xs text-right font-mono focus:outline-none focus:text-white placeholder-gray-600 transition-colors ${
+          invalid
+            ? "border-red-500 text-red-400 focus:border-red-500"
+            : "border-transparent text-gray-200 focus:border-[#8B5CF6]"
+        }`}
+      />
+      {invalid && (
+        <p className="absolute right-0 top-full mt-1 w-44 text-[10px] text-red-400 bg-[#1C0A0A] border border-red-900/50 rounded px-2 py-1 z-10 leading-tight">
+          Use M:SS with seconds 0–59
+        </p>
+      )}
+    </div>
+  );
 }
 
 /**
@@ -34,8 +185,51 @@ function parseDuration(value: string): number | undefined {
  * Supports multiple discs with any number of tracks per disc.
  * Durations are stored as integer seconds internally and displayed as M:SS.
  */
-export default function TrackListingPanel({ data, onChange, errors }: Props) {
+export default function TrackListingPanel({ data, onChange, errors, onErrors }: Props) {
   const media: WizardMedia[] = data.media ?? [];
+
+  // Ref tracks current invalid duration keys synchronously so callers see
+  // the latest state even when blur and a button click fire in the same frame.
+  const durationErrorsRef = useRef<ValidationErrors>({});
+
+  const reportDurationError = useCallback(
+    (key: string, isInvalid: boolean) => {
+      const next = { ...durationErrorsRef.current };
+      if (isInvalid) {
+        next[key] = "Invalid duration";
+      } else {
+        delete next[key];
+      }
+      durationErrorsRef.current = next;
+      onErrors?.(next);
+    },
+    [onErrors]
+  );
+
+  /** Remove all duration error keys belonging to a given disc */
+  const clearDiscDurationErrors = useCallback(
+    (discIndex: number) => {
+      const next = Object.fromEntries(
+        Object.entries(durationErrorsRef.current).filter(
+          ([k]) => !k.startsWith(`duration_${discIndex}_`)
+        )
+      );
+      durationErrorsRef.current = next;
+      onErrors?.(next);
+    },
+    [onErrors]
+  );
+
+  /** Remove the duration error key for a single track */
+  const clearTrackDurationError = useCallback(
+    (discIndex: number, trackIndex: number) => {
+      const next = { ...durationErrorsRef.current };
+      delete next[`duration_${discIndex}_${trackIndex}`];
+      durationErrorsRef.current = next;
+      onErrors?.(next);
+    },
+    [onErrors]
+  );
 
   const updateMedia = (updated: WizardMedia[]) => {
     // Re-index track numbers within each disc
@@ -54,6 +248,7 @@ export default function TrackListingPanel({ data, onChange, errors }: Props) {
   };
 
   const removeDisc = (discIndex: number) => {
+    clearDiscDurationErrors(discIndex);
     updateMedia(media.filter((_, i) => i !== discIndex));
   };
 
@@ -76,6 +271,7 @@ export default function TrackListingPanel({ data, onChange, errors }: Props) {
   };
 
   const removeTrack = (discIndex: number, trackIndex: number) => {
+    clearTrackDurationError(discIndex, trackIndex);
     updateMedia(
       media.map((d, i) =>
         i === discIndex
@@ -157,10 +353,10 @@ export default function TrackListingPanel({ data, onChange, errors }: Props) {
               {disc.tracks.length > 0 && (
                 <div className="flex items-center gap-3 px-4 pt-2.5 pb-1">
                   <span className="w-5" />
-                  <span className="flex-1 text-[10px] font-semibold uppercase tracking-wider text-[#A78BFA]/40">
+                  <span className="flex-1 text-[10px] font-semibold uppercase tracking-wider text-gray-500">
                     Track
                   </span>
-                  <span className="w-16 text-right text-[10px] font-semibold uppercase tracking-wider text-[#A78BFA]/40">
+                  <span className="w-16 text-right text-[10px] font-semibold uppercase tracking-wider text-gray-500">
                     Duration
                   </span>
                   <span className="w-4" />
@@ -196,18 +392,14 @@ export default function TrackListingPanel({ data, onChange, errors }: Props) {
                     />
 
                     {/* Duration */}
-                    <input
-                      type="text"
-                      value={
-                        track.lengthSecs ? formatDuration(track.lengthSecs) : ""
+                    <DurationInput
+                      value={track.lengthSecs}
+                      onChange={(secs) =>
+                        updateTrack(discIndex, trackIndex, { lengthSecs: secs })
                       }
-                      onChange={(e) =>
-                        updateTrack(discIndex, trackIndex, {
-                          lengthSecs: parseDuration(e.target.value),
-                        })
+                      onValidityChange={(isInvalid) =>
+                        reportDurationError(`duration_${discIndex}_${trackIndex}`, isInvalid)
                       }
-                      placeholder="0:00"
-                      className="w-16 bg-transparent text-xs text-gray-500 text-right font-mono focus:outline-none focus:text-white placeholder-gray-700 border-b border-transparent focus:border-[#8B5CF6] pb-0.5"
                     />
 
                     {/* Remove */}
