@@ -184,18 +184,18 @@ export function toCreateDto(data: WizardFormData): CreateMusicReleaseDto {
     // Genre IDs and new names
     genreIds: data.genreIds,
     genreNames: data.genreNames.length ? data.genreNames : undefined,
-    // Classification
+    // Classification — send ID OR name, never both (backend validator rejects both)
     formatId: data.formatId,
-    formatName: data.formatName || undefined,
+    formatName: data.formatId ? undefined : (data.formatName || undefined),
     packagingId: data.packagingId,
-    packagingName: data.packagingName || undefined,
+    packagingName: data.packagingId ? undefined : (data.packagingName || undefined),
     countryId: data.countryId,
-    countryName: data.countryName || undefined,
-    // Label & Dates
+    countryName: data.countryId ? undefined : (data.countryName || undefined),
+    // Label & Dates — same rule
     releaseYear: data.releaseYear ? toBackendDate(data.releaseYear) : undefined,
     origReleaseYear: data.origReleaseYear ? toBackendDate(data.origReleaseYear) : undefined,
     labelId: data.labelId,
-    labelName: data.labelName || undefined,
+    labelName: data.labelId ? undefined : (data.labelName || undefined),
     labelNumber: data.labelNumber || undefined,
     upc: data.upc || undefined,
     // Images

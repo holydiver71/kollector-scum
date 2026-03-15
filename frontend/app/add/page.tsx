@@ -444,7 +444,7 @@ export default function AddReleasePage() {
           </p>
           <button
             onClick={() => router.push(`/releases/${newReleaseId}`)}
-            className="text-[var(--theme-accent)] hover:text-[var(--theme-accent-light)] underline transition-colors"
+            className="text-[var(--theme-accent)] hover:text-[var(--theme-accent-light)] underline transition-colors cursor-pointer"
           >
             View Now
           </button>

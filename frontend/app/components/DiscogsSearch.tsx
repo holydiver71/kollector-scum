@@ -134,7 +134,7 @@ export default function DiscogsSearch({ onResultsFound, onError }: DiscogsSearch
           <button
             type="submit"
             disabled={isSearching || !catalogNumber.trim()}
-            className="flex-1 bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed font-medium transition-colors"
+            className="flex-1 bg-[var(--theme-accent)] text-white px-6 py-2 rounded-md hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed font-medium transition-colors"
           >
             {isSearching ? (
               <span className="flex items-center justify-center">
@@ -153,7 +153,7 @@ export default function DiscogsSearch({ onResultsFound, onError }: DiscogsSearch
             type="button"
             onClick={handleClear}
             disabled={isSearching}
-            className="px-6 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed font-medium transition-colors"
+            className="px-6 py-2 border border-[var(--theme-card-border)] text-[var(--theme-foreground)] rounded-md hover:bg-[var(--theme-sidebar-hover)] disabled:opacity-40 disabled:cursor-not-allowed font-medium transition-colors"
           >
             Clear
           </button>

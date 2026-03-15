@@ -295,9 +295,10 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
 
       console.log('API URL:', `/api/musicreleases?${params}`);
 
-      // Retry once on transient failures (network, timeouts)
+      // Retry on transient failures (network errors, 429 rate-limit, 5xx server errors).
+      // Non-retryable 4xx errors (401, 403, 404, 422…) are thrown immediately.
       let attempts = 0;
-      const maxAttempts = 2;
+      const maxAttempts = 3;
       let lastErr: unknown = null;
       let response: PagedResult<MusicRelease> | MusicRelease[] | null = null;
 
@@ -309,8 +310,16 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
           break;
         } catch (err) {
           lastErr = err;
-          console.warn(`fetchReleases attempt ${attempts} failed`, err);
-          if (attempts < maxAttempts) await new Promise(r => setTimeout(r, 600 * attempts));
+          const status = (err as ApiError)?.status;
+          // Only retry on rate-limiting, server errors, or network failures (no status)
+          const isRetryable = !status || status === 429 || status >= 500;
+          if (!isRetryable || attempts >= maxAttempts) break;
+          // Respect Retry-After on 429, otherwise use exponential backoff
+          const retryAfterMs = status === 429 && (err as ApiError).retryAfter
+            ? (err as ApiError).retryAfter! * 1000
+            : 1000 * Math.pow(2, attempts - 1);
+          console.warn(`fetchReleases attempt ${attempts} failed (${status ?? 'network'}), retrying in ${retryAfterMs}ms`, err);
+          await new Promise(r => setTimeout(r, retryAfterMs));
         }
       }
 
