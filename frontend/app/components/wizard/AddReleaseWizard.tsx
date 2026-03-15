@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useRef } from "react";
 import type { CreateMusicReleaseDto } from "../AddReleaseForm";
 import {
   type WizardFormData,
@@ -80,16 +80,23 @@ export default function AddReleaseWizard({
   onSuccess,
   onCancel,
 }: AddReleaseWizardProps) {
-  // ── Lookup data ─────────────────────────────────────────────────────────────
-  const lookups = useReleaseLookups();
-
   // ── Form state ──────────────────────────────────────────────────────────────
   const [formData, setFormData] = useState<WizardFormData>(() =>
     initialData ? fromCreateDto(initialData) : { ...EMPTY_FORM_DATA }
   );
   const [currentStep, setCurrentStep] = useState(0);
   const [visitedSteps, setVisitedSteps] = useState<number[]>([0]);
+
+  // ── Lookup data (lazy-loaded per step group) ─────────────────────────────
+  const lookups = useReleaseLookups(currentStep);
   const [stepErrors, setStepErrors] = useState<ValidationErrors>({});
+  // Ref mirrors stepErrors so handleNext always reads the latest value even
+  // when blur and click fire before a re-render commits.
+  const stepErrorsRef = useRef<ValidationErrors>({});
+  const updateStepErrors = useCallback((e: ValidationErrors) => {
+    stepErrorsRef.current = e;
+    setStepErrors(e);
+  }, []);
 
   // ── Submit state ────────────────────────────────────────────────────────────
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -105,7 +112,7 @@ export default function AddReleaseWizard({
   };
 
   const goToStep = (target: number) => {
-    setStepErrors({});
+    updateStepErrors({});
     setCurrentStep(target);
     markVisited(target);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -115,11 +122,15 @@ export default function AddReleaseWizard({
 
   const handleNext = () => {
     const errors = validateStep(currentStep, formData);
-    if (Object.keys(errors).length > 0) {
-      setStepErrors(errors);
+    // Merge with any panel-injected errors (e.g. invalid durations) read from
+    // the ref so we see the value set by the blur handler even when blur and
+    // click fire before a re-render commits.
+    const merged = { ...stepErrorsRef.current, ...errors };
+    if (Object.keys(merged).length > 0) {
+      updateStepErrors(merged);
       return;
     }
-    setStepErrors({});
+    updateStepErrors({});
     goToStep(currentStep + 1);
   };
 
@@ -137,14 +148,19 @@ export default function AddReleaseWizard({
 
   const handleChange = (updates: Partial<WizardFormData>) => {
     setFormData((prev) => ({ ...prev, ...updates }));
-    // Clear validation errors for any field that was just updated
+    // Clear validation errors for any field that was just updated.
+    // `artistIds`/`artistNames` are the underlying data keys but the validation
+    // error is stored under the display key `artists`, so include it explicitly.
     const updatedKeys = Object.keys(updates);
+    if (updatedKeys.includes("artistIds") || updatedKeys.includes("artistNames")) {
+      updatedKeys.push("artists");
+    }
     if (updatedKeys.some((k) => k in stepErrors)) {
-      setStepErrors((prev) => {
-        const next = { ...prev };
-        updatedKeys.forEach((k) => delete next[k]);
-        return next;
-      });
+      updateStepErrors(
+        Object.fromEntries(
+          Object.entries(stepErrorsRef.current).filter(([k]) => !updatedKeys.includes(k))
+        )
+      );
     }
   };
 
@@ -328,6 +344,7 @@ export default function AddReleaseWizard({
               data={formData}
               onChange={handleChange}
               errors={stepErrors}
+              onErrors={updateStepErrors}
             />
           )}
           {currentStep === 6 && (

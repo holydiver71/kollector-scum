@@ -64,7 +64,7 @@ export default function LabelInformationPanel({ data, onChange, errors, lookups 
           Enter the year this specific edition was released. If it is a reissue
           or remaster, also fill in the original release year.
         </p>
-        <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-2">
+        <div className="flex items-stretch gap-2">
           {/* Release Year */}
           <div className="flex-1">
             <label
@@ -94,29 +94,32 @@ export default function LabelInformationPanel({ data, onChange, errors, lookups 
             )}
           </div>
 
-          {/* Copy arrow (desktop) */}
-          <div className="hidden md:flex items-end pb-3">
-            <button
-              type="button"
-              onClick={copyYearForward}
-              title="Copy release year to original release year"
-              className="p-2 text-gray-500 hover:text-[#A78BFA] hover:bg-[#8B5CF6]/10 rounded-full transition-colors"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
+          {/* Copy arrow – invisible label spacer keeps it level with the inputs */}
+          <div className="flex-shrink-0 flex flex-col">
+            <div className="text-xs mb-2 invisible select-none" aria-hidden="true">&nbsp;</div>
+            <div className="flex-1 flex items-center">
+              <button
+                type="button"
+                onClick={copyYearForward}
+                title="Copy release year to original release year"
+                className="p-2 text-gray-500 hover:text-[#A78BFA] hover:bg-[#8B5CF6]/10 rounded-full transition-colors"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M13 7l5 5m0 0l-5 5m5-5H6"
-                />
-              </svg>
-            </button>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
 
           {/* Original Release Year */}
@@ -141,31 +144,6 @@ export default function LabelInformationPanel({ data, onChange, errors, lookups 
               className="w-full bg-[#0F0F1A] border border-[#2A2A3C] rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#8B5CF6] focus:ring-1 focus:ring-[#8B5CF6] transition-colors"
             />
           </div>
-        </div>
-
-        {/* Copy button (mobile) */}
-        <div className="md:hidden mt-3">
-          <button
-            type="button"
-            onClick={copyYearForward}
-            className="flex items-center gap-2 text-sm text-[#A78BFA] hover:text-[#8B5CF6] transition-colors"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M13 7l5 5m0 0l-5 5m5-5H6"
-              />
-            </svg>
-            Copy release year to original
-          </button>
         </div>
       </div>
 

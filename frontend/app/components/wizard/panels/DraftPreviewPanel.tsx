@@ -1,6 +1,7 @@
 "use client";
 
 import type { WizardFormData } from "../types";
+import { FormatIcon } from "../../FormatIcon";
 
 interface Props {
   /** Current wizard form data to preview */
@@ -302,9 +303,9 @@ export default function DraftPreviewPanel({
               )}
               <div className="flex items-center gap-3">
                 {data.formatName && (
-                  <span className="text-xs bg-[#8B5CF6]/15 text-[#A78BFA] px-2 py-1 rounded font-semibold">
-                    {data.formatName}
-                  </span>
+                  <div className="flex-shrink-0" title={data.formatName}>
+                    <FormatIcon formatName={data.formatName} className="w-10 h-10 drop-shadow-md" />
+                  </div>
                 )}
                 <h1 className="text-3xl font-black tracking-tight leading-tight text-white">
                   {data.title || (
