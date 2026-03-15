@@ -43,48 +43,57 @@ export default function Header() {
     };
   }, []);
 
-  // Load kollections
+  // Load kollections (with retry + back-off so a 429 doesn't surface as a
+  // console error and doesn't hammer the rate limiter)
   React.useLayoutEffect(() => {
+    let cancelled = false;
+
     const loadKollections = async () => {
       if (!isAuthenticated()) {
-        console.log('[Header] Not authenticated, skipping kollections load');
         setLoadingKollections(false);
         return;
       }
 
-      try {
-        console.log('[Header] Loading kollections...');
-        if (typeof getKollections !== 'function') {
-          console.log('[Header] getKollections not available in this environment, skipping load');
-          setLoadingKollections(false);
-          return;
-        }
-        const response = await getKollections();
-        console.log('[Header] Kollections loaded:', response.items.length, 'items', response);
-        setKollections(response.items);
-      } catch (err) {
-        // Handle 401 silently - user will be redirected by other components
-        const apiError = err as ApiError;
-        if (apiError?.status === 401) {
-          setLoadingKollections(false);
-          return;
-        }
-        console.error('[Header] Failed to load kollections:', err);
-      } finally {
+      if (typeof getKollections !== 'function') {
         setLoadingKollections(false);
+        return;
+      }
+
+      const maxAttempts = 3;
+      let attempt = 0;
+      while (attempt < maxAttempts) {
+        attempt += 1;
+        try {
+          const response = await getKollections();
+          if (!cancelled) setKollections(response.items);
+          return;
+        } catch (err) {
+          if (cancelled) return;
+          const apiError = err as ApiError;
+          // 401 — user not logged in, bail out silently
+          if (apiError?.status === 401) return;
+          // Non-retryable 4xx — log and give up
+          const isRetryable = !apiError?.status || apiError.status === 429 || apiError.status >= 500;
+          if (!isRetryable || attempt >= maxAttempts) {
+            console.error('[Header] Failed to load kollections:', err);
+            return;
+          }
+          // 429: respect Retry-After; otherwise exponential backoff
+          const delayMs = apiError.status === 429 && apiError.retryAfter
+            ? apiError.retryAfter * 1000
+            : 1000 * Math.pow(2, attempt - 1);
+          await new Promise(r => setTimeout(r, delayMs));
+        }
       }
     };
-    
-    loadKollections();
-    
-    // Listen for auth changes to reload kollections
-    const handleAuthChange = () => {
-      loadKollections();
-    };
-    
+
+    setLoadingKollections(true);
+    loadKollections().finally(() => { if (!cancelled) setLoadingKollections(false); });
+
+    const handleAuthChange = () => { loadKollections(); };
     window.addEventListener('authChanged', handleAuthChange);
-    
     return () => {
+      cancelled = true;
       window.removeEventListener('authChanged', handleAuthChange);
     };
   }, [isLoggedIn]);
