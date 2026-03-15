@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { WizardFormData, ValidationErrors, LookupItem } from "../types";
 import type { ReleaseLookups } from "../useReleaseLookups";
+import { WizardDateInput } from "../WizardDateInput";
 
 /** Static list of supported currencies */
 const CURRENCIES = [
@@ -132,12 +133,11 @@ export default function PurchaseInformationPanel({ data, onChange, errors, looku
             >
               Purchase Date
             </label>
-            <input
+            <WizardDateInput
               id="wiz-purchaseDate"
-              type="date"
               value={purchase.purchaseDate ?? ""}
-              onChange={(e) => update({ purchaseDate: e.target.value })}
-              className="w-full bg-[#0F0F1A] border border-[#2A2A3C] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#8B5CF6] focus:ring-1 focus:ring-[#8B5CF6] transition-colors"
+              onChange={(iso) => update({ purchaseDate: iso || undefined })}
+              label="Pick a purchase date"
             />
           </div>
         </div>

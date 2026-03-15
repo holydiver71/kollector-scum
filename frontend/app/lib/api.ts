@@ -17,6 +17,8 @@ export interface ApiError extends Error {
   status?: number;
   details?: unknown;
   url?: string;
+  /** Seconds to wait before retrying, derived from the Retry-After response header */
+  retryAfter?: number;
 }
 
 interface FetchJsonOptions extends RequestInit {
@@ -106,6 +108,12 @@ export async function fetchJson<T = unknown>(path: string, options: FetchJsonOpt
       err.status = res.status;
       err.details = body;
       err.url = url;
+      // Capture Retry-After so callers can back off correctly on 429
+      const retryAfterHeader = res.headers.get('Retry-After');
+      if (retryAfterHeader) {
+        const parsed = Number(retryAfterHeader);
+        if (!isNaN(parsed)) err.retryAfter = parsed;
+      }
       throw err;
     }
     if (!parse) return undefined as unknown as T;
