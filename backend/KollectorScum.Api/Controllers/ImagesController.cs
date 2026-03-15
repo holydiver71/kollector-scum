@@ -100,6 +100,7 @@ namespace KollectorScum.Api.Controllers
                                 _ => "image/jpeg",
                             };
                             _logger.LogDebug("Proxying image from storage: {Path}", normalizedPath);
+                            Response.Headers["Cache-Control"] = "public, max-age=86400, stale-while-revalidate=3600";
                             return File(stream, ct);
                         }
                         _logger.LogDebug("Storage proxy: file not found for path {Path}, falling back to local images directory", normalizedPath);
@@ -145,7 +146,13 @@ namespace KollectorScum.Api.Controllers
                 // Read and serve the file
                 var fileBytes = System.IO.File.ReadAllBytes(fullPath);
                 _logger.LogDebug("Serving image: {ImagePath} ({Size} bytes)", imagePath, fileBytes.Length);
-                
+
+                // Allow the browser to cache images for 24 hours and serve stale copies
+                // for up to 1 hour while revalidating in the background.  This dramatically
+                // reduces repeated image requests between page navigations and helps avoid
+                // hitting the API's rate limiter when browsing a large collection grid.
+                Response.Headers["Cache-Control"] = "public, max-age=86400, stale-while-revalidate=3600";
+
                 return File(fileBytes, contentType);
             }
             catch (Exception ex)

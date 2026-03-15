@@ -131,13 +131,18 @@ builder.Services.AddRateLimiter(options =>
 
     // Global limiter applied to every request before named policies.
     // Keyed per remote IP address using a fixed-window algorithm.
+    // Image-serving requests are given a higher budget because a single
+    // collection grid page can legitimately generate 40+ concurrent image requests.
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
     {
         var remoteIp = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        var path = context.Request.Path.Value ?? string.Empty;
+        var isImageRequest = path.StartsWith("/api/images", StringComparison.OrdinalIgnoreCase)
+                          || path.StartsWith("/cover-art", StringComparison.OrdinalIgnoreCase);
         return RateLimitPartition.GetFixedWindowLimiter(remoteIp, _ => new FixedWindowRateLimiterOptions
         {
             Window = TimeSpan.FromMinutes(1),
-            PermitLimit = 100,
+            PermitLimit = isImageRequest ? 500 : 300,
             QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
             QueueLimit = 0,
         });

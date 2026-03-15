@@ -118,9 +118,10 @@ namespace KollectorScum.Api.Controllers
         /// <summary>
         /// Initiates Google OAuth authorization code flow.
         /// Redirects the browser to Google's consent screen.
+        /// Not rate-limited by the strict auth policy — it only generates a redirect URL
+        /// and is not a brute-force target. The global policy (100 req/min) still applies.
         /// </summary>
         [HttpGet("google/login")]
-        [EnableRateLimiting("auth")]
         [ProducesResponseType(StatusCodes.Status302Found)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public IActionResult GoogleLogin()
