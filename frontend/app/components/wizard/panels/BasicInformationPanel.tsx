@@ -73,6 +73,7 @@ export default function BasicInformationPanel({ data, onChange, errors, lookups 
     onChange({
       artistIds: items.filter((i) => i.id !== undefined).map((i) => i.id!),
       artistNames: items.filter((i) => i.id === undefined).map((i) => i.name),
+      artistDisplayNames: items.map((i) => i.name),
     });
   };
 
