@@ -1,423 +1,44 @@
 "use client";
 
+/**
+ * AddReleasePage
+ *
+ * Entry point for adding a release to the collection.
+ *
+ * Renders a source-selection screen that lets the user choose between:
+ *  - Discogs Import  → DiscogsAddReleaseWizard (3-step guided flow)
+ *  - Manual Entry    → AddReleaseWizard         (8-step manual form)
+ *
+ * After a successful add the user is shown a brief confirmation then
+ * redirected to the new release's detail page.
+ */
+
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import AddReleaseWizard from "../components/wizard/AddReleaseWizard";
-import type { CreateMusicReleaseDto } from "../components/AddReleaseForm";
-import DiscogsSearch from "../components/DiscogsSearch";
-import DiscogsSearchResults from "../components/DiscogsSearchResults";
-import DiscogsReleasePreview from "../components/DiscogsReleasePreview";
-import type { DiscogsSearchResult, DiscogsRelease } from "../lib/discogs-types";
-import { fetchJson } from "../lib/api";
-import type { MusicReleaseDto } from "../lib/types";
+import DiscogsAddReleaseWizard from "../components/wizard/discogs/DiscogsAddReleaseWizard";
 
-type Tab = "manual" | "discogs";
-
-interface CreateMusicReleaseResponseDto {
-  release: MusicReleaseDto;
-  created?: {
-    artists?: { id: number; name: string }[];
-    labels?: { id: number; name: string }[];
-    genres?: { id: number; name: string }[];
-    countries?: { id: number; name: string }[];
-    formats?: { id: number; name: string }[];
-    packagings?: { id: number; name: string }[];
-    stores?: { id: number; name: string }[];
-  };
-}
-
-interface LookupItem {
-  id: number;
-  name: string;
-}
+type FlowChoice = "select" | "discogs" | "manual";
 
 export default function AddReleasePage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<Tab>("discogs");
+  const [flow, setFlow] = useState<FlowChoice>("select");
   const [showSuccess, setShowSuccess] = useState(false);
   const [newReleaseId, setNewReleaseId] = useState<number | null>(null);
-  
-  // Discogs workflow state
-  const [searchResults, setSearchResults] = useState<DiscogsSearchResult[]>([]);
-  const [selectedResult, setSelectedResult] = useState<DiscogsSearchResult | null>(null);
-  const [searchError, setSearchError] = useState("");
-  const [discogsFormData, setDiscogsFormData] = useState<Partial<CreateMusicReleaseDto> | undefined>(undefined);
-  const [discogsImageUrls, setDiscogsImageUrls] = useState<{ cover: string | null; thumbnail: string | null }>({ cover: null, thumbnail: null }); // Store original Discogs image URLs
-  
-  // Lookup data for detecting new entities
-  const [existingArtists, setExistingArtists] = useState<string[]>([]);
-  const [existingLabels, setExistingLabels] = useState<string[]>([]);
-  const [existingGenres, setExistingGenres] = useState<string[]>([]);
-  const [existingCountries, setExistingCountries] = useState<string[]>([]);
-  const [existingFormats, setExistingFormats] = useState<string[]>([]);
-
-  // Load lookup data for new entity detection
-  useEffect(() => {
-    const fetchLookupData = async () => {
-      try {
-        const [artists, labels, genres, countries, formats] = await Promise.all([
-          fetchJson<LookupItem[]>('/api/artists'),
-          fetchJson<LookupItem[]>('/api/labels'),
-          fetchJson<LookupItem[]>('/api/genres'),
-          fetchJson<LookupItem[]>('/api/countries'),
-          fetchJson<LookupItem[]>('/api/formats'),
-        ]);
-
-        // Ensure we have arrays before mapping
-        setExistingArtists(Array.isArray(artists) ? artists.map((a) => a.name) : []);
-        setExistingLabels(Array.isArray(labels) ? labels.map((l) => l.name) : []);
-        setExistingGenres(Array.isArray(genres) ? genres.map((g) => g.name) : []);
-        setExistingCountries(Array.isArray(countries) ? countries.map((c) => c.name) : []);
-        setExistingFormats(Array.isArray(formats) ? formats.map((f) => f.name) : []);
-      } catch (error) {
-        console.error("Failed to load lookup data:", error);
-        // Set empty arrays on error to prevent crashes
-        setExistingArtists([]);
-        setExistingLabels([]);
-        setExistingGenres([]);
-        setExistingCountries([]);
-        setExistingFormats([]);
-      }
-    };
-
-    fetchLookupData();
-  }, []);
-
-  // Helper function to sanitize filename
-  const sanitizeFilename = (str: string): string => {
-    return str
-      .replace(/[^a-z0-9]/gi, '-') // Replace non-alphanumeric with dash
-      .replace(/-+/g, '-') // Replace multiple dashes with single dash
-      .replace(/^-|-$/g, ''); // Remove leading/trailing dashes
-  };
-
-  // Helper function to generate image filename
-  const generateImageFilename = (artist: string, title: string, year?: number): string => {
-    const artistPart = sanitizeFilename(artist);
-    const titlePart = sanitizeFilename(title);
-    const yearPart = year ? `-${year}` : '';
-    return `${artistPart}-${titlePart}${yearPart}.jpg`;
-  };
-
-  // Map Discogs release data to form DTO
-  type _DiscogsFormData = Partial<CreateMusicReleaseDto> & {
-    _meta?: { sourceImageUrl?: string | null; sourceThumbnailUrl?: string | null };
-  };
-
-  const mapDiscogsToFormData = (release: DiscogsRelease): _DiscogsFormData => {
-    // Map artists
-    const artistNames = release.artists?.map(a => a.name) || [];
-    
-    // Map genres - combine genres and styles
-    const genreNames = [
-      ...(release.genres || []),
-      ...(release.styles || [])
-    ];
-    
-    // Map labels
-    const labelName = release.labels?.[0]?.name;
-    const labelNumber = release.labels?.[0]?.catalogNumber;
-    
-    // Map country
-    const countryName = release.country;
-    
-    // Map formats
-    const formatName = release.formats?.[0]?.name;
-    
-    // Extract barcode from identifiers
-    const barcodeIdentifier = release.identifiers?.find(
-      id => id.type.toLowerCase() === 'barcode'
-    );
-    const upc = barcodeIdentifier?.value;
-    
-    // Map tracklist to media
-    const media = release.tracklist ? [{
-      name: "Disc 1",
-      tracks: release.tracklist.map((track, index) => ({
-        title: track.title,
-        index: index + 1,
-        lengthSecs: track.duration ? parseDuration(track.duration) : undefined,
-      }))
-    }] : [];
-    
-    // Map images - generate local filename only (not full URL)
-    let images = undefined;
-    let sourceImageUrl = null;
-    let sourceThumbnailUrl = null;
-    if (release.images?.[0]) {
-      const primaryArtist = release.artists?.[0]?.name || 'Unknown';
-      const filename = generateImageFilename(primaryArtist, release.title, release.year);
-      const thumbnailFilename = `thumb-${filename}`;
-      
-      sourceImageUrl = release.images[0].uri; // Store full-size image for later download
-      sourceThumbnailUrl = release.images[0].uri150 || release.images[0].uri; // Use thumbnail if available, fallback to full image
-      
-      // Store just the filename - backend will serve via /api/images/{filename}
-      images = {
-        coverFront: filename,
-        thumbnail: thumbnailFilename,
-      };
-    }
-    
-    return {
-      title: release.title,
-      releaseYear: release.year?.toString(),
-      artistNames,
-      artistIds: [],
-      genreNames,
-      genreIds: [],
-      live: false,
-      labelName,
-      labelNumber,
-      countryName,
-      formatName,
-      upc,
-      images,
-      media,
-      links: release.uri ? [{ url: release.uri, type: "Discogs", description: "" }] : [],
-      _meta: { sourceImageUrl, sourceThumbnailUrl }, // Store metadata separately
-    } as _DiscogsFormData;
-  };
-  
-  // Helper function to parse duration string (e.g., "3:45" -> 225 seconds)
-  const parseDuration = (duration: string): number | undefined => {
-    if (!duration) return undefined;
-    const parts = duration.split(':').map(p => parseInt(p, 10));
-    if (parts.length === 2) {
-      return parts[0] * 60 + parts[1];
-    } else if (parts.length === 3) {
-      return parts[0] * 3600 + parts[1] * 60 + parts[2];
-    }
-    return undefined;
-  };
-
-  // Helper function to extract filename from API URL path
-  const extractFilenameFromUrl = (url: string): string => {
-    // Extract filename from URL like "http://localhost:5072/api/images/covers/Artist-Album-Year.jpg"
-    const parts = url.split('/');
-    return parts[parts.length - 1];
-  };
 
   const handleSuccess = (releaseId: number) => {
     setNewReleaseId(releaseId);
     setShowSuccess(true);
-    // Auto-redirect after 2 seconds
     setTimeout(() => {
       router.push(`/releases/${releaseId}`);
     }, 2000);
   };
-  
-  const handleFormSuccess = async (releaseId: number) => {
-    // Download images if we have Discogs image URLs
-    const downloadPromises: Promise<void>[] = [];
-
-    // Download cover image
-    if (discogsImageUrls.cover && discogsFormData?.images?.coverFront) {
-      const coverPromise = (async () => {
-        try {
-          const filename = extractFilenameFromUrl(discogsFormData.images!.coverFront!);
-          const imgResult = await fetchJson<{ filename: string }>('/api/images/download', {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              url: discogsImageUrls.cover,
-              filename: filename,
-            }),
-            swallowErrors: true // Don't crash if image download fails
-          });
-          
-          if (imgResult) {
-            console.log("Cover image downloaded successfully:", imgResult.filename);
-          }
-        } catch (imgError) {
-          console.error("Failed to download cover image:", imgError);
-        }
-      })();
-      downloadPromises.push(coverPromise);
-    }
-
-    // Download thumbnail image
-    if (discogsImageUrls.thumbnail && discogsFormData?.images?.thumbnail) {
-      const thumbnailPromise = (async () => {
-        try {
-          const filename = extractFilenameFromUrl(discogsFormData.images!.thumbnail!);
-          const imgResult = await fetchJson<{ filename: string }>('/api/images/download', {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              url: discogsImageUrls.thumbnail,
-              filename: filename,
-            }),
-            swallowErrors: true // Don't crash if image download fails
-          });
-          
-          if (imgResult) {
-            console.log("Thumbnail image downloaded successfully:", imgResult.filename);
-          }
-        } catch (imgError) {
-          console.error("Failed to download thumbnail image:", imgError);
-        }
-      })();
-      downloadPromises.push(thumbnailPromise);
-    }
-
-    // Wait for all downloads to complete (don't fail if they error)
-    await Promise.allSettled(downloadPromises);
-    
-    // Clear the image URL state
-    setDiscogsImageUrls({ cover: null, thumbnail: null });
-    
-    // Call the regular success handler
-    handleSuccess(releaseId);
-  };
 
   const handleCancel = () => {
-    // Clear the image URL state when cancelling
-    setDiscogsImageUrls({ cover: null, thumbnail: null });
     router.push("/collection");
   };
 
-  const handleResultsFound = (results: DiscogsSearchResult[]) => {
-    setSearchResults(results);
-    setSearchError("");
-    setSelectedResult(null);
-  };
-
-  const handleSearchError = (error: string) => {
-    setSearchError(error);
-    setSearchResults([]);
-  };
-
-  const handleSelectResult = (result: DiscogsSearchResult) => {
-    setSelectedResult(result);
-    // Keep search results so we can go back to them
-  };
-
-  const handleBackToResults = () => {
-    setSelectedResult(null);
-    // Search results are preserved
-  };
-
-  const handleAddToCollection = async (release: DiscogsRelease) => {
-    // Add directly to collection without showing edit form
-    const formData = mapDiscogsToFormData(release);
-    const sourceImageUrl = formData._meta?.sourceImageUrl;
-    const sourceThumbnailUrl = formData._meta?.sourceThumbnailUrl;
-    
-    // Remove metadata before sending
-    delete formData._meta;
-    
-    // Convert year strings to ISO DateTime format for the backend
-    const cleanedData = {
-      ...formData,
-      releaseYear: formData.releaseYear 
-        ? new Date(parseInt(formData.releaseYear), 0, 1).toISOString() 
-        : undefined,
-      origReleaseYear: formData.origReleaseYear 
-        ? new Date(parseInt(formData.origReleaseYear), 0, 1).toISOString() 
-        : undefined,
-      artistIds: formData.artistIds?.length ? formData.artistIds : undefined,
-      artistNames: formData.artistNames?.length ? formData.artistNames : undefined,
-      genreIds: formData.genreIds?.length ? formData.genreIds : undefined,
-      genreNames: formData.genreNames?.length ? formData.genreNames : undefined,
-      links: formData.links?.length ? formData.links : undefined,
-      media: formData.media?.length ? formData.media : undefined,
-    };
-    
-    try {
-      const result = await fetchJson<CreateMusicReleaseResponseDto>('/api/musicreleases', {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(cleanedData),
-      });
-      
-      // Download images in parallel if we have source URLs
-      const downloadPromises: Promise<void>[] = [];
-
-      // Download cover image
-      if (sourceImageUrl && cleanedData.images?.coverFront) {
-        const coverPromise = (async () => {
-          try {
-            const filename = extractFilenameFromUrl(cleanedData.images!.coverFront!);
-            // Use fetchJson to include auth token
-            await fetchJson('/api/images/download', {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                url: sourceImageUrl,
-                filename: filename,
-              }),
-              swallowErrors: true, // Don't fail the whole operation if image download fails
-            });
-            console.log("Cover image downloaded successfully:", filename);
-          } catch (imgError) {
-            console.error("Failed to download cover image:", imgError);
-          }
-        })();
-        downloadPromises.push(coverPromise);
-      }
-
-      // Download thumbnail image
-      if (sourceThumbnailUrl && cleanedData.images?.thumbnail) {
-        const thumbnailPromise = (async () => {
-          try {
-            const filename = extractFilenameFromUrl(cleanedData.images!.thumbnail!);
-            // Use fetchJson to include auth token
-            await fetchJson('/api/images/download', {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                url: sourceThumbnailUrl,
-                filename: filename,
-              }),
-              swallowErrors: true, // Don't fail the whole operation if image download fails
-            });
-            console.log("Thumbnail image downloaded successfully:", filename);
-          } catch (imgError) {
-            console.error("Failed to download thumbnail image:", imgError);
-          }
-        })();
-        downloadPromises.push(thumbnailPromise);
-      }
-
-      // Wait for all downloads to complete (don't fail if they error)
-      await Promise.allSettled(downloadPromises);
-      
-      // Redirect to the newly created release
-      handleSuccess(result.release.id);
-    } catch (error) {
-      console.error("Error adding release:", error);
-      alert("Failed to add release. Please try again.");
-    }
-  };
-
-  const handleEditManually = (release: DiscogsRelease) => {
-    const formData = mapDiscogsToFormData(release);
-    const sourceImageUrl = formData._meta?.sourceImageUrl;
-    const sourceThumbnailUrl = formData._meta?.sourceThumbnailUrl;
-    
-    // Store the image URLs for later download
-    setDiscogsImageUrls({ 
-      cover: sourceImageUrl || null, 
-      thumbnail: sourceThumbnailUrl || null 
-    });
-    
-    // Remove metadata before setting form data
-    delete formData._meta;
-    
-    setDiscogsFormData(formData);
-    setActiveTab("manual");
-  };
+  // ── Success screen ─────────────────────────────────────────────────────────
 
   if (showSuccess && newReleaseId) {
     return (
@@ -439,9 +60,7 @@ export default function AddReleasePage() {
           <h2 className="text-2xl font-black text-[var(--theme-foreground)] mb-2">
             Release Added Successfully!
           </h2>
-          <p className="text-gray-400 mb-4">
-            Redirecting to release details...
-          </p>
+          <p className="text-gray-400 mb-4">Redirecting to release details…</p>
           <button
             onClick={() => router.push(`/releases/${newReleaseId}`)}
             className="text-[var(--theme-accent)] hover:text-[var(--theme-accent-light)] underline transition-colors cursor-pointer"
@@ -453,91 +72,103 @@ export default function AddReleasePage() {
     );
   }
 
+  // ── Page wrapper ───────────────────────────────────────────────────────────
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 text-[var(--theme-foreground)] space-y-6">
       <div>
-        <h1 className="text-2xl font-black text-[var(--theme-foreground)]">Add Release</h1>
-        <p className="text-gray-400 mt-1 text-sm">Add a new music release to your collection</p>
+        <h1 className="text-2xl font-black text-[var(--theme-foreground)]">
+          Add Release
+        </h1>
+        <p className="text-gray-400 mt-1 text-sm">
+          Add a new music release to your collection
+        </p>
       </div>
 
-      {/* Tab Navigation */}
-      <div className="flex gap-1 bg-[var(--theme-card-bg)] p-1 rounded-xl border border-[var(--theme-card-border)] w-fit">
-        <button
-          onClick={() => setActiveTab("discogs")}
-          className={`px-5 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${
-            activeTab === "discogs"
-              ? "bg-[var(--theme-accent)] text-white"
-              : "text-gray-400 hover:text-[var(--theme-foreground)]"
-          }`}
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          Search Discogs
-        </button>
-        <button
-          onClick={() => setActiveTab("manual")}
-          className={`px-5 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${
-            activeTab === "manual"
-              ? "bg-[var(--theme-accent)] text-white"
-              : "text-gray-400 hover:text-[var(--theme-foreground)]"
-          }`}
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-          </svg>
-          Manual Entry
-        </button>
-      </div>
-
-      {/* Tab Content */}
-      {activeTab === "discogs" && (
-        <div className="space-y-4">
-          <DiscogsSearch
-            onResultsFound={handleResultsFound}
-            onError={handleSearchError}
-          />
-
-          {searchError && (
-            <div className="bg-yellow-600/10 border border-yellow-600/20 rounded-xl p-4">
-              <div className="flex gap-3">
-                <svg className="h-5 w-5 text-yellow-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-                <p className="text-sm text-yellow-300">{searchError}</p>
-              </div>
+      {/* ── Source selection ───────────────────────────────────────────────── */}
+      {flow === "select" && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Discogs import card */}
+          <button
+            type="button"
+            onClick={() => setFlow("discogs")}
+            className="group flex flex-col items-start gap-3 p-6 bg-[var(--theme-card-bg)] border border-[var(--theme-card-border)] rounded-2xl hover:border-[#8B5CF6]/60 hover:bg-[#8B5CF6]/5 transition-all text-left"
+          >
+            <div className="w-10 h-10 rounded-xl bg-[#8B5CF6]/15 border border-[#8B5CF6]/30 flex items-center justify-center group-hover:bg-[#8B5CF6]/25 transition-colors">
+              <svg
+                className="w-5 h-5 text-[#8B5CF6]"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
             </div>
-          )}
+            <div>
+              <p className="font-bold text-white text-base">
+                Search Discogs
+              </p>
+              <p className="text-sm text-gray-500 mt-0.5">
+                Find a release by catalogue number and import its details
+                automatically.
+              </p>
+            </div>
+            <span className="mt-auto text-xs font-semibold text-[#8B5CF6] group-hover:underline">
+              Start Discogs import →
+            </span>
+          </button>
 
-          {searchResults.length > 0 && !selectedResult && (
-            <DiscogsSearchResults
-              results={searchResults}
-              onSelectResult={handleSelectResult}
-            />
-          )}
-
-          {selectedResult && (
-            <DiscogsReleasePreview
-              searchResult={selectedResult}
-              onAddToCollection={handleAddToCollection}
-              onEditManually={handleEditManually}
-              onBack={handleBackToResults}
-              existingArtists={existingArtists}
-              existingLabels={existingLabels}
-              existingGenres={existingGenres}
-              existingCountries={existingCountries}
-              existingFormats={existingFormats}
-            />
-          )}
+          {/* Manual entry card */}
+          <button
+            type="button"
+            onClick={() => setFlow("manual")}
+            className="group flex flex-col items-start gap-3 p-6 bg-[var(--theme-card-bg)] border border-[var(--theme-card-border)] rounded-2xl hover:border-[#8B5CF6]/60 hover:bg-[#8B5CF6]/5 transition-all text-left"
+          >
+            <div className="w-10 h-10 rounded-xl bg-[#8B5CF6]/15 border border-[#8B5CF6]/30 flex items-center justify-center group-hover:bg-[#8B5CF6]/25 transition-colors">
+              <svg
+                className="w-5 h-5 text-[#8B5CF6]"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                />
+              </svg>
+            </div>
+            <div>
+              <p className="font-bold text-white text-base">Manual Entry</p>
+              <p className="text-sm text-gray-500 mt-0.5">
+                Enter all release details yourself using the step-by-step
+                wizard.
+              </p>
+            </div>
+            <span className="mt-auto text-xs font-semibold text-[#8B5CF6] group-hover:underline">
+              Start manual entry →
+            </span>
+          </button>
         </div>
       )}
 
-      {activeTab === "manual" && (
-        <AddReleaseWizard
-          onSuccess={handleFormSuccess}
-          onCancel={handleCancel}
-          initialData={discogsFormData}
+      {/* ── Discogs wizard ──────────────────────────────────────────────────── */}
+      {flow === "discogs" && (
+        <DiscogsAddReleaseWizard
+          onSuccess={handleSuccess}
+          onCancel={() => setFlow("select")}
         />
+      )}
+
+      {/* ── Manual wizard ───────────────────────────────────────────────────── */}
+      {flow === "manual" && (
+        <AddReleaseWizard onSuccess={handleSuccess} onCancel={() => setFlow("select")} />
       )}
     </div>
   );

@@ -56,6 +56,8 @@ export interface WizardFormData {
   artistIds: number[];
   /** Names of brand-new artists to be created (not in DB) */
   artistNames: string[];
+  /** Resolved display names for ALL artists (both by-ID and free-text) — used for preview only, not sent to API */
+  artistDisplayNames: string[];
 
   // Release Information (Step 1)
   genreIds: number[];
@@ -118,6 +120,7 @@ export const EMPTY_FORM_DATA: WizardFormData = {
   title: "",
   artistIds: [],
   artistNames: [],
+  artistDisplayNames: [],
   genreIds: [],
   genreNames: [],
   live: false,
@@ -257,6 +260,7 @@ export function fromCreateDto(partial: Partial<CreateMusicReleaseDto>): WizardFo
     title: partial.title ?? "",
     artistIds: partial.artistIds ?? [],
     artistNames: partial.artistNames ?? [],
+    artistDisplayNames: partial.artistNames ?? [],
     genreIds: partial.genreIds ?? [],
     genreNames: partial.genreNames ?? [],
     live: partial.live ?? false,
