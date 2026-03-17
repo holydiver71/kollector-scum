@@ -11,6 +11,8 @@ namespace KollectorScum.Api.Services
     /// </summary>
     public class ImageResizerService : IImageResizerService
     {
+        // Quality 85 balances visual fidelity against storage size: it typically
+        // reduces file size by 60-70% vs quality 100 with imperceptible quality loss.
         private const int JpegQuality = 85;
 
         /// <inheritdoc />

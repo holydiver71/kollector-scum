@@ -101,7 +101,8 @@ function ResultCard({
   );
 }
 
-// ─── Modal ────────────────────────────────────────────────────────────────────
+/** Debounce delay (ms) for auto-search while typing. */
+const SEARCH_DEBOUNCE_MS = 400;
 
 /**
  * Full-screen overlay modal for searching and selecting album cover art.
@@ -147,7 +148,7 @@ export default function ImageSearchModal({
     // Auto-search while typing (consideration #1 from Image Search Research)
     debounceRef.current = setTimeout(() => {
       search(value);
-    }, 400);
+    }, SEARCH_DEBOUNCE_MS);
   };
 
   const handleSearchSubmit = (e: React.FormEvent) => {

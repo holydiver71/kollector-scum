@@ -165,8 +165,10 @@ function CoverFrontField({
         data.filename,
         data.thumbnailFilename ?? thumbnailUrl,
       );
-    } catch {
-      // Fall back: store the direct URLs (covers edge-cases / offline local dev)
+    } catch (err: unknown) {
+      // Fall back to storing the direct CAA URLs as a best-effort measure
+      // (e.g., in offline/local dev or if the download endpoint is unavailable).
+      console.warn("Image download endpoint unavailable, falling back to direct URLs", err);
       onChange(imageUrl, thumbnailUrl);
     } finally {
       setUploading(false);
@@ -185,7 +187,7 @@ function CoverFrontField({
     setUploadError(null);
 
     if (file.size > MAX_UPLOAD_BYTES) {
-      setUploadError(`File is too large. Maximum allowed size is 5 MB.`);
+      setUploadError(`File is too large. Maximum allowed size is ${MAX_UPLOAD_BYTES / 1024 / 1024} MB.`);
       return;
     }
     if (!ALLOWED_IMAGE_TYPES.has(file.type)) {

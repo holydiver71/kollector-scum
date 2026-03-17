@@ -5,6 +5,7 @@
 
 using System.Text;
 using System.Threading.RateLimiting;
+using KollectorScum.Api.Controllers;
 using KollectorScum.Api.Middleware;
 using KollectorScum.Api.Data;
 using KollectorScum.Api.DTOs;
@@ -405,6 +406,13 @@ builder.Services.AddHttpClient(CoverArtSearchService.CoverArtArchiveClientName, 
         "User-Agent",
         "KollectorScum/1.0 (https://github.com/holydiver71/kollector-scum; support@kollector.app)");
     client.Timeout = TimeSpan.FromSeconds(10);
+});
+
+// Named HTTP client for downloading external images in ImagesController
+builder.Services.AddHttpClient(ImagesController.ImageDownloadClientName, client =>
+{
+    client.DefaultRequestHeaders.Add("User-Agent", "KollectorScum/1.0");
+    client.Timeout = TimeSpan.FromSeconds(30);
 });
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

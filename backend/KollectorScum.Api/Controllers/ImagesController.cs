@@ -20,9 +20,13 @@ namespace KollectorScum.Api.Controllers
         private readonly IUserContext _userContext;
         private readonly IImageResizerService _imageResizer;
         private readonly ICoverArtSearchService _coverArtSearch;
+        private readonly IHttpClientFactory _httpClientFactory;
 
         /// <summary>Maximum allowed upload size: 5 MB.</summary>
         private const long MaxUploadBytes = 5 * 1024 * 1024;
+
+        /// <summary>Named <see cref="HttpClient"/> key for image download requests.</summary>
+        public const string ImageDownloadClientName = "image-download";
 
         private static readonly HashSet<string> AllowedImageMimeTypes = new(StringComparer.OrdinalIgnoreCase)
         {
@@ -38,7 +42,8 @@ namespace KollectorScum.Api.Controllers
             IStorageService storageService,
             IUserContext userContext,
             IImageResizerService imageResizer,
-            ICoverArtSearchService coverArtSearch)
+            ICoverArtSearchService coverArtSearch,
+            IHttpClientFactory httpClientFactory)
         {
             _imagesPath = configuration["ImagesPath"] ?? "/home/andy/music-images";
             // Support both configuration key formats: the env provider maps '__' to ':'
@@ -50,6 +55,7 @@ namespace KollectorScum.Api.Controllers
             _userContext = userContext;
             _imageResizer = imageResizer;
             _coverArtSearch = coverArtSearch;
+            _httpClientFactory = httpClientFactory;
         }
 
         /// <summary>
@@ -246,9 +252,8 @@ namespace KollectorScum.Api.Controllers
                     }
                 }
 
-                // Download the image
-                using var httpClient = new HttpClient();
-                httpClient.DefaultRequestHeaders.Add("User-Agent", "KollectorScum/1.0");
+                // Download the image using the pooled client from IHttpClientFactory
+                using var httpClient = _httpClientFactory.CreateClient(ImageDownloadClientName);
 
                 var response = await httpClient.GetAsync(parsedUrl);
                 if (!response.IsSuccessStatusCode)
