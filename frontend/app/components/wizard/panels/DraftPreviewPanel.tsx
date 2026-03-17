@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import type { WizardFormData } from "../types";
 import { FormatIcon } from "../../FormatIcon";
+import ConfirmDialog from "../ConfirmDialog";
 
 interface Props {
   /** Current wizard form data to preview */
@@ -9,11 +11,18 @@ interface Props {
   /** Navigate back to the previous panel */
   onGoBack: () => void;
   /** Called when the user confirms and clicks Save Release */
-  onSubmit: () => void;
+  onSubmit?: () => void;
+  /** Called when the user cancels the entire flow */
+  onCancel?: () => void;
   /** True while the API call is in flight */
   isSubmitting?: boolean;
   /** Error message returned from the API, if any */
   submitError?: string | null;
+  /**
+   * Optional custom action buttons rendered in the sticky footer.
+   * When provided, replaces the default Back / Save Release buttons.
+   */
+  actions?: React.ReactNode;
 }
 
 // ─── Helper functions ─────────────────────────────────────────────────────────
@@ -151,9 +160,12 @@ export default function DraftPreviewPanel({
   data,
   onGoBack,
   onSubmit,
+  onCancel,
   isSubmitting = false,
   submitError,
+  actions,
 }: Props) {
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const total = totalSeconds(data);
   const priceStr = formatPrice(data.purchaseInfo.price, data.purchaseInfo.currency);
   const hasMedia = data.media.length > 0 && data.media.some((d) => d.tracks.length > 0);
@@ -165,11 +177,12 @@ export default function DraftPreviewPanel({
     data.purchaseInfo.notes;
 
   // Derive display artist names regardless of whether they are stored by ID or name
-  const allArtistNames = [
-    ...(data.artistNames ?? []),
-  ];
+  const allArtistNames = data.artistDisplayNames?.length
+    ? data.artistDisplayNames
+    : data.artistNames ?? [];
 
   return (
+    <>
     <div className="space-y-0">
       {/* ── Unsaved banner ─────────────────────────────────────────────── */}
       <div
@@ -195,8 +208,8 @@ export default function DraftPreviewPanel({
           <p className="text-xs text-amber-400/70 mt-0.5">
             This is a preview of how your release will appear. Review the
             details below, then click{" "}
-            <strong className="text-amber-300">Save Release</strong> at the
-            bottom to add it to your collection.
+            <strong className="text-amber-300">Add to Collection</strong> at the
+            bottom to save it to your collection.
           </p>
         </div>
       </div>
@@ -475,86 +488,102 @@ export default function DraftPreviewPanel({
           </div>
         )}
 
-        <div className="flex flex-col sm:flex-row items-center gap-3 bg-[#13131F]/90 backdrop-blur border border-[#1C1C28] rounded-2xl px-5 py-4 shadow-2xl">
-          <div className="flex-1 text-center sm:text-left">
-            <p className="text-xs text-gray-500">
-              Review complete? Make sure all details are correct before saving.
-            </p>
-          </div>
-          <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={onGoBack}
-              disabled={isSubmitting}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold border border-[#1C1C28] text-gray-300 hover:text-white hover:border-[#8B5CF6]/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15.75 19.5L8.25 12l7.5-7.5"
-                />
-              </svg>
-              Review Panels
-            </button>
-            <button
-              type="button"
-              onClick={onSubmit}
-              disabled={isSubmitting}
-              className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 disabled:cursor-not-allowed text-white transition-colors shadow-lg shadow-emerald-900/30"
-            >
-              {isSubmitting ? (
-                <>
-                  {/* Spinner */}
-                  <svg
-                    className="w-4 h-4 animate-spin"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                    />
-                  </svg>
-                  Saving…
-                </>
-              ) : (
-                <>
+        <div className="flex items-center gap-3 bg-[#13131F]/90 backdrop-blur border border-[#1C1C28] rounded-2xl px-5 py-4 shadow-2xl">
+          <div className="flex items-center justify-between w-full gap-3">
+            {actions ?? (
+              <>
+                <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={onGoBack}
+                  disabled={isSubmitting}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold border border-[#1C1C28] text-gray-300 hover:text-white hover:border-[#8B5CF6]/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
                   <svg
                     className="w-4 h-4"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
-                    strokeWidth={2.5}
+                    strokeWidth={2}
                   >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      d="M4.5 12.75l6 6 9-13.5"
+                      d="M15.75 19.5L8.25 12l7.5-7.5"
                     />
                   </svg>
-                  Save Release
-                </>
-              )}
-            </button>
+                  Back
+                </button>
+                {onCancel && (
+                  <button
+                    type="button"
+                    onClick={() => setShowCancelConfirm(true)}
+                    disabled={isSubmitting}
+                    className="px-3 py-2 text-sm text-gray-500 hover:text-gray-300 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Cancel
+                  </button>
+                )}
+                </div>
+                <button
+                  type="button"
+                  onClick={onSubmit}
+                  disabled={isSubmitting}
+                  className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 disabled:cursor-not-allowed text-white transition-colors shadow-lg shadow-emerald-900/30"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <svg
+                        className="w-4 h-4 animate-spin"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                        />
+                      </svg>
+                      Saving…
+                    </>
+                  ) : (
+                    <>
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2.5}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M4.5 12.75l6 6 9-13.5"
+                        />
+                      </svg>
+                      Add to Collection
+                    </>
+                  )}
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
     </div>
+    <ConfirmDialog
+      isOpen={showCancelConfirm}
+      onConfirm={() => { setShowCancelConfirm(false); onCancel?.(); }}
+      onDismiss={() => setShowCancelConfirm(false)}
+    />
+    </>
   );
 }
