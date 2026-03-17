@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
+using KollectorScum.Api.DTOs;
 using KollectorScum.Api.Interfaces;
 
 namespace KollectorScum.Api.Controllers
 {
     /// <summary>
-    /// Controller for serving music-related images (album covers, artist photos, etc.)
+    /// Controller for serving, uploading, and searching music-related images
+    /// (album covers, artist photos, etc.)
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
@@ -16,8 +18,27 @@ namespace KollectorScum.Api.Controllers
         private readonly ILogger<ImagesController> _logger;
         private readonly IStorageService _storageService;
         private readonly IUserContext _userContext;
+        private readonly IImageResizerService _imageResizer;
+        private readonly ICoverArtSearchService _coverArtSearch;
 
-        public ImagesController(IConfiguration configuration, ILogger<ImagesController> logger, IStorageService storageService, IUserContext userContext)
+        /// <summary>Maximum allowed upload size: 5 MB.</summary>
+        private const long MaxUploadBytes = 5 * 1024 * 1024;
+
+        private static readonly HashSet<string> AllowedImageMimeTypes = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp", "image/bmp", "image/tiff",
+        };
+
+        /// <summary>
+        /// Initialises a new instance of <see cref="ImagesController"/>.
+        /// </summary>
+        public ImagesController(
+            IConfiguration configuration,
+            ILogger<ImagesController> logger,
+            IStorageService storageService,
+            IUserContext userContext,
+            IImageResizerService imageResizer,
+            ICoverArtSearchService coverArtSearch)
         {
             _imagesPath = configuration["ImagesPath"] ?? "/home/andy/music-images";
             // Support both configuration key formats: the env provider maps '__' to ':'
@@ -27,6 +48,8 @@ namespace KollectorScum.Api.Controllers
             _logger = logger;
             _storageService = storageService;
             _userContext = userContext;
+            _imageResizer = imageResizer;
+            _coverArtSearch = coverArtSearch;
         }
 
         /// <summary>
@@ -185,14 +208,18 @@ namespace KollectorScum.Api.Controllers
         }
 
         /// <summary>
-        /// Downloads an image from a URL and saves it to the images directory
+        /// Downloads an image from a URL, resizes it to fit within 1600px, saves it to storage,
+        /// and optionally generates a 300px thumbnail in the same request.
         /// </summary>
-        /// <param name="request">Download request with URL and filename</param>
-        /// <returns>Success or error response</returns>
+        /// <param name="request">Download request with URL and optional filename hint.</param>
+        /// <param name="generateThumbnail">When <c>true</c>, also stores a 300px thumbnail.</param>
+        /// <returns>Success or error response containing stored filenames.</returns>
         [HttpPost("download")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> DownloadImage([FromBody] ImageDownloadRequest request)
+        public async Task<IActionResult> DownloadImage(
+            [FromBody] ImageDownloadRequest request,
+            [FromQuery] bool generateThumbnail = false)
         {
             try
             {
@@ -202,72 +229,28 @@ namespace KollectorScum.Api.Controllers
                     return BadRequest("URL cannot be empty");
                 }
 
-                if (string.IsNullOrWhiteSpace(request.Filename))
+                // Security: validate that the URL is an absolute HTTP/HTTPS URL to prevent SSRF
+                if (!Uri.TryCreate(request.Url, UriKind.Absolute, out var parsedUrl) ||
+                    (parsedUrl.Scheme != Uri.UriSchemeHttp && parsedUrl.Scheme != Uri.UriSchemeHttps))
                 {
-                    return BadRequest("Filename cannot be empty");
+                    return BadRequest("Only absolute HTTP/HTTPS URLs are accepted.");
                 }
 
-                // Security: Prevent directory traversal attacks
-                if (request.Filename.Contains("..") || Path.IsPathRooted(request.Filename))
+                if (!string.IsNullOrWhiteSpace(request.Filename))
                 {
-                    _logger.LogWarning("Potentially malicious filename requested: {Filename}", request.Filename);
-                    return BadRequest("Invalid filename");
-                }
-
-                // Determine target folder based on folder parameter or filename prefix
-                string targetFolder = "covers"; // default
-                if (!string.IsNullOrWhiteSpace(request.Folder))
-                {
-                    // Validate folder parameter
-                    if (request.Folder.Contains("..") || Path.IsPathRooted(request.Folder))
+                    // Security: Prevent directory traversal attacks
+                    if (request.Filename.Contains("..") || Path.IsPathRooted(request.Filename))
                     {
-                        _logger.LogWarning("Potentially malicious folder requested: {Folder}", request.Folder);
-                        return BadRequest("Invalid folder");
+                        _logger.LogWarning("Potentially malicious filename requested: {Filename}", request.Filename);
+                        return BadRequest("Invalid filename");
                     }
-                    targetFolder = request.Folder;
-                }
-                else if (request.Filename.StartsWith("thumb-", StringComparison.OrdinalIgnoreCase))
-                {
-                    // Auto-detect thumbnails based on filename prefix
-                    targetFolder = "thumbnails";
-                }
-
-                // Ensure target directory exists
-                var targetPath = Path.Combine(_imagesPath, targetFolder);
-                if (!Directory.Exists(targetPath))
-                {
-                    Directory.CreateDirectory(targetPath);
-                    _logger.LogInformation("Created {Folder} directory: {Path}", targetFolder, targetPath);
-                }
-
-                // Build full file path and make it unique if needed
-                var originalFilename = request.Filename;
-                var fullPath = Path.Combine(targetPath, originalFilename);
-                var finalFilename = originalFilename;
-
-                // If file exists, add number suffix
-                if (System.IO.File.Exists(fullPath))
-                {
-                    var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(originalFilename);
-                    var extension = Path.GetExtension(originalFilename);
-                    var counter = 1;
-
-                    do
-                    {
-                        finalFilename = $"{fileNameWithoutExtension} ({counter}){extension}";
-                        fullPath = Path.Combine(targetPath, finalFilename);
-                        counter++;
-                    } while (System.IO.File.Exists(fullPath));
-
-                    _logger.LogInformation("File already exists, using unique filename: {OriginalFilename} -> {FinalFilename}", 
-                        originalFilename, finalFilename);
                 }
 
                 // Download the image
                 using var httpClient = new HttpClient();
                 httpClient.DefaultRequestHeaders.Add("User-Agent", "KollectorScum/1.0");
 
-                var response = await httpClient.GetAsync(request.Url);
+                var response = await httpClient.GetAsync(parsedUrl);
                 if (!response.IsSuccessStatusCode)
                 {
                     _logger.LogWarning("Failed to download image from {Url}: {StatusCode}", request.Url, response.StatusCode);
@@ -275,41 +258,49 @@ namespace KollectorScum.Api.Controllers
                 }
 
                 var imageBytes = await response.Content.ReadAsByteArrayAsync();
-                var contentType = response.Content.Headers.ContentType?.MediaType ?? "application/octet-stream";
+                var contentType = response.Content.Headers.ContentType?.MediaType ?? "image/jpeg";
 
-                // Use provided filename if available (sanitized), otherwise generate GUID
-                string uniqueFileName;
-                if (!string.IsNullOrWhiteSpace(request.Filename)) 
-                {
-                    // Basic sanitization
-                    var cleanName = Path.GetFileName(request.Filename);
-                    uniqueFileName = cleanName; 
-                }
-                else 
-                {
-                    var fileExt = Path.GetExtension(originalFilename);
-                    if (string.IsNullOrWhiteSpace(fileExt)) fileExt = ".jpg";
-                    uniqueFileName = $"{Guid.NewGuid()}{fileExt}";
-                }
+                // Generate unique filenames
+                var baseName = Guid.NewGuid().ToString();
+                var ext = !string.IsNullOrWhiteSpace(request.Filename)
+                    ? (Path.GetExtension(request.Filename).ToLowerInvariant() is { } e && e.Length > 0 ? e : ".jpg")
+                    : ".jpg";
+                var filename = $"{baseName}{ext}";
+                var thumbFilename = $"thumb-{baseName}{ext}";
 
-                // Determine user id for multi-tenant storage; fall back to Guid.Empty if not authenticated
                 var userId = _userContext.GetActingUserId() ?? Guid.Empty;
 
-                _logger.LogInformation("Attempting to upload image. Bucket: {Bucket}, User: {User}, File: {File}", 
-                    _bucketName, userId, uniqueFileName);
+                // Resize cover to ≤1600px then store
+                using var rawStream = new MemoryStream(imageBytes);
+                using var resizedStream = await _imageResizer.ResizeAsync(rawStream, 1600);
+                var publicUrl = await _storageService.UploadFileAsync(
+                    _bucketName, userId.ToString(), filename, resizedStream, "image/jpeg");
 
-                // Upload to configured storage (R2 or local filesystem implementation)
-                using var ms = new MemoryStream(imageBytes);
-                var publicUrl = await _storageService.UploadFileAsync(_bucketName, userId.ToString(), uniqueFileName, ms, contentType);
+                _logger.LogInformation(
+                    "Downloaded and stored image: {Url} -> {StoredFile} (User: {UserId}, Size: {Size})",
+                    request.Url, filename, userId, resizedStream.Length);
 
-                _logger.LogInformation("Downloaded and stored image: {Url} -> {StoredFile} (User: {UserId}, Size: {Size})", request.Url, uniqueFileName, userId, imageBytes.Length);
+                // Optionally generate and store thumbnail
+                string? thumbPublicUrl = null;
+                if (generateThumbnail)
+                {
+                    resizedStream.Position = 0;
+                    using var thumbStream = await _imageResizer.GenerateThumbnailAsync(resizedStream, 300);
+                    thumbPublicUrl = await _storageService.UploadFileAsync(
+                        _bucketName, userId.ToString(), thumbFilename, thumbStream, "image/jpeg");
 
-                return Ok(new {
+                    _logger.LogInformation(
+                        "Generated thumbnail for downloaded image: {ThumbFilename} (User: {UserId})", thumbFilename, userId);
+                }
+
+                return Ok(new
+                {
                     Message = "Image downloaded and stored successfully",
-                    Filename = uniqueFileName,
-                    OriginalFilename = originalFilename,
-                    Size = imageBytes.Length,
-                    PublicUrl = publicUrl
+                    Filename = filename,
+                    ThumbnailFilename = generateThumbnail ? thumbFilename : (string?)null,
+                    Size = resizedStream.Length,
+                    PublicUrl = publicUrl,
+                    ThumbnailPublicUrl = thumbPublicUrl,
                 });
             }
             catch (HttpRequestException ex)
@@ -322,6 +313,117 @@ namespace KollectorScum.Api.Controllers
                 _logger.LogError(ex, "Error downloading image: {Url}", request.Url);
                 return StatusCode(500, "Internal server error while downloading image");
             }
+        }
+
+        /// <summary>
+        /// Accepts a multipart form-file upload, resizes it to fit within 1600px, stores it,
+        /// and optionally auto-generates a 300px thumbnail in the same request.
+        /// </summary>
+        /// <param name="generateThumbnail">When <c>true</c>, a square 300-px thumbnail is also stored.</param>
+        /// <param name="file">The image file to upload (max 5 MB; JPEG, PNG, GIF, WebP, BMP or TIFF).</param>
+        /// <returns>An <see cref="ImageUploadResponseDto"/> containing the stored filenames and public URLs.</returns>
+        [HttpPost("upload")]
+        [ProducesResponseType(typeof(ImageUploadResponseDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [RequestSizeLimit(MaxUploadBytes + 1024)]
+        public async Task<IActionResult> UploadImage(
+            [FromQuery] bool generateThumbnail = true,
+            IFormFile? file = null)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("No file was provided.");
+
+            if (file.Length > MaxUploadBytes)
+                return BadRequest($"File exceeds the maximum allowed size of {MaxUploadBytes / 1024 / 1024} MB.");
+
+            var contentType = file.ContentType ?? string.Empty;
+            if (!AllowedImageMimeTypes.Contains(contentType))
+                return BadRequest("Only image files (JPEG, PNG, GIF, WebP, BMP, TIFF) are accepted.");
+
+            try
+            {
+                var userId = _userContext.GetActingUserId() ?? Guid.Empty;
+                var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (string.IsNullOrWhiteSpace(ext)) ext = ".jpg";
+                var baseName = $"{Guid.NewGuid()}";
+                var filename = $"{baseName}{ext}";
+                var thumbFilename = $"thumb-{baseName}{ext}";
+
+                // Resize cover to ≤1600px
+                await using var inputStream = file.OpenReadStream();
+                using var resizedStream = await _imageResizer.ResizeAsync(inputStream, 1600);
+
+                // Store cover
+                var publicUrl = await _storageService.UploadFileAsync(
+                    _bucketName, userId.ToString(), filename, resizedStream, "image/jpeg");
+
+                _logger.LogInformation(
+                    "Uploaded image: {Filename} (User: {UserId}, Size: {Size} bytes)",
+                    filename, userId, resizedStream.Length);
+
+                // Optionally generate and store thumbnail
+                string? thumbPublicUrl = null;
+                if (generateThumbnail)
+                {
+                    resizedStream.Position = 0;
+                    using var thumbStream = await _imageResizer.GenerateThumbnailAsync(resizedStream, 300);
+                    thumbPublicUrl = await _storageService.UploadFileAsync(
+                        _bucketName, userId.ToString(), thumbFilename, thumbStream, "image/jpeg");
+
+                    _logger.LogInformation(
+                        "Generated thumbnail: {ThumbFilename} (User: {UserId})", thumbFilename, userId);
+                }
+
+                return Ok(new ImageUploadResponseDto
+                {
+                    Filename = filename,
+                    ThumbnailFilename = generateThumbnail ? thumbFilename : null,
+                    PublicUrl = publicUrl,
+                    ThumbnailPublicUrl = thumbPublicUrl,
+                    Size = resizedStream.Length,
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error uploading image file: {FileName}", file.FileName);
+                return StatusCode(500, "Internal server error while uploading image.");
+            }
+        }
+
+        /// <summary>
+        /// Searches MusicBrainz and the Cover Art Archive for album cover art matching
+        /// the given query string. Returns up to 4 results ordered by confidence.
+        /// </summary>
+        /// <param name="q">
+        /// Free-text search query (e.g. "Iron Maiden Killers 1981 CD"). Max 200 characters.
+        /// </param>
+        /// <param name="limit">Maximum results to return (1–10, default 4).</param>
+        /// <param name="cancellationToken">Propagates request cancellation.</param>
+        /// <returns>Array of <see cref="CoverArtSearchResultDto"/> ordered by confidence descending.</returns>
+        [HttpGet("search")]
+        [ProducesResponseType(typeof(IReadOnlyList<CoverArtSearchResultDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        public async Task<IActionResult> SearchCoverArt(
+            [FromQuery] string? q,
+            [FromQuery] int limit = 4,
+            CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(q))
+                return BadRequest("Query parameter 'q' is required.");
+
+            if (q.Length > 200)
+                return BadRequest("Query must not exceed 200 characters.");
+
+            if (limit < 1 || limit > 10)
+                return BadRequest("Limit must be between 1 and 10.");
+
+            var results = await _coverArtSearch.SearchAsync(q, limit, cancellationToken);
+
+            if (results.Count == 0)
+                return NoContent();
+
+            return Ok(results);
         }
     }
 
