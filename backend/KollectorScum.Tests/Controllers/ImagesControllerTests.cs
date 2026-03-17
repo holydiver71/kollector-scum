@@ -23,6 +23,7 @@ namespace KollectorScum.Tests.Controllers
         private readonly Mock<IUserContext> _mockUserContext = new();
         private readonly Mock<IImageResizerService> _mockResizer = new();
         private readonly Mock<ICoverArtSearchService> _mockSearch = new();
+        private readonly Mock<IHttpClientFactory> _mockHttpClientFactory = new();
 
         public ImagesControllerImageTests()
         {
@@ -39,7 +40,8 @@ namespace KollectorScum.Tests.Controllers
                 _mockStorage.Object,
                 _mockUserContext.Object,
                 _mockResizer.Object,
-                _mockSearch.Object);
+                _mockSearch.Object,
+                _mockHttpClientFactory.Object);
 
             controller.ControllerContext = new ControllerContext
             {
