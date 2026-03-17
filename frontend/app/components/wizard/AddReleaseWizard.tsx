@@ -20,6 +20,7 @@ import ImagesPanel from "./panels/ImagesPanel";
 import TrackListingPanel from "./panels/TrackListingPanel";
 import ExternalLinksPanel from "./panels/ExternalLinksPanel";
 import DraftPreviewPanel from "./panels/DraftPreviewPanel";
+import ConfirmDialog from "./ConfirmDialog";
 import { fetchJson } from "../../lib/api";
 
 // ─── Validation ────────────────────────────────────────────────────────────────
@@ -101,6 +102,7 @@ export default function AddReleaseWizard({
   // ── Submit state ────────────────────────────────────────────────────────────
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   const TOTAL_STEPS = WIZARD_STEPS.length;
   const PREVIEW_STEP = TOTAL_STEPS - 1;
@@ -236,6 +238,7 @@ export default function AddReleaseWizard({
   // ── Render ───────────────────────────────────────────────────────────────────
 
   return (
+    <>
     <div className="max-w-4xl mx-auto space-y-4">
       {/* Non-blocking lookup error warning */}
       {lookups.error && (
@@ -359,6 +362,7 @@ export default function AddReleaseWizard({
               data={formData}
               onGoBack={handlePrevious}
               onSubmit={handleSubmit}
+              onCancel={onCancel}
               isSubmitting={isSubmitting}
               submitError={submitError}
             />
@@ -368,15 +372,15 @@ export default function AddReleaseWizard({
         {/* Panel footer navigation (hidden on Draft Preview which has its own bar) */}
         {!isPreview && (
           <div className="px-6 py-3 border-t border-[#1C1C28] flex items-center justify-between gap-4">
-            {/* Back */}
+            {/* Back + Cancel */}
+            <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={currentStep === 0 ? onCancel : handlePrevious}
+              disabled={currentStep === 0 && !onCancel}
               className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold border transition-colors ${
-                currentStep === 0
-                  ? onCancel
-                    ? "border-[#1C1C28] text-gray-500 hover:text-white hover:border-[#8B5CF6]/50"
-                    : "border-[#1C1C28] text-gray-700 cursor-not-allowed"
+                currentStep === 0 && !onCancel
+                  ? "border-[#1C1C28] text-gray-700 cursor-not-allowed"
                   : "border-[#1C1C28] text-gray-300 hover:text-white hover:border-[#8B5CF6]/50"
               }`}
             >
@@ -393,8 +397,18 @@ export default function AddReleaseWizard({
                   d="M15.75 19.5L8.25 12l7.5-7.5"
                 />
               </svg>
-              {currentStep === 0 ? "Cancel" : "Previous"}
+              Back
             </button>
+            {currentStep > 0 && onCancel && (
+              <button
+                type="button"
+                onClick={() => setShowCancelConfirm(true)}
+                className="px-3 py-2 text-sm text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+            )}
+            </div>
 
             {/* Validation summary */}
             {hasErrors && (
@@ -434,5 +448,11 @@ export default function AddReleaseWizard({
         )}
       </div>
     </div>
+    <ConfirmDialog
+      isOpen={showCancelConfirm}
+      onConfirm={() => { setShowCancelConfirm(false); onCancel?.(); }}
+      onDismiss={() => setShowCancelConfirm(false)}
+    />
+    </>
   );
 }

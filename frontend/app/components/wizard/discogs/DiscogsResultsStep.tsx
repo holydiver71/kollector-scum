@@ -12,8 +12,10 @@
  * results.
  */
 
+import { useState } from "react";
 import Image from "next/image";
 import type { DiscogsSearchResult } from "../../../lib/discogs-types";
+import ConfirmDialog from "../ConfirmDialog";
 
 export interface DiscogsResultsStepProps {
   /** Results from the previous search step. */
@@ -26,6 +28,8 @@ export interface DiscogsResultsStepProps {
   onContinue: (result: DiscogsSearchResult) => void;
   /** Called when the user presses Back to return to the search step. */
   onBack: () => void;
+  /** Called when the user cancels the entire flow and returns to the add release home. */
+  onCancel: () => void;
 }
 
 /**
@@ -37,7 +41,9 @@ export default function DiscogsResultsStep({
   onSelectResult,
   onContinue,
   onBack,
+  onCancel,
 }: DiscogsResultsStepProps) {
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const handleContinue = () => {
     if (selectedResult) {
       onContinue(selectedResult);
@@ -45,6 +51,7 @@ export default function DiscogsResultsStep({
   };
 
   return (
+    <>
     <div className="space-y-4">
       <div>
         <h2 className="text-xl font-black text-white mb-1">
@@ -161,6 +168,7 @@ export default function DiscogsResultsStep({
 
       {/* Footer action bar */}
       <div className="flex items-center justify-between gap-4 pt-2 border-t border-[#1C1C28]">
+        <div className="flex items-center gap-2">
         <button
           type="button"
           onClick={onBack}
@@ -181,13 +189,16 @@ export default function DiscogsResultsStep({
           </svg>
           Back
         </button>
+        <button
+          type="button"
+          onClick={() => setShowCancelConfirm(true)}
+          className="px-3 py-2 text-sm text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
+        >
+          Cancel
+        </button>
+        </div>
 
         <div className="flex items-center gap-3">
-          {!selectedResult && (
-            <p role="status" className="text-sm text-gray-500">
-              Select a release to continue
-            </p>
-          )}
           <button
             type="button"
             onClick={handleContinue}
@@ -212,5 +223,11 @@ export default function DiscogsResultsStep({
         </div>
       </div>
     </div>
+    <ConfirmDialog
+      isOpen={showCancelConfirm}
+      onConfirm={() => { setShowCancelConfirm(false); onCancel(); }}
+      onDismiss={() => setShowCancelConfirm(false)}
+    />
+    </>
   );
 }

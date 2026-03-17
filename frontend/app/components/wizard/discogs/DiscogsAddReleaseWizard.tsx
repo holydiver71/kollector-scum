@@ -20,6 +20,8 @@ import { fetchJson } from "../../../lib/api";
 import type { DiscogsRelease, DiscogsSearchRequest, DiscogsSearchResult } from "../../../lib/discogs-types";
 import { mapDiscogsRelease, extractFilenameFromUrl } from "./mapDiscogsRelease";
 import type { DiscogsWizardState } from "./types";
+import type { WizardStep } from "../types";
+import StepIndicator from "../StepIndicator";
 import DiscogsSearchStep from "./DiscogsSearchStep";
 import DiscogsResultsStep from "./DiscogsResultsStep";
 import DiscogsDetailsStep from "./DiscogsDetailsStep";
@@ -37,6 +39,21 @@ export interface DiscogsAddReleaseWizardProps {
   /** Called when the user cancels the entire flow. */
   onCancel: () => void;
 }
+
+// ─── Step definitions ──────────────────────────────────────────────────────────
+
+const DISCOGS_STEPS: WizardStep[] = [
+  { id: 0, title: "Search",  description: "Search Discogs by catalogue number",   required: false },
+  { id: 1, title: "Results", description: "Select a release from search results", required: false },
+  { id: 2, title: "Details", description: "Preview and add the release",          required: false },
+];
+
+const STEP_NAMES: DiscogsWizardState["step"][] = ["search", "results", "details"];
+const STEP_INDEX: Record<DiscogsWizardState["step"], number> = {
+  search: 0,
+  results: 1,
+  details: 2,
+};
 
 // ─── Initial state ─────────────────────────────────────────────────────────────
 
@@ -278,6 +295,17 @@ export default function DiscogsAddReleaseWizard({
     );
   }
 
+  // ── Step indicator helpers ──────────────────────────────────────────────────
+
+  const currentStepIndex = STEP_INDEX[state.step];
+  const visitedSteps = STEP_NAMES.slice(0, currentStepIndex + 1).map((_, i) => i);
+
+  const handleDiscogsStepClick = (stepId: number) => {
+    if (stepId < currentStepIndex) {
+      setState((prev) => ({ ...prev, step: STEP_NAMES[stepId] }));
+    }
+  };
+
   // ── Step indicator label ────────────────────────────────────────────────────
 
   const stepLabels: Record<DiscogsWizardState["step"], string> = {
@@ -290,32 +318,14 @@ export default function DiscogsAddReleaseWizard({
 
   return (
     <div className="space-y-4">
-      {/* Mini step indicator */}
-      <div className="flex items-center gap-3 text-xs text-gray-500">
-        {(["search", "results", "details"] as const).map((s, i) => (
-          <span
-            key={s}
-            className={`flex items-center gap-1.5 ${
-              state.step === s ? "text-[#8B5CF6] font-semibold" : ""
-            }`}
-          >
-            <span
-              className={`inline-flex w-5 h-5 rounded-full items-center justify-center text-xs font-bold border ${
-                state.step === s
-                  ? "border-[#8B5CF6] bg-[#8B5CF6]/20 text-[#8B5CF6]"
-                  : "border-[#1C1C28] text-gray-600"
-              }`}
-            >
-              {i + 1}
-            </span>
-            <span className="hidden sm:inline">
-              {s.charAt(0).toUpperCase() + s.slice(1)}
-            </span>
-            {i < 2 && (
-              <span className="text-gray-700 mx-0.5">›</span>
-            )}
-          </span>
-        ))}
+      {/* Step indicator – same component and wrapper as manual wizard */}
+      <div className="bg-[#13131F] border border-[#1C1C28] rounded-2xl p-3">
+        <StepIndicator
+          steps={DISCOGS_STEPS}
+          currentStep={currentStepIndex}
+          visitedSteps={visitedSteps}
+          onStepClick={handleDiscogsStepClick}
+        />
       </div>
 
       {/* Panel card */}
@@ -344,6 +354,7 @@ export default function DiscogsAddReleaseWizard({
               initialValues={state.searchRequest ?? undefined}
               onSearchSuccess={handleSearchSuccess}
               onSearchError={handleSearchError}
+              onBack={onCancel}
             />
           )}
 
@@ -354,6 +365,7 @@ export default function DiscogsAddReleaseWizard({
               onSelectResult={handleSelectResult}
               onContinue={handleContinueToDetails}
               onBack={handleBackToSearch}
+              onCancel={onCancel}
             />
           )}
 
@@ -361,6 +373,7 @@ export default function DiscogsAddReleaseWizard({
             <DiscogsDetailsStep
               searchResult={state.selectedResult}
               onBack={handleBackToResults}
+              onCancel={onCancel}
               onAddToCollection={handleAddToCollection}
               onEditRelease={handleEditRelease}
               isAdding={isAdding}
@@ -369,18 +382,6 @@ export default function DiscogsAddReleaseWizard({
         </div>
       </div>
 
-      {/* Cancel link (visible on search step only) */}
-      {state.step === "search" && (
-        <div className="text-center">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="text-xs text-gray-600 hover:text-gray-400 transition-colors"
-          >
-            Cancel
-          </button>
-        </div>
-      )}
     </div>
   );
 }

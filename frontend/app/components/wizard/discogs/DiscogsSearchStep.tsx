@@ -24,6 +24,8 @@ export interface DiscogsSearchStepProps {
   onSearchSuccess: (results: DiscogsSearchResult[], request: DiscogsSearchRequest) => void;
   /** Called when the search returns an error or zero results. */
   onSearchError: (message: string) => void;
+  /** Called when the user clicks the Back button to return to method selection. */
+  onBack?: () => void;
 }
 
 /**
@@ -33,6 +35,7 @@ export default function DiscogsSearchStep({
   initialValues,
   onSearchSuccess,
   onSearchError,
+  onBack,
 }: DiscogsSearchStepProps) {
   const [catalogNumber, setCatalogNumber] = useState(
     initialValues?.catalogNumber ?? ""
@@ -202,12 +205,40 @@ export default function DiscogsSearchStep({
           </div>
         </div>
 
-        {/* Action buttons */}
-        <div className="flex gap-3 pt-2">
+        {/* Clear – secondary form action, not a navigation button */}
+        <div className="flex justify-start pt-1">
+          <button
+            type="button"
+            onClick={handleClear}
+            disabled={isSearching}
+            className="text-xs text-gray-500 hover:text-gray-300 underline underline-offset-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            Clear fields
+          </button>
+        </div>
+
+        {/* Navigation footer */}
+        <div className="flex items-center justify-between pt-4 mt-2 border-t border-[#1C1C28]">
+          {onBack ? (
+            <button
+              type="button"
+              onClick={onBack}
+              disabled={isSearching}
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-300 hover:text-white border border-[#1C1C28] hover:border-[#8B5CF6]/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back
+            </button>
+          ) : (
+            <span />
+          )}
+
           <button
             type="submit"
             disabled={isSearching || !catalogNumber.trim()}
-            className="flex-1 flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold bg-[#8B5CF6] hover:bg-[#7C3AED] text-white shadow-lg shadow-[#8B5CF6]/20 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold bg-[#8B5CF6] hover:bg-[#7C3AED] text-white shadow-lg shadow-[#8B5CF6]/20 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
           >
             {isSearching ? (
               <>
@@ -235,31 +266,12 @@ export default function DiscogsSearchStep({
               </>
             ) : (
               <>
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
                 Search Discogs
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               </>
             )}
-          </button>
-
-          <button
-            type="button"
-            onClick={handleClear}
-            disabled={isSearching}
-            className="px-5 py-2.5 rounded-xl text-sm font-semibold border border-[#1C1C28] text-gray-300 hover:text-white hover:border-[#8B5CF6]/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-          >
-            Clear
           </button>
         </div>
       </form>
