@@ -256,6 +256,22 @@ if (!string.IsNullOrEmpty(jwtKey))
 // Register IHttpClientFactory for outbound HTTP calls (e.g. Google token exchange)
 builder.Services.AddHttpClient();
 
+// Named HTTP client for Google Custom Image Search proxy.
+// BaseAddress is NOT set here because the full request URL (including the key and cx params)
+// is constructed in the controller – using a BaseAddress for query-string-heavy APIs is awkward.
+builder.Services.AddHttpClient("google-image-search", client =>
+{
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+    client.Timeout = TimeSpan.FromSeconds(15);
+});
+
+// Named HTTP client for downloading images from external URLs
+builder.Services.AddHttpClient("image-downloader", client =>
+{
+    client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", "KollectorScum/1.0");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
 // Register HTTP context accessor for user context
 builder.Services.AddHttpContextAccessor();
 
@@ -274,6 +290,9 @@ else
     // Fallback to local filesystem for development and tests
     builder.Services.AddScoped<IStorageService, LocalFileSystemStorageService>();
 }
+
+// Register image resizer service
+builder.Services.AddScoped<IImageResizerService, ImageResizerService>();
 
 // Register KollectorScumDbContext with PostgreSQL
 // NOTE: Do not suppress EF warnings or apply migrations automatically in production.

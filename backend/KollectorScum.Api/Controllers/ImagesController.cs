@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using KollectorScum.Api.Interfaces;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace KollectorScum.Api.Controllers
 {
@@ -16,9 +18,27 @@ namespace KollectorScum.Api.Controllers
         private readonly ILogger<ImagesController> _logger;
         private readonly IStorageService _storageService;
         private readonly IUserContext _userContext;
+        private readonly IImageResizerService _imageResizerService;
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IConfiguration _configuration;
 
-        public ImagesController(IConfiguration configuration, ILogger<ImagesController> logger, IStorageService storageService, IUserContext userContext)
+        private static readonly HashSet<string> AllowedExtensions =
+            new(StringComparer.OrdinalIgnoreCase) { ".jpg", ".jpeg", ".png", ".webp", ".gif" };
+
+        private const long MaxFileSizeBytes = 5_242_880; // 5 MB
+        private const int CoverMaxDimension = 1600;
+        private const int ThumbnailMaxDimension = 300;
+
+        /// <summary>Initialises a new instance of <see cref="ImagesController"/>.</summary>
+        public ImagesController(
+            IConfiguration configuration,
+            ILogger<ImagesController> logger,
+            IStorageService storageService,
+            IUserContext userContext,
+            IImageResizerService imageResizerService,
+            IHttpClientFactory httpClientFactory)
         {
+            _configuration = configuration;
             _imagesPath = configuration["ImagesPath"] ?? "/home/andy/music-images";
             // Support both configuration key formats: the env provider maps '__' to ':'
             // so try the colon form first and fall back to the literal double-underscore form.
@@ -27,6 +47,8 @@ namespace KollectorScum.Api.Controllers
             _logger = logger;
             _storageService = storageService;
             _userContext = userContext;
+            _imageResizerService = imageResizerService;
+            _httpClientFactory = httpClientFactory;
         }
 
         /// <summary>
@@ -185,27 +207,25 @@ namespace KollectorScum.Api.Controllers
         }
 
         /// <summary>
-        /// Downloads an image from a URL and saves it to the images directory
+        /// Downloads an image from a URL, resizes it to fit within 1600px, saves it to storage,
+        /// and optionally generates a 300px thumbnail.
         /// </summary>
         /// <param name="request">Download request with URL and filename</param>
-        /// <returns>Success or error response</returns>
+        /// <param name="generateThumbnail">When true, also create a thumbnail stored with a <c>thumb-</c> prefix.</param>
+        /// <returns>Success or error response including public URLs</returns>
         [HttpPost("download")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> DownloadImage([FromBody] ImageDownloadRequest request)
+        public async Task<IActionResult> DownloadImage([FromBody] ImageDownloadRequest request, [FromQuery] bool generateThumbnail = false)
         {
             try
             {
                 // Validate input
                 if (string.IsNullOrWhiteSpace(request.Url))
-                {
                     return BadRequest("URL cannot be empty");
-                }
 
                 if (string.IsNullOrWhiteSpace(request.Filename))
-                {
                     return BadRequest("Filename cannot be empty");
-                }
 
                 // Security: Prevent directory traversal attacks
                 if (request.Filename.Contains("..") || Path.IsPathRooted(request.Filename))
@@ -218,7 +238,6 @@ namespace KollectorScum.Api.Controllers
                 string targetFolder = "covers"; // default
                 if (!string.IsNullOrWhiteSpace(request.Folder))
                 {
-                    // Validate folder parameter
                     if (request.Folder.Contains("..") || Path.IsPathRooted(request.Folder))
                     {
                         _logger.LogWarning("Potentially malicious folder requested: {Folder}", request.Folder);
@@ -228,7 +247,6 @@ namespace KollectorScum.Api.Controllers
                 }
                 else if (request.Filename.StartsWith("thumb-", StringComparison.OrdinalIgnoreCase))
                 {
-                    // Auto-detect thumbnails based on filename prefix
                     targetFolder = "thumbnails";
                 }
 
@@ -240,18 +258,16 @@ namespace KollectorScum.Api.Controllers
                     _logger.LogInformation("Created {Folder} directory: {Path}", targetFolder, targetPath);
                 }
 
-                // Build full file path and make it unique if needed
+                // Build unique filename
                 var originalFilename = request.Filename;
                 var fullPath = Path.Combine(targetPath, originalFilename);
                 var finalFilename = originalFilename;
 
-                // If file exists, add number suffix
                 if (System.IO.File.Exists(fullPath))
                 {
                     var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(originalFilename);
                     var extension = Path.GetExtension(originalFilename);
                     var counter = 1;
-
                     do
                     {
                         finalFilename = $"{fileNameWithoutExtension} ({counter}){extension}";
@@ -259,13 +275,12 @@ namespace KollectorScum.Api.Controllers
                         counter++;
                     } while (System.IO.File.Exists(fullPath));
 
-                    _logger.LogInformation("File already exists, using unique filename: {OriginalFilename} -> {FinalFilename}", 
+                    _logger.LogInformation("File already exists, using unique filename: {OriginalFilename} -> {FinalFilename}",
                         originalFilename, finalFilename);
                 }
 
-                // Download the image
-                using var httpClient = new HttpClient();
-                httpClient.DefaultRequestHeaders.Add("User-Agent", "KollectorScum/1.0");
+                // Download the image using the named 'image-downloader' HttpClient
+                var httpClient = _httpClientFactory.CreateClient("image-downloader");
 
                 var response = await httpClient.GetAsync(request.Url);
                 if (!response.IsSuccessStatusCode)
@@ -275,41 +290,49 @@ namespace KollectorScum.Api.Controllers
                 }
 
                 var imageBytes = await response.Content.ReadAsByteArrayAsync();
-                var contentType = response.Content.Headers.ContentType?.MediaType ?? "application/octet-stream";
+                var contentType = response.Content.Headers.ContentType?.MediaType ?? "image/jpeg";
 
-                // Use provided filename if available (sanitized), otherwise generate GUID
-                string uniqueFileName;
-                if (!string.IsNullOrWhiteSpace(request.Filename)) 
-                {
-                    // Basic sanitization
-                    var cleanName = Path.GetFileName(request.Filename);
-                    uniqueFileName = cleanName; 
-                }
-                else 
-                {
-                    var fileExt = Path.GetExtension(originalFilename);
-                    if (string.IsNullOrWhiteSpace(fileExt)) fileExt = ".jpg";
-                    uniqueFileName = $"{Guid.NewGuid()}{fileExt}";
-                }
+                // Sanitize filename
+                var cleanName = Path.GetFileName(
+                    string.IsNullOrWhiteSpace(request.Filename) ? $"{Guid.NewGuid()}.jpg" : request.Filename);
+                var uniqueFileName = cleanName;
 
                 // Determine user id for multi-tenant storage; fall back to Guid.Empty if not authenticated
                 var userId = _userContext.GetActingUserId() ?? Guid.Empty;
 
-                _logger.LogInformation("Attempting to upload image. Bucket: {Bucket}, User: {User}, File: {File}", 
-                    _bucketName, userId, uniqueFileName);
+                _logger.LogInformation("Resizing cover image to max {Max}px. Bucket: {Bucket}, User: {User}, File: {File}",
+                    CoverMaxDimension, _bucketName, userId, uniqueFileName);
 
-                // Upload to configured storage (R2 or local filesystem implementation)
-                using var ms = new MemoryStream(imageBytes);
-                var publicUrl = await _storageService.UploadFileAsync(_bucketName, userId.ToString(), uniqueFileName, ms, contentType);
+                // Resize cover to max 1600px before storing
+                string publicUrl;
+                using (var sourceStream = new MemoryStream(imageBytes))
+                {
+                    using var resizedStream = await _imageResizerService.ResizeAsync(sourceStream, CoverMaxDimension, contentType);
+                    publicUrl = await _storageService.UploadFileAsync(_bucketName, userId.ToString(), uniqueFileName, resizedStream, "image/jpeg");
+                }
 
-                _logger.LogInformation("Downloaded and stored image: {Url} -> {StoredFile} (User: {UserId}, Size: {Size})", request.Url, uniqueFileName, userId, imageBytes.Length);
+                _logger.LogInformation("Downloaded and stored image: {Url} -> {StoredFile} (User: {UserId}, Size: {Size})",
+                    request.Url, uniqueFileName, userId, imageBytes.Length);
 
-                return Ok(new {
-                    Message = "Image downloaded and stored successfully",
+                // Optionally generate a thumbnail at 300px
+                string? thumbnailFilename = null;
+                string? thumbnailPublicUrl = null;
+                if (generateThumbnail)
+                {
+                    thumbnailFilename = $"thumb-{uniqueFileName}";
+                    _logger.LogInformation("Generating thumbnail {Thumb} at max {Max}px.", thumbnailFilename, ThumbnailMaxDimension);
+
+                    using var thumbSource = new MemoryStream(imageBytes);
+                    using var thumbStream = await _imageResizerService.ResizeAsync(thumbSource, ThumbnailMaxDimension, contentType);
+                    thumbnailPublicUrl = await _storageService.UploadFileAsync(_bucketName, userId.ToString(), thumbnailFilename, thumbStream, "image/jpeg");
+                }
+
+                return Ok(new ImageStoreResult
+                {
                     Filename = uniqueFileName,
-                    OriginalFilename = originalFilename,
-                    Size = imageBytes.Length,
-                    PublicUrl = publicUrl
+                    PublicUrl = publicUrl,
+                    ThumbnailFilename = thumbnailFilename,
+                    ThumbnailPublicUrl = thumbnailPublicUrl
                 });
             }
             catch (HttpRequestException ex)
@@ -323,15 +346,228 @@ namespace KollectorScum.Api.Controllers
                 return StatusCode(500, "Internal server error while downloading image");
             }
         }
+
+        /// <summary>
+        /// Accepts a direct file upload, resizes it to fit within 1600 px, stores it,
+        /// and optionally generates a 300 px thumbnail.
+        /// </summary>
+        /// <param name="file">The image file to upload (max 5 MB; .jpg .jpeg .png .webp .gif).</param>
+        /// <param name="generateThumbnail">When true, also create a thumbnail stored with a <c>thumb-</c> prefix.</param>
+        /// <returns>JSON with <c>Filename</c>, <c>PublicUrl</c>, and optionally <c>ThumbnailFilename</c> / <c>ThumbnailPublicUrl</c>.</returns>
+        [HttpPost("upload")]
+        [RequestSizeLimit(MaxFileSizeBytes)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> UploadImage(IFormFile file, [FromQuery] bool generateThumbnail = false)
+        {
+            try
+            {
+                if (file == null || file.Length == 0)
+                    return BadRequest("No file provided.");
+
+                if (file.Length > MaxFileSizeBytes)
+                    return BadRequest($"File size exceeds the 5 MB limit ({file.Length} bytes).");
+
+                var ext = Path.GetExtension(file.FileName);
+                if (!AllowedExtensions.Contains(ext))
+                    return BadRequest($"File extension '{ext}' is not allowed. Allowed: {string.Join(", ", AllowedExtensions)}");
+
+                var uniqueFileName = $"{Guid.NewGuid()}.jpg";
+                var userId = _userContext.GetActingUserId() ?? Guid.Empty;
+                var contentType = file.ContentType ?? "image/jpeg";
+
+                _logger.LogInformation("Uploading file. Bucket: {Bucket}, User: {User}, File: {File}", _bucketName, userId, uniqueFileName);
+
+                // Read + resize cover to max 1600px
+                string publicUrl;
+                byte[] originalBytes;
+                using (var ms = new MemoryStream())
+                {
+                    await file.CopyToAsync(ms);
+                    originalBytes = ms.ToArray();
+                }
+
+                using (var sourceStream = new MemoryStream(originalBytes))
+                {
+                    using var resized = await _imageResizerService.ResizeAsync(sourceStream, CoverMaxDimension, contentType);
+                    publicUrl = await _storageService.UploadFileAsync(_bucketName, userId.ToString(), uniqueFileName, resized, "image/jpeg");
+                }
+
+                // Optionally generate thumbnail
+                string? thumbnailFilename = null;
+                string? thumbnailPublicUrl = null;
+                if (generateThumbnail)
+                {
+                    thumbnailFilename = $"thumb-{uniqueFileName}";
+                    _logger.LogInformation("Generating upload thumbnail {Thumb}.", thumbnailFilename);
+                    using var thumbSource = new MemoryStream(originalBytes);
+                    using var thumbStream = await _imageResizerService.ResizeAsync(thumbSource, ThumbnailMaxDimension, contentType);
+                    thumbnailPublicUrl = await _storageService.UploadFileAsync(_bucketName, userId.ToString(), thumbnailFilename, thumbStream, "image/jpeg");
+                }
+
+                return Ok(new ImageStoreResult
+                {
+                    Filename = uniqueFileName,
+                    PublicUrl = publicUrl,
+                    ThumbnailFilename = thumbnailFilename,
+                    ThumbnailPublicUrl = thumbnailPublicUrl
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error uploading image.");
+                return StatusCode(500, "Internal server error while uploading image.");
+            }
+        }
+
+        /// <summary>
+        /// Proxies an image search query to Google Custom Search JSON API and returns
+        /// a list of image results. SSRF mitigation: only the sanitised <paramref name="q"/>
+        /// string is forwarded; no user-supplied URLs are followed.
+        /// </summary>
+        /// <param name="q">Search query (max 200 characters).</param>
+        /// <returns>Array of <see cref="ImageSearchResult"/> or 204 when Google returns no results.</returns>
+        [HttpGet("search")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status502BadGateway)]
+        public async Task<IActionResult> SearchImages([FromQuery] string? q)
+        {
+            if (string.IsNullOrWhiteSpace(q))
+                return BadRequest("Query parameter 'q' is required.");
+
+            if (q.Length > 200)
+                return BadRequest("Query must be 200 characters or fewer.");
+
+            var apiKey = _configuration["Google:ApiKey"] ?? _configuration["Google__ApiKey"];
+            var engineId = _configuration["Google:SearchEngineId"] ?? _configuration["Google__SearchEngineId"];
+
+            if (string.IsNullOrWhiteSpace(apiKey) || string.IsNullOrWhiteSpace(engineId))
+            {
+                _logger.LogWarning("Google Image Search is not configured (missing ApiKey or SearchEngineId).");
+                return StatusCode(StatusCodes.Status503ServiceUnavailable,
+                    "Image search is not configured. Set Google:ApiKey and Google:SearchEngineId in app configuration.");
+            }
+
+            try
+            {
+                // Build a safe query string – only q, key, cx, and fixed searchType params are included.
+                var encodedQ = Uri.EscapeDataString(q);
+                var requestUrl =
+                    $"https://www.googleapis.com/customsearch/v1?key={Uri.EscapeDataString(apiKey)}&cx={Uri.EscapeDataString(engineId)}&searchType=image&num=10&q={encodedQ}";
+
+                var client = _httpClientFactory.CreateClient("google-image-search");
+                var response = await client.GetAsync(requestUrl);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("Google Custom Search returned {Status} for query '{Q}'", response.StatusCode, q);
+                    return StatusCode(StatusCodes.Status502BadGateway,
+                        $"Image search upstream error: {response.StatusCode}");
+                }
+
+                var body = await response.Content.ReadAsStringAsync();
+                using var doc = JsonDocument.Parse(body);
+
+                if (!doc.RootElement.TryGetProperty("items", out var items))
+                {
+                    _logger.LogDebug("Google image search returned no items for query '{Q}'", q);
+                    return NoContent();
+                }
+
+                var results = new List<ImageSearchResult>();
+                foreach (var item in items.EnumerateArray())
+                {
+                    var imageUrl = item.TryGetProperty("link", out var link) ? link.GetString() : null;
+                    var title = item.TryGetProperty("title", out var t) ? t.GetString() : null;
+                    string? thumbUrl = null;
+                    int width = 0, height = 0;
+
+                    if (item.TryGetProperty("image", out var imageInfo))
+                    {
+                        if (imageInfo.TryGetProperty("thumbnailLink", out var tl)) thumbUrl = tl.GetString();
+                        if (imageInfo.TryGetProperty("width", out var w)) w.TryGetInt32(out width);
+                        if (imageInfo.TryGetProperty("height", out var h)) h.TryGetInt32(out height);
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(imageUrl))
+                    {
+                        results.Add(new ImageSearchResult
+                        {
+                            Title = title ?? string.Empty,
+                            ImageUrl = imageUrl,
+                            ThumbnailUrl = thumbUrl ?? imageUrl,
+                            Width = width,
+                            Height = height,
+                        });
+                    }
+                }
+
+                return results.Count == 0 ? NoContent() : Ok(results);
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "HTTP error calling Google Custom Search for query '{Q}'", q);
+                return StatusCode(StatusCodes.Status502BadGateway, "Failed to reach image search provider.");
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(ex, "Failed to parse Google Custom Search response for query '{Q}'", q);
+                return StatusCode(StatusCodes.Status502BadGateway, "Failed to parse image search response.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error searching images for query '{Q}'", q);
+                return StatusCode(500, "Internal server error while searching images.");
+            }
+        }
     }
+
+    // ─── Request / Response models ─────────────────────────────────────────────
 
     /// <summary>
     /// Request model for image download
     /// </summary>
     public class ImageDownloadRequest
     {
+        /// <summary>URL of the image to download.</summary>
         public string Url { get; set; } = string.Empty;
+        /// <summary>Desired filename for the stored image.</summary>
         public string Filename { get; set; } = string.Empty;
-        public string? Folder { get; set; } // Optional: "covers", "thumbnails", etc.
+        /// <summary>Optional target folder override (e.g. "covers", "thumbnails").</summary>
+        public string? Folder { get; set; }
+    }
+
+    /// <summary>
+    /// Response returned by the upload and download endpoints.
+    /// </summary>
+    public class ImageStoreResult
+    {
+        /// <summary>Stored filename of the main image.</summary>
+        public string Filename { get; set; } = string.Empty;
+        /// <summary>Public URL of the main image.</summary>
+        public string PublicUrl { get; set; } = string.Empty;
+        /// <summary>Stored filename of the auto-generated thumbnail, if requested.</summary>
+        public string? ThumbnailFilename { get; set; }
+        /// <summary>Public URL of the auto-generated thumbnail, if requested.</summary>
+        public string? ThumbnailPublicUrl { get; set; }
+    }
+
+    /// <summary>
+    /// A single result from the Google image search proxy.
+    /// </summary>
+    public class ImageSearchResult
+    {
+        /// <summary>Page / image title from Google.</summary>
+        public string Title { get; set; } = string.Empty;
+        /// <summary>Direct URL to the full-size image.</summary>
+        public string ImageUrl { get; set; } = string.Empty;
+        /// <summary>URL to the Google-hosted thumbnail.</summary>
+        public string ThumbnailUrl { get; set; } = string.Empty;
+        /// <summary>Reported image width in pixels.</summary>
+        public int Width { get; set; }
+        /// <summary>Reported image height in pixels.</summary>
+        public int Height { get; set; }
     }
 }
