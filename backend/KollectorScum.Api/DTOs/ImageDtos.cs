@@ -28,6 +28,9 @@ namespace KollectorScum.Api.DTOs
         /// <summary>Label name for the release (null if unavailable).</summary>
         public string? Label { get; set; }
 
+        /// <summary>Catalogue number for the release (null if unavailable or from MusicBrainz only).</summary>
+        public string? CatalogueNumber { get; set; }
+
         /// <summary>
         /// Full-resolution image URL from the Cover Art Archive (500px or 1200px variant).
         /// Null when no cover art is available in the archive.

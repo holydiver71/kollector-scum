@@ -397,11 +397,13 @@ namespace KollectorScum.Api.Controllers
 
         /// <summary>
         /// Searches MusicBrainz and the Cover Art Archive for album cover art matching
-        /// the given query string. Returns up to 4 results ordered by confidence.
+        /// the given query string. Optionally uses Discogs for catalogue number lookups.
+        /// Returns up to 4 results ordered by confidence.
         /// </summary>
         /// <param name="q">
         /// Free-text search query (e.g. "Iron Maiden Killers 1981 CD"). Max 200 characters.
         /// </param>
+        /// <param name="catalogueNumber">Optional catalogue number to refine search via Discogs. Max 50 characters.</param>
         /// <param name="limit">Maximum results to return (1–10, default 4).</param>
         /// <param name="cancellationToken">Propagates request cancellation.</param>
         /// <returns>Array of <see cref="CoverArtSearchResultDto"/> ordered by confidence descending.</returns>
@@ -411,6 +413,7 @@ namespace KollectorScum.Api.Controllers
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         public async Task<IActionResult> SearchCoverArt(
             [FromQuery] string? q,
+            [FromQuery] string? catalogueNumber = null,
             [FromQuery] int limit = 4,
             CancellationToken cancellationToken = default)
         {
@@ -420,10 +423,13 @@ namespace KollectorScum.Api.Controllers
             if (q.Length > 200)
                 return BadRequest("Query must not exceed 200 characters.");
 
+            if (!string.IsNullOrWhiteSpace(catalogueNumber) && catalogueNumber.Length > 50)
+                return BadRequest("Catalogue number must not exceed 50 characters.");
+
             if (limit < 1 || limit > 10)
                 return BadRequest("Limit must be between 1 and 10.");
 
-            var results = await _coverArtSearch.SearchAsync(q, limit, cancellationToken);
+            var results = await _coverArtSearch.SearchAsync(q.Trim(), catalogueNumber?.Trim(), limit, cancellationToken);
 
             if (results.Count == 0)
                 return NoContent();
