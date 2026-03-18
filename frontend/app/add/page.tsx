@@ -160,10 +160,21 @@ export default function AddReleasePage() {
 
       {/* ── Discogs wizard ──────────────────────────────────────────────────── */}
       {flow === "discogs" && (
-        <DiscogsAddReleaseWizard
-          onSuccess={handleSuccess}
-          onCancel={() => setFlow("select")}
-        />
+        <div>
+          <div className="mb-4">
+            <button
+              type="button"
+              onClick={() => setFlow("select")}
+              className="text-sm text-gray-400 hover:text-gray-200 underline underline-offset-2"
+            >
+              Change method
+            </button>
+          </div>
+          <DiscogsAddReleaseWizard
+            onSuccess={handleSuccess}
+            onCancel={() => setFlow("select")}
+          />
+        </div>
       )}
 
       {/* ── Manual wizard ───────────────────────────────────────────────────── */}
