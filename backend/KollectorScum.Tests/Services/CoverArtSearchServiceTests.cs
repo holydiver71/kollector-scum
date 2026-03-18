@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using KollectorScum.Api.DTOs;
+using KollectorScum.Api.Interfaces;
 using KollectorScum.Api.Services;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -15,6 +17,7 @@ namespace KollectorScum.Tests.Services
     public class CoverArtSearchServiceTests
     {
         private readonly Mock<ILogger<CoverArtSearchService>> _mockLogger = new();
+        private readonly Mock<IDiscogsService> _mockDiscogsService = new();
 
         // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -54,7 +57,7 @@ namespace KollectorScum.Tests.Services
             HttpMessageHandler mbHandler,
             HttpMessageHandler caaHandler)
         {
-            return new CoverArtSearchService(BuildFactory(mbHandler, caaHandler), _mockLogger.Object);
+            return new CoverArtSearchService(BuildFactory(mbHandler, caaHandler), _mockDiscogsService.Object, _mockLogger.Object);
         }
 
         // ─── SearchAsync – query validation ──────────────────────────────────────────
@@ -222,6 +225,101 @@ namespace KollectorScum.Tests.Services
         {
             var dto = new KollectorScum.Api.DTOs.CoverArtSearchResultDto { Confidence = confidence };
             Assert.Equal(expected, dto.ConfidenceLabel);
+        }
+
+        // ─── SearchAsync – Discogs integration ────────────────────────────────────────
+
+        [Fact]
+        public async Task SearchAsync_WithCatalogueNumber_SearchesDiscogs()
+        {
+            var discogsResults = new List<DiscogsSearchResultDto>
+            {
+                new() { Id = "123", Title = "Album", Artist = "Artist", CatalogNumber = "CAT001",
+                        CoverImageUrl = "https://img.discogs.com/cover.jpg", ThumbUrl = "https://img.discogs.com/thumb.jpg",
+                        Year = "1990", Format = "CD", Country = "UK", Label = "EMI" }
+            };
+            _mockDiscogsService.Setup(d => d.SearchByCatalogNumberAsync("CAT001", null, null, null))
+                .ReturnsAsync(discogsResults);
+
+            var mbJson = JsonSerializer.Serialize(new { releases = Array.Empty<object>() });
+            var service = CreateService(
+                BuildHandler(HttpStatusCode.OK, mbJson),
+                BuildHandler(HttpStatusCode.OK, "{}"));
+
+            var results = await service.SearchAsync("Artist Album", "CAT001");
+
+            Assert.Single(results);
+            var dto = results[0];
+            Assert.Equal("Album", dto.Title);
+            Assert.Equal("Artist", dto.Artist);
+            Assert.Equal("CAT001", dto.CatalogueNumber);
+            Assert.Equal(0.95, dto.Confidence);
+            Assert.NotNull(dto.ImageUrl);
+            Assert.NotNull(dto.ThumbnailUrl);
+        }
+
+        [Fact]
+        public async Task SearchAsync_WithCatalogueNumber_FallsBackToMusicBrainzIfDiscogsReturnsNothing()
+        {
+            _mockDiscogsService.Setup(d => d.SearchByCatalogNumberAsync("NOTFOUND", null, null, null))
+                .ReturnsAsync(new List<DiscogsSearchResultDto>());
+
+            var mbJson = """
+                {
+                  "releases": [
+                    {
+                      "id": "abc-123",
+                      "title": "Fallback Album",
+                      "score": 85,
+                      "artist-credit": [{ "name": "MB Artist" }],
+                      "media": [{ "format": "CD" }]
+                    }
+                  ]
+                }
+                """;
+
+            var caaJson = """
+                {
+                  "images": [
+                    { "image": "https://example.com/img.jpg", "front": true,
+                      "thumbnails": { "large": "https://example.com/thumb.jpg" } }
+                  ]
+                }
+                """;
+
+            var service = CreateService(
+                BuildHandler(HttpStatusCode.OK, mbJson),
+                BuildHandler(HttpStatusCode.OK, caaJson));
+
+            var results = await service.SearchAsync("MB Artist Fallback Album", "NOTFOUND");
+
+            Assert.Single(results);
+            Assert.Equal("Fallback Album", results[0].Title);
+            Assert.Equal("MB Artist", results[0].Artist);
+        }
+
+        [Fact]
+        public async Task SearchAsync_DiscogsSkipsResultsWithoutCoverImage()
+        {
+            var discogsResults = new List<DiscogsSearchResultDto>
+            {
+                new() { Id = "1", Title = "No Cover", Artist = "Artist", CatalogNumber = "CAT002",
+                        CoverImageUrl = null, ThumbUrl = null },
+                new() { Id = "2", Title = "Has Cover", Artist = "Artist", CatalogNumber = "CAT002",
+                        CoverImageUrl = "https://img.discogs.com/cover.jpg", ThumbUrl = "https://img.discogs.com/thumb.jpg" }
+            };
+            _mockDiscogsService.Setup(d => d.SearchByCatalogNumberAsync("CAT002", null, null, null))
+                .ReturnsAsync(discogsResults);
+
+            var mbJson = JsonSerializer.Serialize(new { releases = Array.Empty<object>() });
+            var service = CreateService(
+                BuildHandler(HttpStatusCode.OK, mbJson),
+                BuildHandler(HttpStatusCode.OK, "{}"));
+
+            var results = await service.SearchAsync("Artist Album", "CAT002");
+
+            Assert.Single(results);
+            Assert.Equal("Has Cover", results[0].Title);
         }
     }
 }

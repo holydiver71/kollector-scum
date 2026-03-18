@@ -15,13 +15,15 @@ export interface CoverArtSearchResult {
   format?: string;
   country?: string;
   label?: string;
+  /** Catalogue number (from Discogs or MusicBrainz) */
+  catalogueNumber?: string;
   /** Full-resolution image URL from Cover Art Archive (null if unavailable) */
   imageUrl?: string;
   /** 250px thumbnail URL from Cover Art Archive (null if unavailable) */
   thumbnailUrl?: string;
   /**
    * Normalised confidence score 0.0–1.0.
-   * Derived from the MusicBrainz search score.
+   * Derived from the MusicBrainz search score or Discogs match.
    */
   confidence: number;
   /** Human-readable confidence label ("Exact match" | "Good match" | "Possible match") */
@@ -37,8 +39,8 @@ interface UseImageSearchResult {
   isLoading: boolean;
   /** Error message when the last search failed, null otherwise. */
   error: string | null;
-  /** Executes an immediate search for the given query string. */
-  search: (query: string) => Promise<void>;
+  /** Executes an immediate search for the given query string and optional catalogue number. */
+  search: (query: string, catalogueNumber?: string) => Promise<void>;
   /** Clears results, error and loading state. */
   clear: () => void;
 }
@@ -46,7 +48,8 @@ interface UseImageSearchResult {
 /**
  * Hook that manages cover-art image search state.
  *
- * - Calls `GET /api/images/search?q=<query>` on the backend.
+ * - Calls `GET /api/images/search?q=<query>&catalogueNumber=<optional>` on the backend.
+ * - Supports searching via MusicBrainz (free text) and Discogs (catalogue number).
  * - Cancels any in-flight request when a new search is triggered.
  * - Supports debounced auto-search via the returned `search` function.
  */
@@ -58,7 +61,7 @@ export function useImageSearch(): UseImageSearchResult {
   // AbortController to cancel stale in-flight requests
   const abortRef = useRef<AbortController | null>(null);
 
-  const search = useCallback(async (query: string) => {
+  const search = useCallback(async (query: string, catalogueNumber?: string) => {
     const trimmed = query.trim();
     if (!trimmed) {
       setResults([]);
@@ -75,8 +78,13 @@ export function useImageSearch(): UseImageSearchResult {
     setError(null);
 
     try {
+      let url = `/api/images/search?q=${encodeURIComponent(trimmed)}&limit=8`;
+      if (catalogueNumber?.trim()) {
+        url += `&catalogueNumber=${encodeURIComponent(catalogueNumber.trim())}`;
+      }
+
       const data = await fetchJson<CoverArtSearchResult[]>(
-        `/api/images/search?q=${encodeURIComponent(trimmed)}&limit=4`,
+        url,
         { signal: controller.signal },
       );
       setResults(data ?? []);

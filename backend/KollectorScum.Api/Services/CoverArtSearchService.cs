@@ -8,11 +8,13 @@ namespace KollectorScum.Api.Services
 {
     /// <summary>
     /// Searches for album cover art using the MusicBrainz search API and the
-    /// Cover Art Archive.  No paid external services are required.
+    /// Cover Art Archive, with optional Discogs API support for catalogue number searches.
+    /// No paid external services are required.
     /// </summary>
     public class CoverArtSearchService : ICoverArtSearchService
     {
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IDiscogsService _discogsService;
         private readonly ILogger<CoverArtSearchService> _logger;
 
         /// <summary>Named <see cref="HttpClient"/> key for the MusicBrainz API.</summary>
@@ -24,62 +26,42 @@ namespace KollectorScum.Api.Services
         /// <summary>
         /// Initialises a new instance of <see cref="CoverArtSearchService"/>.
         /// </summary>
-        public CoverArtSearchService(IHttpClientFactory httpClientFactory, ILogger<CoverArtSearchService> logger)
+        public CoverArtSearchService(
+            IHttpClientFactory httpClientFactory,
+            IDiscogsService discogsService,
+            ILogger<CoverArtSearchService> logger)
         {
             _httpClientFactory = httpClientFactory;
+            _discogsService = discogsService ?? throw new ArgumentNullException(nameof(discogsService));
             _logger = logger;
         }
 
         /// <inheritdoc />
         public async Task<IReadOnlyList<CoverArtSearchResultDto>> SearchAsync(
             string query,
-            int limit = 4,
+            string? catalogueNumber = null,
+            int limit = 8,
             CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(query))
                 return Array.Empty<CoverArtSearchResultDto>();
 
-            limit = Math.Clamp(limit, 1, 10);
-
-            var releases = await SearchMusicBrainzAsync(query, limit * 3, cancellationToken);
-            if (releases.Count == 0)
-            {
-                _logger.LogDebug("MusicBrainz returned no results for query: {Query}", query);
-                return Array.Empty<CoverArtSearchResultDto>();
-            }
+            limit = Math.Clamp(limit, 1, 20);
 
             var results = new List<CoverArtSearchResultDto>();
-            foreach (var release in releases)
+
+            // If catalogue number is provided, search Discogs first
+            if (!string.IsNullOrWhiteSpace(catalogueNumber))
             {
-                if (results.Count >= limit) break;
+                var discogsResults = await SearchDiscogsAsync(catalogueNumber, query, limit, cancellationToken);
+                results.AddRange(discogsResults);
+            }
 
-                var coverUrls = await TryGetCoverArtAsync(release.Id, cancellationToken);
-                if (coverUrls == null)
-                {
-                    _logger.LogDebug("No cover art found for MBID {MbId}", release.Id);
-                    continue;
-                }
-
-                var artist = release.ArtistCredit?.FirstOrDefault()?.Name ?? string.Empty;
-                var year = ParseYear(release.Date);
-                var format = release.Media?.FirstOrDefault()?.Format;
-                var country = release.Country;
-                var label = release.LabelInfo?.FirstOrDefault()?.Label?.Name;
-                var confidence = (release.Score ?? 0) / 100.0;
-
-                results.Add(new CoverArtSearchResultDto
-                {
-                    MbId = release.Id,
-                    Artist = artist,
-                    Title = release.Title ?? string.Empty,
-                    Year = year,
-                    Format = format,
-                    Country = country,
-                    Label = label,
-                    ImageUrl = coverUrls.Value.imageUrl,
-                    ThumbnailUrl = coverUrls.Value.thumbnailUrl,
-                    Confidence = Math.Round(confidence, 2),
-                });
+            // If we haven't reached the limit, also search MusicBrainz
+            if (results.Count < limit)
+            {
+                var mbResults = await SearchMusicBrainzAsync(query, limit - results.Count, cancellationToken);
+                results.AddRange(mbResults);
             }
 
             return results;
@@ -87,7 +69,64 @@ namespace KollectorScum.Api.Services
 
         // ─── MusicBrainz ────────────────────────────────────────────────────────────
 
-        private async Task<List<MbRelease>> SearchMusicBrainzAsync(
+        private async Task<List<CoverArtSearchResultDto>> SearchMusicBrainzAsync(
+            string query,
+            int limit,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                var mbReleases = await SearchMusicBrainzReleasesAsync(query, limit * 3, cancellationToken);
+                if (mbReleases.Count == 0)
+                {
+                    _logger.LogDebug("MusicBrainz returned no results for query: {Query}", query);
+                    return new List<CoverArtSearchResultDto>();
+                }
+
+                var results = new List<CoverArtSearchResultDto>();
+                foreach (var release in mbReleases)
+                {
+                    if (results.Count >= limit) break;
+
+                    var coverUrls = await TryGetCoverArtAsync(release.Id, cancellationToken);
+                    if (coverUrls == null)
+                    {
+                        _logger.LogDebug("No cover art found for MBID {MbId}", release.Id);
+                        continue;
+                    }
+
+                    var artist = release.ArtistCredit?.FirstOrDefault()?.Name ?? string.Empty;
+                    var year = ParseYear(release.Date);
+                    var format = release.Media?.FirstOrDefault()?.Format;
+                    var country = release.Country;
+                    var label = release.LabelInfo?.FirstOrDefault()?.Label?.Name;
+                    var confidence = (release.Score ?? 0) / 100.0;
+
+                    results.Add(new CoverArtSearchResultDto
+                    {
+                        MbId = release.Id,
+                        Artist = artist,
+                        Title = release.Title ?? string.Empty,
+                        Year = year,
+                        Format = format,
+                        Country = country,
+                        Label = label,
+                        ImageUrl = coverUrls.Value.imageUrl,
+                        ThumbnailUrl = coverUrls.Value.thumbnailUrl,
+                        Confidence = Math.Round(confidence, 2),
+                    });
+                }
+
+                return results;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "MusicBrainz search error for query: {Query}", query);
+                return new List<CoverArtSearchResultDto>();
+            }
+        }
+
+        private async Task<List<MbRelease>> SearchMusicBrainzReleasesAsync(
             string query,
             int limit,
             CancellationToken cancellationToken)
@@ -107,8 +146,71 @@ namespace KollectorScum.Api.Services
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "MusicBrainz search failed for query: {Query}", query);
+                _logger.LogWarning(ex, "MusicBrainz API request failed for query: {Query}", query);
                 return new List<MbRelease>();
+            }
+        }
+
+        // ─── Discogs ─────────────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Search Discogs by catalogue number and extract cover art.
+        /// </summary>
+        private async Task<List<CoverArtSearchResultDto>> SearchDiscogsAsync(
+            string catalogueNumber,
+            string query,
+            int limit,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                _logger.LogDebug("Searching Discogs for catalogue number: {CatalogueNumber}", catalogueNumber);
+
+                var discogsResults = await _discogsService.SearchByCatalogNumberAsync(
+                    catalogueNumber,
+                    null,
+                    null,
+                    null);
+
+                var results = new List<CoverArtSearchResultDto>();
+                foreach (var discogsResult in discogsResults.Take(limit))
+                {
+                    // Use Discogs cover image if available
+                    if (string.IsNullOrWhiteSpace(discogsResult.CoverImageUrl))
+                    {
+                        _logger.LogDebug("No cover image found for Discogs result: {Title}", discogsResult.Title);
+                        continue;
+                    }
+
+                    var year = int.TryParse(discogsResult.Year, out var parsedYear) ? parsedYear : (int?)null;
+                    var confidence = 0.95; // High confidence for catalogue number match
+
+                    results.Add(new CoverArtSearchResultDto
+                    {
+                        Artist = discogsResult.Artist,
+                        Title = discogsResult.Title,
+                        Year = year,
+                        Format = discogsResult.Format,
+                        Country = discogsResult.Country,
+                        Label = discogsResult.Label,
+                        CatalogueNumber = discogsResult.CatalogNumber,
+                        ImageUrl = discogsResult.CoverImageUrl,
+                        ThumbnailUrl = discogsResult.ThumbUrl,
+                        Confidence = confidence,
+                    });
+                }
+
+                if (results.Count > 0)
+                {
+                    _logger.LogDebug("Found {Count} Discogs covers for catalogue: {CatalogueNumber}", results.Count, catalogueNumber);
+                }
+
+                return results;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Discogs search error for catalogue number: {CatalogueNumber}", catalogueNumber);
+                return new List<CoverArtSearchResultDto>();
             }
         }
 

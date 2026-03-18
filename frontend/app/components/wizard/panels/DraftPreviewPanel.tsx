@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { WizardFormData } from "../types";
 import { FormatIcon } from "../../FormatIcon";
+import { API_BASE_URL } from "../../../lib/api";
 import ConfirmDialog from "../ConfirmDialog";
 
 interface Props {
@@ -104,11 +105,21 @@ function CoverArt({
   const src = images?.coverFront;
   const looksLikeUrl = src && (src.startsWith("http://") || src.startsWith("https://"));
 
-  if (looksLikeUrl) {
+  // Resolve a displayable URL: full https URLs as-is; root-relative storage
+  // paths (/cover-art/…) prepend the API base; bare filenames go via /api/images/.
+  const resolvedSrc = src
+    ? looksLikeUrl
+      ? src
+      : src.startsWith("/")
+        ? `${API_BASE_URL}${src}`
+        : `${API_BASE_URL}/api/images/${src}`
+    : null;
+
+  if (resolvedSrc) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
-        src={src}
+        src={resolvedSrc}
         alt={`${title} – front cover`}
         className="w-full h-full object-cover"
         onError={(e) => {
@@ -133,9 +144,6 @@ function CoverArt({
           d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5M21 3.75H3A.75.75 0 002.25 4.5v13.5A.75.75 0 003 18.75h18a.75.75 0 00.75-.75V4.5a.75.75 0 00-.75-.75z"
         />
       </svg>
-      {src && (
-        <p className="text-xs text-center px-4 font-mono opacity-50 break-all">{src}</p>
-      )}
     </div>
   );
 }
