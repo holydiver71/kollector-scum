@@ -382,6 +382,21 @@ export default function DiscogsAddReleaseWizard({
         </div>
       </div>
 
+      {/* Search-step footer: show Cancel action so parent callers can abort the flow */}
+      {state.step === "search" && (
+        <div className="pt-2">
+          <div className="flex">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="text-sm text-gray-500 hover:text-gray-300 underline underline-offset-2"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

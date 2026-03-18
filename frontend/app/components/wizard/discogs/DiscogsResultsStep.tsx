@@ -166,6 +166,13 @@ export default function DiscogsResultsStep({
         })}
       </div>
 
+      {/* Inline status hint when no selection */}
+      {!selectedResult && (
+        <div role="status" className="text-sm text-gray-400">
+          Select a release to continue
+        </div>
+      )}
+
       {/* Footer action bar */}
       <div className="flex items-center justify-between gap-4 pt-2 border-t border-[#1C1C28]">
         <div className="flex items-center gap-2">

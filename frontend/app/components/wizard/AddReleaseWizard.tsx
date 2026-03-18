@@ -372,42 +372,56 @@ export default function AddReleaseWizard({
         {/* Panel footer navigation (hidden on Draft Preview which has its own bar) */}
         {!isPreview && (
           <div className="px-6 py-3 border-t border-[#1C1C28] flex items-center justify-between gap-4">
-            {/* Back + Cancel */}
+            {/* Primary left action: Cancel (step 0) or Previous (later steps) */}
             <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={currentStep === 0 ? onCancel : handlePrevious}
-              disabled={currentStep === 0 && !onCancel}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold border transition-colors ${
-                currentStep === 0 && !onCancel
-                  ? "border-[#1C1C28] text-gray-700 cursor-not-allowed"
-                  : "border-[#1C1C28] text-gray-300 hover:text-white hover:border-[#8B5CF6]/50"
-              }`}
-            >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15.75 19.5L8.25 12l7.5-7.5"
-                />
-              </svg>
-              Back
-            </button>
-            {currentStep > 0 && onCancel && (
-              <button
-                type="button"
-                onClick={() => setShowCancelConfirm(true)}
-                className="px-3 py-2 text-sm text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
-            )}
+              {currentStep === 0 ? (
+                <button
+                  type="button"
+                  onClick={onCancel}
+                  disabled={!onCancel}
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold border transition-colors ${
+                    !onCancel
+                      ? "border-[#1C1C28] text-gray-700 cursor-not-allowed"
+                      : "border-[#1C1C28] text-gray-300 hover:text-white hover:border-[#8B5CF6]/50"
+                  }`}
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M15.75 19.5L8.25 12l7.5-7.5"
+                    />
+                  </svg>
+                  Cancel
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handlePrevious}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold border transition-colors border-[#1C1C28] text-gray-300 hover:text-white hover:border-[#8B5CF6]/50"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M15.75 19.5L8.25 12l7.5-7.5"
+                    />
+                  </svg>
+                  Previous
+                </button>
+              )}
             </div>
 
             {/* Validation summary */}
