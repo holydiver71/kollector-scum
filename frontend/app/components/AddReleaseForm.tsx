@@ -908,7 +908,75 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
             )}
           </div>
 
-          {/* Back cover and thumbnail inputs removed per design: only front cover remains */}
+            <div>
+              <label htmlFor="coverBack" className="block text-sm font-medium text-gray-700 mb-1">
+                Back Cover Filename
+              </label>
+              <input
+                type="text"
+                id="coverBack"
+                value={formData.images?.coverBack || ""}
+                onChange={(e) => updateField("images", {
+                  ...formData.images,
+                  coverBack: e.target.value,
+                })}
+                className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  validationErrors.coverBack ? "border-red-500" : "border-gray-300"
+                }`}
+                placeholder="back-cover.jpg"
+              />
+              {validationErrors.coverBack && (
+                <p className="mt-1 text-sm text-red-600">{validationErrors.coverBack}</p>
+              )}
+              {formData.images?.coverBack && (
+                <div className="mt-2">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={formData.images.coverBack}
+                    alt="Back cover preview"
+                    className="h-24 w-24 object-cover rounded border"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="thumbnail" className="block text-sm font-medium text-gray-700 mb-1">
+                Thumbnail Filename
+              </label>
+              <input
+                type="text"
+                id="thumbnail"
+                value={formData.images?.thumbnail || ""}
+                onChange={(e) => updateField("images", {
+                  ...formData.images,
+                  thumbnail: e.target.value,
+                })}
+                className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  validationErrors.thumbnail ? "border-red-500" : "border-gray-300"
+                }`}
+                placeholder="thumbnail.jpg"
+              />
+              {validationErrors.thumbnail && (
+                <p className="mt-1 text-sm text-red-600">{validationErrors.thumbnail}</p>
+              )}
+              {formData.images?.thumbnail && (
+                <div className="mt-2">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={formData.images.thumbnail}
+                    alt="Thumbnail preview"
+                    className="h-20 w-20 object-cover rounded border"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                </div>
+              )}
+            </div>
         </div>
       </div>
 
