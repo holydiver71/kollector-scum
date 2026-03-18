@@ -20,15 +20,25 @@ jest.mock('next/navigation', () => ({
 // Mock the wizard components so they don't need API access
 jest.mock('../../components/wizard/discogs/DiscogsAddReleaseWizard', () => ({
   __esModule: true,
-  default: function MockDiscogsWizard() {
-    return <div data-testid="discogs-wizard">Discogs Wizard</div>;
+  default: function MockDiscogsWizard({ onCancel }: { onCancel: () => void }) {
+    return (
+      <div data-testid="discogs-wizard">
+        <button onClick={onCancel}>Change method</button>
+        Discogs Wizard
+      </div>
+    );
   },
 }));
 
 jest.mock('../../components/wizard/AddReleaseWizard', () => ({
   __esModule: true,
-  default: function MockManualWizard() {
-    return <div data-testid="manual-wizard">Manual Wizard</div>;
+  default: function MockManualWizard({ onCancel }: { onCancel: () => void }) {
+    return (
+      <div data-testid="manual-wizard">
+        <button onClick={onCancel}>Change method</button>
+        Manual Wizard
+      </div>
+    );
   },
 }));
 
