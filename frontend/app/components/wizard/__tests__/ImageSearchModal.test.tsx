@@ -59,7 +59,7 @@ describe("ImageSearchModal", () => {
 
   it("triggers initial search on mount", () => {
     render(<ImageSearchModal {...defaultProps} />);
-    expect(mockSearch).toHaveBeenCalledWith("Iron Maiden Killers 1981");
+    expect(mockSearch).toHaveBeenCalledWith("Iron Maiden Killers 1981", undefined);
   });
 
   it("calls onClose when close button is clicked", async () => {
