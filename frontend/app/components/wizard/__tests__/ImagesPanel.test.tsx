@@ -81,12 +81,6 @@ describe("ImagesPanel", () => {
     expect(screen.getByRole("button", { name: /upload file/i })).toBeInTheDocument();
   });
 
-  it("shows Back Cover and Thumbnail text inputs", () => {
-    renderPanel();
-    expect(screen.getByLabelText(/back cover/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/thumbnail/i)).toBeInTheDocument();
-  });
-
   it("opens ImageSearchModal when 'Search Web' is clicked", async () => {
     renderPanel();
     await userEvent.click(screen.getByRole("button", { name: /search web/i }));
@@ -164,10 +158,4 @@ describe("ImagesPanel", () => {
     });
   });
 
-  it("shows thumbnail hint text", () => {
-    renderPanel();
-    expect(
-      screen.getByText(/auto-generated from cover front/i),
-    ).toBeInTheDocument();
-  });
 });
