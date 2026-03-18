@@ -5,6 +5,7 @@
 
 using System.Text;
 using System.Threading.RateLimiting;
+using KollectorScum.Api.Controllers;
 using KollectorScum.Api.Middleware;
 using KollectorScum.Api.Data;
 using KollectorScum.Api.DTOs;
@@ -382,6 +383,37 @@ builder.Services.AddScoped<IUserAuthenticationService, UserAuthenticationService
 builder.Services.AddSingleton<IDatabaseSchemaService, DatabaseSchemaService>();
 builder.Services.AddScoped<ISqlValidationService, SqlValidationService>();
 builder.Services.AddScoped<IQueryLLMService, NaturalLanguageQueryService>();
+
+// Register image services (Wizard Step 5)
+builder.Services.AddScoped<IImageResizerService, ImageResizerService>();
+builder.Services.AddScoped<ICoverArtSearchService, CoverArtSearchService>();
+
+// Named HTTP clients for MusicBrainz and Cover Art Archive (used by CoverArtSearchService)
+builder.Services.AddHttpClient(CoverArtSearchService.MusicBrainzClientName, client =>
+{
+    client.BaseAddress = new Uri("https://musicbrainz.org/ws/2/");
+    client.DefaultRequestHeaders.Add(
+        "User-Agent",
+        "KollectorScum/1.0 (https://github.com/holydiver71/kollector-scum; support@kollector.app)");
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+    client.Timeout = TimeSpan.FromSeconds(10);
+});
+
+builder.Services.AddHttpClient(CoverArtSearchService.CoverArtArchiveClientName, client =>
+{
+    client.BaseAddress = new Uri("https://coverartarchive.org/");
+    client.DefaultRequestHeaders.Add(
+        "User-Agent",
+        "KollectorScum/1.0 (https://github.com/holydiver71/kollector-scum; support@kollector.app)");
+    client.Timeout = TimeSpan.FromSeconds(10);
+});
+
+// Named HTTP client for downloading external images in ImagesController
+builder.Services.AddHttpClient(ImagesController.ImageDownloadClientName, client =>
+{
+    client.DefaultRequestHeaders.Add("User-Agent", "KollectorScum/1.0");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
