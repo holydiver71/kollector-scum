@@ -8,6 +8,8 @@ import { useImageSearch, type CoverArtSearchResult } from "./useImageSearch";
 interface ImageSearchModalProps {
   /** Pre-populated search query (typically "{artist} {title} {year}"). */
   defaultQuery: string;
+  /** Optional catalogue number to refine search via Discogs. */
+  defaultCatalogueNumber?: string;
   /** Called with the selected full-resolution image URL. */
   onSelect: (imageUrl: string, thumbnailUrl: string) => void;
   /** Called when the user closes the modal without selecting. */
@@ -50,7 +52,7 @@ function ResultCard({
     <button
       type="button"
       onClick={onSelect}
-      className="group flex flex-col rounded-xl border border-[#1C1C28] bg-[#0A0A12] hover:border-[#8B5CF6]/60 hover:bg-[#0F0F1A] transition-all text-left overflow-hidden focus:outline-none focus:ring-2 focus:ring-[#8B5CF6]"
+      className="group flex flex-col h-full rounded-xl border border-[#1C1C28] bg-[#0A0A12] hover:border-[#8B5CF6]/60 hover:bg-[#0F0F1A] transition-all text-left overflow-hidden focus:outline-none focus:ring-2 focus:ring-[#8B5CF6]"
       aria-label={`Select ${result.artist} – ${result.title}`}
     >
       {/* Thumbnail */}
@@ -96,6 +98,9 @@ function ResultCard({
         {result.label && (
           <p className="text-gray-600 text-[10px] truncate">{result.label}</p>
         )}
+        {result.catalogueNumber && (
+          <p className="text-gray-600 text-[10px] truncate font-mono">{result.catalogueNumber}</p>
+        )}
       </div>
     </button>
   );
@@ -109,12 +114,14 @@ const SEARCH_DEBOUNCE_MS = 400;
  *
  * Features:
  * - Search bar pre-populated with the default query; pressing Enter triggers search.
+ * - Optional catalogue number parameter to refine search via Discogs.
  * - Auto-search on input change (debounced 400 ms — "auto-search while typing").
  * - Up to 4 results displayed in a responsive grid with confidence indicators.
  * - Loading spinner, empty state and error state.
  */
 export default function ImageSearchModal({
   defaultQuery,
+  defaultCatalogueNumber,
   onSelect,
   onClose,
 }: ImageSearchModalProps) {
@@ -126,7 +133,7 @@ export default function ImageSearchModal({
   // Run initial search when the modal opens
   useEffect(() => {
     if (defaultQuery.trim()) {
-      search(defaultQuery.trim());
+      search(defaultQuery.trim(), defaultCatalogueNumber);
     }
     inputRef.current?.focus();
     return () => clear();
@@ -147,14 +154,14 @@ export default function ImageSearchModal({
     if (debounceRef.current) clearTimeout(debounceRef.current);
     // Auto-search while typing (consideration #1 from Image Search Research)
     debounceRef.current = setTimeout(() => {
-      search(value);
+      search(value, defaultCatalogueNumber);
     }, SEARCH_DEBOUNCE_MS);
   };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    search(query);
+    search(query, defaultCatalogueNumber);
   };
 
   const handleSelect = (result: CoverArtSearchResult) => {
@@ -175,7 +182,7 @@ export default function ImageSearchModal({
         role="dialog"
         aria-modal="true"
         aria-label="Search for album cover art"
-        className="relative bg-[#13131F] border border-[#1C1C28] rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[90vh]"
+        className="relative bg-[#13131F] border border-[#1C1C28] rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col max-h-[90vh]"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-[#1C1C28]">
@@ -253,12 +260,12 @@ export default function ImageSearchModal({
 
           {!isLoading && !error && results.length > 0 && (
             <div
-              className="grid grid-cols-2 sm:grid-cols-4 gap-3"
+              className="grid grid-cols-2 sm:grid-cols-4 gap-3 items-stretch"
               role="list"
               aria-label="Cover art search results"
             >
               {results.map((result) => (
-                <div key={result.mbId} role="listitem">
+                <div key={result.mbId} role="listitem" className="flex">
                   <ResultCard result={result} onSelect={() => handleSelect(result)} />
                 </div>
               ))}
