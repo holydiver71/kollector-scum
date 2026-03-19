@@ -44,6 +44,18 @@ export default function DiscogsResultsStep({
   onBack,
   onCancel,
 }: DiscogsResultsStepProps) {
+  const derivePublicDiscogsUrl = (resourceUrl?: string | null): string | undefined => {
+    if (!resourceUrl) return undefined;
+    // resourceUrl example: https://api.discogs.com/releases/25904050
+    try {
+      const parts = resourceUrl.split('/').filter(Boolean);
+      const id = parts[parts.length - 1];
+      if (!/^[0-9]+$/.test(id)) return undefined;
+      return `https://www.discogs.com/release/${id}`;
+    } catch {
+      return undefined;
+    }
+  };
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const handleContinue = () => {
     if (selectedResult) {
@@ -68,11 +80,19 @@ export default function DiscogsResultsStep({
       <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
         {results.map((result) => {
           const isSelected = selectedResult?.id === result.id;
+          const publicDiscogsUrl = result.uri ?? derivePublicDiscogsUrl(result.resourceUrl);
           return (
-            <button
+            <div
               key={result.id}
-              type="button"
+              role="button"
+              tabIndex={0}
               onClick={() => onSelectResult(result)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  onSelectResult(result);
+                }
+              }}
               className={`w-full text-left rounded-xl border p-4 transition-all ${
                 isSelected
                   ? "border-[#8B5CF6] bg-[#8B5CF6]/10 shadow-[0_0_0_1px_#8B5CF6]"
@@ -137,6 +157,30 @@ export default function DiscogsResultsStep({
                   </div>
                 </div>
 
+                {/* External Discogs link */}
+                <div className="flex-shrink-0 ml-2 mr-2">
+                  {publicDiscogsUrl && (
+                    <a
+                      href={publicDiscogsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={`Open ${result.title} on Discogs`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 shadow-sm hover:bg-white/10 transition-colors"
+                      aria-label={`Open ${result.title} on Discogs (opens in new tab)`}
+                    >
+                      {/* Official Discogs logo (favicon) */}
+                      <img
+                        src="https://www.discogs.com/favicon.ico"
+                        alt="Discogs"
+                        className="w-4 h-4 object-contain"
+                        // prevent the click from selecting the card
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </a>
+                  )}
+                </div>
+
                 {/* Selection indicator */}
                 <div
                   className={`flex-shrink-0 w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center transition-colors ${
@@ -162,7 +206,7 @@ export default function DiscogsResultsStep({
                   )}
                 </div>
               </div>
-            </button>
+            </div>
           );
         })}
       </div>
