@@ -685,12 +685,16 @@ export async function deleteCollection(): Promise<DeleteCollectionResponse> {
 }
 
 /**
- * Converts a Discogs CDN image URL (i.discogs.com) to a backend proxy URL.
+ * Converts a Discogs CDN image URL (i.discogs.com) to a frontend-server proxy URL.
  *
  * Discogs uses Referer-based hotlink protection that blocks browser requests
- * originating from third-party domains (staging / production). Routing the
- * request through the backend bypasses this because the server-side HTTP call
- * carries no browser Referer header.
+ * originating from third-party domains (staging / production). A server-side
+ * fetch via the Next.js API route at /api/images/proxy carries no browser
+ * Referer header, so it succeeds unconditionally.
+ *
+ * Using a relative URL (/api/images/proxy) means this works on every
+ * deployment without requiring NEXT_PUBLIC_API_BASE_URL to be configured at
+ * build time.
  *
  * Non-Discogs URLs are returned unchanged so the helper is safe to call
  * unconditionally on any image URL field.
@@ -698,5 +702,5 @@ export async function deleteCollection(): Promise<DeleteCollectionResponse> {
 export function toDiscogsProxyUrl(imageUrl: string | null | undefined): string | undefined {
   if (!imageUrl) return undefined;
   if (!imageUrl.includes('i.discogs.com')) return imageUrl;
-  return `${API_BASE_URL}/api/images/proxy?url=${encodeURIComponent(imageUrl)}`;
+  return `/api/images/proxy?url=${encodeURIComponent(imageUrl)}`;
 }
