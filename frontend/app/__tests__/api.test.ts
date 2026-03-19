@@ -1,4 +1,4 @@
-import { fetchJson } from '../lib/api';
+import { fetchJson, toDiscogsProxyUrl } from '../lib/api';
 
 describe('fetchJson — impersonation header injection', () => {
   let mockFetch: jest.Mock;
@@ -53,5 +53,46 @@ describe('fetchJson — impersonation header injection', () => {
     const headers = options.headers as Record<string, string>;
     expect(headers['Authorization']).toBe('Bearer test-token');
     expect(headers['X-Admin-Act-As']).toBe('impersonated-user-id');
+  });
+});
+
+describe('toDiscogsProxyUrl', () => {
+  it('returns a relative proxy path for i.discogs.com URLs', () => {
+    const input = 'https://i.discogs.com/abc/image.jpg';
+    const result = toDiscogsProxyUrl(input);
+    expect(result).toBe('/api/images/proxy?url=https%3A%2F%2Fi.discogs.com%2Fabc%2Fimage.jpg');
+  });
+
+  it('returns a relative proxy path preserving query parameters', () => {
+    const input = 'https://i.discogs.com/thumb/abc.jpg?token=xyz&size=thumb';
+    const result = toDiscogsProxyUrl(input);
+    expect(result).toContain('/api/images/proxy?url=');
+    expect(result).toContain(encodeURIComponent(input));
+  });
+
+  it('returns non-Discogs URLs unchanged', () => {
+    const input = 'https://example.com/cover.jpg';
+    expect(toDiscogsProxyUrl(input)).toBe(input);
+  });
+
+  it('returns undefined for null input', () => {
+    expect(toDiscogsProxyUrl(null)).toBeUndefined();
+  });
+
+  it('returns undefined for undefined input', () => {
+    expect(toDiscogsProxyUrl(undefined)).toBeUndefined();
+  });
+
+  it('returns undefined for empty string', () => {
+    expect(toDiscogsProxyUrl('')).toBeUndefined();
+  });
+
+  it('proxy path does not contain the API base URL', () => {
+    const input = 'https://i.discogs.com/test.jpg';
+    const result = toDiscogsProxyUrl(input);
+    expect(result).not.toContain('localhost');
+    expect(result).not.toContain('http://');
+    expect(result).not.toContain('https://');
+    expect(result).toMatch(/^\/api\/images\/proxy\?url=/);
   });
 });
