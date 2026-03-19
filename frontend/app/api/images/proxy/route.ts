@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// Ensure this route runs on the Edge runtime (required by Cloudflare Pages / Vercel)
+export const runtime = 'edge';
+
 /**
  * GET /api/images/proxy?url=<encoded-discogs-url>
  *
