@@ -15,6 +15,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import type { DiscogsSearchResult } from "../../../lib/discogs-types";
+import { toDiscogsProxyUrl } from "../../../lib/api";
 import ConfirmDialog from "../ConfirmDialog";
 
 export interface DiscogsResultsStepProps {
@@ -86,7 +87,7 @@ export default function DiscogsResultsStep({
                   {result.thumbUrl || result.coverImageUrl ? (
                     <div className="relative w-16 h-16 bg-[#1C1C28] rounded-lg overflow-hidden">
                       <Image
-                        src={result.thumbUrl ?? result.coverImageUrl ?? ""}
+                        src={toDiscogsProxyUrl(result.thumbUrl ?? result.coverImageUrl) ?? ""}
                         alt={`${result.title} cover`}
                         fill
                         sizes="64px"
