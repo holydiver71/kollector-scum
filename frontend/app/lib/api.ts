@@ -683,3 +683,20 @@ export async function deleteCollection(): Promise<DeleteCollectionResponse> {
     method: 'DELETE',
   });
 }
+
+/**
+ * Converts a Discogs CDN image URL (i.discogs.com) to a backend proxy URL.
+ *
+ * Discogs uses Referer-based hotlink protection that blocks browser requests
+ * originating from third-party domains (staging / production). Routing the
+ * request through the backend bypasses this because the server-side HTTP call
+ * carries no browser Referer header.
+ *
+ * Non-Discogs URLs are returned unchanged so the helper is safe to call
+ * unconditionally on any image URL field.
+ */
+export function toDiscogsProxyUrl(imageUrl: string | null | undefined): string | undefined {
+  if (!imageUrl) return undefined;
+  if (!imageUrl.includes('i.discogs.com')) return imageUrl;
+  return `${API_BASE_URL}/api/images/proxy?url=${encodeURIComponent(imageUrl)}`;
+}
