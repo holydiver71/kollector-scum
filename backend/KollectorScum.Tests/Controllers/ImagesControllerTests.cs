@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Moq.Protected;
 using Xunit;
 using KollectorScum.Api.Controllers;
 using KollectorScum.Api.DTOs;
@@ -227,5 +228,132 @@ namespace KollectorScum.Tests.Controllers
             var result = await controller.SearchCoverArt(q: "test", catalogueNumber: new string('x', 51));
             Assert.IsType<BadRequestObjectResult>(result);
         }
+
+        #region ProxyImage Tests
+
+        /// <summary>
+        /// Builds a mock <see cref="HttpClient"/> backed by a handler that returns the supplied response.
+        /// </summary>
+        private static HttpClient BuildMockHttpClient(HttpResponseMessage response)
+        {
+            var handler = new Mock<HttpMessageHandler>();
+            handler.Protected()
+                .Setup<Task<HttpResponseMessage>>("SendAsync",
+                    ItExpr.IsAny<HttpRequestMessage>(),
+                    ItExpr.IsAny<CancellationToken>())
+                .ReturnsAsync(response);
+            return new HttpClient(handler.Object);
+        }
+
+        [Fact]
+        public async Task ProxyImage_MissingUrl_ReturnsBadRequest()
+        {
+            var controller = CreateController();
+            var result = await controller.ProxyImage(url: "");
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task ProxyImage_NonDiscogsUrl_ReturnsBadRequest()
+        {
+            var controller = CreateController();
+            var result = await controller.ProxyImage(url: "https://evil.example.com/image.jpg");
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task ProxyImage_HttpDiscogsUrl_ReturnsBadRequest()
+        {
+            // Must be HTTPS – plain HTTP should be rejected.
+            var controller = CreateController();
+            var result = await controller.ProxyImage(url: "http://i.discogs.com/image.jpg");
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task ProxyImage_ValidDiscogsUrl_ReturnsImageBytes()
+        {
+            var imageBytes = new byte[] { 0xFF, 0xD8, 0xFF }; // JPEG magic bytes
+            var upstreamResponse = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new ByteArrayContent(imageBytes),
+            };
+            upstreamResponse.Content.Headers.ContentType =
+                new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg");
+
+            var client = BuildMockHttpClient(upstreamResponse);
+            _mockHttpClientFactory
+                .Setup(f => f.CreateClient(ImagesController.ImageDownloadClientName))
+                .Returns(client);
+
+            var controller = CreateController();
+            var result = await controller.ProxyImage(url: "https://i.discogs.com/abc/cover.jpg");
+
+            var fileResult = Assert.IsType<FileContentResult>(result);
+            Assert.Equal("image/jpeg", fileResult.ContentType);
+            Assert.Equal(imageBytes, fileResult.FileContents);
+        }
+
+        [Fact]
+        public async Task ProxyImage_UpstreamReturnsNotFound_Returns502()
+        {
+            var upstreamResponse = new HttpResponseMessage(HttpStatusCode.NotFound);
+
+            var client = BuildMockHttpClient(upstreamResponse);
+            _mockHttpClientFactory
+                .Setup(f => f.CreateClient(ImagesController.ImageDownloadClientName))
+                .Returns(client);
+
+            var controller = CreateController();
+            var result = await controller.ProxyImage(url: "https://i.discogs.com/abc/cover.jpg");
+
+            var statusResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(StatusCodes.Status502BadGateway, statusResult.StatusCode);
+        }
+
+        [Fact]
+        public async Task ProxyImage_UpstreamReturnsNonImageContentType_ReturnsBadRequest()
+        {
+            var upstreamResponse = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("<script>alert('xss')</script>"),
+            };
+            upstreamResponse.Content.Headers.ContentType =
+                new System.Net.Http.Headers.MediaTypeHeaderValue("text/html");
+
+            var client = BuildMockHttpClient(upstreamResponse);
+            _mockHttpClientFactory
+                .Setup(f => f.CreateClient(ImagesController.ImageDownloadClientName))
+                .Returns(client);
+
+            var controller = CreateController();
+            var result = await controller.ProxyImage(url: "https://i.discogs.com/abc/cover.jpg");
+
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task ProxyImage_HttpRequestException_Returns502()
+        {
+            var handler = new Mock<HttpMessageHandler>();
+            handler.Protected()
+                .Setup<Task<HttpResponseMessage>>("SendAsync",
+                    ItExpr.IsAny<HttpRequestMessage>(),
+                    ItExpr.IsAny<CancellationToken>())
+                .ThrowsAsync(new HttpRequestException("Network failure"));
+
+            var client = new HttpClient(handler.Object);
+            _mockHttpClientFactory
+                .Setup(f => f.CreateClient(ImagesController.ImageDownloadClientName))
+                .Returns(client);
+
+            var controller = CreateController();
+            var result = await controller.ProxyImage(url: "https://i.discogs.com/abc/cover.jpg");
+
+            var statusResult = Assert.IsType<ObjectResult>(result);
+            Assert.Equal(StatusCodes.Status502BadGateway, statusResult.StatusCode);
+        }
+
+        #endregion
     }
 }

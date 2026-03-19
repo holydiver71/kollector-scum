@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import type { DiscogsSearchResult } from "../lib/discogs-types";
+import { toDiscogsProxyUrl } from "../lib/api";
 
 interface DiscogsSearchResultsProps {
   results: DiscogsSearchResult[];
@@ -35,7 +36,7 @@ export default function DiscogsSearchResults({
                 {result.thumbUrl || result.coverImageUrl ? (
                   <div className="relative w-24 h-24 bg-gray-100 rounded overflow-hidden">
                     <Image
-                      src={result.thumbUrl || result.coverImageUrl || ""}
+                      src={toDiscogsProxyUrl(result.thumbUrl || result.coverImageUrl) ?? ""}
                       alt={`${result.title} cover`}
                       fill
                       sizes="96px"
