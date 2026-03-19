@@ -436,6 +436,78 @@ namespace KollectorScum.Api.Controllers
 
             return Ok(results);
         }
+
+        /// <summary>
+        /// Proxies an image from the Discogs CDN (<c>i.discogs.com</c>) through the backend.
+        /// This is required because Discogs uses Referer-based hotlink protection that blocks
+        /// browser requests originating from third-party domains (e.g. a staging or production
+        /// frontend). Server-side requests are not subject to this restriction.
+        /// </summary>
+        /// <param name="url">
+        /// Absolute HTTPS URL of the Discogs image to proxy.  Must be on the
+        /// <c>i.discogs.com</c> hostname; all other URLs are rejected (SSRF prevention).
+        /// </param>
+        /// <param name="cancellationToken">Propagates request cancellation.</param>
+        /// <returns>The raw image bytes with the upstream <c>Content-Type</c> header preserved.</returns>
+        [HttpGet("proxy")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status502BadGateway)]
+        [ProducesResponseType(StatusCodes.Status504GatewayTimeout)]
+        public async Task<IActionResult> ProxyImage(
+            [FromQuery] string url,
+            CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+                return BadRequest("url parameter is required.");
+
+            // Security: reject anything that is not a Discogs CDN image URL (SSRF prevention).
+            if (!Uri.TryCreate(url, UriKind.Absolute, out var parsedUri) ||
+                !string.Equals(parsedUri.Scheme, "https", StringComparison.OrdinalIgnoreCase) ||
+                !string.Equals(parsedUri.Host, "i.discogs.com", StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogWarning("Rejected image proxy request for non-Discogs URL: {Url}", url);
+                return BadRequest("Only https://i.discogs.com image URLs are supported.");
+            }
+
+            try
+            {
+                var client = _httpClientFactory.CreateClient(ImageDownloadClientName);
+                using var response = await client.GetAsync(parsedUri, cancellationToken);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("Upstream Discogs image request failed: {StatusCode} for {Url}",
+                        response.StatusCode, url);
+                    return StatusCode(StatusCodes.Status502BadGateway, "Failed to retrieve image from Discogs.");
+                }
+
+                var contentType = response.Content.Headers.ContentType?.MediaType ?? "image/jpeg";
+                if (!AllowedImageMimeTypes.Contains(contentType))
+                {
+                    _logger.LogWarning(
+                        "Discogs returned unsupported content type '{ContentType}' for {Url}",
+                        contentType, url);
+                    return BadRequest("Upstream responded with an unsupported content type.");
+                }
+
+                var bytes = await response.Content.ReadAsByteArrayAsync(cancellationToken);
+
+                // Cache at the CDN / browser level for 1 hour — Discogs thumbnails rarely change.
+                Response.Headers["Cache-Control"] = "public, max-age=3600";
+
+                return File(bytes, contentType);
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "Network error proxying Discogs image from {Url}", url);
+                return StatusCode(StatusCodes.Status502BadGateway, "Network error retrieving image.");
+            }
+            catch (TaskCanceledException)
+            {
+                return StatusCode(StatusCodes.Status504GatewayTimeout, "Upstream image request timed out.");
+            }
+        }
     }
 
     /// <summary>
