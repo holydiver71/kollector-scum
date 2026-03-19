@@ -20,6 +20,8 @@ export interface DiscogsSearchResult {
   thumbUrl?: string;
   coverImageUrl?: string;
   resourceUrl: string;
+  /** Public Discogs page URL (e.g. https://www.discogs.com/release/12345) */
+  uri?: string;
 }
 
 export interface DiscogsArtist {
