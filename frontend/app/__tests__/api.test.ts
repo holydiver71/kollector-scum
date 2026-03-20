@@ -1,4 +1,4 @@
-import { fetchJson, toDiscogsProxyUrl } from '../lib/api';
+import { fetchJson, toDiscogsProxyUrl, API_BASE_URL } from '../lib/api';
 
 describe('fetchJson — impersonation header injection', () => {
   let mockFetch: jest.Mock;
@@ -60,8 +60,8 @@ describe('toDiscogsProxyUrl', () => {
   it('returns a proxy path for i.discogs.com URLs', () => {
     const input = 'https://i.discogs.com/abc/image.jpg';
     const result = toDiscogsProxyUrl(input);
-    // In the test environment NEXT_PUBLIC_API_BASE_URL is not set so API_BASE_URL is ''
-    expect(result).toBe('/api/images/proxy?url=https%3A%2F%2Fi.discogs.com%2Fabc%2Fimage.jpg');
+    // Should match the API_BASE_URL + proxy path
+    expect(result).toBe(`${API_BASE_URL}/api/images/proxy?url=${encodeURIComponent(input)}`);
   });
 
   it('returns a proxy path preserving query parameters', () => {
