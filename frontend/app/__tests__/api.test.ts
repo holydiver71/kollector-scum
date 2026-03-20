@@ -57,13 +57,14 @@ describe('fetchJson — impersonation header injection', () => {
 });
 
 describe('toDiscogsProxyUrl', () => {
-  it('returns a relative proxy path for i.discogs.com URLs', () => {
+  it('returns a proxy path for i.discogs.com URLs', () => {
     const input = 'https://i.discogs.com/abc/image.jpg';
     const result = toDiscogsProxyUrl(input);
+    // In the test environment NEXT_PUBLIC_API_BASE_URL is not set so API_BASE_URL is ''
     expect(result).toBe('/api/images/proxy?url=https%3A%2F%2Fi.discogs.com%2Fabc%2Fimage.jpg');
   });
 
-  it('returns a relative proxy path preserving query parameters', () => {
+  it('returns a proxy path preserving query parameters', () => {
     const input = 'https://i.discogs.com/thumb/abc.jpg?token=xyz&size=thumb';
     const result = toDiscogsProxyUrl(input);
     expect(result).toContain('/api/images/proxy?url=');
@@ -87,12 +88,12 @@ describe('toDiscogsProxyUrl', () => {
     expect(toDiscogsProxyUrl('')).toBeUndefined();
   });
 
-  it('proxy path does not contain the API base URL', () => {
+  it('proxy path routes through the backend images/proxy endpoint', () => {
     const input = 'https://i.discogs.com/test.jpg';
     const result = toDiscogsProxyUrl(input);
-    expect(result).not.toContain('localhost');
-    expect(result).not.toContain('http://');
-    expect(result).not.toContain('https://');
-    expect(result).toMatch(/^\/api\/images\/proxy\?url=/);
+    // Must contain the backend proxy path so static-SPA deployments (e.g. Cloudflare
+    // Pages) use the Render backend rather than a non-existent Next.js API route.
+    expect(result).toContain('/api/images/proxy?url=');
+    expect(result).toContain(encodeURIComponent(input));
   });
 });
