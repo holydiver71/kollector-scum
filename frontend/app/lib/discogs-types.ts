@@ -19,8 +19,6 @@ export interface DiscogsSearchResult {
   catalogNumber: string;
   thumbUrl?: string;
   coverImageUrl?: string;
-  /** Optional short notes or annotations returned by Discogs */
-  notes?: string;
   resourceUrl: string;
   /** Public Discogs page URL (e.g. https://www.discogs.com/release/12345) */
   uri?: string;

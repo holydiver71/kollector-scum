@@ -155,11 +155,7 @@ export default function DiscogsResultsStep({
                       </span>
                     )}
                   </div>
-                  {result.notes && (
-                    <p className="mt-2 text-sm text-gray-400 truncate">
-                      {result.notes}
-                    </p>
-                  )}
+                  {/* notes removed from search results */}
                 </div>
 
                 {/* External Discogs link */}

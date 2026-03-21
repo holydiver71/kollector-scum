@@ -88,11 +88,6 @@ namespace KollectorScum.Api.DTOs
         /// Resource URL for full details
         /// </summary>
         public string? ResourceUrl { get; set; }
-
-        /// <summary>
-        /// Short notes or annotations for the release (if available)
-        /// </summary>
-        public string? Notes { get; set; }
     }
 
     /// <summary>
