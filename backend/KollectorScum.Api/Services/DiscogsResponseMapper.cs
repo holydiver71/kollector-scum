@@ -57,6 +57,7 @@ namespace KollectorScum.Api.Services
                     Country = r.Country,
                     ThumbUrl = r.Thumb,
                     CoverImageUrl = r.CoverImage,
+                    Notes = r.Notes,
                     ResourceUrl = r.ResourceUrl
                 }).ToList();
 
@@ -348,6 +349,7 @@ namespace KollectorScum.Api.Services
             public string? Catno { get; set; }
             public string? Country { get; set; }
             public string? Thumb { get; set; }
+            public string? Notes { get; set; }
 
             [JsonPropertyName("cover_image")]
             public string? CoverImage { get; set; }
