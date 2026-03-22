@@ -1,4 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using System.Data;
+using System.Threading;
+using System.Threading.Tasks;
+using System;
 
 namespace KollectorScum.Api.Data
 {
@@ -364,6 +368,281 @@ namespace KollectorScum.Api.Data
             modelBuilder.Entity<Models.MagicLinkToken>()
                 .HasIndex(t => t.ExpiresAt)
                 .HasDatabaseName("IX_MagicLinkTokens_ExpiresAt");
+        }
+
+        /// <summary>
+        /// Performs an atomic upsert for a Format row keyed by (UserId, Name).
+        /// Returns the Id of the inserted or existing row.
+        /// </summary>
+        public async Task<int> UpsertFormatAsync(Guid userId, string name, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Name must be provided", nameof(name));
+
+            var sql = @"WITH ins AS (
+  INSERT INTO ""Formats"" (""UserId"",""Name"") VALUES (@userId, @name)
+  ON CONFLICT (""UserId"",""Name"") DO NOTHING
+  RETURNING ""Id""
+)
+SELECT ""Id"" FROM ins
+UNION
+SELECT ""Id"" FROM ""Formats"" WHERE ""UserId"" = @userId AND ""Name"" = @name
+LIMIT 1;";
+
+            var conn = Database.GetDbConnection();
+            try
+            {
+                if (conn.State != ConnectionState.Open)
+                {
+                    await conn.OpenAsync(cancellationToken);
+                }
+
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = sql;
+
+                var pUser = cmd.CreateParameter();
+                pUser.ParameterName = "@userId";
+                pUser.Value = userId;
+                pUser.DbType = DbType.Guid;
+                cmd.Parameters.Add(pUser);
+
+                var pName = cmd.CreateParameter();
+                pName.ParameterName = "@name";
+                pName.Value = name;
+                pName.DbType = DbType.String;
+                cmd.Parameters.Add(pName);
+
+                var result = await cmd.ExecuteScalarAsync(cancellationToken);
+                if (result == null || result == DBNull.Value)
+                {
+                    throw new InvalidOperationException("Failed to upsert Format and retrieve Id.");
+                }
+
+                return Convert.ToInt32(result);
+            }
+            finally
+            {
+                // Do not close/dispose the connection here; let the context manage it.
+            }
+        }
+
+        /// <summary>
+        /// Performs an atomic upsert for a Label row keyed by (UserId, Name).
+        /// Returns the Id of the inserted or existing row.
+        /// </summary>
+        public async Task<int> UpsertLabelAsync(Guid userId, string name, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Name must be provided", nameof(name));
+
+            var sql = @"WITH ins AS (
+  INSERT INTO ""Labels"" (""UserId"",""Name"") VALUES (@userId, @name)
+  ON CONFLICT (""UserId"",""Name"") DO NOTHING
+  RETURNING ""Id""
+)
+SELECT ""Id"" FROM ins
+UNION
+SELECT ""Id"" FROM ""Labels"" WHERE ""UserId"" = @userId AND ""Name"" = @name
+LIMIT 1;";
+
+            var conn = Database.GetDbConnection();
+            try
+            {
+                if (conn.State != ConnectionState.Open)
+                {
+                    await conn.OpenAsync(cancellationToken);
+                }
+
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = sql;
+
+                var pUser = cmd.CreateParameter();
+                pUser.ParameterName = "@userId";
+                pUser.Value = userId;
+                pUser.DbType = DbType.Guid;
+                cmd.Parameters.Add(pUser);
+
+                var pName = cmd.CreateParameter();
+                pName.ParameterName = "@name";
+                pName.Value = name;
+                pName.DbType = DbType.String;
+                cmd.Parameters.Add(pName);
+
+                var result = await cmd.ExecuteScalarAsync(cancellationToken);
+                if (result == null || result == DBNull.Value)
+                {
+                    throw new InvalidOperationException("Failed to upsert Label and retrieve Id.");
+                }
+
+                return Convert.ToInt32(result);
+            }
+            finally
+            {
+                // Context manages connection lifecycle
+            }
+        }
+
+        /// <summary>
+        /// Performs an atomic upsert for a Country row keyed by (UserId, Name).
+        /// Returns the Id of the inserted or existing row.
+        /// </summary>
+        public async Task<int> UpsertCountryAsync(Guid userId, string name, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Name must be provided", nameof(name));
+
+            var sql = @"WITH ins AS (
+  INSERT INTO ""Countries"" (""UserId"",""Name"") VALUES (@userId, @name)
+  ON CONFLICT (""UserId"",""Name"") DO NOTHING
+  RETURNING ""Id""
+)
+SELECT ""Id"" FROM ins
+UNION
+SELECT ""Id"" FROM ""Countries"" WHERE ""UserId"" = @userId AND ""Name"" = @name
+LIMIT 1;";
+
+            var conn = Database.GetDbConnection();
+            try
+            {
+                if (conn.State != ConnectionState.Open)
+                {
+                    await conn.OpenAsync(cancellationToken);
+                }
+
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = sql;
+
+                var pUser = cmd.CreateParameter();
+                pUser.ParameterName = "@userId";
+                pUser.Value = userId;
+                pUser.DbType = DbType.Guid;
+                cmd.Parameters.Add(pUser);
+
+                var pName = cmd.CreateParameter();
+                pName.ParameterName = "@name";
+                pName.Value = name;
+                pName.DbType = DbType.String;
+                cmd.Parameters.Add(pName);
+
+                var result = await cmd.ExecuteScalarAsync(cancellationToken);
+                if (result == null || result == DBNull.Value)
+                {
+                    throw new InvalidOperationException("Failed to upsert Country and retrieve Id.");
+                }
+
+                return Convert.ToInt32(result);
+            }
+            finally
+            {
+                // Context manages connection lifecycle
+            }
+        }
+
+        /// <summary>
+        /// Performs an atomic upsert for an Artist row keyed by (UserId, Name).
+        /// Returns the Id of the inserted or existing row.
+        /// </summary>
+        public async Task<int> UpsertArtistAsync(Guid userId, string name, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Name must be provided", nameof(name));
+
+            var sql = @"WITH ins AS (
+  INSERT INTO ""Artists"" (""UserId"",""Name"") VALUES (@userId, @name)
+  ON CONFLICT (""UserId"",""Name"") DO NOTHING
+  RETURNING ""Id""
+)
+SELECT ""Id"" FROM ins
+UNION
+SELECT ""Id"" FROM ""Artists"" WHERE ""UserId"" = @userId AND ""Name"" = @name
+LIMIT 1;";
+
+            var conn = Database.GetDbConnection();
+            try
+            {
+                if (conn.State != ConnectionState.Open)
+                {
+                    await conn.OpenAsync(cancellationToken);
+                }
+
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = sql;
+
+                var pUser = cmd.CreateParameter();
+                pUser.ParameterName = "@userId";
+                pUser.Value = userId;
+                pUser.DbType = DbType.Guid;
+                cmd.Parameters.Add(pUser);
+
+                var pName = cmd.CreateParameter();
+                pName.ParameterName = "@name";
+                pName.Value = name;
+                pName.DbType = DbType.String;
+                cmd.Parameters.Add(pName);
+
+                var result = await cmd.ExecuteScalarAsync(cancellationToken);
+                if (result == null || result == DBNull.Value)
+                {
+                    throw new InvalidOperationException("Failed to upsert Artist and retrieve Id.");
+                }
+
+                return Convert.ToInt32(result);
+            }
+            finally
+            {
+                // Context manages connection lifecycle
+            }
+        }
+
+        /// <summary>
+        /// Performs an atomic upsert for a Genre row keyed by (UserId, Name).
+        /// Returns the Id of the inserted or existing row.
+        /// </summary>
+        public async Task<int> UpsertGenreAsync(Guid userId, string name, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Name must be provided", nameof(name));
+
+            var sql = @"WITH ins AS (
+  INSERT INTO ""Genres"" (""UserId"",""Name"") VALUES (@userId, @name)
+  ON CONFLICT (""UserId"",""Name"") DO NOTHING
+  RETURNING ""Id""
+)
+SELECT ""Id"" FROM ins
+UNION
+SELECT ""Id"" FROM ""Genres"" WHERE ""UserId"" = @userId AND ""Name"" = @name
+LIMIT 1;";
+
+            var conn = Database.GetDbConnection();
+            try
+            {
+                if (conn.State != ConnectionState.Open)
+                {
+                    await conn.OpenAsync(cancellationToken);
+                }
+
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = sql;
+
+                var pUser = cmd.CreateParameter();
+                pUser.ParameterName = "@userId";
+                pUser.Value = userId;
+                pUser.DbType = DbType.Guid;
+                cmd.Parameters.Add(pUser);
+
+                var pName = cmd.CreateParameter();
+                pName.ParameterName = "@name";
+                pName.Value = name;
+                pName.DbType = DbType.String;
+                cmd.Parameters.Add(pName);
+
+                var result = await cmd.ExecuteScalarAsync(cancellationToken);
+                if (result == null || result == DBNull.Value)
+                {
+                    throw new InvalidOperationException("Failed to upsert Genre and retrieve Id.");
+                }
+
+                return Convert.ToInt32(result);
+            }
+            finally
+            {
+                // Context manages connection lifecycle
+            }
         }
     }
 }

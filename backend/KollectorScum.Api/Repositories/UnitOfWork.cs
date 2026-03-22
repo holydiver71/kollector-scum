@@ -99,6 +99,46 @@ namespace KollectorScum.Api.Repositories
         }
 
         /// <summary>
+        /// Atomically upserts a Format row and returns its Id.
+        /// </summary>
+        public async Task<int> UpsertFormatAsync(Guid userId, string name)
+        {
+            return await _context.UpsertFormatAsync(userId, name);
+        }
+
+        /// <summary>
+        /// Atomically upserts a Label row and returns its Id.
+        /// </summary>
+        public async Task<int> UpsertLabelAsync(Guid userId, string name)
+        {
+            return await _context.UpsertLabelAsync(userId, name);
+        }
+
+        /// <summary>
+        /// Atomically upserts a Country row and returns its Id.
+        /// </summary>
+        public async Task<int> UpsertCountryAsync(Guid userId, string name)
+        {
+            return await _context.UpsertCountryAsync(userId, name);
+        }
+
+        /// <summary>
+        /// Atomically upserts an Artist row and returns its Id.
+        /// </summary>
+        public async Task<int> UpsertArtistAsync(Guid userId, string name)
+        {
+            return await _context.UpsertArtistAsync(userId, name);
+        }
+
+        /// <summary>
+        /// Atomically upserts a Genre row and returns its Id.
+        /// </summary>
+        public async Task<int> UpsertGenreAsync(Guid userId, string name)
+        {
+            return await _context.UpsertGenreAsync(userId, name);
+        }
+
+        /// <summary>
         /// Gets a generic repository for any entity type
         /// </summary>
         /// <typeparam name="T">Entity type</typeparam>
