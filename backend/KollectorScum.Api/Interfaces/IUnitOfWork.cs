@@ -101,5 +101,30 @@ namespace KollectorScum.Api.Interfaces
         /// <typeparam name="T">Entity type</typeparam>
         /// <returns>Repository for the entity type</returns>
         IRepository<T> GetRepository<T>() where T : class;
+
+        /// <summary>
+        /// Atomically upserts a Format and returns its Id.
+        /// </summary>
+        Task<int> UpsertFormatAsync(Guid userId, string name);
+
+        /// <summary>
+        /// Atomically upserts a Label and returns its Id.
+        /// </summary>
+        Task<int> UpsertLabelAsync(Guid userId, string name);
+
+        /// <summary>
+        /// Atomically upserts a Country and returns its Id.
+        /// </summary>
+        Task<int> UpsertCountryAsync(Guid userId, string name);
+
+        /// <summary>
+        /// Atomically upserts an Artist and returns its Id.
+        /// </summary>
+        Task<int> UpsertArtistAsync(Guid userId, string name);
+
+        /// <summary>
+        /// Atomically upserts a Genre and returns its Id.
+        /// </summary>
+        Task<int> UpsertGenreAsync(Guid userId, string name);
     }
 }

@@ -3,6 +3,7 @@ using System.Text.Json;
 using KollectorScum.Api.DTOs;
 using KollectorScum.Api.Interfaces;
 using KollectorScum.Api.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace KollectorScum.Api.Services
 {
@@ -391,8 +392,11 @@ namespace KollectorScum.Api.Services
 
             var formatName = formats.First().Name;
             if (string.IsNullOrEmpty(formatName)) return null;
+            // Normalize (trim + case) before using as a key or storing
+            var normalizedFormatName = formatName.Trim().ToUpperInvariant();
+            if (string.IsNullOrEmpty(normalizedFormatName)) return null;
 
-            var cacheKey = $"{userId}:{formatName}";
+            var cacheKey = $"{userId}:{normalizedFormatName}";
 
             // Check cache first
             if (_formatCache.TryGetValue(cacheKey, out var cachedId))
@@ -400,9 +404,9 @@ namespace KollectorScum.Api.Services
                 return cachedId;
             }
 
-            // Try to find existing format
+            // Try to find existing format using normalized name
             var existing = await _unitOfWork.Formats
-                .GetAsync(f => f.UserId == userId && f.Name == formatName);
+                .GetAsync(f => f.UserId == userId && f.Name == normalizedFormatName);
             
             if (existing.Any())
             {
@@ -411,13 +415,10 @@ namespace KollectorScum.Api.Services
                 return id;
             }
 
-            // Create new format
-            var format = new Format { UserId = userId, Name = formatName };
-            await _unitOfWork.Formats.AddAsync(format);
-            await _unitOfWork.SaveChangesAsync(); // Save immediately to get the generated ID
-            _formatCache[cacheKey] = format.Id;
-            
-            return format.Id;
+            // Atomically insert or return existing id using the database upsert helper
+            var newId = await _unitOfWork.UpsertFormatAsync(userId, normalizedFormatName);
+            _formatCache[cacheKey] = newId;
+            return newId;
         }
 
         private async Task<int?> GetOrCreateLabelAsync(List<DiscogsLabelDto> labels, Guid userId)
@@ -427,7 +428,11 @@ namespace KollectorScum.Api.Services
             var labelName = labels.First().Name;
             if (string.IsNullOrEmpty(labelName)) return null;
 
-            var cacheKey = $"{userId}:{labelName}";
+            // Normalize (trim + case)
+            var normalizedLabelName = labelName.Trim().ToUpperInvariant();
+            if (string.IsNullOrEmpty(normalizedLabelName)) return null;
+
+            var cacheKey = $"{userId}:{normalizedLabelName}";
 
             // Check cache first
             if (_labelCache.TryGetValue(cacheKey, out var cachedId))
@@ -437,7 +442,7 @@ namespace KollectorScum.Api.Services
 
             // Try to find existing label
             var existing = await _unitOfWork.Labels
-                .GetAsync(l => l.UserId == userId && l.Name == labelName);
+                .GetAsync(l => l.UserId == userId && l.Name == normalizedLabelName);
             
             if (existing.Any())
             {
@@ -446,20 +451,20 @@ namespace KollectorScum.Api.Services
                 return id;
             }
 
-            // Create new label
-            var label = new Label { UserId = userId, Name = labelName };
-            await _unitOfWork.Labels.AddAsync(label);
-            await _unitOfWork.SaveChangesAsync(); // Save immediately to get the generated ID
-            _labelCache[cacheKey] = label.Id;
-            
-            return label.Id;
+            // Atomically insert or return existing id using the database upsert helper
+            var newId = await _unitOfWork.UpsertLabelAsync(userId, normalizedLabelName);
+            _labelCache[cacheKey] = newId;
+            return newId;
         }
 
         private async Task<int?> GetOrCreateCountryAsync(string? countryName, Guid userId)
         {
             if (string.IsNullOrEmpty(countryName)) return null;
 
-            var cacheKey = $"{userId}:{countryName}";
+            var normalizedCountryName = countryName.Trim().ToUpperInvariant();
+            if (string.IsNullOrEmpty(normalizedCountryName)) return null;
+
+            var cacheKey = $"{userId}:{normalizedCountryName}";
 
             // Check cache first
             if (_countryCache.TryGetValue(cacheKey, out var cachedId))
@@ -469,7 +474,7 @@ namespace KollectorScum.Api.Services
 
             // Try to find existing country
             var existing = await _unitOfWork.Countries
-                .GetAsync(c => c.UserId == userId && c.Name == countryName);
+                .GetAsync(c => c.UserId == userId && c.Name == normalizedCountryName);
             
             if (existing.Any())
             {
@@ -478,13 +483,10 @@ namespace KollectorScum.Api.Services
                 return id;
             }
 
-            // Create new country
-            var country = new Country { UserId = userId, Name = countryName };
-            await _unitOfWork.Countries.AddAsync(country);
-            await _unitOfWork.SaveChangesAsync(); // Save immediately to get the generated ID
-            _countryCache[cacheKey] = country.Id;
-            
-            return country.Id;
+            // Atomically insert or return existing id using the database upsert helper
+            var newCountryId = await _unitOfWork.UpsertCountryAsync(userId, normalizedCountryName);
+            _countryCache[cacheKey] = newCountryId;
+            return newCountryId;
         }
 
         private async Task<List<int>> GetOrCreateArtistsAsync(List<DiscogsArtistDto> artists, Guid userId)
@@ -497,7 +499,11 @@ namespace KollectorScum.Api.Services
             {
                 if (string.IsNullOrEmpty(artist.Name)) continue;
 
-                var cacheKey = $"{userId}:{artist.Name}";
+                // Normalize artist name (trim + case)
+                var normalizedArtistName = artist.Name.Trim().ToUpperInvariant();
+                if (string.IsNullOrEmpty(normalizedArtistName)) continue;
+
+                var cacheKey = $"{userId}:{normalizedArtistName}";
 
                 // Check cache first
                 if (_artistCache.TryGetValue(cacheKey, out var cachedId))
@@ -508,7 +514,7 @@ namespace KollectorScum.Api.Services
 
                 // Try to find existing artist in database
                 var existing = await _unitOfWork.Artists
-                    .GetAsync(a => a.UserId == userId && a.Name == artist.Name);
+                    .GetAsync(a => a.UserId == userId && a.Name == normalizedArtistName);
                 
                 if (existing.Any())
                 {
@@ -518,12 +524,10 @@ namespace KollectorScum.Api.Services
                 }
                 else
                 {
-                    // Create new artist
-                    var newArtist = new Artist { UserId = userId, Name = artist.Name };
-                    await _unitOfWork.Artists.AddAsync(newArtist);
-                    await _unitOfWork.SaveChangesAsync(); // Save immediately to get the generated ID
-                    _artistCache[cacheKey] = newArtist.Id;
-                    artistIds.Add(newArtist.Id);
+                    // Atomically insert or return existing id using the upsert helper
+                    var newArtistId = await _unitOfWork.UpsertArtistAsync(userId, normalizedArtistName);
+                    _artistCache[cacheKey] = newArtistId;
+                    artistIds.Add(newArtistId);
                 }
             }
 
@@ -542,7 +546,10 @@ namespace KollectorScum.Api.Services
             {
                 if (string.IsNullOrEmpty(genreName)) continue;
 
-                var cacheKey = $"{userId}:{genreName}";
+                var normalizedGenreName = genreName.Trim().ToUpperInvariant();
+                if (string.IsNullOrEmpty(normalizedGenreName)) continue;
+
+                var cacheKey = $"{userId}:{normalizedGenreName}";
 
                 // Check cache first
                 if (_genreCache.TryGetValue(cacheKey, out var cachedId))
@@ -553,7 +560,7 @@ namespace KollectorScum.Api.Services
 
                 // Try to find existing genre
                 var existing = await _unitOfWork.Genres
-                    .GetAsync(g => g.UserId == userId && g.Name == genreName);
+                    .GetAsync(g => g.UserId == userId && g.Name == normalizedGenreName);
                 
                 if (existing.Any())
                 {
@@ -563,12 +570,10 @@ namespace KollectorScum.Api.Services
                 }
                 else
                 {
-                    // Create new genre
-                    var newGenre = new Genre { UserId = userId, Name = genreName };
-                    await _unitOfWork.Genres.AddAsync(newGenre);
-                    await _unitOfWork.SaveChangesAsync(); // Save immediately to get the generated ID
-                    _genreCache[cacheKey] = newGenre.Id;
-                    genreIds.Add(newGenre.Id);
+                    // Atomically insert or return existing id using the upsert helper
+                    var newGenreId = await _unitOfWork.UpsertGenreAsync(userId, normalizedGenreName);
+                    _genreCache[cacheKey] = newGenreId;
+                    genreIds.Add(newGenreId);
                 }
             }
 
