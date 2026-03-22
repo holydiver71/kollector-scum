@@ -14,8 +14,8 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import type { DiscogsSearchResult } from "../../../lib/discogs-types";
-import { toDiscogsProxyUrl } from "../../../lib/api";
+import type { DiscogsSearchResult, DiscogsRelease } from "../../../lib/discogs-types";
+import { toDiscogsProxyUrl, getDiscogsRelease } from "../../../lib/api";
 import ConfirmDialog from "../ConfirmDialog";
 
 export interface DiscogsResultsStepProps {
@@ -44,6 +44,32 @@ export default function DiscogsResultsStep({
   onBack,
   onCancel,
 }: DiscogsResultsStepProps) {
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [expandedData, setExpandedData] = useState<Record<number, DiscogsRelease | null>>({});
+  const [loadingId, setLoadingId] = useState<number | null>(null);
+  const [errorId, setErrorId] = useState<Record<number, string>>({});
+
+  const handleToggleExpand = async (result: DiscogsSearchResult, stop?: boolean) => {
+    const id = Number(result.id);
+    if (expandedId === id) {
+      setExpandedId(null);
+      return;
+    }
+
+    setExpandedId(id);
+    if (expandedData[id]) return;
+
+    try {
+      setLoadingId(id);
+      setErrorId((s) => ({ ...s, [id]: "" }));
+      const data = await getDiscogsRelease(id);
+      setExpandedData((s) => ({ ...s, [id]: data }));
+    } catch (err: any) {
+      setErrorId((s) => ({ ...s, [id]: err?.message ?? "Failed to load details" }));
+    } finally {
+      setLoadingId((s) => (s === id ? null : s));
+    }
+  };
   const derivePublicDiscogsUrl = (resourceUrl?: string | null): string | undefined => {
     if (!resourceUrl) return undefined;
     // resourceUrl example: https://api.discogs.com/releases/25904050
@@ -84,23 +110,26 @@ export default function DiscogsResultsStep({
           return (
             <div
               key={result.id}
-              role="button"
-              tabIndex={0}
-              onClick={() => onSelectResult(result)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  onSelectResult(result);
-                }
-              }}
               className={`w-full text-left rounded-xl border p-4 transition-all ${
                 isSelected
                   ? "border-[#8B5CF6] bg-[#8B5CF6]/10 shadow-[0_0_0_1px_#8B5CF6]"
                   : "border-[#1C1C28] bg-[#0F0F1A] hover:border-[#8B5CF6]/50 hover:bg-[#8B5CF6]/5"
               }`}
-              aria-pressed={isSelected}
-              aria-label={`Select ${result.title}`}
             >
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => onSelectResult(result)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onSelectResult(result);
+                  }
+                }}
+                aria-pressed={isSelected}
+                aria-label={`Select ${result.title}`}
+                className="w-full text-left"
+              >
               <div className="flex gap-4 items-start">
                 {/* Thumbnail */}
                 <div className="flex-shrink-0">
@@ -182,6 +211,25 @@ export default function DiscogsResultsStep({
                   )}
                 </div>
 
+                {/* Expand details control */}
+                <div className="flex-shrink-0 ml-1 mr-2">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      void handleToggleExpand(result);
+                    }}
+                    aria-label={`Expand details for ${result.title}`}
+                    className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 shadow-sm hover:bg-white/10 transition-colors"
+                    title="Expand details"
+                  >
+                    <svg className="w-4 h-4 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+                      <circle cx="12" cy="12" r="10"/>
+                      <path d="M12 8v8M8 12h8" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
+                </div>
+
                 {/* Selection indicator */}
                 <div
                   className={`flex-shrink-0 w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center transition-colors ${
@@ -207,6 +255,81 @@ export default function DiscogsResultsStep({
                   )}
                 </div>
               </div>
+              </div>
+            {/* Inline expandable details */}
+            {expandedId === Number(result.id) && (
+              <div className="mt-3 pt-3 text-white">
+                {loadingId === Number(result.id) && (
+                  <div className="py-6 text-center text-sm text-gray-300">Loading details…</div>
+                )}
+
+                {errorId[Number(result.id)] && (
+                  <div className="py-4 text-sm text-red-300">{errorId[Number(result.id)]}</div>
+                )}
+
+                {expandedData[Number(result.id)] && (
+                  <div className="flex flex-col md:flex-row gap-4">
+                    {/* Left: Tracklist */}
+                    <div className="md:w-2/3 bg-transparent">
+                      <h4 className="text-lg font-semibold text-purple-200 mb-2">Tracklist</h4>
+                      <div className="bg-transparent rounded-md p-2 max-h-64 overflow-y-auto">
+                        <table className="w-full text-sm table-fixed">
+                          <thead>
+                            <tr className="text-left text-purple-300 text-xs">
+                              <th className="w-20">Pos</th>
+                              <th>Title</th>
+                              <th className="w-24">Duration</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {expandedData[Number(result.id)]!.tracklist.map((t, i) => (
+                              <tr key={i} className="border-t border-purple-700/30">
+                                <td className="py-2 text-purple-100 font-mono">{t.position}</td>
+                                <td className="py-2 text-purple-100 truncate">{t.title}</td>
+                                <td className="py-2 text-purple-200">{t.duration}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* Right: Formats + Notes */}
+                    <div className="md:w-1/3 bg-transparent">
+                      <h4 className="text-lg font-semibold text-purple-200 mb-2">Details</h4>
+                      <div className="mb-4 text-sm text-purple-100">
+                        {expandedData[Number(result.id)]!.formats.map((f, idx) => (
+                          <div key={idx} className="mb-2">
+                            <div className="font-medium">{f.name} {f.qty ? `×${f.qty}` : ""}</div>
+                            {f.descriptions && f.descriptions.length > 0 && (
+                              <div className="text-xs text-purple-300">{f.descriptions.join(", ")}</div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+
+                      {expandedData[Number(result.id)]!.notes && (
+                        <>
+                          <h4 className="text-lg font-semibold text-purple-200 mb-2">Notes</h4>
+                          <div className="text-sm text-purple-100 bg-[#1B1336]/10 rounded p-2 max-h-40 overflow-y-auto whitespace-pre-wrap">
+                            {expandedData[Number(result.id)]!.notes}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-3 flex justify-end">
+                  <button
+                    className="px-3 py-1 text-sm text-purple-100 border border-purple-600 rounded hover:bg-[#8B5CF6]/10"
+                    onClick={() => handleToggleExpand(result)}
+                  >
+                    {expandedId === Number(result.id) ? "Collapse" : "Expand"}
+                  </button>
+                </div>
+              </div>
+            )}
             </div>
           );
         })}
