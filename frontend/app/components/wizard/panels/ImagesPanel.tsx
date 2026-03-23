@@ -69,7 +69,7 @@ function CoverFrontField({
       ? looksLikeUrl
         ? value
         : value.startsWith("/")
-          ? `${API_BASE_URL}${value}`
+          ? `${API_BASE_URL}/api/images/${value.replace(/^\\+/, '')}`
           : `${API_BASE_URL}/api/images/${value}`
       : null);
 
@@ -94,7 +94,7 @@ function CoverFrontField({
       // Switch preview to the stored URL once available (works with local storage too).
       if (data.publicUrl) {
         setPreviewUrl(
-          data.publicUrl.startsWith("http") ? data.publicUrl : `${API_BASE_URL}${data.publicUrl}`,
+          data.publicUrl.startsWith("http") ? data.publicUrl : `${API_BASE_URL}/api/images/${data.publicUrl.replace(/^\\+/, '')}`,
         );
       }
       // Store publicUrl (e.g. /cover-art/{userId}/uuid.jpg) as coverFront so the
@@ -156,7 +156,7 @@ function CoverFrontField({
       const data: { filename: string; thumbnailFilename?: string; publicUrl?: string } = await res.json();
       if (data.publicUrl) {
         setPreviewUrl(
-          data.publicUrl.startsWith("http") ? data.publicUrl : `${API_BASE_URL}${data.publicUrl}`,
+          data.publicUrl.startsWith("http") ? data.publicUrl : `${API_BASE_URL}/api/images/${data.publicUrl.replace(/^\\+/, '')}`,
         );
       }
       // Store publicUrl so the value is displayable on the Draft Preview step.

@@ -67,7 +67,8 @@ export const MusicReleaseCard = React.memo(function MusicReleaseCard({ release }
       // If it starts with /cover-art/, it's already a full path (multi-tenant storage)
       if (release.coverImageUrl.startsWith('/cover-art/')) {
         const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5072';
-        return `${apiBaseUrl}${release.coverImageUrl}`;
+        // Route root-relative storage paths through the backend images proxy
+        return `${apiBaseUrl}/api/images/${release.coverImageUrl.replace(/^\\+/, '')}`;
       }
       // Otherwise, serve images through the backend API with /api/images/
       const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5072';
