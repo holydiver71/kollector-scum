@@ -12,6 +12,13 @@ namespace KollectorScum.Api.Interfaces
         /// <param name="userId">User ID who owns the collection</param>
         /// <returns>Import result with statistics</returns>
         Task<DiscogsImportResult> ImportCollectionAsync(string username, Guid userId);
+
+        /// <summary>
+        /// Get current import progress snapshot for a user (if an import is running)
+        /// </summary>
+        /// <param name="userId">User ID</param>
+        /// <returns>Progress snapshot or null if no import in progress</returns>
+        DiscogsImportProgress? GetProgress(Guid userId);
     }
 
     /// <summary>
@@ -53,5 +60,19 @@ namespace KollectorScum.Api.Interfaces
         /// Time taken for the import
         /// </summary>
         public TimeSpan Duration { get; set; }
+    }
+
+    /// <summary>
+    /// Lightweight progress snapshot for an in-progress Discogs import
+    /// </summary>
+    public class DiscogsImportProgress
+    {
+        public int TotalReleases { get; set; }
+        public int EffectiveTotal { get; set; }
+        public int Imported { get; set; }
+        public int Skipped { get; set; }
+        public int Failed { get; set; }
+        public bool Completed { get; set; }
+        public DateTime LastUpdatedUtc { get; set; }
     }
 }

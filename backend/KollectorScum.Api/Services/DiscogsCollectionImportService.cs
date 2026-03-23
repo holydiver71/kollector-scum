@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text.Json;
 using KollectorScum.Api.DTOs;
 using KollectorScum.Api.Interfaces;
+using System.Collections.Concurrent;
 using KollectorScum.Api.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
@@ -14,6 +15,9 @@ namespace KollectorScum.Api.Services
     /// </summary>
     public class DiscogsCollectionImportService : IDiscogsCollectionImportService
     {
+        // In-memory progress store to allow clients to poll import progress
+        private static readonly ConcurrentDictionary<Guid, DiscogsImportProgress> _progressStore = new();
+
         private readonly IDiscogsService _discogsService;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<DiscogsCollectionImportService> _logger;
@@ -89,6 +93,21 @@ namespace KollectorScum.Api.Services
                 // Remaining to process (null/unbounded when not limiting)
                 int? remainingToProcess = applyLimit ? NEW_USER_IMPORT_LIMIT : null;
 
+                // Effective total for progress reporting (100 for new users in dev/staging)
+                var effectiveTotal = applyLimit ? NEW_USER_IMPORT_LIMIT : result.TotalReleases;
+
+                // Initialize progress snapshot for polling clients
+                _progressStore[userId] = new DiscogsImportProgress
+                {
+                    TotalReleases = result.TotalReleases,
+                    EffectiveTotal = effectiveTotal,
+                    Imported = 0,
+                    Skipped = 0,
+                    Failed = 0,
+                    Completed = false,
+                    LastUpdatedUtc = DateTime.UtcNow
+                };
+
                 // Process first page (respect remainingToProcess)
                 await ProcessReleasesAsync(firstPage.Releases, userId, result, remainingToProcess);
 
@@ -131,6 +150,21 @@ namespace KollectorScum.Api.Services
                 
                 _logger.LogInformation("Discogs import completed for {Username}: {Imported} imported, {Skipped} skipped, {Failed} failed",
                     username, result.ImportedReleases, result.SkippedReleases, result.FailedReleases);
+
+                // Mark progress completed
+                if (_progressStore.ContainsKey(userId))
+                {
+                    _progressStore[userId] = new DiscogsImportProgress
+                    {
+                        TotalReleases = result.TotalReleases,
+                        EffectiveTotal = (_env.IsDevelopment() || _env.IsStaging()) && (await _unitOfWork.MusicReleases.CountAsync(mr => mr.UserId == userId) == 0) ? NEW_USER_IMPORT_LIMIT : result.TotalReleases,
+                        Imported = result.ImportedReleases,
+                        Skipped = result.SkippedReleases,
+                        Failed = result.FailedReleases,
+                        Completed = true,
+                        LastUpdatedUtc = DateTime.UtcNow
+                    };
+                }
             }
             catch (Exception ex)
             {
@@ -189,6 +223,13 @@ namespace KollectorScum.Api.Services
                     if (existing.Any())
                     {
                         result.SkippedReleases++;
+                        if (_progressStore.ContainsKey(userId))
+                        {
+                            var snap = _progressStore[userId];
+                            snap.Skipped = result.SkippedReleases;
+                            snap.LastUpdatedUtc = DateTime.UtcNow;
+                            _progressStore[userId] = snap;
+                        }
                         continue;
                     }
 
@@ -199,6 +240,13 @@ namespace KollectorScum.Api.Services
                         await _unitOfWork.MusicReleases.AddAsync(musicRelease);
                         await _unitOfWork.SaveChangesAsync();
                         result.ImportedReleases++;
+                        if (_progressStore.ContainsKey(userId))
+                        {
+                            var snap = _progressStore[userId];
+                            snap.Imported = result.ImportedReleases;
+                            snap.LastUpdatedUtc = DateTime.UtcNow;
+                            _progressStore[userId] = snap;
+                        }
                         
                         _logger.LogDebug("Imported release: {Title} (Discogs ID: {DiscogsId})", 
                             musicRelease.Title, musicRelease.DiscogsId);
@@ -206,6 +254,13 @@ namespace KollectorScum.Api.Services
                     else
                     {
                         result.FailedReleases++;
+                        if (_progressStore.ContainsKey(userId))
+                        {
+                            var snap = _progressStore[userId];
+                            snap.Failed = result.FailedReleases;
+                            snap.LastUpdatedUtc = DateTime.UtcNow;
+                            _progressStore[userId] = snap;
+                        }
                         var errorMsg = $"Failed to map release: {release.BasicInformation.Title}";
                         result.Errors.Add(errorMsg);
                         _logger.LogWarning("{ErrorMsg} (Discogs ID: {DiscogsId})", errorMsg, release.BasicInformation.Id);
@@ -214,6 +269,13 @@ namespace KollectorScum.Api.Services
                 catch (Exception ex)
                 {
                     result.FailedReleases++;
+                    if (_progressStore.ContainsKey(userId))
+                    {
+                        var snap = _progressStore[userId];
+                        snap.Failed = result.FailedReleases;
+                        snap.LastUpdatedUtc = DateTime.UtcNow;
+                        _progressStore[userId] = snap;
+                    }
                     var title = release.BasicInformation?.Title ?? "Unknown";
                     result.Errors.Add($"Error importing '{title}': {ex.Message}");
                     _logger.LogError(ex, "Error importing release: {Title}", title);
@@ -636,4 +698,13 @@ namespace KollectorScum.Api.Services
             return genreIds;
         }
     }
+
+        /// <summary>
+        /// Return progress snapshot for a user's current import (if any)
+        /// </summary>
+        public DiscogsImportProgress? GetProgress(Guid userId)
+        {
+            if (_progressStore.TryGetValue(userId, out var snap)) return snap;
+            return null;
+        }
 }
