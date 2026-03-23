@@ -323,10 +323,13 @@ namespace KollectorScum.Api.Services
                     var artist = basicInfo.Artists?.FirstOrDefault()?.Name ?? "Unknown";
                     var year = basicInfo.Year?.ToString();
                     _logger.LogDebug("Attempting to download and store cover art for Discogs ID {Id} - {Title}", basicInfo.Id, basicInfo.Title);
-                    coverImageFilename = await _imageService.DownloadAndStoreCoverArtAsync(
+                    var rawFilename = await _imageService.DownloadAndStoreCoverArtAsync(
                         basicInfo.CoverImage, artist, basicInfo.Title ?? "Unknown", year, userId);
-
-                    if (string.IsNullOrEmpty(coverImageFilename))
+                    if (!string.IsNullOrEmpty(rawFilename))
+                    {
+                        coverImageFilename = $"/cover-art/{userId}/{rawFilename}";
+                    }
+                    else
                     {
                         _logger.LogWarning("Cover art upload failed or was skipped for Discogs ID {Id}. Will attempt fallback to Discogs-hosted image URL if available.", basicInfo.Id);
                     }

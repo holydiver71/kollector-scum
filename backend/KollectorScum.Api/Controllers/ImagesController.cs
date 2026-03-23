@@ -379,10 +379,11 @@ namespace KollectorScum.Api.Controllers
                         "Generated thumbnail: {ThumbFilename} (User: {UserId})", thumbFilename, userId);
                 }
 
+                string coverArtPrefix = $"/cover-art/{userId}/";
                 return Ok(new ImageUploadResponseDto
                 {
-                    Filename = filename,
-                    ThumbnailFilename = generateThumbnail ? thumbFilename : null,
+                    Filename = coverArtPrefix + filename,
+                    ThumbnailFilename = generateThumbnail ? coverArtPrefix + thumbFilename : null,
                     PublicUrl = publicUrl,
                     ThumbnailPublicUrl = thumbPublicUrl,
                     Size = resizedStream.Length,
