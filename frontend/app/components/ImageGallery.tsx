@@ -26,10 +26,11 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
       return imagePath;
     }
     
-    // If it starts with /cover-art/, it's already a full path (multi-tenant storage)
+    // If it starts with /cover-art/, route via backend images proxy so the
+    // API can redirect to R2 or proxy the object as configured.
     if (imagePath.startsWith('/cover-art/')) {
       const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5072';
-      return `${apiBaseUrl}${imagePath}`;
+      return `${apiBaseUrl}/api/images/${imagePath.replace(/^\\+/, '')}`;
     }
     
     // Otherwise, treat it as a relative path and construct the full URL with /api/images/
