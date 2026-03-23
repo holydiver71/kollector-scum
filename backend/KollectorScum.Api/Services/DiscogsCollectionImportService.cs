@@ -260,8 +260,14 @@ namespace KollectorScum.Api.Services
                 {
                     var artist = basicInfo.Artists?.FirstOrDefault()?.Name ?? "Unknown";
                     var year = basicInfo.Year?.ToString();
+                    _logger.LogDebug("Attempting to download and store cover art for Discogs ID {Id} - {Title}", basicInfo.Id, basicInfo.Title);
                     coverImageFilename = await _imageService.DownloadAndStoreCoverArtAsync(
                         basicInfo.CoverImage, artist, basicInfo.Title ?? "Unknown", year, userId);
+
+                    if (string.IsNullOrEmpty(coverImageFilename))
+                    {
+                        _logger.LogWarning("Cover art upload failed or was skipped for Discogs ID {Id}. Will attempt fallback to Discogs-hosted image URL if available.", basicInfo.Id);
+                    }
                 }
 
                 // Extract notes
@@ -307,6 +313,17 @@ namespace KollectorScum.Api.Services
                 {
                     var images = new { CoverFront = coverImageFilename };
                     musicRelease.Images = JsonSerializer.Serialize(images);
+                }
+                else
+                {
+                    // Fallback: if upload failed, try to store Discogs-hosted cover/thumb URL so UI can fall back to it
+                    var fallbackUrl = basicInfo.CoverImage ?? basicInfo.Thumb;
+                    if (!string.IsNullOrEmpty(fallbackUrl))
+                    {
+                        _logger.LogInformation("Falling back to Discogs-hosted image for Discogs ID {Id}: {Url}", basicInfo.Id, fallbackUrl);
+                        var images = new { CoverFront = fallbackUrl };
+                        musicRelease.Images = JsonSerializer.Serialize(images);
+                    }
                 }
 
                 // Build Media (tracks) from full release details
