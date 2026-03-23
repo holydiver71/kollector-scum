@@ -94,11 +94,24 @@ export function DiscogsImportDialog({
 
     // Polling for progress while the import runs
     let pollId: number | undefined;
+    const normalizeProgress = (p: any): ImportProgress | null => {
+      if (!p) return null;
+      // Accept either camelCase or PascalCase keys from server
+      const totalReleases = p.totalReleases ?? p.TotalReleases ?? 0;
+      const effectiveTotal = p.effectiveTotal ?? p.EffectiveTotal ?? totalReleases;
+      const imported = p.imported ?? p.Imported ?? 0;
+      const skipped = p.skipped ?? p.Skipped ?? 0;
+      const failed = p.failed ?? p.Failed ?? 0;
+      const completed = p.completed ?? p.Completed ?? false;
+      return { totalReleases, effectiveTotal, imported, skipped, failed, completed };
+    };
+
     const startPolling = () => {
       pollId = window.setInterval(async () => {
         try {
-          const p = await fetchJson<ImportProgress>("/api/import/discogs/status", { method: "GET" });
-          if (p) setProgress(p);
+          const p = await fetchJson<any>("/api/import/discogs/status", { method: "GET", swallowErrors: true, timeoutMs: 5000 });
+          const norm = normalizeProgress(p);
+          if (norm) setProgress(norm);
         } catch (e) {
           // ignore polling errors silently
         }
