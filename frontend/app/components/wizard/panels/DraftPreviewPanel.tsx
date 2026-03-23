@@ -111,7 +111,7 @@ function CoverArt({
     ? looksLikeUrl
       ? src
       : src.startsWith("/")
-        ? `${API_BASE_URL}${src}`
+        ? `${API_BASE_URL}/api/images/${src.replace(/^\/+/, '')}`
         : `${API_BASE_URL}/api/images/${src}`
     : null;
 

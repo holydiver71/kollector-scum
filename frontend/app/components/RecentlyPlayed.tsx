@@ -63,7 +63,8 @@ function getImageUrl(coverFront?: string): string {
 
   // Handle multi-tenant local storage paths like /cover-art/{userId}/{filename}
   if (coverFront.startsWith("/cover-art/")) {
-    return `${apiBaseUrl}${coverFront}`;
+    // Route root-relative storage paths through the backend images proxy
+    return `${apiBaseUrl}/api/images/${coverFront.replace(/^\/+/, '')}`;
   }
 
   // Otherwise, proxy through the backend images endpoint
