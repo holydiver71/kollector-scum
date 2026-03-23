@@ -276,29 +276,6 @@ namespace KollectorScum.Api.Services
                 }
                 
                 existingMusicRelease.Images = updateDto.Images != null ? JsonSerializer.Serialize(NormalizeImagePaths(updateDto.Images, existingMusicRelease.UserId)) : null;
-                        /// <summary>
-                        /// Ensures all image paths are stored as /cover-art/{userId}/{filename} if not already a full URL or prefixed.
-                        /// </summary>
-                        private static MusicReleaseImageDto NormalizeImagePaths(MusicReleaseImageDto images, Guid userId)
-                        {
-                            string Normalize(string? v)
-                            {
-                                if (string.IsNullOrWhiteSpace(v)) return v ?? string.Empty;
-                                var trimmed = v.Trim();
-                                if (trimmed.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-                                    trimmed.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
-                                    trimmed.StartsWith("/cover-art/"))
-                                    return trimmed;
-                                var fileName = trimmed.Contains('/') ? trimmed.Split('/').Last() : trimmed;
-                                return $"/cover-art/{userId}/{fileName}";
-                            }
-                            return new MusicReleaseImageDto
-                            {
-                                CoverFront = Normalize(images.CoverFront),
-                                CoverBack = Normalize(images.CoverBack),
-                                Thumbnail = Normalize(images.Thumbnail)
-                            };
-                        }
                 existingMusicRelease.Links = updateDto.Links != null ? JsonSerializer.Serialize(updateDto.Links) : null;
                 existingMusicRelease.Media = updateDto.Media != null ? JsonSerializer.Serialize(updateDto.Media) : null;
                 existingMusicRelease.LastModified = DateTime.UtcNow;
@@ -501,6 +478,30 @@ namespace KollectorScum.Api.Services
                 _logger.LogWarning(ex, "Failed to delete {ImageType} file: {FilePath}", imageType, fullPath);
                 // Continue even if one file fails to delete
             }
+        }
+
+        /// <summary>
+        /// Ensures all image paths are stored as /cover-art/{userId}/{filename} if not already a full URL or prefixed.
+        /// </summary>
+        private static MusicReleaseImageDto NormalizeImagePaths(MusicReleaseImageDto images, Guid userId)
+        {
+            string Normalize(string? v)
+            {
+                if (string.IsNullOrWhiteSpace(v)) return v ?? string.Empty;
+                var trimmed = v.Trim();
+                if (trimmed.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                    trimmed.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
+                    trimmed.StartsWith("/cover-art/"))
+                    return trimmed;
+                var fileName = trimmed.Contains('/') ? trimmed.Split('/').Last() : trimmed;
+                return $"/cover-art/{userId}/{fileName}";
+            }
+            return new MusicReleaseImageDto
+            {
+                CoverFront = Normalize(images.CoverFront),
+                CoverBack = Normalize(images.CoverBack),
+                Thumbnail = Normalize(images.Thumbnail)
+            };
         }
 
         /// <summary>
