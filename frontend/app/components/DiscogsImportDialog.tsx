@@ -17,6 +17,15 @@ interface ImportResult {
   duration: string;
 }
 
+interface ImportProgress {
+  totalReleases: number;
+  effectiveTotal: number;
+  imported: number;
+  skipped: number;
+  failed: number;
+  completed: boolean;
+}
+
 /**
  * Dialog for importing collection from Discogs
  */
@@ -29,6 +38,7 @@ export function DiscogsImportDialog({
   const [isImporting, setIsImporting] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState<ImportProgress | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -82,7 +92,21 @@ export function DiscogsImportDialog({
     setError(null);
     setResult(null);
 
+    // Polling for progress while the import runs
+    let pollId: number | undefined;
+    const startPolling = () => {
+      pollId = window.setInterval(async () => {
+        try {
+          const p = await fetchJson<ImportProgress>("/api/import/discogs/status", { method: "GET" });
+          if (p) setProgress(p);
+        } catch (e) {
+          // ignore polling errors silently
+        }
+      }, 1000);
+    };
+
     try {
+      startPolling();
       const data = await fetchJson<ImportResult>("/api/import/discogs", {
         method: "POST",
         headers: {
@@ -92,7 +116,6 @@ export function DiscogsImportDialog({
         timeoutMs: 1800000, // 30 minute timeout for large collections
       });
       setResult(data);
-      
       // Don't auto-close - let user review results and close manually
     } catch (err) {
       console.error("Error importing from Discogs:", err);
@@ -110,6 +133,12 @@ export function DiscogsImportDialog({
         setError('Failed to import from Discogs. Please try again.');
       }
     } finally {
+      if (pollId) window.clearInterval(pollId);
+      // final poll to pick up last values
+      try {
+        const p = await fetchJson<ImportProgress>("/api/import/discogs/status", { method: "GET" });
+        if (p) setProgress(p);
+      } catch {}
       setIsImporting(false);
     }
   };
@@ -187,17 +216,34 @@ export function DiscogsImportDialog({
           )}
 
           {isImporting && (
-            <div className="flex flex-col items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
-              <p className="text-gray-300 text-center">
-                Importing your collection...
-                <br />
-                <span className="text-sm text-gray-400">
-                  This may take several minutes for large collections.
-                  <br />
-                  Please do not close this dialog.
-                </span>
-              </p>
+            <div className="flex flex-col items-center justify-center py-6 w-full">
+              {progress ? (
+                <div className="w-full">
+                  <div className="mb-3 text-center text-sm text-gray-300">Importing your collection…</div>
+                  <div className="w-full bg-white/10 rounded-full h-4 overflow-hidden">
+                    <div
+                      className="h-4 bg-emerald-500"
+                      style={{ width: `${Math.min(100, Math.round(((progress.imported + progress.skipped + progress.failed) / Math.max(1, progress.effectiveTotal)) * 100))}%` }}
+                    />
+                  </div>
+                  <div className="mt-2 text-xs text-gray-400 text-center">
+                    {progress.imported + progress.skipped + progress.failed} / {progress.effectiveTotal} items ({Math.min(100, Math.round(((progress.imported + progress.skipped + progress.failed) / Math.max(1, progress.effectiveTotal)) * 100))}%)
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
+                  <p className="text-gray-300 text-center">
+                    Importing your collection...
+                    <br />
+                    <span className="text-sm text-gray-400">
+                      This may take several minutes for large collections.
+                      <br />
+                      Please do not close this dialog.
+                    </span>
+                  </p>
+                </div>
+              )}
             </div>
           )}
 

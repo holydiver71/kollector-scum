@@ -82,6 +82,24 @@ namespace KollectorScum.Api.Controllers
                 return StatusCode(500, new { error = "Failed to import from Discogs", message = ex.Message });
             }
         }
+
+        /// <summary>
+        /// Get progress for the current user's Discogs import (if one is running)
+        /// </summary>
+        [HttpGet("discogs/status")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public ActionResult GetDiscogsImportStatus()
+        {
+            var userId = _userContext.GetUserId();
+            if (!userId.HasValue) return Unauthorized(new { error = "User is not authenticated" });
+
+            var progress = _importService.GetProgress(userId.Value);
+            if (progress == null) return NoContent();
+
+            return Ok(progress);
+        }
     }
 
     /// <summary>
