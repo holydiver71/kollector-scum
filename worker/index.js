@@ -1,8 +1,13 @@
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    // remove leading slash
+    // remove leading slash, then decode percent-encoded characters
     let key = url.pathname.replace(/^\/+/, '');
+    try {
+      key = decodeURIComponent(key);
+    } catch (e) {
+      // If decoding fails for any reason, fall back to raw key
+    }
     if (!key) return new Response('Bad Request', { status: 400 });
 
     try {
