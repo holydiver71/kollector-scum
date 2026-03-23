@@ -711,7 +711,6 @@ namespace KollectorScum.Api.Services
 
             return genreIds;
         }
-    }
 
         /// <summary>
         /// Return progress snapshot for a user's current import (if any)
@@ -721,4 +720,5 @@ namespace KollectorScum.Api.Services
             if (_progressStore.TryGetValue(userId, out var snap)) return snap;
             return null;
         }
+}
 }
