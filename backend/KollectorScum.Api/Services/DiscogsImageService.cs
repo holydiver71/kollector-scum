@@ -49,18 +49,38 @@ namespace KollectorScum.Api.Services
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    _logger.LogWarning("Failed to download cover art from {Url}: {StatusCode}", imageUrl, response.StatusCode);
+                    _logger.LogWarning("Failed to download cover art from {Url}: {StatusCode} {ReasonPhrase}", imageUrl, response.StatusCode, response.ReasonPhrase);
                     return null;
                 }
 
-                var imageBytes = await response.Content.ReadAsByteArrayAsync();
+                var contentLength = response.Content.Headers.ContentLength;
                 var contentType = response.Content.Headers.ContentType?.MediaType ?? "image/jpeg";
 
-                using var ms = new MemoryStream(imageBytes);
-                var publicUrl = await _storageService.UploadFileAsync(_bucketName, userId.ToString(), filename, ms, contentType);
+                _logger.LogDebug("Downloaded cover art metadata: Url={Url}, ContentType={ContentType}, ContentLength={ContentLength}",
+                    imageUrl, contentType, contentLength ?? -1);
 
-                _logger.LogDebug("Uploaded cover art to R2: {Filename} -> {Url}", filename, publicUrl);
-                return filename;
+                var imageBytes = await response.Content.ReadAsByteArrayAsync();
+
+                if (imageBytes == null || imageBytes.Length == 0)
+                {
+                    _logger.LogWarning("Downloaded cover art is empty for {Url}", imageUrl);
+                    return null;
+                }
+
+                using var ms = new MemoryStream(imageBytes);
+
+                try
+                {
+                    var publicUrl = await _storageService.UploadFileAsync(_bucketName, userId.ToString(), filename, ms, contentType);
+                    _logger.LogDebug("Uploaded cover art to R2: {Filename} -> {Url}", filename, publicUrl);
+                    return filename;
+                }
+                catch (Exception exUpload)
+                {
+                    _logger.LogError(exUpload, "Failed to upload cover art to storage for {Url} (filename={Filename})", imageUrl, filename);
+                    // Let caller decide on fallback; return null to indicate upload failure
+                    return null;
+                }
             }
             catch (Exception ex)
             {
