@@ -4,6 +4,8 @@ using KollectorScum.Api.DTOs;
 using KollectorScum.Api.Interfaces;
 using KollectorScum.Api.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
+using System.Linq;
 
 namespace KollectorScum.Api.Services
 {
@@ -16,6 +18,7 @@ namespace KollectorScum.Api.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILogger<DiscogsCollectionImportService> _logger;
         private readonly IDiscogsImageService _imageService;
+        private readonly IHostEnvironment _env;
 
         // Cache for lookups created during import to avoid duplicates
         private Dictionary<string, int> _artistCache = new();
@@ -28,12 +31,14 @@ namespace KollectorScum.Api.Services
             IDiscogsService discogsService,
             IUnitOfWork unitOfWork,
             ILogger<DiscogsCollectionImportService> logger,
-            IDiscogsImageService imageService)
+            IDiscogsImageService imageService,
+            IHostEnvironment env)
         {
             _discogsService = discogsService ?? throw new ArgumentNullException(nameof(discogsService));
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _imageService = imageService ?? throw new ArgumentNullException(nameof(imageService));
+            _env = env ?? throw new ArgumentNullException(nameof(env));
         }
 
         /// <summary>
@@ -68,19 +73,48 @@ namespace KollectorScum.Api.Services
                 _logger.LogInformation("Found {TotalReleases} releases in collection for {Username}", 
                     result.TotalReleases, username);
 
-                // Process first page
-                await ProcessReleasesAsync(firstPage.Releases, userId, result);
+                const int NEW_USER_IMPORT_LIMIT = 100;
+
+                // Determine if this is a new user (no existing releases)
+                var existingCount = await _unitOfWork.MusicReleases.CountAsync(mr => mr.UserId == userId);
+                var isNewUser = existingCount == 0;
+
+                // Apply strict limit for new user imports in Development (local) and Staging environments
+                var applyLimit = isNewUser && (_env.IsDevelopment() || _env.IsStaging());
+                if (applyLimit)
+                {
+                    _logger.LogInformation("Applying new-user import limit of {Limit} releases for environment {Env}", NEW_USER_IMPORT_LIMIT, _env.EnvironmentName);
+                }
+
+                // Remaining to process (null/unbounded when not limiting)
+                int? remainingToProcess = applyLimit ? NEW_USER_IMPORT_LIMIT : null;
+
+                // Process first page (respect remainingToProcess)
+                await ProcessReleasesAsync(firstPage.Releases, userId, result, remainingToProcess);
 
                 // Process remaining pages
                 var totalPages = firstPage.Pagination.Pages;
                 for (int page = 2; page <= totalPages; page++)
                 {
+                    // If we have a remaining limit, break when reached
+                    if (remainingToProcess.HasValue)
+                    {
+                        var processedSoFar = result.ImportedReleases + result.SkippedReleases + result.FailedReleases;
+                        var remaining = NEW_USER_IMPORT_LIMIT - processedSoFar;
+                        if (remaining <= 0)
+                        {
+                            _logger.LogInformation("Reached new-user import limit of {Limit}; stopping further page processing", NEW_USER_IMPORT_LIMIT);
+                            break;
+                        }
+                        remainingToProcess = remaining;
+                    }
+
                     _logger.LogInformation("Processing page {Page} of {TotalPages}", page, totalPages);
                     
                     var pageData = await _discogsService.GetUserCollectionAsync(username, page, 100);
                     if (pageData?.Releases != null)
                     {
-                        await ProcessReleasesAsync(pageData.Releases, userId, result);
+                        await ProcessReleasesAsync(pageData.Releases, userId, result, remainingToProcess);
                     }
 
                     // Add small delay to respect rate limits
@@ -113,14 +147,19 @@ namespace KollectorScum.Api.Services
             return result;
         }
 
-        private async Task ProcessReleasesAsync(List<DiscogsCollectionReleaseDto> releases, Guid userId, DiscogsImportResult result)
+        private async Task ProcessReleasesAsync(List<DiscogsCollectionReleaseDto> releases, Guid userId, DiscogsImportResult result, int? maxToProcess = null)
         {
             if (releases == null || releases.Count == 0)
             {
                 _logger.LogWarning("No releases to process");
                 return;
             }
-            
+            // If a maximum number of releases to process was provided, trim the list
+            if (maxToProcess.HasValue && maxToProcess.Value > 0 && releases.Count > maxToProcess.Value)
+            {
+                releases = releases.Take(maxToProcess.Value).ToList();
+            }
+
             _logger.LogDebug("Processing {Count} releases", releases.Count);
             
             foreach (var release in releases)
