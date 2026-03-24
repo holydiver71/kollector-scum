@@ -129,6 +129,12 @@ export function DiscogsImportDialog({
         timeoutMs: 1800000, // 30 minute timeout for large collections
       });
       setResult(data);
+      // Notify app that collection changed so dashboard can refresh totals
+      try {
+        if (data && data.success) {
+          window.dispatchEvent(new CustomEvent('collectionChanged'));
+        }
+      } catch {}
       // Don't auto-close - let user review results and close manually
     } catch (err) {
       console.error("Error importing from Discogs:", err);

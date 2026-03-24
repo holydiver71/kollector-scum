@@ -18,6 +18,10 @@ backend/KollectorScum.Api/wwwroot/images/covers/
 backend/KollectorScum.Api/wwwroot/cover-art/
 **/wwwroot/cover-art/
 
+# Cover art staging (temporary user-generated uploads)
+backend/KollectorScum.Api/wwwroot/cover-art-staging/
+**/wwwroot/cover-art-staging/
+
 # Node modules
 node_modules/
 
