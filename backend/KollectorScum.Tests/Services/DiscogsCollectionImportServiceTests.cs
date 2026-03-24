@@ -49,12 +49,14 @@ namespace KollectorScum.Tests.Services
 
         private DiscogsCollectionImportService CreateService()
         {
+            var mockCache = new Mock<KollectorScum.Api.Interfaces.ICacheService>();
             return new DiscogsCollectionImportService(
                 _mockDiscogsService.Object,
                 _mockUnitOfWork.Object,
                 _mockLogger.Object,
                 _mockImageService.Object,
-                _mockEnv.Object);
+                _mockEnv.Object,
+                mockCache.Object);
         }
 
         private DiscogsCollectionResponseDto MakePage(int page, int perPage, int totalPages, int totalItems)

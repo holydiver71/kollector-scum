@@ -3,6 +3,7 @@ using System.Data;
 using System.Threading;
 using System.Threading.Tasks;
 using System;
+using Npgsql;
 
 namespace KollectorScum.Api.Data
 {
@@ -419,6 +420,55 @@ LIMIT 1;";
 
                 return Convert.ToInt32(result);
             }
+            catch (PostgresException pex) when (pex.SqlState == "23505")
+            {
+                // Unique/PK violation: try to recover by selecting existing row, then resync sequence and retry once.
+                using var selectCmd = conn.CreateCommand();
+                selectCmd.CommandText = "SELECT \"Id\" FROM \"Formats\" WHERE \"UserId\" = @userId AND \"Name\" = @name LIMIT 1;";
+
+                var spUser = selectCmd.CreateParameter();
+                spUser.ParameterName = "@userId";
+                spUser.Value = userId;
+                spUser.DbType = DbType.Guid;
+                selectCmd.Parameters.Add(spUser);
+
+                var spName = selectCmd.CreateParameter();
+                spName.ParameterName = "@name";
+                spName.Value = name;
+                spName.DbType = DbType.String;
+                selectCmd.Parameters.Add(spName);
+
+                var sel = await selectCmd.ExecuteScalarAsync(cancellationToken);
+                if (sel != null && sel != DBNull.Value)
+                {
+                    return Convert.ToInt32(sel);
+                }
+
+                // If still not found, attempt to resync the sequence and retry the upsert once.
+                using var fixCmd = conn.CreateCommand();
+                fixCmd.CommandText = "SELECT setval(pg_get_serial_sequence('\"Formats\"','Id'), (SELECT COALESCE(MAX(\"Id\"),0) FROM \"Formats\"));";
+                await fixCmd.ExecuteNonQueryAsync(cancellationToken);
+
+                using var retryCmd = conn.CreateCommand();
+                retryCmd.CommandText = sql;
+                var rUser = retryCmd.CreateParameter();
+                rUser.ParameterName = "@userId";
+                rUser.Value = userId;
+                rUser.DbType = DbType.Guid;
+                retryCmd.Parameters.Add(rUser);
+                var rName = retryCmd.CreateParameter();
+                rName.ParameterName = "@name";
+                rName.Value = name;
+                rName.DbType = DbType.String;
+                retryCmd.Parameters.Add(rName);
+
+                var retryRes = await retryCmd.ExecuteScalarAsync(cancellationToken);
+                if (retryRes == null || retryRes == DBNull.Value)
+                {
+                    throw; // rethrow original PostgresException
+                }
+                return Convert.ToInt32(retryRes);
+            }
             finally
             {
                 // Do not close/dispose the connection here; let the context manage it.
@@ -466,13 +516,62 @@ LIMIT 1;";
                 pName.DbType = DbType.String;
                 cmd.Parameters.Add(pName);
 
-                var result = await cmd.ExecuteScalarAsync(cancellationToken);
-                if (result == null || result == DBNull.Value)
+                try
                 {
-                    throw new InvalidOperationException("Failed to upsert Label and retrieve Id.");
+                    var result = await cmd.ExecuteScalarAsync(cancellationToken);
+                    if (result == null || result == DBNull.Value)
+                    {
+                        throw new InvalidOperationException("Failed to upsert Label and retrieve Id.");
+                    }
+                    return Convert.ToInt32(result);
                 }
+                catch (PostgresException pex) when (pex.SqlState == "23505")
+                {
+                    using var selectCmd = conn.CreateCommand();
+                    selectCmd.CommandText = "SELECT \"Id\" FROM \"Labels\" WHERE \"UserId\" = @userId AND \"Name\" = @name LIMIT 1;";
 
-                return Convert.ToInt32(result);
+                    var spUser = selectCmd.CreateParameter();
+                    spUser.ParameterName = "@userId";
+                    spUser.Value = userId;
+                    spUser.DbType = DbType.Guid;
+                    selectCmd.Parameters.Add(spUser);
+
+                    var spName = selectCmd.CreateParameter();
+                    spName.ParameterName = "@name";
+                    spName.Value = name;
+                    spName.DbType = DbType.String;
+                    selectCmd.Parameters.Add(spName);
+
+                    var sel = await selectCmd.ExecuteScalarAsync(cancellationToken);
+                    if (sel != null && sel != DBNull.Value)
+                    {
+                        return Convert.ToInt32(sel);
+                    }
+
+                    using var fixCmd = conn.CreateCommand();
+                    fixCmd.CommandText = "SELECT setval(pg_get_serial_sequence('\"Labels\"','Id'), (SELECT COALESCE(MAX(\"Id\"),0) FROM \"Labels\"));";
+                    await fixCmd.ExecuteNonQueryAsync(cancellationToken);
+
+                    using var retryCmd = conn.CreateCommand();
+                    retryCmd.CommandText = sql;
+                    var rUser = retryCmd.CreateParameter();
+                    rUser.ParameterName = "@userId";
+                    rUser.Value = userId;
+                    rUser.DbType = DbType.Guid;
+                    retryCmd.Parameters.Add(rUser);
+                    var rName = retryCmd.CreateParameter();
+                    rName.ParameterName = "@name";
+                    rName.Value = name;
+                    rName.DbType = DbType.String;
+                    retryCmd.Parameters.Add(rName);
+
+                    var retryRes = await retryCmd.ExecuteScalarAsync(cancellationToken);
+                    if (retryRes == null || retryRes == DBNull.Value)
+                    {
+                        throw; // rethrow original PostgresException
+                    }
+                    return Convert.ToInt32(retryRes);
+                }
             }
             finally
             {
@@ -529,6 +628,53 @@ LIMIT 1;";
 
                 return Convert.ToInt32(result);
             }
+            catch (PostgresException pex) when (pex.SqlState == "23505")
+            {
+                using var selectCmd = conn.CreateCommand();
+                selectCmd.CommandText = "SELECT \"Id\" FROM \"Countries\" WHERE \"UserId\" = @userId AND \"Name\" = @name LIMIT 1;";
+
+                var spUser = selectCmd.CreateParameter();
+                spUser.ParameterName = "@userId";
+                spUser.Value = userId;
+                spUser.DbType = DbType.Guid;
+                selectCmd.Parameters.Add(spUser);
+
+                var spName = selectCmd.CreateParameter();
+                spName.ParameterName = "@name";
+                spName.Value = name;
+                spName.DbType = DbType.String;
+                selectCmd.Parameters.Add(spName);
+
+                var sel = await selectCmd.ExecuteScalarAsync(cancellationToken);
+                if (sel != null && sel != DBNull.Value)
+                {
+                    return Convert.ToInt32(sel);
+                }
+
+                using var fixCmd = conn.CreateCommand();
+                fixCmd.CommandText = "SELECT setval(pg_get_serial_sequence('\"Countries\"','Id'), (SELECT COALESCE(MAX(\"Id\"),0) FROM \"Countries\"));";
+                await fixCmd.ExecuteNonQueryAsync(cancellationToken);
+
+                using var retryCmd = conn.CreateCommand();
+                retryCmd.CommandText = sql;
+                var rUser = retryCmd.CreateParameter();
+                rUser.ParameterName = "@userId";
+                rUser.Value = userId;
+                rUser.DbType = DbType.Guid;
+                retryCmd.Parameters.Add(rUser);
+                var rName = retryCmd.CreateParameter();
+                rName.ParameterName = "@name";
+                rName.Value = name;
+                rName.DbType = DbType.String;
+                retryCmd.Parameters.Add(rName);
+
+                var retryRes = await retryCmd.ExecuteScalarAsync(cancellationToken);
+                if (retryRes == null || retryRes == DBNull.Value)
+                {
+                    throw;
+                }
+                return Convert.ToInt32(retryRes);
+            }
             finally
             {
                 // Context manages connection lifecycle
@@ -576,13 +722,63 @@ LIMIT 1;";
                 pName.DbType = DbType.String;
                 cmd.Parameters.Add(pName);
 
-                var result = await cmd.ExecuteScalarAsync(cancellationToken);
-                if (result == null || result == DBNull.Value)
+                try
                 {
-                    throw new InvalidOperationException("Failed to upsert Artist and retrieve Id.");
+                    var result = await cmd.ExecuteScalarAsync(cancellationToken);
+                    if (result == null || result == DBNull.Value)
+                    {
+                        throw new InvalidOperationException("Failed to upsert Artist and retrieve Id.");
+                    }
+                    return Convert.ToInt32(result);
                 }
+                catch (PostgresException pex) when (pex.SqlState == "23505")
+                {
+                    using var selectCmd = conn.CreateCommand();
+                    selectCmd.CommandText = "SELECT \"Id\" FROM \"Artists\" WHERE \"UserId\" = @userId AND \"Name\" = @name LIMIT 1;";
 
-                return Convert.ToInt32(result);
+                    var spUser = selectCmd.CreateParameter();
+                    spUser.ParameterName = "@userId";
+                    spUser.Value = userId;
+                    spUser.DbType = DbType.Guid;
+                    selectCmd.Parameters.Add(spUser);
+
+                    var spName = selectCmd.CreateParameter();
+                    spName.ParameterName = "@name";
+                    spName.Value = name;
+                    spName.DbType = DbType.String;
+                    selectCmd.Parameters.Add(spName);
+
+                    var sel = await selectCmd.ExecuteScalarAsync(cancellationToken);
+                    if (sel != null && sel != DBNull.Value)
+                    {
+                        return Convert.ToInt32(sel);
+                    }
+
+                    // Try to resync sequence and retry once
+                    using var fixCmd = conn.CreateCommand();
+                    fixCmd.CommandText = "SELECT setval(pg_get_serial_sequence('\"Artists\"','Id'), (SELECT COALESCE(MAX(\"Id\"),0) FROM \"Artists\"));";
+                    await fixCmd.ExecuteNonQueryAsync(cancellationToken);
+
+                    using var retryCmd = conn.CreateCommand();
+                    retryCmd.CommandText = sql;
+                    var rUser = retryCmd.CreateParameter();
+                    rUser.ParameterName = "@userId";
+                    rUser.Value = userId;
+                    rUser.DbType = DbType.Guid;
+                    retryCmd.Parameters.Add(rUser);
+                    var rName = retryCmd.CreateParameter();
+                    rName.ParameterName = "@name";
+                    rName.Value = name;
+                    rName.DbType = DbType.String;
+                    retryCmd.Parameters.Add(rName);
+
+                    var retryRes = await retryCmd.ExecuteScalarAsync(cancellationToken);
+                    if (retryRes == null || retryRes == DBNull.Value)
+                    {
+                        throw;
+                    }
+                    return Convert.ToInt32(retryRes);
+                }
             }
             finally
             {
@@ -638,6 +834,53 @@ LIMIT 1;";
                 }
 
                 return Convert.ToInt32(result);
+            }
+            catch (PostgresException pex) when (pex.SqlState == "23505")
+            {
+                using var selectCmd = conn.CreateCommand();
+                selectCmd.CommandText = "SELECT \"Id\" FROM \"Genres\" WHERE \"UserId\" = @userId AND \"Name\" = @name LIMIT 1;";
+
+                var spUser = selectCmd.CreateParameter();
+                spUser.ParameterName = "@userId";
+                spUser.Value = userId;
+                spUser.DbType = DbType.Guid;
+                selectCmd.Parameters.Add(spUser);
+
+                var spName = selectCmd.CreateParameter();
+                spName.ParameterName = "@name";
+                spName.Value = name;
+                spName.DbType = DbType.String;
+                selectCmd.Parameters.Add(spName);
+
+                var sel = await selectCmd.ExecuteScalarAsync(cancellationToken);
+                if (sel != null && sel != DBNull.Value)
+                {
+                    return Convert.ToInt32(sel);
+                }
+
+                using var fixCmd = conn.CreateCommand();
+                fixCmd.CommandText = "SELECT setval(pg_get_serial_sequence('\"Genres\"','Id'), (SELECT COALESCE(MAX(\"Id\"),0) FROM \"Genres\"));";
+                await fixCmd.ExecuteNonQueryAsync(cancellationToken);
+
+                using var retryCmd = conn.CreateCommand();
+                retryCmd.CommandText = sql;
+                var rUser = retryCmd.CreateParameter();
+                rUser.ParameterName = "@userId";
+                rUser.Value = userId;
+                rUser.DbType = DbType.Guid;
+                retryCmd.Parameters.Add(rUser);
+                var rName = retryCmd.CreateParameter();
+                rName.ParameterName = "@name";
+                rName.Value = name;
+                rName.DbType = DbType.String;
+                retryCmd.Parameters.Add(rName);
+
+                var retryRes = await retryCmd.ExecuteScalarAsync(cancellationToken);
+                if (retryRes == null || retryRes == DBNull.Value)
+                {
+                    throw;
+                }
+                return Convert.ToInt32(retryRes);
             }
             finally
             {

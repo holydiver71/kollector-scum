@@ -514,7 +514,9 @@ namespace KollectorScum.Api.Services
 
             if (string.IsNullOrWhiteSpace(r2Endpoint) && string.IsNullOrWhiteSpace(r2AccountId) && string.IsNullOrWhiteSpace(r2PublicBaseUrl))
             {
-                return trimmed;
+                // When no external storage is configured, surface only the filename portion so
+                // callers (and tests) receive the original filename instead of a stored path.
+                return fileName;
             }
 
             var bucket = _configuration["R2:BucketName"] ?? _configuration["R2__BucketName"] ?? "cover-art";

@@ -122,10 +122,17 @@ export default function Dashboard() {
     };
     
     window.addEventListener('authChanged', handleAuthChange);
+
+    // Listen for collection changes (e.g., Discogs import completion)
+    const handleCollectionChanged = () => {
+      checkAuthAndFetch();
+    };
+    window.addEventListener('collectionChanged', handleCollectionChanged);
     
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('authChanged', handleAuthChange);
+      window.removeEventListener('collectionChanged', handleCollectionChanged);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
