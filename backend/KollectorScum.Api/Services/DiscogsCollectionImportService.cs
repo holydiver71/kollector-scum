@@ -23,6 +23,7 @@ namespace KollectorScum.Api.Services
         private readonly ILogger<DiscogsCollectionImportService> _logger;
         private readonly IDiscogsImageService _imageService;
         private readonly IHostEnvironment _env;
+        private readonly ICacheService? _cacheService;
 
         // Cache for lookups created during import to avoid duplicates
         private Dictionary<string, int> _artistCache = new();
@@ -36,13 +37,15 @@ namespace KollectorScum.Api.Services
             IUnitOfWork unitOfWork,
             ILogger<DiscogsCollectionImportService> logger,
             IDiscogsImageService imageService,
-            IHostEnvironment env)
+            IHostEnvironment env,
+            ICacheService? cacheService = null)
         {
             _discogsService = discogsService ?? throw new ArgumentNullException(nameof(discogsService));
             _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _imageService = imageService ?? throw new ArgumentNullException(nameof(imageService));
             _env = env ?? throw new ArgumentNullException(nameof(env));
+            _cacheService = cacheService;
         }
 
         /// <summary>
@@ -176,6 +179,25 @@ namespace KollectorScum.Api.Services
             {
                 stopwatch.Stop();
                 result.Duration = stopwatch.Elapsed;
+            }
+
+            // Invalidate cached lookup lists for this user so the UI picks up newly created
+            // artists/genres/labels without requiring a manual refresh.
+            try
+            {
+                if (_cacheService != null)
+                {
+                    var userKey = userId;
+                    _cacheService.InvalidateGroup($"Artist:all:{userKey}");
+                    _cacheService.InvalidateGroup($"Genre:all:{userKey}");
+                    _cacheService.InvalidateGroup($"Label:all:{userKey}");
+                    _cacheService.InvalidateGroup($"Format:all:{userKey}");
+                    _cacheService.InvalidateGroup($"Country:all:{userKey}");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to invalidate cache groups after import for user {Username}", username);
             }
 
             return result;
