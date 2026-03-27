@@ -71,17 +71,26 @@ namespace KollectorScum.Api.Services
                         $"File size {fileStream.Length} bytes exceeds maximum allowed size of {MaxFileSize} bytes", nameof(fileStream));
                 }
 
-                // Create unique filename to avoid collisions
-                var uniqueFileName = $"{Guid.NewGuid()}{extension}";
+                // Prefer the provided filename (sanitised) and avoid collisions by suffixing
+                var baseName = Path.GetFileNameWithoutExtension(sanitizedFileName);
+                if (string.IsNullOrWhiteSpace(baseName))
+                    baseName = Guid.NewGuid().ToString();
+
+                var candidateFileName = baseName + extension;
 
                 // Build directory path: wwwroot/{bucketName}/{userId}
                 var userDirectory = Path.Combine(_environment.WebRootPath, bucketName, userId);
-                
-                // Ensure directory exists
                 Directory.CreateDirectory(userDirectory);
 
-                // Build full file path
-                var filePath = Path.Combine(userDirectory, uniqueFileName);
+                // If a file with the same name exists, append a numeric suffix to avoid overwrite
+                var filePath = Path.Combine(userDirectory, candidateFileName);
+                var suffix = 1;
+                while (File.Exists(filePath))
+                {
+                    candidateFileName = $"{baseName}-{suffix}{extension}";
+                    filePath = Path.Combine(userDirectory, candidateFileName);
+                    suffix++;
+                }
 
                 // Write file to disk
                 using (var fileStreamOutput = new FileStream(filePath, FileMode.Create, FileAccess.Write))
@@ -92,11 +101,11 @@ namespace KollectorScum.Api.Services
                 _logger.LogInformation(
                     "File uploaded successfully: {FileName} -> {FilePath} (User: {UserId})", 
                     sanitizedFileName, 
-                    uniqueFileName, 
+                    candidateFileName, 
                     userId);
 
                 // Return the public URL path
-                return GetPublicUrl(bucketName, userId, uniqueFileName);
+                return GetPublicUrl(bucketName, userId, candidateFileName);
             }
             catch (Exception ex)
             {
