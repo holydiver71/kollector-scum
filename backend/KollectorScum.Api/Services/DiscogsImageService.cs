@@ -1,5 +1,6 @@
 using System.Text;
 using KollectorScum.Api.Interfaces;
+using Microsoft.AspNetCore.Hosting;
 
 namespace KollectorScum.Api.Services
 {
@@ -12,6 +13,7 @@ namespace KollectorScum.Api.Services
         private readonly IStorageService _storageService;
         private readonly IConfiguration _configuration;
         private readonly ILogger<DiscogsImageService> _logger;
+        private readonly IWebHostEnvironment _environment;
         private readonly string _bucketName;
 
         private const int MaxFilenameLength = 200;
@@ -23,13 +25,18 @@ namespace KollectorScum.Api.Services
             HttpClient httpClient,
             IStorageService storageService,
             IConfiguration configuration,
-            ILogger<DiscogsImageService> logger)
+            ILogger<DiscogsImageService> logger,
+            IWebHostEnvironment environment)
         {
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             _storageService = storageService ?? throw new ArgumentNullException(nameof(storageService));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _bucketName = _configuration["R2:BucketName"] ?? _configuration["R2__BucketName"] ?? "cover-art-staging";
+            _environment = environment ?? throw new ArgumentNullException(nameof(environment));
+
+            // Default bucket: use `cover-art` for local development, otherwise keep staging default
+            var defaultBucket = _environment.IsDevelopment() ? "cover-art" : "cover-art-staging";
+            _bucketName = _configuration["R2:BucketName"] ?? _configuration["R2__BucketName"] ?? defaultBucket;
         }
 
         /// <inheritdoc />
