@@ -15,6 +15,7 @@ namespace KollectorScum.Api.Controllers
         private readonly string _imagesPath;
         private readonly string? _r2PublicBaseUrl;
         private readonly string _bucketName;
+        private readonly IWebHostEnvironment _env;
         private readonly ILogger<ImagesController> _logger;
         private readonly IStorageService _storageService;
         private readonly IUserContext _userContext;
@@ -43,7 +44,8 @@ namespace KollectorScum.Api.Controllers
             IUserContext userContext,
             IImageResizerService imageResizer,
             ICoverArtSearchService coverArtSearch,
-            IHttpClientFactory httpClientFactory)
+            IHttpClientFactory httpClientFactory,
+            IWebHostEnvironment env)
         {
             _imagesPath = configuration["ImagesPath"] ?? "/home/andy/music-images";
             // Support both configuration key formats: the env provider maps '__' to ':'
@@ -56,6 +58,7 @@ namespace KollectorScum.Api.Controllers
             _imageResizer = imageResizer;
             _coverArtSearch = coverArtSearch;
             _httpClientFactory = httpClientFactory;
+            _env = env;
         }
 
         /// <summary>
@@ -152,11 +155,37 @@ namespace KollectorScum.Api.Controllers
                     fullPath = Path.Combine(_imagesPath, "covers", imagePath);
                 }
                 
-                // Check if file exists
+                // Check if file exists in configured images path
                 if (!System.IO.File.Exists(fullPath))
                 {
-                    _logger.LogDebug("Image not found: {FullPath}", fullPath);
-                    return NotFound($"Image not found: {imagePath}");
+                    _logger.LogDebug("Image not found in ImagesPath: {FullPath}", fullPath);
+
+                    // As a fallback, check local wwwroot storage (e.g., /wwwroot/cover-art/{userId}/{filename})
+                    try
+                    {
+                        var webroot = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                        var bucketRoot = Path.Combine(webroot, _bucketName);
+                        if (Directory.Exists(bucketRoot))
+                        {
+                            // Search for the filename under the bucket root (all user folders)
+                            var matches = Directory.EnumerateFiles(bucketRoot, Path.GetFileName(imagePath), SearchOption.AllDirectories).FirstOrDefault();
+                            if (!string.IsNullOrWhiteSpace(matches) && System.IO.File.Exists(matches))
+                            {
+                                fullPath = matches;
+                                _logger.LogDebug("Found image in wwwroot bucket fallback: {FullPath}", fullPath);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Error while searching wwwroot bucket for image fallback: {ImagePath}", imagePath);
+                    }
+
+                    if (!System.IO.File.Exists(fullPath))
+                    {
+                        _logger.LogDebug("Image not found after fallback: {FullPath}", fullPath);
+                        return NotFound($"Image not found: {imagePath}");
+                    }
                 }
 
                 // Determine content type based on file extension
