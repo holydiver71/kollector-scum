@@ -46,6 +46,7 @@ export function DiscogsImportDialog({
     if (!isImporting) {
       // If import was successful, trigger the success callback
       if (result?.success) {
+        try { window.dispatchEvent(new CustomEvent('collectionChanged')); } catch {}
         onSuccess();
       }
       setUsername("");
@@ -149,12 +150,6 @@ export function DiscogsImportDialog({
         console.debug('Discogs import normalized result:', normalized);
       } catch {}
       setResult(normalized);
-      // Notify app that collection changed so dashboard can refresh totals
-      try {
-        if (normalized && normalized.success) {
-          window.dispatchEvent(new CustomEvent('collectionChanged'));
-        }
-      } catch {}
       // Don't auto-close - let user review results and close manually
     } catch (err) {
       console.error("Error importing from Discogs:", err);
