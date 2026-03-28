@@ -3,6 +3,7 @@ using System.Net;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Moq.Protected;
@@ -25,12 +26,15 @@ namespace KollectorScum.Tests.Controllers
         private readonly Mock<IImageResizerService> _mockResizer = new();
         private readonly Mock<ICoverArtSearchService> _mockSearch = new();
         private readonly Mock<IHttpClientFactory> _mockHttpClientFactory = new();
+        private readonly Mock<IWebHostEnvironment> _mockEnv = new();
 
         public ImagesControllerImageTests()
         {
             _mockConfig.Setup(c => c["ImagesPath"]).Returns("/tmp/images");
             _mockConfig.Setup(c => c["R2:BucketName"]).Returns("test-bucket");
             _mockUserContext.Setup(u => u.GetActingUserId()).Returns(Guid.NewGuid());
+            // Provide a sensible WebRootPath for controller logic that checks wwwroot
+            _mockEnv.Setup(e => e.WebRootPath).Returns(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"));
         }
 
         private ImagesController CreateController()
@@ -42,7 +46,8 @@ namespace KollectorScum.Tests.Controllers
                 _mockUserContext.Object,
                 _mockResizer.Object,
                 _mockSearch.Object,
-                _mockHttpClientFactory.Object);
+                _mockHttpClientFactory.Object,
+                _mockEnv.Object);
 
             controller.ControllerContext = new ControllerContext
             {
