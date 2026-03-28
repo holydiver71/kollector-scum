@@ -312,20 +312,20 @@ export function DiscogsImportDialog({
                 </div>
               )}
 
-              {result.errors.length > 1 && (
+              {(result.errors?.length ?? 0) > 1 && (
                 <details className="text-sm">
                   <summary className="text-gray-400 cursor-pointer hover:text-gray-300">
-                    View all errors ({result.errors.length})
+                    View all errors ({result.errors?.length ?? 0})
                   </summary>
                   <div className="mt-2 space-y-1 max-h-40 overflow-y-auto">
-                    {result.errors.slice(0, 10).map((err, idx) => (
+                    {(result.errors ?? []).slice(0, 10).map((err, idx) => (
                       <p key={idx} className="text-gray-400 text-xs">
                         • {err}
                       </p>
                     ))}
-                    {result.errors.length > 10 && (
+                    {(result.errors?.length ?? 0) > 10 && (
                       <p className="text-gray-500 text-xs italic">
-                        ... and {result.errors.length - 10} more errors
+                        ... and {(result.errors?.length ?? 0) - 10} more errors
                       </p>
                     )}
                   </div>
