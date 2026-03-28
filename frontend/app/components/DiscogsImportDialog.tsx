@@ -140,10 +140,18 @@ export function DiscogsImportDialog({
         return { success, totalReleases, importedReleases, skippedReleases, failedReleases, errors, duration };
       };
 
-      setResult(normalizeResult(data));
+      const normalized = normalizeResult(data);
+      // Debug log raw and normalized result to help diagnose missing UI
+      try {
+        // eslint-disable-next-line no-console
+        console.debug('Discogs import raw response:', data);
+        // eslint-disable-next-line no-console
+        console.debug('Discogs import normalized result:', normalized);
+      } catch {}
+      setResult(normalized);
       // Notify app that collection changed so dashboard can refresh totals
       try {
-        if (data && data.success) {
+        if (normalized && normalized.success) {
           window.dispatchEvent(new CustomEvent('collectionChanged'));
         }
       } catch {}
