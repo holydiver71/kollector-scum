@@ -2,6 +2,7 @@ using System.Net;
 using KollectorScum.Api.Interfaces;
 using KollectorScum.Api.Services;
 using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Moq.Protected;
@@ -17,12 +18,17 @@ namespace KollectorScum.Tests.Services
         private readonly Mock<IStorageService> _mockStorageService;
         private readonly Mock<IConfiguration> _mockConfiguration;
         private readonly Mock<ILogger<DiscogsImageService>> _mockLogger;
+        private readonly Mock<IWebHostEnvironment> _mockEnvironment;
 
         public DiscogsImageServiceTests()
         {
             _mockStorageService = new Mock<IStorageService>();
             _mockConfiguration = new Mock<IConfiguration>();
             _mockLogger = new Mock<ILogger<DiscogsImageService>>();
+            _mockEnvironment = new Mock<IWebHostEnvironment>();
+
+            // Default to development environment for tests
+            _mockEnvironment.Setup(e => e.EnvironmentName).Returns("Development");
 
             _mockConfiguration.Setup(c => c["R2:BucketName"]).Returns("test-bucket");
         }
@@ -30,7 +36,7 @@ namespace KollectorScum.Tests.Services
         private DiscogsImageService CreateService(HttpMessageHandler handler)
         {
             var client = new HttpClient(handler);
-            return new DiscogsImageService(client, _mockStorageService.Object, _mockConfiguration.Object, _mockLogger.Object);
+            return new DiscogsImageService(client, _mockStorageService.Object, _mockConfiguration.Object, _mockLogger.Object, _mockEnvironment.Object);
         }
 
         #region SanitizeFilename Tests
