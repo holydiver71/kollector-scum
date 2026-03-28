@@ -46,7 +46,10 @@ namespace KollectorScum.Api.Services
                     throw new ArgumentException("File stream is empty", nameof(fileStream));
 
                 // Sanitize filename (security: prevent directory traversal)
-                var sanitizedFileName = Path.GetFileName(fileName);
+                // Normalize Windows-style backslashes to forward slashes so tests and
+                // inputs from different platforms are handled consistently on Linux.
+                var normalizedInput = fileName.Replace('\\', '/');
+                var sanitizedFileName = Path.GetFileName(normalizedInput);
                 if (string.IsNullOrWhiteSpace(sanitizedFileName))
                     throw new ArgumentException("Invalid file name after sanitization", nameof(fileName));
 
@@ -124,7 +127,8 @@ namespace KollectorScum.Api.Services
                 try
                 {
                     // Sanitize filename
-                    var sanitizedFileName = Path.GetFileName(fileName);
+                var normalizedInput = fileName.Replace('\\', '/');
+                var sanitizedFileName = Path.GetFileName(normalizedInput);
                     if (string.IsNullOrWhiteSpace(sanitizedFileName))
                     {
                         _logger.LogWarning("Invalid file name for deletion: {FileName}", fileName);
@@ -177,7 +181,8 @@ namespace KollectorScum.Api.Services
         /// </summary>
         public Task<Stream?> GetFileStreamAsync(string bucketName, string userId, string fileName)
         {
-            var sanitizedFileName = Path.GetFileName(fileName);
+            var normalizedInput = fileName.Replace('\\', '/');
+            var sanitizedFileName = Path.GetFileName(normalizedInput);
             var filePath = Path.Combine(_environment.WebRootPath, bucketName, userId, sanitizedFileName);
 
             if (!File.Exists(filePath))

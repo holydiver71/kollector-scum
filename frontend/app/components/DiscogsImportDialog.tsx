@@ -128,7 +128,19 @@ export function DiscogsImportDialog({
         body: JSON.stringify({ username: username.trim() }),
         timeoutMs: 1800000, // 30 minute timeout for large collections
       });
-      setResult(data);
+      const normalizeResult = (r: any): ImportResult => {
+        if (!r) return null as any;
+        const success = r.success ?? r.Success ?? false;
+        const totalReleases = r.totalReleases ?? r.TotalReleases ?? 0;
+        const importedReleases = r.importedReleases ?? r.ImportedReleases ?? 0;
+        const skippedReleases = r.skippedReleases ?? r.SkippedReleases ?? 0;
+        const failedReleases = r.failedReleases ?? r.FailedReleases ?? 0;
+        const errors = r.errors ?? r.Errors ?? [];
+        const duration = r.duration ?? (r.Duration ? String(r.Duration) : "");
+        return { success, totalReleases, importedReleases, skippedReleases, failedReleases, errors, duration };
+      };
+
+      setResult(normalizeResult(data));
       // Notify app that collection changed so dashboard can refresh totals
       try {
         if (data && data.success) {
