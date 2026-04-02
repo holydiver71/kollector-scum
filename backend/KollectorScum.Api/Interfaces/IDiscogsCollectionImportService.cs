@@ -10,8 +10,9 @@ namespace KollectorScum.Api.Interfaces
         /// </summary>
         /// <param name="username">Discogs username</param>
         /// <param name="userId">User ID who owns the collection</param>
+        /// <param name="cancellationToken">Cancellation token for the import operation</param>
         /// <returns>Import result with statistics</returns>
-        Task<DiscogsImportResult> ImportCollectionAsync(string username, Guid userId);
+        Task<DiscogsImportResult> ImportCollectionAsync(string username, Guid userId, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Get current import progress snapshot for a user (if an import is running)
