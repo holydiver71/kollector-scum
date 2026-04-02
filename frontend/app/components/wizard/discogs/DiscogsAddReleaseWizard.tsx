@@ -317,9 +317,9 @@ export default function DiscogsAddReleaseWizard({
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 text-[var(--theme-card-text)]">
       {/* Step indicator – same component and wrapper as manual wizard */}
-      <div className="bg-[#13131F] border border-[#1C1C28] rounded-2xl p-3">
+      <div className="bg-[var(--theme-card-bg)] border border-[var(--theme-card-border)] rounded-2xl p-3">
         <StepIndicator
           steps={DISCOGS_STEPS}
           currentStep={currentStepIndex}
@@ -329,10 +329,10 @@ export default function DiscogsAddReleaseWizard({
       </div>
 
       {/* Panel card */}
-      <div className="bg-[#13131F] border border-[#1C1C28] rounded-2xl overflow-hidden">
+      <div className="bg-[var(--theme-card-bg)] border border-[var(--theme-card-border)] rounded-2xl overflow-hidden">
         {/* Card header */}
-        <div className="px-6 py-3 border-b border-[#1C1C28]">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-gray-600">
+        <div className="px-6 py-3 border-b border-[var(--theme-card-border)]">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--theme-card-text)]/70">
             {stepLabels[state.step]}
           </span>
         </div>
@@ -389,7 +389,7 @@ export default function DiscogsAddReleaseWizard({
             <button
               type="button"
               onClick={onCancel}
-              className="text-sm text-gray-500 hover:text-gray-300 underline underline-offset-2"
+              className="text-sm text-[var(--theme-card-text)]/70 hover:text-[var(--theme-card-text)] underline underline-offset-2"
             >
               Cancel
             </button>

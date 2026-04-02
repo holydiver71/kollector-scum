@@ -199,22 +199,22 @@ export function DiscogsImportDialog({
     >
       <div
         ref={dialogRef}
-        className="bg-gradient-to-br from-red-900 via-red-950 to-black rounded-lg border border-white/10 shadow-xl max-w-md w-full p-6 transform transition-all"
+        className="bg-[var(--theme-card-bg)] rounded-lg border border-[var(--theme-card-border)] shadow-xl max-w-md w-full p-6 transform transition-all"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Dialog Header */}
         <div className="mb-4">
           <h2
             id="import-dialog-title"
-            className="text-xl font-semibold text-white"
+            className="text-xl font-semibold text-[var(--theme-card-text)]"
           >
             Import from Discogs
           </h2>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="text-sm text-[var(--theme-card-text)]/70 mt-1">
             Enter your Discogs username to import your collection
           </p>
           {!isImporting && !result && (
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-[var(--theme-card-text)]/55 mt-2">
               Note: Large collections may take 10-20 minutes to import
             </p>
           )}
@@ -226,7 +226,7 @@ export function DiscogsImportDialog({
             <>
               <label
                 htmlFor="discogs-username"
-                className="block text-sm font-medium text-gray-300 mb-2"
+                className="block text-sm font-medium text-[var(--theme-card-text)] mb-2"
               >
                 Discogs Username
               </label>
@@ -237,7 +237,7 @@ export function DiscogsImportDialog({
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="w-full px-3 py-2 bg-black/30 border border-white/20 rounded-md text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                className="w-full px-3 py-2 bg-[var(--theme-body-bg-start)] border border-[var(--theme-card-border)] rounded-md text-[var(--theme-card-text)] placeholder:text-[var(--theme-card-text)]/45 focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)] focus:border-transparent"
                 placeholder="your_username"
                 disabled={isImporting}
               />
@@ -253,24 +253,24 @@ export function DiscogsImportDialog({
             <div className="flex flex-col items-center justify-center py-6 w-full">
               {progress ? (
                 <div className="w-full">
-                  <div className="mb-3 text-center text-sm text-gray-300">Importing your collection…</div>
-                  <div className="w-full bg-white/10 rounded-full h-4 overflow-hidden">
+                  <div className="mb-3 text-center text-sm text-[var(--theme-card-text)]">Importing your collection…</div>
+                  <div className="w-full bg-[var(--theme-card-border)]/50 rounded-full h-4 overflow-hidden">
                     <div
                       className="h-4 bg-emerald-500"
                       style={{ width: `${Math.min(100, Math.round(((progress.imported + progress.skipped + progress.failed) / Math.max(1, progress.effectiveTotal)) * 100))}%` }}
                     />
                   </div>
-                  <div className="mt-2 text-xs text-gray-400 text-center">
+                  <div className="mt-2 text-xs text-[var(--theme-card-text)]/70 text-center">
                     {progress.imported + progress.skipped + progress.failed} / {progress.effectiveTotal} items ({Math.min(100, Math.round(((progress.imported + progress.skipped + progress.failed) / Math.max(1, progress.effectiveTotal)) * 100))}%)
                   </div>
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
-                  <p className="text-gray-300 text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--theme-accent)] mb-4"></div>
+                  <p className="text-[var(--theme-card-text)] text-center">
                     Importing your collection...
                     <br />
-                    <span className="text-sm text-gray-400">
+                    <span className="text-sm text-[var(--theme-card-text)]/70">
                       This may take several minutes for large collections.
                       <br />
                       Please do not close this dialog.
@@ -288,7 +288,7 @@ export function DiscogsImportDialog({
                   <h3 className="text-green-400 font-semibold mb-2">
                     Import Successful!
                   </h3>
-                  <div className="text-sm text-gray-300 space-y-1">
+                  <div className="text-sm text-[var(--theme-card-text)]/85 space-y-1">
                     <p>Total releases: {result.totalReleases}</p>
                     <p>Imported: {result.importedReleases}</p>
                     <p>Skipped (already exist): {result.skippedReleases}</p>
@@ -297,7 +297,7 @@ export function DiscogsImportDialog({
                         Failed: {result.failedReleases}
                       </p>
                     )}
-                    <p className="text-gray-400 text-xs mt-2">
+                    <p className="text-[var(--theme-card-text)]/65 text-xs mt-2">
                       Duration: {result.duration}
                     </p>
                   </div>
@@ -307,7 +307,7 @@ export function DiscogsImportDialog({
                   <h3 className="text-red-400 font-semibold mb-2">
                     Import Failed
                   </h3>
-                  <p className="text-sm text-gray-300">
+                  <p className="text-sm text-[var(--theme-card-text)]/85">
                     {result.errors.length > 0
                       ? result.errors[0]
                       : "An unknown error occurred"}
@@ -317,17 +317,17 @@ export function DiscogsImportDialog({
 
               {(result.errors?.length ?? 0) > 1 && (
                 <details className="text-sm">
-                  <summary className="text-gray-400 cursor-pointer hover:text-gray-300">
+                  <summary className="text-[var(--theme-card-text)]/70 cursor-pointer hover:text-[var(--theme-card-text)]">
                     View all errors ({result.errors?.length ?? 0})
                   </summary>
                   <div className="mt-2 space-y-1 max-h-40 overflow-y-auto">
                     {(result.errors ?? []).slice(0, 10).map((err, idx) => (
-                      <p key={idx} className="text-gray-400 text-xs">
+                      <p key={idx} className="text-[var(--theme-card-text)]/70 text-xs">
                         • {err}
                       </p>
                     ))}
                     {(result.errors?.length ?? 0) > 10 && (
-                      <p className="text-gray-500 text-xs italic">
+                      <p className="text-[var(--theme-card-text)]/55 text-xs italic">
                         ... and {(result.errors?.length ?? 0) - 10} more errors
                       </p>
                     )}
@@ -344,7 +344,7 @@ export function DiscogsImportDialog({
             <button
               type="button"
               onClick={handleClose}
-              className="px-4 py-2 text-sm font-medium text-white bg-white/10 border border-white/20 rounded-md hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              className="px-4 py-2 text-sm font-medium text-[var(--theme-card-text)]/85 bg-transparent border border-[var(--theme-card-border)] rounded-md hover:border-[var(--theme-accent)]/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--theme-accent)]"
             >
               {result ? "Close" : "Cancel"}
             </button>
@@ -354,7 +354,7 @@ export function DiscogsImportDialog({
               type="button"
               onClick={handleImport}
               disabled={!username.trim()}
-              className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-red-900/50"
+              className="px-4 py-2 text-sm font-medium text-white bg-[var(--theme-accent)] rounded-md hover:bg-[var(--theme-accent-hover)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--theme-accent)] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
             >
               Import Collection
             </button>
