@@ -97,10 +97,10 @@ export default function DiscogsSearchStep({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-[var(--theme-card-text)]">
       <div>
-        <h2 className="text-xl font-black text-white mb-1">Search Discogs</h2>
-        <p className="text-sm text-gray-500">
+        <h2 className="text-xl font-black text-[var(--theme-card-text)] mb-1">Search Discogs</h2>
+        <p className="text-sm text-[var(--theme-card-text)]/70">
           Enter a catalogue number to find matching releases on Discogs.
         </p>
       </div>
@@ -110,7 +110,7 @@ export default function DiscogsSearchStep({
         <div>
           <label
             htmlFor="discogs-catalog-number"
-            className="block text-sm font-medium text-gray-300 mb-1"
+            className="block text-sm font-medium text-[var(--theme-card-text)] mb-1"
           >
             Catalogue Number <span className="text-red-400">*</span>
           </label>
@@ -123,10 +123,10 @@ export default function DiscogsSearchStep({
               if (localError) setLocalError("");
             }}
             placeholder="e.g., MOVLP001, ABC-12345"
-            className={`w-full px-3 py-2 bg-[#0F0F1A] border rounded-lg text-white placeholder-gray-600 focus:outline-none focus:ring-1 transition-colors ${
+            className={`w-full px-3 py-2 bg-[var(--theme-body-bg-start)] border rounded-lg text-[var(--theme-card-text)] placeholder:text-[var(--theme-card-text)]/45 focus:outline-none focus:ring-1 transition-colors ${
               localError
                 ? "border-red-500 focus:ring-red-500"
-                : "border-[#1C1C28] focus:ring-[#8B5CF6] focus:border-[#8B5CF6]"
+                : "border-[var(--theme-card-border)] focus:ring-[var(--theme-accent)] focus:border-[var(--theme-accent)]"
             }`}
             disabled={isSearching}
             aria-required="true"
@@ -137,7 +137,7 @@ export default function DiscogsSearchStep({
               {localError}
             </p>
           ) : (
-            <p id="catalog-hint" className="mt-1 text-xs text-gray-600">
+            <p id="catalog-hint" className="mt-1 text-xs text-[var(--theme-card-text)]/55">
               Usually found on the spine or back cover of the release.
             </p>
           )}
@@ -148,10 +148,10 @@ export default function DiscogsSearchStep({
           <div>
             <label
               htmlFor="discogs-format"
-              className="block text-sm font-medium text-gray-300 mb-1"
+              className="block text-sm font-medium text-[var(--theme-card-text)] mb-1"
             >
               Format
-              <span className="ml-1 text-xs text-gray-600">(optional)</span>
+              <span className="ml-1 text-xs text-[var(--theme-card-text)]/55">(optional)</span>
             </label>
             <input
               type="text"
@@ -159,7 +159,7 @@ export default function DiscogsSearchStep({
               value={format}
               onChange={(e) => setFormat(e.target.value)}
               placeholder="e.g., Vinyl, CD"
-              className="w-full px-3 py-2 bg-[#0F0F1A] border border-[#1C1C28] rounded-lg text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-[#8B5CF6] focus:border-[#8B5CF6] transition-colors"
+              className="w-full px-3 py-2 bg-[var(--theme-body-bg-start)] border border-[var(--theme-card-border)] rounded-lg text-[var(--theme-card-text)] placeholder:text-[var(--theme-card-text)]/45 focus:outline-none focus:ring-1 focus:ring-[var(--theme-accent)] focus:border-[var(--theme-accent)] transition-colors"
               disabled={isSearching}
             />
           </div>
@@ -167,10 +167,10 @@ export default function DiscogsSearchStep({
           <div>
             <label
               htmlFor="discogs-country"
-              className="block text-sm font-medium text-gray-300 mb-1"
+              className="block text-sm font-medium text-[var(--theme-card-text)] mb-1"
             >
               Country
-              <span className="ml-1 text-xs text-gray-600">(optional)</span>
+              <span className="ml-1 text-xs text-[var(--theme-card-text)]/55">(optional)</span>
             </label>
             <input
               type="text"
@@ -178,7 +178,7 @@ export default function DiscogsSearchStep({
               value={country}
               onChange={(e) => setCountry(e.target.value)}
               placeholder="e.g., US, UK"
-              className="w-full px-3 py-2 bg-[#0F0F1A] border border-[#1C1C28] rounded-lg text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-[#8B5CF6] focus:border-[#8B5CF6] transition-colors"
+              className="w-full px-3 py-2 bg-[var(--theme-body-bg-start)] border border-[var(--theme-card-border)] rounded-lg text-[var(--theme-card-text)] placeholder:text-[var(--theme-card-text)]/45 focus:outline-none focus:ring-1 focus:ring-[var(--theme-accent)] focus:border-[var(--theme-accent)] transition-colors"
               disabled={isSearching}
             />
           </div>
@@ -186,10 +186,10 @@ export default function DiscogsSearchStep({
           <div>
             <label
               htmlFor="discogs-year"
-              className="block text-sm font-medium text-gray-300 mb-1"
+              className="block text-sm font-medium text-[var(--theme-card-text)] mb-1"
             >
               Year
-              <span className="ml-1 text-xs text-gray-600">(optional)</span>
+              <span className="ml-1 text-xs text-[var(--theme-card-text)]/55">(optional)</span>
             </label>
             <input
               type="number"
@@ -199,7 +199,7 @@ export default function DiscogsSearchStep({
               placeholder="e.g., 2020"
               min="1900"
               max={new Date().getFullYear() + 1}
-              className="w-full px-3 py-2 bg-[#0F0F1A] border border-[#1C1C28] rounded-lg text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-[#8B5CF6] focus:border-[#8B5CF6] transition-colors"
+              className="w-full px-3 py-2 bg-[var(--theme-body-bg-start)] border border-[var(--theme-card-border)] rounded-lg text-[var(--theme-card-text)] placeholder:text-[var(--theme-card-text)]/45 focus:outline-none focus:ring-1 focus:ring-[var(--theme-accent)] focus:border-[var(--theme-accent)] transition-colors"
               disabled={isSearching}
             />
           </div>
@@ -211,20 +211,20 @@ export default function DiscogsSearchStep({
             type="button"
             onClick={handleClear}
             disabled={isSearching}
-            className="text-xs text-gray-500 hover:text-gray-300 underline underline-offset-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="text-xs text-[var(--theme-card-text)]/65 hover:text-[var(--theme-card-text)] underline underline-offset-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             Clear fields
           </button>
         </div>
 
         {/* Navigation footer */}
-        <div className="flex items-center justify-between pt-4 mt-2 border-t border-[#1C1C28]">
+        <div className="flex items-center justify-between pt-4 mt-2 border-t border-[var(--theme-card-border)]">
           {onBack ? (
             <button
               type="button"
               onClick={onBack}
               disabled={isSearching}
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-300 hover:text-white border border-[#1C1C28] hover:border-[#8B5CF6]/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold text-[var(--theme-card-text)]/85 hover:text-[var(--theme-card-text)] border border-[var(--theme-card-border)] hover:border-[var(--theme-accent)]/50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -238,7 +238,7 @@ export default function DiscogsSearchStep({
           <button
             type="submit"
             disabled={isSearching || !catalogNumber.trim()}
-            className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold bg-[#8B5CF6] hover:bg-[#7C3AED] text-white shadow-lg shadow-[#8B5CF6]/20 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold bg-[var(--theme-accent)] hover:bg-[var(--theme-accent-hover)] text-white shadow-lg disabled:opacity-40 disabled:cursor-not-allowed transition-all"
           >
             {isSearching ? (
               <>
