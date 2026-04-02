@@ -58,10 +58,10 @@ export default function StepIndicator({
                 <div
                   className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold border-2 transition-all ${
                     current
-                      ? "bg-[#8B5CF6] border-[#8B5CF6] text-white shadow-[0_0_10px_rgba(139,92,246,0.5)]"
+                      ? "bg-[var(--theme-accent)] border-[var(--theme-accent)] text-white shadow-lg"
                       : completed
-                      ? "bg-[#8B5CF6]/20 border-[#8B5CF6] text-[#A78BFA]"
-                      : "bg-[#13131F] border-[#1C1C28] text-gray-600"
+                      ? "bg-[var(--theme-accent)]/15 border-[var(--theme-accent)] text-[var(--theme-accent)]"
+                      : "bg-[var(--theme-card-bg)] border-[var(--theme-card-border)] text-[var(--theme-card-text)]/50"
                   }`}
                 >
                   {completed ? (
@@ -87,10 +87,10 @@ export default function StepIndicator({
                 <span
                   className={`hidden sm:block text-[9px] font-semibold text-center max-w-[60px] leading-tight uppercase tracking-wide ${
                     current
-                      ? "text-[#A78BFA]"
+                      ? "text-[var(--theme-accent)]"
                       : completed
-                      ? "text-[#8B5CF6]"
-                      : "text-gray-600"
+                      ? "text-[var(--theme-accent)]/80"
+                      : "text-[var(--theme-card-text)]/50"
                   }`}
                 >
                   {step.title}
@@ -99,9 +99,9 @@ export default function StepIndicator({
 
               {/* Connector line */}
               {!isLast && (
-                <div className="flex-1 mx-1 mt-3.5 h-0.5 min-w-[8px] bg-[#1C1C28] overflow-hidden">
+                <div className="flex-1 mx-1 mt-3.5 h-0.5 min-w-[8px] bg-[var(--theme-card-border)] overflow-hidden">
                   <div
-                    className="h-full bg-[#8B5CF6] transition-all duration-500"
+                    className="h-full bg-[var(--theme-accent)] transition-all duration-500"
                     style={{ width: completed ? "100%" : "0%" }}
                   />
                 </div>

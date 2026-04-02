@@ -91,12 +91,12 @@ export default function DiscogsResultsStep({
 
   return (
     <>
-    <div className="space-y-4">
+    <div className="space-y-4 text-[var(--theme-card-text)]">
       <div>
-        <h2 className="text-xl font-black text-white mb-1">
+        <h2 className="text-xl font-black text-[var(--theme-card-text)] mb-1">
           Select a Release
         </h2>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-[var(--theme-card-text)]/70">
           {results.length} {results.length === 1 ? "match" : "matches"} found.
           Select a release to view its full details.
         </p>
@@ -112,8 +112,8 @@ export default function DiscogsResultsStep({
               key={result.id}
               className={`w-full text-left rounded-xl border p-4 transition-all ${
                 isSelected
-                  ? "border-[#8B5CF6] bg-[#8B5CF6]/10 shadow-[0_0_0_1px_#8B5CF6]"
-                  : "border-[#1C1C28] bg-[#0F0F1A] hover:border-[#8B5CF6]/50 hover:bg-[#8B5CF6]/5"
+                  ? "border-[var(--theme-accent)] bg-[var(--theme-accent)]/10 shadow-[0_0_0_1px_var(--theme-accent)]"
+                  : "border-[var(--theme-card-border)] bg-[var(--theme-body-bg-start)] hover:border-[var(--theme-accent)]/50 hover:bg-[var(--theme-accent)]/5"
               }`}
             >
               <div
@@ -134,7 +134,7 @@ export default function DiscogsResultsStep({
                 {/* Thumbnail */}
                 <div className="flex-shrink-0">
                   {result.thumbUrl || result.coverImageUrl ? (
-                    <div className="relative w-16 h-16 bg-[#1C1C28] rounded-lg overflow-hidden">
+                    <div className="relative w-16 h-16 bg-[var(--theme-sidebar-hover)] rounded-lg overflow-hidden">
                       <Image
                         src={toDiscogsProxyUrl(result.thumbUrl ?? result.coverImageUrl) ?? ""}
                         alt={`${result.title} cover`}
@@ -147,9 +147,9 @@ export default function DiscogsResultsStep({
                       />
                     </div>
                   ) : (
-                    <div className="w-16 h-16 bg-[#1C1C28] rounded-lg flex items-center justify-center">
+                    <div className="w-16 h-16 bg-[var(--theme-sidebar-hover)] rounded-lg flex items-center justify-center">
                       <svg
-                        className="w-8 h-8 text-gray-600"
+                        className="w-8 h-8 text-[var(--theme-card-text)]/45"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -167,13 +167,13 @@ export default function DiscogsResultsStep({
 
                 {/* Details */}
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-white truncate">
+                  <p className="font-semibold text-[var(--theme-card-text)] truncate">
                     {result.title}
                   </p>
-                  <p className="text-sm text-gray-400 truncate">
+                  <p className="text-sm text-[var(--theme-card-text)]/80 truncate">
                     {result.artist}
                   </p>
-                  <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-gray-500">
+                  <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-[var(--theme-card-text)]/65">
                     {result.format && <span>Format: {result.format}</span>}
                     {result.country && <span>Country: {result.country}</span>}
                     {result.year && <span>Year: {result.year}</span>}
@@ -196,7 +196,7 @@ export default function DiscogsResultsStep({
                       rel="noopener noreferrer"
                       title={`Open ${result.title} on Discogs`}
                       onClick={(e) => e.stopPropagation()}
-                      className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 shadow-sm hover:bg-white/10 transition-colors"
+                      className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[var(--theme-sidebar-hover)] border border-[var(--theme-card-border)] shadow-sm hover:bg-[var(--theme-sidebar-hover)]/80 transition-colors"
                       aria-label={`Open ${result.title} on Discogs (opens in new tab)`}
                     >
                       {/* Official Discogs logo (favicon) */}
@@ -220,10 +220,10 @@ export default function DiscogsResultsStep({
                       void handleToggleExpand(result);
                     }}
                     aria-label={`Expand details for ${result.title}`}
-                    className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 shadow-sm hover:bg-white/10 transition-colors"
+                    className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[var(--theme-sidebar-hover)] border border-[var(--theme-card-border)] shadow-sm hover:bg-[var(--theme-sidebar-hover)]/80 transition-colors"
                     title="Expand details"
                   >
-                    <svg className="w-4 h-4 text-gray-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
+                    <svg className="w-4 h-4 text-[var(--theme-card-text)]/70" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5}>
                       <circle cx="12" cy="12" r="10"/>
                       <path d="M12 8v8M8 12h8" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
@@ -234,8 +234,8 @@ export default function DiscogsResultsStep({
                 <div
                   className={`flex-shrink-0 w-5 h-5 rounded-full border-2 mt-0.5 flex items-center justify-center transition-colors ${
                     isSelected
-                      ? "border-[#8B5CF6] bg-[#8B5CF6]"
-                      : "border-gray-600"
+                      ? "border-[var(--theme-accent)] bg-[var(--theme-accent)]"
+                      : "border-[var(--theme-card-border)]"
                   }`}
                 >
                   {isSelected && (
@@ -258,9 +258,9 @@ export default function DiscogsResultsStep({
               </div>
             {/* Inline expandable details */}
             {expandedId === Number(result.id) && (
-              <div className="mt-3 pt-3 text-white">
+              <div className="mt-3 pt-3 text-[var(--theme-card-text)] border-t border-[var(--theme-card-border)]">
                 {loadingId === Number(result.id) && (
-                  <div className="py-6 text-center text-sm text-gray-300">Loading details…</div>
+                  <div className="py-6 text-center text-sm text-[var(--theme-card-text)]/70">Loading details…</div>
                 )}
 
                 {errorId[Number(result.id)] && (
@@ -271,11 +271,11 @@ export default function DiscogsResultsStep({
                   <div className="flex flex-col md:flex-row gap-4">
                     {/* Left: Tracklist */}
                     <div className="md:w-2/3 bg-transparent">
-                      <h4 className="text-lg font-semibold text-purple-200 mb-2">Tracklist</h4>
+                      <h4 className="text-lg font-semibold text-[var(--theme-card-text)] mb-2">Tracklist</h4>
                       <div className="bg-transparent rounded-md p-2 max-h-64 overflow-y-auto">
                         <table className="w-full text-sm table-fixed">
                           <thead>
-                            <tr className="text-left text-purple-300 text-xs">
+                            <tr className="text-left text-[var(--theme-card-text)]/75 text-xs">
                               <th className="w-20">Pos</th>
                               <th>Title</th>
                               <th className="w-24">Duration</th>
@@ -283,10 +283,10 @@ export default function DiscogsResultsStep({
                           </thead>
                           <tbody>
                             {expandedData[Number(result.id)]!.tracklist.map((t, i) => (
-                              <tr key={i} className="border-t border-purple-700/30">
-                                <td className="py-2 text-purple-100 font-mono">{t.position}</td>
-                                <td className="py-2 text-purple-100 truncate">{t.title}</td>
-                                <td className="py-2 text-purple-200">{t.duration}</td>
+                              <tr key={i} className="border-t border-[var(--theme-card-border)]">
+                                <td className="py-2 text-[var(--theme-card-text)] font-mono">{t.position}</td>
+                                <td className="py-2 text-[var(--theme-card-text)] truncate">{t.title}</td>
+                                <td className="py-2 text-[var(--theme-card-text)]/80">{t.duration}</td>
                               </tr>
                             ))}
                           </tbody>
@@ -296,13 +296,13 @@ export default function DiscogsResultsStep({
 
                     {/* Right: Formats + Notes */}
                     <div className="md:w-1/3 bg-transparent">
-                      <h4 className="text-lg font-semibold text-purple-200 mb-2">Details</h4>
-                      <div className="mb-4 text-sm text-purple-100">
+                      <h4 className="text-lg font-semibold text-[var(--theme-card-text)] mb-2">Details</h4>
+                      <div className="mb-4 text-sm text-[var(--theme-card-text)]">
                         {expandedData[Number(result.id)]!.formats.map((f, idx) => (
                           <div key={idx} className="mb-2">
                             <div className="font-medium">{f.name} {f.qty ? `×${f.qty}` : ""}</div>
                             {f.descriptions && f.descriptions.length > 0 && (
-                              <div className="text-xs text-purple-300">{f.descriptions.join(", ")}</div>
+                              <div className="text-xs text-[var(--theme-card-text)]/75">{f.descriptions.join(", ")}</div>
                             )}
                           </div>
                         ))}
@@ -310,8 +310,8 @@ export default function DiscogsResultsStep({
 
                       {expandedData[Number(result.id)]!.notes && (
                         <>
-                          <h4 className="text-lg font-semibold text-purple-200 mb-2">Notes</h4>
-                          <div className="text-sm text-purple-100 bg-[#1B1336]/10 rounded p-2 max-h-40 overflow-y-auto whitespace-pre-wrap">
+                          <h4 className="text-lg font-semibold text-[var(--theme-card-text)] mb-2">Notes</h4>
+                          <div className="text-sm text-[var(--theme-card-text)] bg-[var(--theme-sidebar-hover)]/50 rounded p-2 max-h-40 overflow-y-auto whitespace-pre-wrap">
                             {expandedData[Number(result.id)]!.notes}
                           </div>
                         </>
@@ -322,7 +322,7 @@ export default function DiscogsResultsStep({
 
                 <div className="mt-3 flex justify-end">
                   <button
-                    className="px-3 py-1 text-sm text-purple-100 border border-purple-600 rounded hover:bg-[#8B5CF6]/10"
+                    className="px-3 py-1 text-sm text-[var(--theme-card-text)] border border-[var(--theme-card-border)] rounded hover:bg-[var(--theme-accent)]/10"
                     onClick={() => handleToggleExpand(result)}
                   >
                     {expandedId === Number(result.id) ? "Collapse" : "Expand"}
@@ -337,18 +337,18 @@ export default function DiscogsResultsStep({
 
       {/* Inline status hint when no selection */}
       {!selectedResult && (
-        <div role="status" className="text-sm text-gray-400">
+        <div role="status" className="text-sm text-[var(--theme-card-text)]/70">
           Select a release to continue
         </div>
       )}
 
       {/* Footer action bar */}
-      <div className="flex items-center justify-between gap-4 pt-2 border-t border-[#1C1C28]">
+      <div className="flex items-center justify-between gap-4 pt-2 border-t border-[var(--theme-card-border)]">
         <div className="flex items-center gap-2">
         <button
           type="button"
           onClick={onBack}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold border border-[#1C1C28] text-gray-300 hover:text-white hover:border-[#8B5CF6]/50 transition-colors"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold border border-[var(--theme-card-border)] text-[var(--theme-card-text)]/85 hover:text-[var(--theme-card-text)] hover:border-[var(--theme-accent)]/50 transition-colors"
         >
           <svg
             className="w-4 h-4"
@@ -368,7 +368,7 @@ export default function DiscogsResultsStep({
         <button
           type="button"
           onClick={() => setShowCancelConfirm(true)}
-          className="px-3 py-2 text-sm text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
+          className="px-3 py-2 text-sm text-[var(--theme-card-text)]/65 hover:text-[var(--theme-card-text)] transition-colors cursor-pointer"
         >
           Cancel
         </button>
@@ -379,7 +379,7 @@ export default function DiscogsResultsStep({
             type="button"
             onClick={handleContinue}
             disabled={!selectedResult}
-            className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold bg-[#8B5CF6] hover:bg-[#7C3AED] text-white shadow-lg shadow-[#8B5CF6]/20 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold bg-[var(--theme-accent)] hover:bg-[var(--theme-accent-hover)] text-white shadow-lg disabled:opacity-40 disabled:cursor-not-allowed transition-all"
           >
             Continue
             <svg
