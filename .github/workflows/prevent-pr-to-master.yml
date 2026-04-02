@@ -1,18 +1,20 @@
-name: Prevent PRs Targeting Master
+name: Prevent Direct PRs to Main
 
 on:
   pull_request: {}
 
 jobs:
-  block-master:
-    name: Block PRs to master
+  block-main:
+    name: Block PRs to main
     runs-on: ubuntu-latest
     steps:
       - name: Check PR base branch
         run: |
           base_ref="${{ github.event.pull_request.base.ref }}"
+          head_ref="${{ github.event.pull_request.head.ref }}"
           echo "PR base branch: $base_ref"
-          if [ "$base_ref" = "master" ]; then
-            echo "Pull requests must target 'dev' first. Blocking this PR."
+          echo "PR head branch: $head_ref"
+          if [ "$base_ref" = "main" ] && [ "$head_ref" != "dev" ]; then
+            echo "PRs to 'main' must come from 'dev'. Blocking this PR."
             exit 1
           fi
