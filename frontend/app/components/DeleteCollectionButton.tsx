@@ -71,6 +71,9 @@ export function DeleteCollectionButton({
       const response = await deleteCollection();
       setShowConfirm(false);
 
+      // Notify other UI parts (Dashboard, contexts) that the collection changed
+      try { window.dispatchEvent(new CustomEvent('collectionChanged')); } catch {}
+
       // Call success callback if provided
       if (onDeleteSuccess) {
         onDeleteSuccess(response.albumsDeleted);

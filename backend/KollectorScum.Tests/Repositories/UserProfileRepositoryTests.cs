@@ -84,6 +84,11 @@ namespace KollectorScum.Tests.Repositories
             };
 
             _context.MusicReleases.Add(release);
+            // Add some user-owned lookup rows that should be removed when collection is deleted
+            _context.Artists.Add(new Artist { Name = "Test Artist", UserId = _testUserId });
+            _context.Genres.Add(new Genre { Name = "Test Genre", UserId = _testUserId });
+            _context.Labels.Add(new Label { Name = "Test Label", UserId = _testUserId });
+
             await _context.SaveChangesAsync();
 
             // Verify files exist before deletion
@@ -105,6 +110,14 @@ namespace KollectorScum.Tests.Repositories
             Assert.False(File.Exists(Path.Combine(coversPath, frontCoverFile)));
             Assert.False(File.Exists(Path.Combine(coversPath, backCoverFile)));
             Assert.False(File.Exists(Path.Combine(thumbnailsPath, thumbnailFile)));
+
+            // Verify user-owned lookup rows removed
+            var remainingArtists = await _context.Artists.CountAsync(a => a.UserId == _testUserId);
+            var remainingGenres = await _context.Genres.CountAsync(g => g.UserId == _testUserId);
+            var remainingLabels = await _context.Labels.CountAsync(l => l.UserId == _testUserId);
+            Assert.Equal(0, remainingArtists);
+            Assert.Equal(0, remainingGenres);
+            Assert.Equal(0, remainingLabels);
         }
 
         [Fact]
@@ -234,6 +247,16 @@ namespace KollectorScum.Tests.Repositories
                 DateAdded = DateTime.UtcNow
             };
 
+            // Add lookup rows for both users to verify only the specified user's
+            // lookup rows are deleted.
+            _context.Artists.Add(new Artist { Name = "User Artist", UserId = _testUserId });
+            _context.Genres.Add(new Genre { Name = "User Genre", UserId = _testUserId });
+            _context.Labels.Add(new Label { Name = "User Label", UserId = _testUserId });
+
+            _context.Artists.Add(new Artist { Name = "Other Artist", UserId = otherUserId });
+            _context.Genres.Add(new Genre { Name = "Other Genre", UserId = otherUserId });
+            _context.Labels.Add(new Label { Name = "Other Label", UserId = otherUserId });
+
             _context.MusicReleases.AddRange(userRelease, otherUserRelease);
             await _context.SaveChangesAsync();
 
@@ -248,6 +271,21 @@ namespace KollectorScum.Tests.Repositories
             var otherReleases = await _context.MusicReleases.CountAsync(mr => mr.UserId == otherUserId);
             Assert.Equal(0, userReleases);
             Assert.Equal(1, otherReleases);
+
+            // Verify lookup rows: user's lookups removed, other user's remain
+            var userArtists = await _context.Artists.CountAsync(a => a.UserId == _testUserId);
+            var otherArtists = await _context.Artists.CountAsync(a => a.UserId == otherUserId);
+            var userGenres = await _context.Genres.CountAsync(g => g.UserId == _testUserId);
+            var otherGenres = await _context.Genres.CountAsync(g => g.UserId == otherUserId);
+            var userLabels = await _context.Labels.CountAsync(l => l.UserId == _testUserId);
+            var otherLabels = await _context.Labels.CountAsync(l => l.UserId == otherUserId);
+
+            Assert.Equal(0, userArtists);
+            Assert.Equal(1, otherArtists);
+            Assert.Equal(0, userGenres);
+            Assert.Equal(1, otherGenres);
+            Assert.Equal(0, userLabels);
+            Assert.Equal(1, otherLabels);
         }
 
         [Fact]
