@@ -17,15 +17,18 @@ namespace KollectorScum.Api.Repositories
         private readonly KollectorScumDbContext _context;
         private readonly IConfiguration _configuration;
         private readonly ILogger<UserProfileRepository> _logger;
+        private readonly Interfaces.ICacheService? _cacheService;
 
         public UserProfileRepository(
             KollectorScumDbContext context,
             IConfiguration configuration,
-            ILogger<UserProfileRepository> logger)
+            ILogger<UserProfileRepository> logger,
+            Interfaces.ICacheService? cacheService = null)
         {
             _context = context;
             _configuration = configuration;
             _logger = logger;
+            _cacheService = cacheService;
         }
 
         /// <inheritdoc />
@@ -83,6 +86,57 @@ namespace KollectorScum.Api.Repositories
             await _context.SaveChangesAsync();
 
             _logger.LogInformation("Deleted {Count} releases and their associated image files for user {UserId}", count, userId);
+
+            // Also remove user-owned lookup data (artists, genres, labels) so the
+            // user's dashboard and lookup lists do not show stale entries after a
+            // full collection wipe. These lookup tables are per-user (contain
+            // UserId) so it's safe to delete them here.
+            var deletedLookups = 0;
+
+            var userArtists = await _context.Artists.Where(a => a.UserId == userId).ToListAsync();
+            if (userArtists.Any())
+            {
+                deletedLookups += userArtists.Count;
+                _context.Artists.RemoveRange(userArtists);
+            }
+
+            var userGenres = await _context.Genres.Where(g => g.UserId == userId).ToListAsync();
+            if (userGenres.Any())
+            {
+                deletedLookups += userGenres.Count;
+                _context.Genres.RemoveRange(userGenres);
+            }
+
+            var userLabels = await _context.Labels.Where(l => l.UserId == userId).ToListAsync();
+            if (userLabels.Any())
+            {
+                deletedLookups += userLabels.Count;
+                _context.Labels.RemoveRange(userLabels);
+            }
+
+            if (deletedLookups > 0)
+            {
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("Deleted {LookupCount} lookup rows (artists/genres/labels) for user {UserId}", deletedLookups, userId);
+
+                // Invalidate cache groups for lookup lists so API responses reflect
+                // the deletions immediately (GenericCrudService caches paged
+                // lookup results per user under the group key). Use the same
+                // cache group naming convention as GenericCrudService.
+                try
+                {
+                    var groupArtist = $"{nameof(Models.Artist)}:all:{userId}";
+                    var groupGenre = $"{nameof(Models.Genre)}:all:{userId}";
+                    var groupLabel = $"{nameof(Models.Label)}:all:{userId}";
+                    _cacheService?.InvalidateGroup(groupArtist);
+                    _cacheService?.InvalidateGroup(groupGenre);
+                    _cacheService?.InvalidateGroup(groupLabel);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to invalidate lookup cache groups for user {UserId}", userId);
+                }
+            }
 
             return count;
         }
