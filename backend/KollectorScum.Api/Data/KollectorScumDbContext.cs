@@ -103,6 +103,11 @@ namespace KollectorScum.Api.Data
         public DbSet<Models.MagicLinkToken> MagicLinkTokens { get; set; }
 
         /// <summary>
+        /// Gets or sets the DiscogsImportJobs DbSet.
+        /// </summary>
+        public DbSet<Models.DiscogsImportJob> DiscogsImportJobs { get; set; }
+
+        /// <summary>
         /// Configure the database model and relationships
         /// </summary>
         /// <param name="modelBuilder">The model builder</param>
@@ -369,6 +374,20 @@ namespace KollectorScum.Api.Data
             modelBuilder.Entity<Models.MagicLinkToken>()
                 .HasIndex(t => t.ExpiresAt)
                 .HasDatabaseName("IX_MagicLinkTokens_ExpiresAt");
+
+            // Configure Discogs import job indexes for user-scoped lookups and recovery.
+            modelBuilder.Entity<Models.DiscogsImportJob>()
+                .HasIndex(job => job.JobId)
+                .IsUnique()
+                .HasDatabaseName("IX_DiscogsImportJobs_JobId");
+
+            modelBuilder.Entity<Models.DiscogsImportJob>()
+                .HasIndex(job => new { job.UserId, job.CreatedAtUtc })
+                .HasDatabaseName("IX_DiscogsImportJobs_UserId_CreatedAtUtc");
+
+            modelBuilder.Entity<Models.DiscogsImportJob>()
+                .HasIndex(job => new { job.UserId, job.Status })
+                .HasDatabaseName("IX_DiscogsImportJobs_UserId_Status");
         }
 
         /// <summary>

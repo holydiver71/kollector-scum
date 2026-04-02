@@ -4,7 +4,6 @@ using KollectorScum.Api.DTOs;
 using KollectorScum.Api.Interfaces;
 using System.Collections.Concurrent;
 using KollectorScum.Api.Models;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using System.Linq;
 
@@ -51,7 +50,7 @@ namespace KollectorScum.Api.Services
         /// <summary>
         /// Import user's collection from Discogs
         /// </summary>
-        public async Task<DiscogsImportResult> ImportCollectionAsync(string username, Guid userId)
+        public async Task<DiscogsImportResult> ImportCollectionAsync(string username, Guid userId, CancellationToken cancellationToken = default)
         {
             // Clear caches at the start of each import
             _artistCache.Clear();
@@ -98,6 +97,7 @@ namespace KollectorScum.Api.Services
 
                 // Effective total for progress reporting (100 for new users in dev/staging)
                 var effectiveTotal = applyLimit ? NEW_USER_IMPORT_LIMIT : result.TotalReleases;
+                var importedDiscogsIds = new HashSet<int>();
 
                 // Initialize progress snapshot for polling clients
                 _progressStore[userId] = new DiscogsImportProgress
@@ -112,12 +112,14 @@ namespace KollectorScum.Api.Services
                 };
 
                 // Process first page (respect remainingToProcess)
-                await ProcessReleasesAsync(firstPage.Releases, userId, result, remainingToProcess);
+                await ProcessReleasesAsync(firstPage.Releases, userId, result, importedDiscogsIds, remainingToProcess, cancellationToken);
 
                 // Process remaining pages
                 var totalPages = firstPage.Pagination.Pages;
                 for (int page = 2; page <= totalPages; page++)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+
                     // If we have a remaining limit, break when reached
                     if (remainingToProcess.HasValue)
                     {
@@ -136,12 +138,11 @@ namespace KollectorScum.Api.Services
                     var pageData = await _discogsService.GetUserCollectionAsync(username, page, 100);
                     if (pageData?.Releases != null)
                     {
-                        await ProcessReleasesAsync(pageData.Releases, userId, result, remainingToProcess);
+                        await ProcessReleasesAsync(pageData.Releases, userId, result, importedDiscogsIds, remainingToProcess, cancellationToken);
                     }
-
-                    // Add small delay to respect rate limits
-                    await Task.Delay(1000);
                 }
+
+                await EnrichTracklistsAsync(userId, importedDiscogsIds, cancellationToken);
 
                 // Import is only successful if at least one release was imported
                 result.Success = result.ImportedReleases > 0;
@@ -203,109 +204,258 @@ namespace KollectorScum.Api.Services
             return result;
         }
 
-        private async Task ProcessReleasesAsync(List<DiscogsCollectionReleaseDto> releases, Guid userId, DiscogsImportResult result, int? maxToProcess = null)
+        private async Task ProcessReleasesAsync(
+            List<DiscogsCollectionReleaseDto> releases,
+            Guid userId,
+            DiscogsImportResult result,
+            ISet<int> importedDiscogsIds,
+            int? maxToProcess = null,
+            CancellationToken cancellationToken = default)
         {
             if (releases == null || releases.Count == 0)
             {
                 _logger.LogWarning("No releases to process");
                 return;
             }
-            // If a maximum number of releases to process was provided, trim the list
+
+            // Trim to the max if a limit applies.
             if (maxToProcess.HasValue && maxToProcess.Value > 0 && releases.Count > maxToProcess.Value)
-            {
                 releases = releases.Take(maxToProcess.Value).ToList();
-            }
 
             _logger.LogDebug("Processing {Count} releases", releases.Count);
-            
-            foreach (var release in releases)
+
+            // Filter out structurally invalid items upfront.
+            var validReleases = new List<DiscogsCollectionReleaseDto>();
+            foreach (var r in releases)
             {
+                if (r == null)
+                {
+                    result.FailedReleases++;
+                    result.Errors.Add("Release object is null");
+                    _logger.LogWarning("Encountered null release object");
+                    continue;
+                }
+                if (r.BasicInformation == null)
+                {
+                    result.FailedReleases++;
+                    result.Errors.Add($"Release missing basic information (InstanceId: {r.InstanceId})");
+                    _logger.LogWarning("Release {InstanceId} missing BasicInformation", r.InstanceId ?? "unknown");
+                    continue;
+                }
+                validReleases.Add(r);
+            }
+
+            if (validReleases.Count == 0) return;
+
+            // --- Bulk duplicate check ---
+            // Fetch the DiscogsIds that already exist for this user in a single query,
+            // then skip those releases without issuing one SELECT per release.
+            var batchDiscogsIds = validReleases
+                .Select(r => r.BasicInformation!.Id)
+                .Distinct()
+                .ToHashSet();
+
+            var existingIds = (await _unitOfWork.MusicReleases
+                .GetAsync(mr => mr.UserId == userId && mr.DiscogsId != null && batchDiscogsIds.Contains(mr.DiscogsId.Value),
+                          null, "", cancellationToken))
+                .Where(mr => mr.DiscogsId.HasValue)
+                .Select(mr => mr.DiscogsId!.Value)
+                .ToHashSet();
+
+            // Count skipped and update progress snapshot once.
+            var skippedInBatch = validReleases.Count(r => existingIds.Contains(r.BasicInformation!.Id));
+            if (skippedInBatch > 0)
+            {
+                result.SkippedReleases += skippedInBatch;
+                UpdateProgressSnapshot(userId, result);
+            }
+
+            var toImport = validReleases
+                .Where(r => !existingIds.Contains(r.BasicInformation!.Id))
+                .ToList();
+
+            if (toImport.Count == 0) return;
+
+            // --- Map and collect ---
+            var newReleases = new List<MusicRelease>();
+            var pendingImportedInBatch = 0;
+            foreach (var release in toImport)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
                 try
                 {
-                    if (release == null)
-                    {
-                        result.FailedReleases++;
-                        result.Errors.Add("Release object is null");
-                        _logger.LogWarning("Encountered null release object");
-                        continue;
-                    }
-                    
-                    if (release.BasicInformation == null)
-                    {
-                        result.FailedReleases++;
-                        result.Errors.Add($"Release missing basic information (InstanceId: {release.InstanceId})");
-                        _logger.LogWarning("Release {InstanceId} missing BasicInformation", release.InstanceId ?? "unknown");
-                        continue;
-                    }
-
-                    // Check if already imported
-                    var existing = await _unitOfWork.MusicReleases
-                        .GetAsync(mr => mr.UserId == userId && mr.DiscogsId == release.BasicInformation.Id);
-                    
-                    if (existing.Any())
-                    {
-                        result.SkippedReleases++;
-                        if (_progressStore.ContainsKey(userId))
-                        {
-                            var snap = _progressStore[userId];
-                            snap.Skipped = result.SkippedReleases;
-                            snap.LastUpdatedUtc = DateTime.UtcNow;
-                            _progressStore[userId] = snap;
-                        }
-                        continue;
-                    }
-
-                    // Map and import the release
-                    var musicRelease = await MapToMusicReleaseAsync(release, userId);
+                    var musicRelease = await MapToMusicReleaseAsync(release, userId, cancellationToken);
                     if (musicRelease != null)
                     {
-                        await _unitOfWork.MusicReleases.AddAsync(musicRelease);
-                        await _unitOfWork.SaveChangesAsync();
-                        result.ImportedReleases++;
-                        if (_progressStore.ContainsKey(userId))
-                        {
-                            var snap = _progressStore[userId];
-                            snap.Imported = result.ImportedReleases;
-                            snap.LastUpdatedUtc = DateTime.UtcNow;
-                            _progressStore[userId] = snap;
-                        }
-                        
-                        _logger.LogDebug("Imported release: {Title} (Discogs ID: {DiscogsId})", 
+                        newReleases.Add(musicRelease);
+                        pendingImportedInBatch++;
+                        UpdateProgressSnapshot(userId, result, pendingImportedInBatch);
+                        _logger.LogDebug("Mapped release: {Title} (Discogs ID: {DiscogsId})",
                             musicRelease.Title, musicRelease.DiscogsId);
                     }
                     else
                     {
                         result.FailedReleases++;
-                        if (_progressStore.ContainsKey(userId))
-                        {
-                            var snap = _progressStore[userId];
-                            snap.Failed = result.FailedReleases;
-                            snap.LastUpdatedUtc = DateTime.UtcNow;
-                            _progressStore[userId] = snap;
-                        }
-                        var errorMsg = $"Failed to map release: {release.BasicInformation.Title}";
+                        UpdateProgressSnapshot(userId, result, pendingImportedInBatch);
+                        var errorMsg = $"Failed to map release: {release.BasicInformation!.Title}";
                         result.Errors.Add(errorMsg);
                         _logger.LogWarning("{ErrorMsg} (Discogs ID: {DiscogsId})", errorMsg, release.BasicInformation.Id);
                     }
                 }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
                 catch (Exception ex)
                 {
                     result.FailedReleases++;
-                    if (_progressStore.ContainsKey(userId))
-                    {
-                        var snap = _progressStore[userId];
-                        snap.Failed = result.FailedReleases;
-                        snap.LastUpdatedUtc = DateTime.UtcNow;
-                        _progressStore[userId] = snap;
-                    }
+                    UpdateProgressSnapshot(userId, result, pendingImportedInBatch);
                     var title = release.BasicInformation?.Title ?? "Unknown";
                     result.Errors.Add($"Error importing '{title}': {ex.Message}");
                     _logger.LogError(ex, "Error importing release: {Title}", title);
                 }
             }
+
+            if (newReleases.Count == 0) return;
+
+            // --- Batch insert ---
+            try
+            {
+                await _unitOfWork.MusicReleases.AddRangeAsync(newReleases);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+            }
+            catch
+            {
+                UpdateProgressSnapshot(userId, result);
+                throw;
+            }
+
+            result.ImportedReleases += newReleases.Count;
+            foreach (var newRelease in newReleases)
+            {
+                if (newRelease.DiscogsId.HasValue && newRelease.DiscogsId.Value > 0)
+                {
+                    importedDiscogsIds.Add(newRelease.DiscogsId.Value);
+                }
+            }
+
+            UpdateProgressSnapshot(userId, result);
+            _logger.LogInformation("Batch-inserted {Count} releases into the database.", newReleases.Count);
         }
 
-        private async Task<MusicRelease?> MapToMusicReleaseAsync(DiscogsCollectionReleaseDto release, Guid userId)
+        private async Task EnrichTracklistsAsync(Guid userId, ISet<int> importedDiscogsIds, CancellationToken cancellationToken)
+        {
+            if (importedDiscogsIds.Count == 0)
+            {
+                return;
+            }
+
+            var releasesToEnrich = (await _unitOfWork.MusicReleases.GetAsync(
+                    mr => mr.UserId == userId
+                        && mr.DiscogsId.HasValue
+                        && mr.DiscogsId.Value > 0
+                        && importedDiscogsIds.Contains(mr.DiscogsId.Value)
+                        && string.IsNullOrWhiteSpace(mr.Media),
+                    null,
+                    "",
+                    cancellationToken))
+                .ToList();
+
+            if (releasesToEnrich.Count == 0)
+            {
+                return;
+            }
+
+            _logger.LogInformation("Starting deferred tracklist enrichment for {Count} releases", releasesToEnrich.Count);
+
+            var enrichedCount = 0;
+            foreach (var release in releasesToEnrich)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if (!release.DiscogsId.HasValue)
+                {
+                    continue;
+                }
+
+                try
+                {
+                    var fullRelease = await _discogsService.GetReleaseDetailsAsync(release.DiscogsId.Value.ToString());
+                    if (fullRelease?.Tracklist == null || fullRelease.Tracklist.Count == 0)
+                    {
+                        continue;
+                    }
+
+                    var artistIds = DeserializeIds(release.Artists);
+                    var genreIds = DeserializeIds(release.Genres);
+
+                    var media = BuildMediaFromTracklist(
+                        fullRelease.Tracklist,
+                        release.Title,
+                        release.FormatId,
+                        artistIds,
+                        genreIds,
+                        release.ReleaseYear);
+
+                    if (media == null)
+                    {
+                        continue;
+                    }
+
+                    release.Media = JsonSerializer.Serialize(media);
+                    release.LastModified = DateTime.UtcNow;
+                    enrichedCount++;
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Deferred tracklist enrichment failed for Discogs ID {DiscogsId}", release.DiscogsId);
+                }
+            }
+
+            if (enrichedCount > 0)
+            {
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+                _logger.LogInformation("Completed deferred tracklist enrichment for {Count} releases", enrichedCount);
+            }
+        }
+
+        private static List<int> DeserializeIds(string? serializedIds)
+        {
+            if (string.IsNullOrWhiteSpace(serializedIds))
+            {
+                return new List<int>();
+            }
+
+            try
+            {
+                return JsonSerializer.Deserialize<List<int>>(serializedIds) ?? new List<int>();
+            }
+            catch
+            {
+                return new List<int>();
+            }
+        }
+
+        /// <summary>
+        /// Updates the in-memory progress snapshot used by polling clients.
+        /// </summary>
+        private void UpdateProgressSnapshot(Guid userId, DiscogsImportResult result, int pendingImportedInBatch = 0)
+        {
+            if (_progressStore.TryGetValue(userId, out var snap))
+            {
+                snap.Imported = result.ImportedReleases + pendingImportedInBatch;
+                snap.Skipped = result.SkippedReleases;
+                snap.Failed = result.FailedReleases;
+                snap.LastUpdatedUtc = DateTime.UtcNow;
+                _progressStore[userId] = snap;
+            }
+        }
+
+        private async Task<MusicRelease?> MapToMusicReleaseAsync(DiscogsCollectionReleaseDto release, Guid userId, CancellationToken cancellationToken = default)
         {
             if (release.BasicInformation == null) return null;
 
@@ -313,60 +463,12 @@ namespace KollectorScum.Api.Services
 
             try
             {
-                // Fetch full release details to get tracklist
-                // Add delay to respect Discogs rate limit (60 requests/minute = 1 request per second)
-                DiscogsReleaseDto? fullRelease = null;
-                if (basicInfo.Id > 0)
-                {
-                    try
-                    {
-                        await Task.Delay(1100); // 1.1 second delay to stay safely under rate limit
-                        fullRelease = await _discogsService.GetReleaseDetailsAsync(basicInfo.Id.ToString());
-                        _logger.LogDebug("Fetched full details for release {Title} (ID: {Id})", basicInfo.Title, basicInfo.Id);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "Failed to fetch full details for release {Title} (ID: {Id}) - continuing without tracklist", basicInfo.Title, basicInfo.Id);
-                        // Continue without tracklist rather than failing the entire import
-                    }
-                }
-
                 // Resolve or create lookups (these methods now save immediately if creating new entities)
                 var formatId = await GetOrCreateFormatAsync(basicInfo.Formats, userId);
                 var labelId = await GetOrCreateLabelAsync(basicInfo.Labels, userId);
                 var countryId = await GetOrCreateCountryAsync(basicInfo.Country, userId);
                 var artistIds = await GetOrCreateArtistsAsync(basicInfo.Artists, userId);
                 var genreIds = await GetOrCreateGenresAsync(basicInfo.Genres, basicInfo.Styles, userId);
-
-                // Download cover art and upload to R2
-                string? coverImageFilename = null;
-                if (!string.IsNullOrEmpty(basicInfo.CoverImage))
-                {
-                    var artist = basicInfo.Artists?.FirstOrDefault()?.Name ?? "Unknown";
-                    var year = basicInfo.Year?.ToString();
-                    _logger.LogDebug("Attempting to download and store cover art for Discogs ID {Id} - {Title}", basicInfo.Id, basicInfo.Title);
-                    var returnedValue = await _imageService.DownloadAndStoreCoverArtAsync(
-                        basicInfo.CoverImage, artist, basicInfo.Title ?? "Unknown", year, userId);
-                    if (!string.IsNullOrEmpty(returnedValue))
-                    {
-                        var trimmed = returnedValue.Trim();
-                        if (trimmed.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-                            trimmed.StartsWith("https://", StringComparison.OrdinalIgnoreCase) ||
-                            trimmed.StartsWith("/cover-art/"))
-                        {
-                            coverImageFilename = trimmed;
-                        }
-                        else
-                        {
-                            var fileName = trimmed.Contains('/') ? trimmed.Split('/').Last() : trimmed;
-                            coverImageFilename = $"/cover-art/{userId}/{fileName}";
-                        }
-                    }
-                    else
-                    {
-                        _logger.LogWarning("Cover art upload failed or was skipped for Discogs ID {Id}. Will attempt fallback to Discogs-hosted image URL if available.", basicInfo.Id);
-                    }
-                }
 
                 // Extract notes
                 var notes = release.Notes?.FirstOrDefault()?.Value;
@@ -406,49 +508,13 @@ namespace KollectorScum.Api.Services
                     LastModified = DateTime.UtcNow
                 };
 
-                // Set cover image if downloaded
-                if (!string.IsNullOrEmpty(coverImageFilename))
+                // Keep the initial import fast by storing the Discogs-hosted image URL.
+                // Mirroring to R2 is handled as deferred enrichment work.
+                var fallbackUrl = basicInfo.CoverImage ?? basicInfo.Thumb;
+                if (!string.IsNullOrEmpty(fallbackUrl))
                 {
-                    var images = new { CoverFront = coverImageFilename };
+                    var images = new { CoverFront = fallbackUrl };
                     musicRelease.Images = JsonSerializer.Serialize(images);
-                }
-                else
-                {
-                    // Fallback: if upload failed, try to store Discogs-hosted cover/thumb URL so UI can fall back to it
-                    var fallbackUrl = basicInfo.CoverImage ?? basicInfo.Thumb;
-                    if (!string.IsNullOrEmpty(fallbackUrl))
-                    {
-                        _logger.LogInformation("Falling back to Discogs-hosted image for Discogs ID {Id}: {Url}", basicInfo.Id, fallbackUrl);
-                        var images = new { CoverFront = fallbackUrl };
-                        musicRelease.Images = JsonSerializer.Serialize(images);
-                    }
-                }
-
-                // Build Media (tracks) from full release details
-                if (fullRelease != null && fullRelease.Tracklist != null && fullRelease.Tracklist.Count > 0)
-                {
-                    _logger.LogInformation("Building tracklist for {Title} - {TrackCount} tracks found", basicInfo.Title, fullRelease.Tracklist.Count);
-                    var media = BuildMediaFromTracklist(fullRelease.Tracklist, basicInfo.Title ?? string.Empty, formatId, artistIds, genreIds, releaseYear);
-                    if (media != null)
-                    {
-                        musicRelease.Media = JsonSerializer.Serialize(media);
-                        _logger.LogInformation("Successfully added tracklist to {Title}", basicInfo.Title);
-                    }
-                    else
-                    {
-                        _logger.LogWarning("BuildMediaFromTracklist returned null for {Title}", basicInfo.Title);
-                    }
-                }
-                else
-                {
-                    if (fullRelease == null)
-                    {
-                        _logger.LogWarning("No full release data fetched for {Title} - skipping tracklist", basicInfo.Title);
-                    }
-                    else if (fullRelease.Tracklist == null || fullRelease.Tracklist.Count == 0)
-                    {
-                        _logger.LogInformation("Release {Title} has no tracklist in Discogs data", basicInfo.Title);
-                    }
                 }
 
                 return musicRelease;
