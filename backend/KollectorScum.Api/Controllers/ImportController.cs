@@ -1,4 +1,5 @@
 using KollectorScum.Api.Interfaces;
+using KollectorScum.Api.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,7 +13,7 @@ namespace KollectorScum.Api.Controllers
     [Authorize]
     public class ImportController : ControllerBase
     {
-        private readonly IDiscogsCollectionImportService _importService;
+        private readonly IDiscogsImportJobService _jobService;
         private readonly IUserContext _userContext;
         private readonly ILogger<ImportController> _logger;
 
@@ -20,11 +21,11 @@ namespace KollectorScum.Api.Controllers
         /// Constructor for ImportController
         /// </summary>
         public ImportController(
-            IDiscogsCollectionImportService importService,
+            IDiscogsImportJobService jobService,
             IUserContext userContext,
             ILogger<ImportController> logger)
         {
-            _importService = importService ?? throw new ArgumentNullException(nameof(importService));
+            _jobService = jobService ?? throw new ArgumentNullException(nameof(jobService));
             _userContext = userContext ?? throw new ArgumentNullException(nameof(userContext));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
@@ -33,17 +34,19 @@ namespace KollectorScum.Api.Controllers
         /// Import collection from Discogs
         /// </summary>
         /// <param name="request">Import request with Discogs username</param>
-        /// <returns>Import result with statistics</returns>
-        /// <response code="200">Returns the import result</response>
+        /// <returns>Accepted job metadata for the queued import</returns>
+        /// <response code="202">Returns the queued job metadata</response>
         /// <response code="400">If the username is invalid</response>
         /// <response code="401">If the user is not authenticated</response>
+        /// <response code="409">If another import is already queued or running</response>
         /// <response code="500">If there was an error during import</response>
         [HttpPost("discogs")]
-        [ProducesResponseType(typeof(DiscogsImportResult), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(DiscogsImportJobStatusDto), StatusCodes.Status202Accepted)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<DiscogsImportResult>> ImportFromDiscogs(
+        public async Task<ActionResult<DiscogsImportJobStatusDto>> ImportFromDiscogs(
             [FromBody] DiscogsImportRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Username))
@@ -62,19 +65,13 @@ namespace KollectorScum.Api.Controllers
                 _logger.LogInformation("Starting Discogs import for user {UserId} from Discogs user {DiscogsUsername}", 
                     userId.Value, request.Username);
 
-                var result = await _importService.ImportCollectionAsync(request.Username, userId.Value);
-
-                if (!result.Success)
-                {
-                    _logger.LogWarning("Discogs import failed for user {UserId}: {Errors}", 
-                        userId.Value, string.Join("; ", result.Errors));
-                    return StatusCode(500, result);
-                }
-
-                _logger.LogInformation("Discogs import completed for user {UserId}: {Imported} imported, {Skipped} skipped, {Failed} failed",
-                    userId.Value, result.ImportedReleases, result.SkippedReleases, result.FailedReleases);
-
-                return Ok(result);
+                var job = await _jobService.EnqueueImportAsync(request.Username, userId.Value, HttpContext.RequestAborted);
+                return Accepted(job);
+            }
+            catch (InvalidOperationException ex)
+            {
+                _logger.LogWarning(ex, "Discogs import rejected for user {Username}", request.Username);
+                return Conflict(new { error = ex.Message });
             }
             catch (Exception ex)
             {
@@ -84,21 +81,21 @@ namespace KollectorScum.Api.Controllers
         }
 
         /// <summary>
-        /// Get progress for the current user's Discogs import (if one is running)
+        /// Get status for the current user's Discogs import job.
         /// </summary>
         [HttpGet("discogs/status")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(DiscogsImportJobStatusDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public ActionResult GetDiscogsImportStatus()
+        public async Task<ActionResult<DiscogsImportJobStatusDto?>> GetDiscogsImportStatus([FromQuery] Guid? jobId = null)
         {
             var userId = _userContext.GetUserId();
             if (!userId.HasValue) return Unauthorized(new { error = "User is not authenticated" });
 
-            var progress = _importService.GetProgress(userId.Value);
-            if (progress == null) return NoContent();
+            var status = jobId.HasValue
+                ? await _jobService.GetJobStatusAsync(jobId.Value, userId.Value, HttpContext.RequestAborted)
+                : await _jobService.GetLatestJobStatusAsync(userId.Value, HttpContext.RequestAborted);
 
-            return Ok(progress);
+            return Ok(status);
         }
     }
 
