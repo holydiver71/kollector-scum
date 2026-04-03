@@ -45,10 +45,10 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Restore backend
-        run: dotnet restore backend/KollectorScum.sln
+        run: dotnet restore kollector-scum.sln
 
       - name: Build backend
-        run: dotnet build backend/KollectorScum.sln --configuration Release --no-restore
+        run: dotnet build kollector-scum.sln --configuration Release --no-restore
 
       - name: Run backend tests
         env:
