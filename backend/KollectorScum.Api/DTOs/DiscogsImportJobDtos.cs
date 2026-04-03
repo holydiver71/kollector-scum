@@ -41,6 +41,11 @@ namespace KollectorScum.Api.DTOs
         public int Failed { get; set; }
 
         /// <summary>
+        /// Gets or sets the calculated progress percentage.
+        /// </summary>
+        public int Percentage { get; set; }
+
+        /// <summary>
         /// Gets or sets whether the job has completed.
         /// </summary>
         public bool Completed { get; set; }
