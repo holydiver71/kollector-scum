@@ -173,6 +173,16 @@ namespace KollectorScum.Api.Services
                 throw;
             }
         }
+
+        /// <summary>
+        /// Registers a callback that is invoked when the underlying HTTP client enters or
+        /// exits a rate-limit cooldown period.
+        /// </summary>
+        /// <param name="callback">Callback to invoke on cooldown state changes.</param>
+        public void SetCooldownCallback(Action<DateTime?> callback)
+        {
+            _httpClient.CooldownCallback = callback;
+        }
     }
 }
 

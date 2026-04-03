@@ -115,7 +115,7 @@ function buildProgressSteps(progress: ImportProgress, completedItems: number): P
   return steps;
 }
 
-function ImportProgressWheel({ progress }: { progress: ImportProgress }) {
+function ImportProgressWheel({ progress, cooldownSecondsLeft }: { progress: ImportProgress; cooldownSecondsLeft: number | null }) {
   const completedItems = progress.imported + progress.skipped + progress.failed;
   const rawPercentage = Math.min(
     100,
@@ -211,6 +211,30 @@ function ImportProgressWheel({ progress }: { progress: ImportProgress }) {
           Do not close or refresh your browser during the import. Wait until the process is fully complete.
         </div>
       </div>
+
+      {cooldownSecondsLeft !== null && cooldownSecondsLeft > 0 && (
+        <div
+          className="mt-2 rounded-xl border border-sky-400/35 bg-sky-500/10 px-3 py-2.5 text-center"
+          data-testid="discogs-import-cooldown"
+          role="status"
+          aria-live="polite"
+        >
+          <div className="flex flex-col items-center gap-1">
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-sky-300/90">
+              API Rate Limit — Cooling Down
+            </div>
+            <div
+              className="text-2xl font-bold tabular-nums text-sky-200"
+              data-testid="discogs-import-cooldown-timer"
+            >
+              {cooldownSecondsLeft}s
+            </div>
+            <div className="text-[10px] text-sky-300/70">
+              Discogs limits requests per minute. Resuming automatically…
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -245,6 +269,7 @@ interface ImportProgress {
   failed: number;
   percentage?: number;
   completed: boolean;
+  cooldownUntilUtc?: string | null;
 }
 
 interface ImportJobStatus extends ImportProgress {
@@ -269,6 +294,7 @@ export function DiscogsImportDialog({
   const [result, setResult] = useState<ImportResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<ImportProgress | null>(null);
+  const [cooldownSecondsLeft, setCooldownSecondsLeft] = useState<number | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -283,6 +309,7 @@ export function DiscogsImportDialog({
       setResult(null);
       setProgress(null);
       setError(null);
+      setCooldownSecondsLeft(null);
       onClose();
     }
   }, [isImporting, result, onSuccess, onClose]);
@@ -314,6 +341,21 @@ export function DiscogsImportDialog({
     };
   }, [isOpen, isImporting, handleClose]);
 
+  // Tick down the cooldown countdown every second.
+  useEffect(() => {
+    if (!progress?.cooldownUntilUtc) {
+      setCooldownSecondsLeft(null);
+      return;
+    }
+    const tick = () => {
+      const secsLeft = Math.max(0, Math.round((new Date(progress.cooldownUntilUtc!).getTime() - Date.now()) / 1000));
+      setCooldownSecondsLeft(secsLeft > 0 ? secsLeft : null);
+    };
+    tick();
+    const id = window.setInterval(tick, 1000);
+    return () => window.clearInterval(id);
+  }, [progress?.cooldownUntilUtc]);
+
   const handleImport = async () => {
     if (!username.trim()) {
       setError("Please enter a Discogs username");
@@ -342,6 +384,7 @@ export function DiscogsImportDialog({
       const errorMessage = p.errorMessage ?? p.ErrorMessage ?? null;
       const errors = p.errors ?? p.Errors ?? [];
       const duration = p.duration ?? (p.Duration ? String(p.Duration) : "");
+      const cooldownUntilUtc = p.cooldownUntilUtc ?? p.CooldownUntilUtc ?? null;
 
       return {
         jobId,
@@ -357,6 +400,7 @@ export function DiscogsImportDialog({
         errorMessage,
         errors,
         duration,
+        cooldownUntilUtc,
       };
     };
 
@@ -517,7 +561,7 @@ export function DiscogsImportDialog({
           {isImporting && (
             <div className="flex flex-col items-center justify-center py-4 w-full">
               {progress ? (
-                <ImportProgressWheel progress={progress} />
+                <ImportProgressWheel progress={progress} cooldownSecondsLeft={cooldownSecondsLeft} />
               ) : (
                 <div className="flex flex-col items-center justify-center py-4">
                   <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[var(--theme-accent)] mb-2"></div>

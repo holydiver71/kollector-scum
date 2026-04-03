@@ -25,6 +25,9 @@ namespace KollectorScum.Api.Services
         private const int RateLimitWindowSeconds = 62;
         private const int MaxRetryAttempts = 3;
 
+        /// <inheritdoc />
+        public Action<DateTime?>? CooldownCallback { get; set; }
+
         public DiscogsHttpClient(
             HttpClient httpClient,
             IOptions<DiscogsSettings> settings,
@@ -68,7 +71,9 @@ namespace KollectorScum.Api.Services
                     _logger.LogInformation(
                         "Discogs rate limit nearly exhausted ({Remaining}/{Total}). Pausing {Seconds}s to allow window reset.",
                         _rateLimitRemaining, _rateLimitTotal, RateLimitWindowSeconds);
+                    CooldownCallback?.Invoke(DateTime.UtcNow.AddSeconds(RateLimitWindowSeconds));
                     await Task.Delay(TimeSpan.FromSeconds(RateLimitWindowSeconds), cancellationToken);
+                    CooldownCallback?.Invoke(null);
                     _rateLimitRemaining = _rateLimitTotal;
                 }
 
@@ -90,7 +95,9 @@ namespace KollectorScum.Api.Services
                         return null;
                     }
 
+                    CooldownCallback?.Invoke(DateTime.UtcNow.Add(retryDelay));
                     await Task.Delay(retryDelay, cancellationToken);
+                    CooldownCallback?.Invoke(null);
                     _rateLimitRemaining = _rateLimitTotal; // Assume window has reset.
                     continue;
                 }
