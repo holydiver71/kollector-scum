@@ -30,7 +30,20 @@ namespace KollectorScum.Api.Services
         /// <inheritdoc />
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            await RecoverPendingJobsAsync(stoppingToken);
+            try
+            {
+                await RecoverPendingJobsAsync(stoppingToken);
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                return;
+            }
+            catch (Exception ex)
+            {
+                // Recovery failure (e.g. DB not yet migrated) must not prevent the service from
+                // starting.  New import jobs submitted after startup will still be processed.
+                _logger.LogWarning(ex, "Discogs background job recovery failed on startup. Pending job recovery will be skipped; new jobs will still be processed.");
+            }
 
             while (!stoppingToken.IsCancellationRequested)
             {
