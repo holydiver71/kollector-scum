@@ -180,29 +180,29 @@ export default function ComboBox({
 
   return (
     <div ref={containerRef} className="relative">
-      <label htmlFor={label} className="block text-sm font-medium text-gray-700 mb-1">
-        {label} {required && <span className="text-red-500">*</span>}
+      <label htmlFor={label} className="block text-sm font-medium text-[var(--theme-card-text)] mb-1">
+        {label} {required && <span className="text-[var(--theme-error-text)]">*</span>}
       </label>
 
       {/* Selected items display */}
       <div
-        className={`min-h-[42px] w-full px-3 py-2 border rounded-md focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 ${
-          error ? "border-red-500" : "border-gray-300"
-        } ${disabled ? "bg-gray-50" : "bg-white"}`}
+        className={`min-h-[42px] w-full px-3 py-2 border rounded-md text-[var(--theme-card-text)] focus-within:ring-2 focus-within:ring-[var(--theme-accent)] focus-within:border-[var(--theme-accent)] ${
+          error ? "border-[var(--theme-error-border)]" : "border-[var(--theme-card-border)]"
+        } ${disabled ? "bg-[var(--theme-sidebar-hover)]" : "bg-[var(--theme-card-bg)]"}`}
       >
         <div className="flex flex-wrap gap-2 mb-2">
           {/* Existing selected items */}
           {selectedItems.map((item) => (
             <span
               key={item.id}
-              className="inline-flex items-center px-2 py-1 rounded-md text-sm bg-blue-100 text-blue-800"
+              className="inline-flex items-center px-2 py-1 rounded-md text-sm bg-[var(--theme-sidebar-hover)] text-[var(--theme-card-text)] border border-[var(--theme-accent)]"
             >
               {item.name}
               {!disabled && (
                 <button
                   type="button"
                   onClick={() => handleRemoveExisting(item.id)}
-                  className="ml-1 text-blue-600 hover:text-blue-800 focus:outline-none"
+                  className="ml-1 text-[var(--theme-accent)] hover:text-[var(--theme-accent-hover)] focus:outline-none"
                   aria-label={`Remove ${item.name}`}
                 >
                   ×
@@ -215,7 +215,7 @@ export default function ComboBox({
           {newValues.map((val) => (
             <span
               key={val}
-              className="inline-flex items-center px-2 py-1 rounded-md text-sm bg-green-100 text-green-800 border border-green-300"
+              className="inline-flex items-center px-2 py-1 rounded-md text-sm bg-[var(--theme-success-bg)] text-[var(--theme-success-text)] border border-[var(--theme-success-border)]"
             >
               <span className="text-xs mr-1">✨</span>
               {val}
@@ -223,7 +223,7 @@ export default function ComboBox({
                 <button
                   type="button"
                   onClick={() => handleRemoveNew(val)}
-                  className="ml-1 text-green-600 hover:text-green-800 focus:outline-none"
+                  className="ml-1 text-[var(--theme-success-text)] hover:opacity-80 focus:outline-none"
                   aria-label={`Remove ${val}`}
                 >
                   ×
@@ -247,18 +247,18 @@ export default function ComboBox({
           onKeyDown={handleKeyDown}
           placeholder={selectedIds.length === 0 && newValues.length === 0 ? placeholder : ""}
           disabled={disabled || (!multiple && selectedIds.length > 0 && newValues.length === 0)}
-          className="w-full outline-none bg-transparent text-sm"
+          className="w-full outline-none bg-transparent text-sm text-[var(--theme-card-text)] placeholder:text-[var(--theme-muted-text)]"
         />
       </div>
 
       {/* Dropdown list */}
       {isOpen && !disabled && (
         <div
-          className="z-50 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto"
+          className="z-50 bg-[var(--theme-card-bg)] border border-[var(--theme-card-border)] rounded-md shadow-lg max-h-60 overflow-y-auto"
           style={dropdownStyle}
         >
           {filteredItems.length === 0 && !isNewValue && (
-            <div className="px-3 py-2 text-sm text-gray-500">No results found</div>
+            <div className="px-3 py-2 text-sm text-[var(--theme-muted-text)]">No results found</div>
           )}
 
           {filteredItems.map((item, index) => {
@@ -269,13 +269,13 @@ export default function ComboBox({
               <div
                 key={item.id}
                 onClick={() => handleSelect(item.id)}
-                className={`px-3 py-2 cursor-pointer text-sm ${
-                  isHighlighted ? "bg-blue-50" : ""
-                } ${isSelected ? "bg-blue-100 font-medium" : "hover:bg-gray-50"}`}
+                className={`px-3 py-2 cursor-pointer text-sm text-[var(--theme-card-text)] ${
+                  isHighlighted ? "bg-[var(--theme-sidebar-hover)]" : ""
+                } ${isSelected ? "bg-[var(--theme-sidebar-hover)] font-medium" : "hover:bg-[var(--theme-sidebar-hover)]"}`}
               >
                 <div className="flex items-center justify-between">
                   <span>{item.name}</span>
-                  {isSelected && <span className="text-blue-600">✓</span>}
+                  {isSelected && <span className="text-[var(--theme-accent)]">✓</span>}
                 </div>
               </div>
             );
@@ -285,13 +285,13 @@ export default function ComboBox({
           {isNewValue && (
             <div
               onClick={handleAddNew}
-              className={`px-3 py-2 cursor-pointer text-sm border-t ${
-                highlightedIndex === filteredItems.length ? "bg-green-50" : "hover:bg-gray-50"
+              className={`px-3 py-2 cursor-pointer text-sm border-t border-[var(--theme-card-border)] ${
+                highlightedIndex === filteredItems.length ? "bg-[var(--theme-success-bg)]" : "hover:bg-[var(--theme-sidebar-hover)]"
               }`}
             >
               <div className="flex items-center">
-                <span className="text-green-600 mr-2">✨</span>
-                <span className="text-green-700 font-medium">
+                <span className="text-[var(--theme-success-text)] mr-2">✨</span>
+                <span className="text-[var(--theme-success-text)] font-medium">
                   Create &quot;{searchTerm.trim()}&quot;
                 </span>
               </div>
@@ -301,14 +301,14 @@ export default function ComboBox({
       )}
 
       {/* Help text */}
-      {helpText && <p className="mt-1 text-xs text-gray-500">{helpText}</p>}
+      {helpText && <p className="mt-1 text-xs text-[var(--theme-muted-text)]">{helpText}</p>}
 
       {/* Error message */}
-      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-1 text-sm text-[var(--theme-error-text)]">{error}</p>}
 
       {/* Info about new values */}
       {newValues.length > 0 && !error && (
-        <p className="mt-1 text-xs text-green-600">
+        <p className="mt-1 text-xs text-[var(--theme-success-text)]">
           {newValues.length} new {multiple ? "items" : "item"} will be created
         </p>
       )}
