@@ -164,5 +164,51 @@ namespace KollectorScum.Tests.Services
             // Assert
             Assert.Equal("{\"results\":[]}", result);
         }
+
+        [Fact]
+        public async Task CooldownCallback_InvokedWithEndTimeWhenRateLimitExhausted_AndClearedAfterDelay()
+        {
+            // Arrange — First call returns remaining=3, which primes the client state.
+            // The second call then sees _rateLimitRemaining <= threshold and triggers cooldown.
+            var primeResponse = OkResponse("{}", remaining: 3);
+            var secondResponse = OkResponse("{\"id\":1}");
+
+            var client = CreateClient(primeResponse, secondResponse);
+
+            var invocations = new List<DateTime?>();
+            client.CooldownCallback = until => invocations.Add(until);
+
+            // First call primes the rate-limit state (remaining=3 stored internally)
+            await client.GetReleaseDetailsAsync("0");
+
+            // Act — second call should trigger proactive cooldown before issuing the request
+            await client.GetReleaseDetailsAsync("1");
+
+            // Assert — callback was called twice: once with an end-time, once with null.
+            Assert.Equal(2, invocations.Count);
+            Assert.NotNull(invocations[0]);   // start: end-time is in the future
+            Assert.Null(invocations[1]);       // end / cleared
+        }
+
+        [Fact]
+        public async Task CooldownCallback_InvokedOnTooManyRequests_AndClearedAfterDelay()
+        {
+            // Arrange — 429 with 0-second Retry-After triggers the 429 cooldown branch.
+            var client = CreateClient(
+                TooManyRequestsResponse(retryAfterSeconds: 0),
+                OkResponse("{\"id\":2}"));
+
+            var invocations = new List<DateTime?>();
+            client.CooldownCallback = until => invocations.Add(until);
+
+            // Act
+            var result = await client.GetReleaseDetailsAsync("2");
+
+            // Assert — succeeds and callback fired: one start + one clear.
+            Assert.Equal("{\"id\":2}", result);
+            Assert.Equal(2, invocations.Count);
+            Assert.NotNull(invocations[0]);
+            Assert.Null(invocations[1]);
+        }
     }
 }

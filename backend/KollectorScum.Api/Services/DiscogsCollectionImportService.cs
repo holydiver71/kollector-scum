@@ -62,6 +62,16 @@ namespace KollectorScum.Api.Services
             _labelCache.Clear();
             _countryCache.Clear();
 
+            // Register a cooldown callback so the progress store reflects API throttle pauses.
+            _discogsService.SetCooldownCallback(cooldownUntil =>
+            {
+                if (_progressStore.TryGetValue(userId, out var snap))
+                {
+                    snap.CooldownUntilUtc = cooldownUntil;
+                    _progressStore[userId] = snap;
+                }
+            });
+
             var stopwatch = Stopwatch.StartNew();
             var result = new DiscogsImportResult();
 

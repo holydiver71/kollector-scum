@@ -79,5 +79,11 @@ namespace KollectorScum.Api.DTOs
         /// Gets or sets when the job last changed.
         /// </summary>
         public DateTime LastUpdatedUtc { get; set; }
+
+        /// <summary>
+        /// Gets or sets the UTC time when the API rate-limit cooldown ends.
+        /// Null when no cooldown is in effect.
+        /// </summary>
+        public DateTime? CooldownUntilUtc { get; set; }
     }
 }
