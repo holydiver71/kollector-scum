@@ -73,6 +73,7 @@ namespace KollectorScum.Api.Interfaces
         public int Imported { get; set; }
         public int Skipped { get; set; }
         public int Failed { get; set; }
+        public int Percentage { get; set; }
         public bool Completed { get; set; }
         public DateTime LastUpdatedUtc { get; set; }
     }

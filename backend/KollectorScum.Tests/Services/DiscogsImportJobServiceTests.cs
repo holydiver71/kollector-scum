@@ -85,5 +85,50 @@ namespace KollectorScum.Tests.Services
             Assert.Equal(1, result.Failed);
             Assert.False(result.Completed);
         }
+
+        [Fact]
+        public async Task GetJobStatusAsync_WhenRunningAndLiveProgressCompleted_DoesNotCompleteUntilJobStatusIsTerminal()
+        {
+            using var context = CreateContext();
+            var repository = new Repository<DiscogsImportJob>(context);
+            using var unitOfWork = new UnitOfWork(context);
+            var queue = new Mock<IDiscogsImportJobQueue>();
+            var importService = new Mock<IDiscogsCollectionImportService>();
+            var logger = new Mock<ILogger<DiscogsImportJobService>>();
+            var jobId = Guid.NewGuid();
+            var userId = Guid.NewGuid();
+
+            context.DiscogsImportJobs.Add(new DiscogsImportJob
+            {
+                JobId = jobId,
+                UserId = userId,
+                Username = "discogs-user",
+                Status = DiscogsImportJobStatus.Running,
+                CreatedAtUtc = DateTime.UtcNow,
+                LastUpdatedUtc = DateTime.UtcNow,
+            });
+            await context.SaveChangesAsync();
+
+            importService.Setup(item => item.GetProgress(userId)).Returns(new DiscogsImportProgress
+            {
+                TotalReleases = 42,
+                EffectiveTotal = 42,
+                Imported = 42,
+                Skipped = 0,
+                Failed = 0,
+                Percentage = 99,
+                Completed = true,
+                LastUpdatedUtc = DateTime.UtcNow,
+            });
+
+            var service = new DiscogsImportJobService(repository, unitOfWork, queue.Object, importService.Object, logger.Object);
+
+            var result = await service.GetJobStatusAsync(jobId, userId);
+
+            Assert.NotNull(result);
+            Assert.Equal("Running", result!.Status);
+            Assert.False(result.Completed);
+            Assert.Equal(99, result.Percentage);
+        }
     }
 }
