@@ -1,5 +1,5 @@
 import React from "react";
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { DiscogsImportDialog } from "../DiscogsImportDialog";
 import { fetchJson } from "../../lib/api";
 
@@ -20,7 +20,7 @@ describe("DiscogsImportDialog", () => {
     jest.useRealTimers();
   });
 
-  it("renders a theme-aware segmented progress wheel while importing", async () => {
+  it("renders spinner with discogs logo and three step progress panels", async () => {
     let isCompleted = false;
 
     mockFetchJson.mockImplementation((url, options) => {
@@ -67,14 +67,88 @@ describe("DiscogsImportDialog", () => {
       jest.advanceTimersByTime(1000);
     });
 
-    const wheel = await screen.findByTestId("discogs-import-progress-wheel");
-    expect(wheel).toHaveAttribute("aria-valuenow", "15");
+    const spinner = await screen.findByTestId("discogs-import-progress-spinner");
+    expect(spinner).toHaveAttribute("aria-valuenow", "15");
+    expect(screen.getByTestId("discogs-import-logo")).toBeInTheDocument();
+    expect(screen.queryByText("15%")).not.toBeInTheDocument();
 
-    const segments = within(wheel).getAllByTestId("discogs-import-progress-segment");
-    expect(segments).toHaveLength(32);
-    expect(segments.filter((segment) => segment.getAttribute("data-active") === "true")).toHaveLength(5);
-    expect(segments[0].getAttribute("style")).toContain("var(--theme-accent)");
-    expect(segments[5].getAttribute("style")).toContain("var(--theme-card-border)");
+    expect(screen.getByTestId("discogs-import-step-title-1")).toHaveTextContent("Step 1/3: Importing releases");
+    expect(screen.getByTestId("discogs-import-step-title-2")).toHaveTextContent("Step 2/3: Enriching tracklists");
+    expect(screen.getByTestId("discogs-import-step-title-3")).toHaveTextContent("Step 3/3: Mirroring cover art");
+    expect(screen.getByTestId("discogs-import-current-status-text")).toHaveTextContent(/Crate-digging through Discogs shelves|Lining up the next stack of records|Cueing side B and syncing metadata|Nudging the pitch while indexes settle/);
+    expect(screen.getByTestId("discogs-import-step-count-1")).toHaveTextContent("3/20");
+    expect(screen.getByTestId("discogs-import-step-count-2")).toHaveTextContent("0/3");
+    expect(screen.getByTestId("discogs-import-step-count-3")).toHaveTextContent("0/3");
+    expect(screen.getByTestId("discogs-import-step-pending-1")).toBeInTheDocument();
+    expect(screen.queryByTestId("discogs-import-step-complete-1")).not.toBeInTheDocument();
+
+    isCompleted = true;
+
+    await act(async () => {
+      jest.advanceTimersByTime(1000);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("Import Successful!")).toBeInTheDocument();
+    });
+  });
+
+  it("shows per-step counters and tick marks as phases complete", async () => {
+    let isCompleted = false;
+
+    mockFetchJson.mockImplementation((url, options) => {
+      if (url === "/api/import/discogs" && options?.method === "POST") {
+        return Promise.resolve({
+          jobId: "job-2",
+          status: "Queued",
+        }) as Promise<any>;
+      }
+
+      if (url === "/api/import/discogs/status?jobId=job-2") {
+        return Promise.resolve({
+          jobId: "job-2",
+          status: isCompleted ? "Succeeded" : "Running",
+          totalReleases: 10,
+          effectiveTotal: 10,
+          imported: 10,
+          skipped: 0,
+          failed: 0,
+          percentage: isCompleted ? 100 : 94,
+          completed: isCompleted,
+          success: isCompleted,
+          errors: [],
+          duration: "00:00:15",
+        }) as Promise<any>;
+      }
+
+      throw new Error(`Unexpected fetchJson call: ${url}`);
+    });
+
+    render(
+      <DiscogsImportDialog
+        isOpen={true}
+        onClose={jest.fn()}
+        onSuccess={jest.fn()}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText("Discogs Username"), {
+      target: { value: "test-user" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Import Collection" }));
+
+    await act(async () => {
+      jest.advanceTimersByTime(1000);
+    });
+
+    const spinner = await screen.findByTestId("discogs-import-progress-spinner");
+    expect(spinner).toHaveAttribute("aria-valuenow", "94");
+    expect(screen.queryByText("94%")).not.toBeInTheDocument();
+    expect(screen.getByTestId("discogs-import-step-count-1")).toHaveTextContent("10/10");
+    expect(screen.getByTestId("discogs-import-step-complete-1")).toBeInTheDocument();
+    expect(screen.getByTestId("discogs-import-step-count-2")).toHaveTextContent("9/10");
+    expect(screen.getByTestId("discogs-import-step-pending-2")).toBeInTheDocument();
+    expect(screen.getByTestId("discogs-import-step-count-3")).toHaveTextContent("0/10");
 
     isCompleted = true;
 
