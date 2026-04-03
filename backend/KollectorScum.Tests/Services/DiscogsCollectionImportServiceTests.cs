@@ -232,7 +232,7 @@ namespace KollectorScum.Tests.Services
         }
 
         [Fact]
-        public async Task ImportCollectionAsync_DefersDetailsAndSkipsImageMirroringDuringCoreImport()
+        public async Task ImportCollectionAsync_DefersDetailsToEnrichmentPhase_ImageMirroredAfterInsert()
         {
             // Arrange
             var username = "coreimportuser";
@@ -242,11 +242,13 @@ namespace KollectorScum.Tests.Services
             var persistedReleases = new List<MusicRelease>();
             List<MusicRelease>? insertedReleases = null;
             var mediaWasEmptyAtInsert = false;
+            var imagesAtInsert = string.Empty;
             _mockMusicRepo.Setup(r => r.AddRangeAsync(It.IsAny<IEnumerable<MusicRelease>>()))
                 .Callback<IEnumerable<MusicRelease>>(releases =>
                 {
                     insertedReleases = releases.ToList();
                     mediaWasEmptyAtInsert = insertedReleases.All(r => string.IsNullOrWhiteSpace(r.Media));
+                    imagesAtInsert = insertedReleases.FirstOrDefault()?.Images ?? string.Empty;
                     persistedReleases.AddRange(insertedReleases);
                 })
                 .Returns(Task.CompletedTask);
@@ -286,6 +288,15 @@ namespace KollectorScum.Tests.Services
                     }
                 });
 
+            _mockImageService
+                .Setup(s => s.DownloadAndStoreCoverArtAsync(
+                    "https://img.discogs.com/cover.jpg",
+                    string.Empty,
+                    It.IsAny<string>(),
+                    It.IsAny<string?>(),
+                    userId))
+                .ReturnsAsync("mirrored-release.jpg");
+
             _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100))
                 .ReturnsAsync(MakePage(1, release));
 
@@ -294,16 +305,113 @@ namespace KollectorScum.Tests.Services
             // Act
             var result = await service.ImportCollectionAsync(username, userId);
 
-            // Assert
+            // Assert: core import stored Discogs URL, not R2 filename
             Assert.True(result.Success);
             Assert.Equal(1, result.ImportedReleases);
             Assert.NotNull(insertedReleases);
             Assert.Single(insertedReleases!);
-            Assert.Equal("{\"CoverFront\":\"https://img.discogs.com/cover.jpg\"}", insertedReleases![0].Images);
+            Assert.Equal("{\"CoverFront\":\"https://img.discogs.com/cover.jpg\"}", imagesAtInsert);
             Assert.True(mediaWasEmptyAtInsert);
+
+            // Assert: deferred enrichment populated tracklist
             Assert.False(string.IsNullOrWhiteSpace(persistedReleases[0].Media));
+
+            // Assert: deferred mirroring replaced Discogs URL with R2 filename
+            Assert.Equal("{\"CoverFront\":\"mirrored-release.jpg\"}", persistedReleases[0].Images);
+
             _mockDiscogsService.Verify(s => s.GetReleaseDetailsAsync("42"), Times.Once);
-            _mockImageService.Verify(s => s.DownloadAndStoreCoverArtAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<Guid>()), Times.Never);
+            _mockImageService.Verify(
+                s => s.DownloadAndStoreCoverArtAsync(
+                    "https://img.discogs.com/cover.jpg",
+                    string.Empty,
+                    It.IsAny<string>(),
+                    It.IsAny<string?>(),
+                    userId),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task ImportCollectionAsync_WhenImageMirroringFails_ContinuesAndKeepsDiscogsUrl()
+        {
+            // Arrange
+            var username = "mirroruser";
+            var userId = Guid.NewGuid();
+            _mockEnv.SetupGet(e => e.EnvironmentName).Returns("Production");
+
+            var persistedReleases = new List<MusicRelease>();
+            _mockMusicRepo.Setup(r => r.AddRangeAsync(It.IsAny<IEnumerable<MusicRelease>>()))
+                .Callback<IEnumerable<MusicRelease>>(releases => persistedReleases.AddRange(releases))
+                .Returns(Task.CompletedTask);
+            _mockMusicRepo.Setup(r => r.GetAsync(
+                    It.IsAny<Expression<Func<MusicRelease, bool>>>(),
+                    null,
+                    "",
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Expression<Func<MusicRelease, bool>> filter,
+                    Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>>? _,
+                    string __,
+                    CancellationToken ___) => persistedReleases.Where(filter.Compile()).ToList());
+
+            var release = new DiscogsCollectionReleaseDto
+            {
+                InstanceId = Guid.NewGuid().ToString(),
+                BasicInformation = new DiscogsBasicInfoDto
+                {
+                    Id = 99,
+                    Title = "Mirror Fail Release",
+                    CoverImage = "https://img.discogs.com/cover99.jpg"
+                }
+            };
+
+            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100))
+                .ReturnsAsync(MakePage(1, release));
+
+            // Image service returns null to indicate failure
+            _mockImageService
+                .Setup(s => s.DownloadAndStoreCoverArtAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string?>(),
+                    It.IsAny<Guid>()))
+                .ReturnsAsync((string?)null);
+
+            var service = CreateService();
+
+            // Act
+            var result = await service.ImportCollectionAsync(username, userId);
+
+            // Assert: import still succeeds
+            Assert.True(result.Success);
+            Assert.Equal(1, result.ImportedReleases);
+
+            // Assert: Images still contains the original Discogs URL (not replaced)
+            Assert.Equal("{\"CoverFront\":\"https://img.discogs.com/cover99.jpg\"}", persistedReleases[0].Images);
+        }
+
+        [Fact]
+        public async Task ImportCollectionAsync_MultiPage_CallsAddRangeOncePerPage()
+        {
+            // Arrange
+            var username = "batchuser";
+            var userId = Guid.NewGuid();
+            _mockEnv.SetupGet(e => e.EnvironmentName).Returns("Production");
+
+            // 2 pages of 3 releases each
+            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100))
+                .ReturnsAsync(MakePage(1, 3, 2, 6));
+            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 2, 100))
+                .ReturnsAsync(MakePage(2, 3, 2, 6));
+
+            var service = CreateService();
+
+            // Act
+            await service.ImportCollectionAsync(username, userId);
+
+            // Assert: AddRangeAsync called once per page (not once per release)
+            _mockMusicRepo.Verify(
+                r => r.AddRangeAsync(It.IsAny<IEnumerable<MusicRelease>>()),
+                Times.Exactly(2));
         }
     }
 }

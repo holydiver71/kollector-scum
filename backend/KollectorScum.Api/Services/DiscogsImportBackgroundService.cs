@@ -45,10 +45,19 @@ namespace KollectorScum.Api.Services
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
             var jobRepository = unitOfWork.GetRepository<DiscogsImportJob>();
 
-            var pendingJobs = await jobRepository.Query()
-                .Where(job => job.Status == DiscogsImportJobStatus.Queued || job.Status == DiscogsImportJobStatus.Running)
-                .OrderBy(job => job.CreatedAtUtc)
-                .ToListAsync(cancellationToken);
+            List<DiscogsImportJob> pendingJobs;
+            try
+            {
+                pendingJobs = await jobRepository.Query()
+                    .Where(job => job.Status == DiscogsImportJobStatus.Queued || job.Status == DiscogsImportJobStatus.Running)
+                    .OrderBy(job => job.CreatedAtUtc)
+                    .ToListAsync(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Unable to recover pending Discogs import jobs on startup; the table may not exist yet.");
+                return;
+            }
 
             if (pendingJobs.Count == 0)
             {

@@ -143,6 +143,7 @@ namespace KollectorScum.Api.Services
                 }
 
                 await EnrichTracklistsAsync(userId, importedDiscogsIds, cancellationToken);
+                await EnrichCoverArtAsync(userId, importedDiscogsIds, cancellationToken);
 
                 // Import is only successful if at least one release was imported
                 result.Success = result.ImportedReleases > 0;
@@ -420,6 +421,94 @@ namespace KollectorScum.Api.Services
             {
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
                 _logger.LogInformation("Completed deferred tracklist enrichment for {Count} releases", enrichedCount);
+            }
+        }
+
+        /// <summary>
+        /// Deferred enrichment pass that mirrors Discogs-hosted cover-art URLs to R2 storage.
+        /// Runs after <see cref="EnrichTracklistsAsync"/> so the collection is already usable.
+        /// Failures are isolated per release and do not roll back successfully mirrored images.
+        /// </summary>
+        private async Task EnrichCoverArtAsync(Guid userId, ISet<int> importedDiscogsIds, CancellationToken cancellationToken)
+        {
+            if (importedDiscogsIds.Count == 0)
+            {
+                return;
+            }
+
+            // Fetch all releases imported in this run; the URL check is done after JSON parsing
+            // to avoid fragile string matching on the serialised blob.
+            var releasesToEnrich = (await _unitOfWork.MusicReleases.GetAsync(
+                    mr => mr.UserId == userId
+                        && mr.DiscogsId.HasValue
+                        && mr.DiscogsId.Value > 0
+                        && importedDiscogsIds.Contains(mr.DiscogsId.Value)
+                        && mr.Images != null,
+                    null,
+                    "",
+                    cancellationToken))
+                .ToList();
+
+            if (releasesToEnrich.Count == 0)
+            {
+                return;
+            }
+
+            _logger.LogInformation("Starting deferred cover-art mirroring for {Count} releases", releasesToEnrich.Count);
+
+            var mirroredCount = 0;
+            foreach (var release in releasesToEnrich)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                try
+                {
+                    string? imageUrl = null;
+                    if (!string.IsNullOrWhiteSpace(release.Images))
+                    {
+                        using var doc = JsonDocument.Parse(release.Images);
+                        if (doc.RootElement.TryGetProperty("CoverFront", out var coverFrontProp))
+                        {
+                            imageUrl = coverFrontProp.GetString();
+                        }
+                    }
+
+                    // Only mirror externally-hosted (Discogs) URLs; skip R2 filenames already stored.
+                    if (string.IsNullOrWhiteSpace(imageUrl) || !imageUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    var year = release.ReleaseYear?.Year.ToString();
+                    var storedFilename = await _imageService.DownloadAndStoreCoverArtAsync(
+                        imageUrl,
+                        artist: string.Empty,
+                        title: release.Title,
+                        year,
+                        userId);
+
+                    if (!string.IsNullOrWhiteSpace(storedFilename))
+                    {
+                        var images = new { CoverFront = storedFilename };
+                        release.Images = JsonSerializer.Serialize(images);
+                        release.LastModified = DateTime.UtcNow;
+                        mirroredCount++;
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Deferred cover-art mirroring failed for release '{Title}' (Discogs ID {DiscogsId})", release.Title, release.DiscogsId);
+                }
+            }
+
+            if (mirroredCount > 0)
+            {
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+                _logger.LogInformation("Completed deferred cover-art mirroring for {Count} releases", mirroredCount);
             }
         }
 
