@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+using System.Text.Json;
 using KollectorScum.Api.Data;
 using KollectorScum.Api.DTOs;
 using KollectorScum.Api.Interfaces;
@@ -22,6 +23,7 @@ namespace KollectorScum.Tests.Services
         private readonly Mock<IRepository<Label>> _mockLabelRepo;
         private readonly Mock<IMusicReleaseMapperService> _mockMapper;
         private readonly Mock<ICollectionStatisticsService> _mockStatisticsService;
+        private readonly Mock<IDiscogsService> _mockDiscogsService;
         private readonly KollectorScumDbContext _context;
         private readonly Mock<ILogger<MusicReleaseQueryService>> _mockLogger;
         private readonly Mock<IUserContext> _mockUserContext;
@@ -34,6 +36,7 @@ namespace KollectorScum.Tests.Services
             _mockLabelRepo = new Mock<IRepository<Label>>();
             _mockMapper = new Mock<IMusicReleaseMapperService>();
             _mockStatisticsService = new Mock<ICollectionStatisticsService>();
+            _mockDiscogsService = new Mock<IDiscogsService>();
             _mockLogger = new Mock<ILogger<MusicReleaseQueryService>>();
             _mockUserContext = new Mock<IUserContext>();
             var defaultUserId = Guid.Parse("12337b39-c346-449c-b269-33b2e820d74f");
@@ -54,7 +57,8 @@ namespace KollectorScum.Tests.Services
                 _mockStatisticsService.Object,
                 _context,
                 _mockLogger.Object,
-                _mockUserContext.Object
+                _mockUserContext.Object,
+                _mockDiscogsService.Object
             );
         }
 
@@ -138,6 +142,70 @@ namespace KollectorScum.Tests.Services
             var func = capturedFilter!.Compile();
             var anyRelease = new MusicRelease { UserId = Guid.NewGuid(), Title = "Any Release" };
             Assert.False(func(anyRelease), "Filter should always return false when no user context");
+        }
+
+        [Fact]
+        public async Task GetMusicReleaseAsync_BackfillsMediaFromDiscogs_WhenMediaMissing()
+        {
+            // Arrange
+            var userId = Guid.NewGuid();
+            _mockUserContext.Setup(x => x.GetActingUserId()).Returns(userId);
+
+            var release = new MusicRelease
+            {
+                Id = 38549,
+                UserId = userId,
+                Title = "Futhark Dawning / Wisdom & Darkness",
+                DiscogsId = 8895299,
+                Media = null,
+                Artists = "[3901470]",
+                Genres = "[664911,664934]",
+                ReleaseYear = new DateTime(2016, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+            };
+
+            _mockMusicReleaseRepo
+                .Setup(r => r.GetByIdAsync(38549, "Label,Country,Format,Packaging"))
+                .ReturnsAsync(release);
+
+            _mockDiscogsService
+                .Setup(s => s.GetReleaseDetailsAsync("8895299"))
+                .ReturnsAsync(new DiscogsReleaseDto
+                {
+                    Tracklist = new List<DiscogsTrackDto>
+                    {
+                        new DiscogsTrackDto { Title = "Into The Hall", Duration = "2:58" },
+                        new DiscogsTrackDto { Title = "Wisdom Of The Runes", Duration = "4:16" }
+                    }
+                });
+
+            _mockMapper
+                .Setup(m => m.MapToFullDtoAsync(It.IsAny<MusicRelease>()))
+                .ReturnsAsync((MusicRelease mr) =>
+                {
+                    var media = string.IsNullOrWhiteSpace(mr.Media)
+                        ? null
+                        : JsonSerializer.Deserialize<List<MusicReleaseMediaDto>>(mr.Media);
+                    return new MusicReleaseDto
+                    {
+                        Id = mr.Id,
+                        Title = mr.Title,
+                        Media = media,
+                        DateAdded = DateTime.UtcNow,
+                        LastModified = DateTime.UtcNow
+                    };
+                });
+
+            // Act
+            var result = await _service.GetMusicReleaseAsync(38549);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.NotNull(result!.Media);
+            Assert.Single(result.Media!);
+            Assert.NotNull(result.Media![0].Tracks);
+            Assert.Equal(2, result.Media[0].Tracks!.Count);
+            Assert.Equal("Into The Hall", result.Media[0].Tracks[0].Title);
+            _mockDiscogsService.Verify(s => s.GetReleaseDetailsAsync("8895299"), Times.Once);
         }
     }
 }

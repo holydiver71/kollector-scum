@@ -75,8 +75,7 @@ namespace KollectorScum.Tests.Services
                 InstanceId = Guid.NewGuid().ToString(),
                 BasicInformation = new DiscogsBasicInfoDto
                 {
-                    // Use Id=0 to avoid the 1.1s per-release delay in MapToMusicReleaseAsync
-                    Id = 0,
+                    Id = ((page - 1) * perPage) + i,
                     Title = $"Test Release {page}-{i}",
                 }
             }).ToList();
@@ -232,7 +231,70 @@ namespace KollectorScum.Tests.Services
         }
 
         [Fact]
-        public async Task ImportCollectionAsync_DefersDetailsAndSkipsImageMirroringDuringCoreImport()
+        public async Task ImportCollectionAsync_DuplicateDiscogsIdsInSameBatch_AreSkipped()
+        {
+            // Arrange
+            var username = "dupeuser";
+            var userId = Guid.NewGuid();
+            _mockEnv.SetupGet(e => e.EnvironmentName).Returns("Production");
+
+            var firstCopy = new DiscogsCollectionReleaseDto
+            {
+                InstanceId = Guid.NewGuid().ToString(),
+                BasicInformation = new DiscogsBasicInfoDto
+                {
+                    Id = 999,
+                    Title = "Duplicate Release"
+                }
+            };
+
+            var secondCopy = new DiscogsCollectionReleaseDto
+            {
+                InstanceId = Guid.NewGuid().ToString(),
+                BasicInformation = new DiscogsBasicInfoDto
+                {
+                    Id = 999,
+                    Title = "Duplicate Release"
+                }
+            };
+
+            var distinctRelease = new DiscogsCollectionReleaseDto
+            {
+                InstanceId = Guid.NewGuid().ToString(),
+                BasicInformation = new DiscogsBasicInfoDto
+                {
+                    Id = 1000,
+                    Title = "Unique Release"
+                }
+            };
+
+            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100))
+                .ReturnsAsync(MakePage(3, firstCopy, secondCopy, distinctRelease));
+
+            List<MusicRelease>? inserted = null;
+            _mockMusicRepo.Setup(r => r.AddRangeAsync(It.IsAny<IEnumerable<MusicRelease>>()))
+                .Callback<IEnumerable<MusicRelease>>(releases => inserted = releases.ToList())
+                .Returns(Task.CompletedTask);
+
+            var service = CreateService();
+
+            // Act
+            var result = await service.ImportCollectionAsync(username, userId);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.Equal(3, result.TotalReleases);
+            Assert.Equal(2, result.ImportedReleases);
+            Assert.Equal(1, result.SkippedReleases);
+            Assert.Equal(0, result.FailedReleases);
+
+            Assert.NotNull(inserted);
+            Assert.Equal(2, inserted!.Count);
+            Assert.Equal(2, inserted.Select(r => r.DiscogsId).Distinct().Count());
+        }
+
+        [Fact]
+        public async Task ImportCollectionAsync_DefersDetailsAndMirrorsCoverArtAfterInsert()
         {
             // Arrange
             var username = "coreimportuser";
@@ -242,11 +304,13 @@ namespace KollectorScum.Tests.Services
             var persistedReleases = new List<MusicRelease>();
             List<MusicRelease>? insertedReleases = null;
             var mediaWasEmptyAtInsert = false;
+            var insertedImagePayload = string.Empty;
             _mockMusicRepo.Setup(r => r.AddRangeAsync(It.IsAny<IEnumerable<MusicRelease>>()))
                 .Callback<IEnumerable<MusicRelease>>(releases =>
                 {
                     insertedReleases = releases.ToList();
                     mediaWasEmptyAtInsert = insertedReleases.All(r => string.IsNullOrWhiteSpace(r.Media));
+                    insertedImagePayload = insertedReleases[0].Images ?? string.Empty;
                     persistedReleases.AddRange(insertedReleases);
                 })
                 .Returns(Task.CompletedTask);
@@ -285,6 +349,13 @@ namespace KollectorScum.Tests.Services
                         }
                     }
                 });
+            _mockImageService.Setup(s => s.DownloadAndStoreCoverArtAsync(
+                    "https://img.discogs.com/cover.jpg",
+                    It.IsAny<string>(),
+                    "Fast Import Release",
+                    It.IsAny<string?>(),
+                    userId))
+                .ReturnsAsync("mirrored.jpg");
 
             _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100))
                 .ReturnsAsync(MakePage(1, release));
@@ -299,11 +370,206 @@ namespace KollectorScum.Tests.Services
             Assert.Equal(1, result.ImportedReleases);
             Assert.NotNull(insertedReleases);
             Assert.Single(insertedReleases!);
-            Assert.Equal("{\"CoverFront\":\"https://img.discogs.com/cover.jpg\"}", insertedReleases![0].Images);
+            Assert.Equal("{\"CoverFront\":\"https://img.discogs.com/cover.jpg\"}", insertedImagePayload);
             Assert.True(mediaWasEmptyAtInsert);
             Assert.False(string.IsNullOrWhiteSpace(persistedReleases[0].Media));
+            Assert.Equal($"{{\"CoverFront\":\"/cover-art/{userId}/mirrored.jpg\"}}", persistedReleases[0].Images);
             _mockDiscogsService.Verify(s => s.GetReleaseDetailsAsync("42"), Times.Once);
-            _mockImageService.Verify(s => s.DownloadAndStoreCoverArtAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<Guid>()), Times.Never);
+            _mockImageService.Verify(s => s.DownloadAndStoreCoverArtAsync("https://img.discogs.com/cover.jpg", It.IsAny<string>(), "Fast Import Release", It.IsAny<string?>(), userId), Times.Once);
+        }
+
+        [Fact]
+        public async Task ImportCollectionAsync_EnrichesTracklist_WhenMediaIsStoredAsEmptyArray()
+        {
+            // Arrange
+            var username = "emptymediauser";
+            var userId = Guid.NewGuid();
+            _mockEnv.SetupGet(e => e.EnvironmentName).Returns("Production");
+
+            var persistedReleases = new List<MusicRelease>();
+            _mockMusicRepo.Setup(r => r.AddRangeAsync(It.IsAny<IEnumerable<MusicRelease>>()))
+                .Callback<IEnumerable<MusicRelease>>(releases =>
+                {
+                    var inserted = releases.ToList();
+                    foreach (var release in inserted)
+                    {
+                        release.Media = "[]";
+                    }
+
+                    persistedReleases.AddRange(inserted);
+                })
+                .Returns(Task.CompletedTask);
+
+            _mockMusicRepo.Setup(r => r.GetAsync(
+                    It.IsAny<Expression<Func<MusicRelease, bool>>>(),
+                    null,
+                    "",
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Expression<Func<MusicRelease, bool>> filter,
+                    Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>>? _,
+                    string __,
+                    CancellationToken ___) => persistedReleases.Where(filter.Compile()).ToList());
+
+            var release = new DiscogsCollectionReleaseDto
+            {
+                InstanceId = Guid.NewGuid().ToString(),
+                BasicInformation = new DiscogsBasicInfoDto
+                {
+                    Id = 314,
+                    Title = "Needs Tracklist"
+                }
+            };
+
+            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100))
+                .ReturnsAsync(MakePage(1, release));
+
+            _mockDiscogsService.Setup(s => s.GetReleaseDetailsAsync("314"))
+                .ReturnsAsync(new DiscogsReleaseDto
+                {
+                    Tracklist = new List<DiscogsTrackDto>
+                    {
+                        new DiscogsTrackDto { Title = "Track A", Duration = "4:00" },
+                        new DiscogsTrackDto { Title = "Track B", Duration = "5:10" }
+                    }
+                });
+
+            var service = CreateService();
+
+            // Act
+            var result = await service.ImportCollectionAsync(username, userId);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.Single(persistedReleases);
+            Assert.False(string.IsNullOrWhiteSpace(persistedReleases[0].Media));
+            Assert.Contains("Track A", persistedReleases[0].Media);
+            _mockDiscogsService.Verify(s => s.GetReleaseDetailsAsync("314"), Times.Once);
+        }
+
+        [Fact]
+        public async Task ImportCollectionAsync_BackfillsExistingReleaseTracklist_WhenReleaseAlreadyExists()
+        {
+            // Arrange
+            var username = "existingreleaseuser";
+            var userId = Guid.NewGuid();
+            _mockEnv.SetupGet(e => e.EnvironmentName).Returns("Production");
+
+            var persistedReleases = new List<MusicRelease>
+            {
+                new MusicRelease
+                {
+                    Id = 99,
+                    UserId = userId,
+                    DiscogsId = 8895299,
+                    Title = "Futhark Dawning / Wisdom & Darkness",
+                    Media = null,
+                    DateAdded = DateTime.UtcNow,
+                    LastModified = DateTime.UtcNow
+                }
+            };
+
+            _mockMusicRepo.Setup(r => r.Query()).Returns(() => persistedReleases.AsQueryable());
+            _mockMusicRepo.Setup(r => r.AddRangeAsync(It.IsAny<IEnumerable<MusicRelease>>()))
+                .Returns(Task.CompletedTask);
+            _mockMusicRepo.Setup(r => r.GetAsync(
+                    It.IsAny<Expression<Func<MusicRelease, bool>>>(),
+                    null,
+                    "",
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Expression<Func<MusicRelease, bool>> filter,
+                    Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>>? _,
+                    string __,
+                    CancellationToken ___) => persistedReleases.Where(filter.Compile()).ToList());
+
+            var collectionRelease = new DiscogsCollectionReleaseDto
+            {
+                InstanceId = Guid.NewGuid().ToString(),
+                BasicInformation = new DiscogsBasicInfoDto
+                {
+                    Id = 8895299,
+                    Title = "Futhark Dawning / Wisdom & Darkness"
+                }
+            };
+
+            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100))
+                .ReturnsAsync(MakePage(1, collectionRelease));
+            _mockDiscogsService.Setup(s => s.GetReleaseDetailsAsync("8895299"))
+                .ReturnsAsync(new DiscogsReleaseDto
+                {
+                    Tracklist = new List<DiscogsTrackDto>
+                    {
+                        new DiscogsTrackDto { Title = "Track 1", Duration = "4:05" },
+                        new DiscogsTrackDto { Title = "Track 2", Duration = "5:01" }
+                    }
+                });
+
+            var service = CreateService();
+
+            // Act
+            await service.ImportCollectionAsync(username, userId);
+
+            // Assert
+            Assert.False(string.IsNullOrWhiteSpace(persistedReleases[0].Media));
+            Assert.Contains("Track 1", persistedReleases[0].Media);
+            _mockDiscogsService.Verify(s => s.GetReleaseDetailsAsync("8895299"), Times.Once);
+        }
+
+        [Fact]
+        public async Task ImportCollectionAsync_ContinuesWhenDeferredImageMirroringFails()
+        {
+            // Arrange
+            var username = "mirrorfailuser";
+            var userId = Guid.NewGuid();
+            _mockEnv.SetupGet(e => e.EnvironmentName).Returns("Production");
+
+            var persistedReleases = new List<MusicRelease>();
+            _mockMusicRepo.Setup(r => r.AddRangeAsync(It.IsAny<IEnumerable<MusicRelease>>()))
+                .Callback<IEnumerable<MusicRelease>>(releases => persistedReleases.AddRange(releases))
+                .Returns(Task.CompletedTask);
+            _mockMusicRepo.Setup(r => r.Query()).Returns(() => persistedReleases.AsQueryable());
+            _mockMusicRepo.Setup(r => r.GetAsync(
+                    It.IsAny<Expression<Func<MusicRelease, bool>>>(),
+                    null,
+                    "",
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Expression<Func<MusicRelease, bool>> filter,
+                    Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>>? _,
+                    string __,
+                    CancellationToken ___) => persistedReleases.Where(filter.Compile()).ToList());
+
+            var release = new DiscogsCollectionReleaseDto
+            {
+                InstanceId = Guid.NewGuid().ToString(),
+                BasicInformation = new DiscogsBasicInfoDto
+                {
+                    Id = 77,
+                    Title = "Mirror Fail Release",
+                    CoverImage = "https://img.discogs.com/fail.jpg"
+                }
+            };
+
+            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100))
+                .ReturnsAsync(MakePage(1, release));
+            _mockDiscogsService.Setup(s => s.GetReleaseDetailsAsync("77"))
+                .ReturnsAsync((DiscogsReleaseDto?)null);
+            _mockImageService.Setup(s => s.DownloadAndStoreCoverArtAsync(
+                    "https://img.discogs.com/fail.jpg",
+                    It.IsAny<string>(),
+                    "Mirror Fail Release",
+                    It.IsAny<string?>(),
+                    userId))
+                .ThrowsAsync(new InvalidOperationException("mirror failed"));
+
+            var service = CreateService();
+
+            // Act
+            var result = await service.ImportCollectionAsync(username, userId);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.Equal(1, result.ImportedReleases);
+            Assert.Single(persistedReleases);
+            Assert.Equal("{\"CoverFront\":\"https://img.discogs.com/fail.jpg\"}", persistedReleases[0].Images);
         }
     }
 }
