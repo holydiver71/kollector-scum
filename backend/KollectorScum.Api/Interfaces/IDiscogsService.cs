@@ -56,5 +56,13 @@ namespace KollectorScum.Api.Interfaces
         /// <param name="perPage">Items per page (default: 100, max: 100)</param>
         /// <returns>Collection response with releases and pagination info</returns>
         Task<DiscogsCollectionResponseDto?> GetUserCollectionAsync(string username, int page = 1, int perPage = 100);
+
+        /// <summary>
+        /// Registers a callback that is invoked when the underlying HTTP client enters or
+        /// exits a rate-limit cooldown period.  The callback receives the UTC end-time of
+        /// the cooldown, or <c>null</c> when the cooldown ends.
+        /// </summary>
+        /// <param name="callback">Callback to invoke on cooldown state changes.</param>
+        void SetCooldownCallback(Action<DateTime?> callback);
     }
 }

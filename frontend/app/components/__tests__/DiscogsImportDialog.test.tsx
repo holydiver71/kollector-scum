@@ -160,4 +160,58 @@ describe("DiscogsImportDialog", () => {
       expect(screen.getByText("Import Successful!")).toBeInTheDocument();
     });
   });
+
+  it("shows cooldown overlay with countdown timer when API rate limit is active", async () => {
+    // Set cooldown to 30 seconds from now
+    const cooldownUntil = new Date(Date.now() + 30000).toISOString();
+
+    mockFetchJson.mockImplementation((url, options) => {
+      if (url === "/api/import/discogs" && options?.method === "POST") {
+        return Promise.resolve({ jobId: "job-3", status: "Queued" }) as Promise<any>;
+      }
+      if (url === "/api/import/discogs/status?jobId=job-3") {
+        return Promise.resolve({
+          jobId: "job-3",
+          status: "Running",
+          totalReleases: 20,
+          effectiveTotal: 20,
+          imported: 5,
+          skipped: 0,
+          failed: 0,
+          percentage: 18,
+          completed: false,
+          success: false,
+          errors: [],
+          cooldownUntilUtc: cooldownUntil,
+        }) as Promise<any>;
+      }
+      throw new Error(`Unexpected fetchJson call: ${url}`);
+    });
+
+    render(
+      <DiscogsImportDialog
+        isOpen={true}
+        onClose={jest.fn()}
+        onSuccess={jest.fn()}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText("Discogs Username"), {
+      target: { value: "test-user" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Import Collection" }));
+
+    await act(async () => {
+      jest.advanceTimersByTime(1000);
+    });
+
+    // Wait for cooldown panel to appear
+    await waitFor(() => {
+      expect(screen.getByTestId("discogs-import-cooldown")).toBeInTheDocument();
+    });
+
+    expect(screen.getByTestId("discogs-import-cooldown-timer")).toBeInTheDocument();
+    expect(screen.getByText(/API Rate Limit/i)).toBeInTheDocument();
+    expect(screen.getByText(/Resuming automatically/i)).toBeInTheDocument();
+  });
 });
