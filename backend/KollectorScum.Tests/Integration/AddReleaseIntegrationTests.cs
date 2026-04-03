@@ -90,8 +90,12 @@ namespace KollectorScum.Tests.Integration
 
         private void SeedDatabase()
         {
-            using var scope = _factory.Services.CreateScope();
-            var dbContext = scope.ServiceProvider.GetRequiredService<KollectorScumDbContext>();
+            // Use a dedicated DbContext instance tied to the same in-memory SQLite connection
+            var options = new DbContextOptionsBuilder<KollectorScumDbContext>()
+                .UseSqlite(_connection)
+                .Options;
+
+            using var dbContext = new KollectorScumDbContext(options);
             dbContext.Database.EnsureCreated();
 
             if (!dbContext.ApplicationUsers.Any(u => u.Id == TestUserId))
