@@ -228,6 +228,8 @@ public class DiscogsCollectionImportIntegrationTests : IDisposable
 
             return Task.FromResult<DiscogsCollectionResponseDto?>(response);
         }
+
+        public void SetCooldownCallback(Action<DateTime?> callback) { /* no-op for tests */ }
     }
 
     private sealed class FakeDiscogsImageService : IDiscogsImageService
