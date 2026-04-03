@@ -55,6 +55,13 @@ After: **1 `SaveChangesAsync` call per page**.
 - Tracklists are mapped through `BuildMediaFromTracklist(...)` and persisted back to `MusicRelease.Media` after the collection is already available.
 - Enrichment failures are isolated per release and logged without failing the completed core import.
 
+### `DiscogsCollectionImportService` — Deferred cover-art mirroring
+
+- Added a second follow-up enrichment pass after deferred tracklist enrichment.
+- The image phase targets releases imported in the current run that still store a remote `CoverFront` URL in `MusicRelease.Images`.
+- Remote cover URLs are mirrored with `DownloadAndStoreCoverArtAsync(...)`; successful mirrors replace `CoverFront` with the normalized `/cover-art/{userId}/{filename}` path.
+- Image mirroring failures are isolated per release and logged without failing the overall import.
+
 ### `IDiscogsCollectionImportService` + `DiscogsCollectionImportService` — `CancellationToken`
 
 - Added `CancellationToken cancellationToken = default` parameter to `ImportCollectionAsync` on both the interface and the implementation.
@@ -93,6 +100,8 @@ Uses a `SequentialHttpHandler` fake that returns a pre-configured queue of `Http
 - Added coverage that live progress updates before the batch save completes.
 - Added coverage that core import no longer calls Discogs release-details or cover-art mirroring services.
 - Added coverage that release details are fetched in the deferred phase and `Media` is populated after insert.
+- Added coverage that cover-art mirroring runs after insert and updates `Images.CoverFront` to the mirrored path.
+- Added coverage that the import still succeeds when deferred image mirroring fails for a release.
 
 **All 10 targeted unit tests** (6 HTTP client + 2 import service + 2 job service) pass. Full suite: **910 unit tests pass, 11 integration tests skipped** (require live PostgreSQL).
 
@@ -111,5 +120,4 @@ Uses a `SequentialHttpHandler` fake that returns a pre-configured queue of `Http
 
 ## Remaining Work
 
-- **Deferred image mirroring**: the core import now stores Discogs-hosted image URLs only. The next step is to add a follow-up enrichment phase that mirrors cover art to R2 without blocking import completion.
 - **Integration test coverage for new batch path**: add an EF-InMemory integration test that verifies `AddRangeAsync` is called once per page rather than once per release.

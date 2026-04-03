@@ -5,6 +5,15 @@ on:
     branches: [dev, main]
   pull_request:
     branches: [dev, main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment to deploy: staging, production, or all'
+        required: true
+        default: 'staging'
+      ref:
+        description: 'Optional git ref to deploy (branch or tag)'
+        required: false
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -161,6 +170,86 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           BRANCH="${{ github.ref_name }}"
+          npx wrangler pages project create kollector-scum-frontend --production-branch=main 2>/dev/null || true
+          npx wrangler pages deploy .vercel/output/static \
+            --project-name=kollector-scum-frontend \
+            --branch="$BRANCH" \
+            --commit-dirty=true
+
+  manual-deploy:
+    name: Manual Deploy (workflow_dispatch)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy API to Render (Staging)
+        if: ${{ github.event.inputs.environment == 'staging' || github.event.inputs.environment == 'all' }}
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID_STAGING: ${{ secrets.RENDER_SERVICE_ID_STAGING }}
+        run: |
+          if [ -z "$RENDER_API_KEY" ] || [ -z "$RENDER_SERVICE_ID_STAGING" ]; then
+            echo "Missing RENDER_API_KEY or RENDER_SERVICE_ID_STAGING"
+            exit 1
+          fi
+          curl -fsS -X POST "https://api.render.com/v1/services/${RENDER_SERVICE_ID_STAGING}/deploys" \
+            -H "Authorization: Bearer ${RENDER_API_KEY}" \
+            -H "Content-Type: application/json" \
+            -d '{}'
+
+      - name: Deploy API to Render (Production)
+        if: ${{ github.event.inputs.environment == 'production' || github.event.inputs.environment == 'all' }}
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID_PROD: ${{ secrets.RENDER_SERVICE_ID_PROD }}
+        run: |
+          if [ -z "$RENDER_API_KEY" ] || [ -z "$RENDER_SERVICE_ID_PROD" ]; then
+            echo "Missing RENDER_API_KEY or RENDER_SERVICE_ID_PROD"
+            exit 1
+          fi
+          curl -fsS -X POST "https://api.render.com/v1/services/${RENDER_SERVICE_ID_PROD}/deploys" \
+            -H "Authorization: Bearer ${RENDER_API_KEY}" \
+            -H "Content-Type: application/json" \
+            -d '{}'
+
+      - name: Setup Node (for frontend deploy)
+        if: ${{ github.event.inputs.environment == 'staging' || github.event.inputs.environment == 'production' || github.event.inputs.environment == 'all' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        if: ${{ github.event.inputs.environment == 'staging' || github.event.inputs.environment == 'production' || github.event.inputs.environment == 'all' }}
+        working-directory: frontend
+        run: npm ci
+
+      - name: Set BRANCH for frontend deploy
+        if: ${{ github.event.inputs.environment == 'staging' || github.event.inputs.environment == 'production' || github.event.inputs.environment == 'all' }}
+        run: |
+          BRANCH="${{ github.event.inputs.ref != '' && github.event.inputs.ref || github.ref_name }}"
+          echo "BRANCH=$BRANCH" >> $GITHUB_ENV
+
+      - name: Build for Cloudflare Pages
+        if: ${{ github.event.inputs.environment == 'staging' || github.event.inputs.environment == 'production' || github.event.inputs.environment == 'all' }}
+        working-directory: frontend
+        env:
+          NEXT_PUBLIC_API_BASE_URL: ${{ github.event.inputs.environment == 'staging' && secrets.NEXT_PUBLIC_API_BASE_URL_STAGING || secrets.NEXT_PUBLIC_API_BASE_URL_PROD }}
+          NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE__CLIENTID }}
+          NEXT_PUBLIC_API_TIMEOUT_MS: "20000"
+        run: npx @cloudflare/next-on-pages@1
+
+      - name: Deploy to Cloudflare Pages
+        if: ${{ github.event.inputs.environment == 'staging' || github.event.inputs.environment == 'production' || github.event.inputs.environment == 'all' }}
+        working-directory: frontend
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          BRANCH="$BRANCH"
           npx wrangler pages project create kollector-scum-frontend --production-branch=main 2>/dev/null || true
           npx wrangler pages deploy .vercel/output/static \
             --project-name=kollector-scum-frontend \
