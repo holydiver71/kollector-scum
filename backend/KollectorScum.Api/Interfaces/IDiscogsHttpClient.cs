@@ -6,6 +6,13 @@ namespace KollectorScum.Api.Interfaces
     public interface IDiscogsHttpClient
     {
         /// <summary>
+        /// Optional callback invoked whenever the client enters or exits a rate-limit
+        /// cooldown.  Receives the UTC end-time when a cooldown begins, and
+        /// <c>null</c> when it ends.
+        /// </summary>
+        Action<DateTime?>? CooldownCallback { get; set; }
+
+        /// <summary>
         /// Search for releases with the specified parameters
         /// </summary>
         /// <param name="catalogNumber">Catalog number to search for</param>
