@@ -76,5 +76,11 @@ namespace KollectorScum.Api.Interfaces
         public int Percentage { get; set; }
         public bool Completed { get; set; }
         public DateTime LastUpdatedUtc { get; set; }
+
+        /// <summary>
+        /// When set, indicates the API rate-limit cooldown ends at this UTC time.
+        /// Null when no cooldown is in effect.
+        /// </summary>
+        public DateTime? CooldownUntilUtc { get; set; }
     }
 }
