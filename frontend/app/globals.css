@@ -42,6 +42,14 @@
   --theme-accent:          #8B5CF6;
   --theme-accent-hover:    #7C3AED;
   --theme-accent-light:    #A78BFA;
+  --theme-input-bg:        #0f1324;
+  --theme-muted-text:      #94a3b8;
+  --theme-error-bg:        rgba(239, 68, 68, 0.16);
+  --theme-error-border:    rgba(239, 68, 68, 0.38);
+  --theme-error-text:      #fda4af;
+  --theme-success-bg:      rgba(34, 197, 94, 0.16);
+  --theme-success-border:  rgba(34, 197, 94, 0.38);
+  --theme-success-text:    #86efac;
 }
 
 /* ─── metal-default theme ────────────────────────────────────────────────── */
@@ -61,6 +69,14 @@
   --theme-accent:          #D93611;
   --theme-accent-hover:    #B02D0D;
   --theme-accent-light:    #F27141;
+  --theme-input-bg:        #ffffff;
+  --theme-muted-text:      #6b7280;
+  --theme-error-bg:        #fee2e2;
+  --theme-error-border:    #fecaca;
+  --theme-error-text:      #b91c1c;
+  --theme-success-bg:      #dcfce7;
+  --theme-success-border:  #86efac;
+  --theme-success-text:    #166534;
 }
 
 /* ─── dark theme ─────────────────────────────────────────────────── */
@@ -77,6 +93,14 @@
   --theme-card-text:       #e5e7eb;
   --theme-card-border:     #374151;
   --theme-foreground:      #e5e7eb;
+  --theme-input-bg:        #0f172a;
+  --theme-muted-text:      #94a3b8;
+  --theme-error-bg:        rgba(239, 68, 68, 0.14);
+  --theme-error-border:    rgba(239, 68, 68, 0.35);
+  --theme-error-text:      #fda4af;
+  --theme-success-bg:      rgba(34, 197, 94, 0.14);
+  --theme-success-border:  rgba(34, 197, 94, 0.35);
+  --theme-success-text:    #86efac;
 
   /* Extended dark-theme palette tokens */
   --dark-surface:          #1e293b; /* card / panel surface */
@@ -199,6 +223,14 @@
   --theme-card-text:       #0D0D0D;
   --theme-card-border:     #BF9D8A;
   --theme-foreground:      #F2F2E4;
+  --theme-input-bg:        #011a1f;
+  --theme-muted-text:      #687273;
+  --theme-error-bg:        rgba(239, 68, 68, 0.14);
+  --theme-error-border:    rgba(239, 68, 68, 0.35);
+  --theme-error-text:      #fecaca;
+  --theme-success-bg:      rgba(34, 197, 94, 0.14);
+  --theme-success-border:  rgba(34, 197, 94, 0.35);
+  --theme-success-text:    #bbf7d0;
 
   /* Extended metal-1 palette tokens */
   --m1-surface:            #022026;
@@ -323,6 +355,14 @@
   --theme-accent:          #D93611;
   --theme-accent-hover:    #B02D0D;
   --theme-accent-light:    #F27141;
+  --theme-input-bg:        #ffffff;
+  --theme-muted-text:      #6b7280;
+  --theme-error-bg:        #fee2e2;
+  --theme-error-border:    #fecaca;
+  --theme-error-text:      #b91c1c;
+  --theme-success-bg:      #dcfce7;
+  --theme-success-border:  #86efac;
+  --theme-success-text:    #166534;
 }
 
 /* Force legacy light utility classes to render in midnight theme */

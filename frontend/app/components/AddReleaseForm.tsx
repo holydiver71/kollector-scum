@@ -489,8 +489,8 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p className="mt-2 text-gray-600">Loading form...</p>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--theme-accent)]"></div>
+          <p className="mt-2 text-[var(--theme-muted-text)]">Loading form...</p>
         </div>
       </div>
     );
@@ -499,32 +499,32 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <div role="alert" className="bg-red-50 border border-red-200 rounded-md p-4">
-          <p className="text-sm text-red-800">{error}</p>
+        <div role="alert" className="bg-[var(--theme-error-bg)] border border-[var(--theme-error-border)] rounded-md p-4">
+          <p className="text-sm text-[var(--theme-error-text)]">{error}</p>
         </div>
       )}
 
       {/* Basic Information */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h2>
+      <div className="bg-[var(--theme-card-bg)] rounded-lg shadow-sm border border-[var(--theme-card-border)] p-6">
+        <h2 className="text-lg font-semibold text-[var(--theme-card-text)] mb-4">Basic Information</h2>
         
         {/* Title */}
         <div className="mb-4">
-          <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
-            Title <span className="text-red-500">*</span>
+          <label htmlFor="title" className="block text-sm font-medium text-[var(--theme-card-text)] mb-1">
+            Title <span className="text-[var(--theme-error-text)]">*</span>
           </label>
           <input
             type="text"
             id="title"
             value={formData.title}
             onChange={(e) => updateField("title", e.target.value)}
-            className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-              validationErrors.title ? "border-red-500" : "border-gray-300"
+            className={`w-full px-3 py-2 border rounded-md bg-[var(--theme-input-bg)] text-[var(--theme-card-text)] placeholder:text-[var(--theme-muted-text)] focus:ring-2 focus:ring-[var(--theme-accent)] focus:border-[var(--theme-accent)] ${
+              validationErrors.title ? "border-[var(--theme-error-border)]" : "border-[var(--theme-card-border)]"
             }`}
             placeholder="Enter album title"
           />
           {validationErrors.title && (
-            <p className="mt-1 text-sm text-red-600">{validationErrors.title}</p>
+            <p className="mt-1 text-sm text-[var(--theme-error-text)]">{validationErrors.title}</p>
           )}
         </div>
 
@@ -552,7 +552,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
         {/* Release Year */}
         <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 mb-4 items-end">
           <div>
-            <label htmlFor="releaseYear" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="releaseYear" className="block text-sm font-medium text-[var(--theme-card-text)] mb-1">
               Release Year
             </label>
             <input
@@ -562,7 +562,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
                 ? new Date(formData.releaseYear).toISOString().split('T')[0] 
                 : ""}
               onChange={(e) => updateField("releaseYear", e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-[var(--theme-card-border)] rounded-md bg-[var(--theme-input-bg)] text-[var(--theme-card-text)] focus:ring-2 focus:ring-[var(--theme-accent)] focus:border-[var(--theme-accent)]"
             />
           </div>
           <div className="flex items-center justify-center pb-1">
@@ -573,7 +573,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
                   updateField("origReleaseYear", formData.releaseYear);
                 }
               }}
-              className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+              className="p-2 text-[var(--theme-muted-text)] hover:text-[var(--theme-accent)] hover:bg-[var(--theme-sidebar-hover)] rounded-full transition-colors"
               title="Copy Release Year to Original Release Year"
               aria-label="Copy Release Year to Original Release Year"
             >
@@ -594,7 +594,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
             </button>
           </div>
           <div>
-            <label htmlFor="origReleaseYear" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="origReleaseYear" className="block text-sm font-medium text-[var(--theme-card-text)] mb-1">
               Original Release Year
             </label>
             <input
@@ -604,7 +604,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
                 ? new Date(formData.origReleaseYear).toISOString().split('T')[0] 
                 : ""}
               onChange={(e) => updateField("origReleaseYear", e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-[var(--theme-card-border)] rounded-md bg-[var(--theme-input-bg)] text-[var(--theme-card-text)] focus:ring-2 focus:ring-[var(--theme-accent)] focus:border-[var(--theme-accent)]"
             />
           </div>
         </div>
@@ -616,16 +616,16 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
               type="checkbox"
               checked={formData.live}
               onChange={(e) => updateField("live", e.target.checked)}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              className="h-4 w-4 text-[var(--theme-accent)] focus:ring-[var(--theme-accent)] border-[var(--theme-card-border)] rounded"
             />
-            <span className="ml-2 text-sm text-gray-700">Live Recording</span>
+            <span className="ml-2 text-sm text-[var(--theme-card-text)]">Live Recording</span>
           </label>
         </div>
       </div>
 
       {/* Classification */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Classification</h2>
+      <div className="bg-[var(--theme-card-bg)] rounded-lg shadow-sm border border-[var(--theme-card-border)] p-6">
+        <h2 className="text-lg font-semibold text-[var(--theme-card-text)] mb-4">Classification</h2>
         
         {/* Genres */}
         <div className="mb-4">
@@ -705,8 +705,8 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
       </div>
 
       {/* Label Information */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Label Information</h2>
+      <div className="bg-[var(--theme-card-bg)] rounded-lg shadow-sm border border-[var(--theme-card-border)] p-6">
+        <h2 className="text-lg font-semibold text-[var(--theme-card-text)] mb-4">Label Information</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -728,7 +728,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
           </div>
 
           <div>
-            <label htmlFor="labelNumber" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="labelNumber" className="block text-sm font-medium text-[var(--theme-card-text)] mb-1">
               Catalogue Number
             </label>
             <input
@@ -736,14 +736,14 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
               id="labelNumber"
               value={formData.labelNumber || ""}
               onChange={(e) => updateField("labelNumber", e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-[var(--theme-card-border)] rounded-md bg-[var(--theme-input-bg)] text-[var(--theme-card-text)] placeholder:text-[var(--theme-muted-text)] focus:ring-2 focus:ring-[var(--theme-accent)] focus:border-[var(--theme-accent)]"
               placeholder="e.g., ABC-12345"
             />
           </div>
         </div>
 
         <div className="mt-4">
-          <label htmlFor="upc" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="upc" className="block text-sm font-medium text-[var(--theme-card-text)] mb-1">
             UPC/Barcode
           </label>
           <input
@@ -751,15 +751,15 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
             id="upc"
             value={formData.upc || ""}
             onChange={(e) => updateField("upc", e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 border border-[var(--theme-card-border)] rounded-md bg-[var(--theme-input-bg)] text-[var(--theme-card-text)] placeholder:text-[var(--theme-muted-text)] focus:ring-2 focus:ring-[var(--theme-accent)] focus:border-[var(--theme-accent)]"
             placeholder="Enter UPC/barcode"
           />
         </div>
       </div>
 
       {/* Purchase Information */}
-      <div className="bg-white shadow-md rounded-lg p-6 mb-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Purchase Information (Optional)</h2>
+      <div className="bg-[var(--theme-card-bg)] shadow-md rounded-lg border border-[var(--theme-card-border)] p-6 mb-6">
+        <h2 className="text-lg font-semibold text-[var(--theme-card-text)] mb-4">Purchase Information (Optional)</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
@@ -784,7 +784,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
           </div>
 
           <div>
-            <label htmlFor="purchaseDate" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="purchaseDate" className="block text-sm font-medium text-[var(--theme-card-text)] mb-1">
               Purchase Date
             </label>
             <input
@@ -797,14 +797,14 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
                 ...formData.purchaseInfo,
                 purchaseDate: e.target.value,
               })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-[var(--theme-card-border)] rounded-md bg-[var(--theme-input-bg)] text-[var(--theme-card-text)] focus:ring-2 focus:ring-[var(--theme-accent)] focus:border-[var(--theme-accent)]"
             />
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
-            <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="price" className="block text-sm font-medium text-[var(--theme-card-text)] mb-1">
               Price
             </label>
             <input
@@ -817,18 +817,18 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
                 ...formData.purchaseInfo,
                 price: e.target.value === "" ? undefined : parseFloat(e.target.value),
               })}
-              className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                validationErrors.price ? "border-red-500" : "border-gray-300"
+              className={`w-full px-3 py-2 border rounded-md bg-[var(--theme-input-bg)] text-[var(--theme-card-text)] placeholder:text-[var(--theme-muted-text)] focus:ring-2 focus:ring-[var(--theme-accent)] focus:border-[var(--theme-accent)] ${
+                validationErrors.price ? "border-[var(--theme-error-border)]" : "border-[var(--theme-card-border)]"
               }`}
               placeholder="0.00"
             />
             {validationErrors.price && (
-              <p className="mt-1 text-sm text-red-600">{validationErrors.price}</p>
+              <p className="mt-1 text-sm text-[var(--theme-error-text)]">{validationErrors.price}</p>
             )}
           </div>
 
           <div>
-            <label htmlFor="currency" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="currency" className="block text-sm font-medium text-[var(--theme-card-text)] mb-1">
               Currency
             </label>
             <select
@@ -838,7 +838,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
                 ...formData.purchaseInfo,
                 currency: e.target.value,
               })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-[var(--theme-card-border)] rounded-md bg-[var(--theme-input-bg)] text-[var(--theme-card-text)] focus:ring-2 focus:ring-[var(--theme-accent)] focus:border-[var(--theme-accent)]"
             >
               <option value="USD">USD ($)</option>
               <option value="EUR">EUR (€)</option>
@@ -851,7 +851,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
         </div>
 
         <div>
-          <label htmlFor="purchaseNotes" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="purchaseNotes" className="block text-sm font-medium text-[var(--theme-card-text)] mb-1">
             Purchase Notes
           </label>
           <textarea
@@ -862,19 +862,19 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
               ...formData.purchaseInfo,
               notes: e.target.value,
             })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 border border-[var(--theme-card-border)] rounded-md bg-[var(--theme-input-bg)] text-[var(--theme-card-text)] placeholder:text-[var(--theme-muted-text)] focus:ring-2 focus:ring-[var(--theme-accent)] focus:border-[var(--theme-accent)]"
             placeholder="Additional purchase details..."
           />
         </div>
       </div>
 
       {/* Images */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Images (Optional)</h2>
+      <div className="bg-[var(--theme-card-bg)] rounded-lg shadow-sm border border-[var(--theme-card-border)] p-6">
+        <h2 className="text-lg font-semibold text-[var(--theme-card-text)] mb-4">Images (Optional)</h2>
         
         <div className="space-y-4">
           <div>
-            <label htmlFor="coverFront" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="coverFront" className="block text-sm font-medium text-[var(--theme-card-text)] mb-1">
               Front Cover Filename
             </label>
             <input
@@ -885,13 +885,13 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
                 ...formData.images,
                 coverFront: e.target.value,
               })}
-              className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                validationErrors.coverFront ? "border-red-500" : "border-gray-300"
+              className={`w-full px-3 py-2 border rounded-md bg-[var(--theme-input-bg)] text-[var(--theme-card-text)] placeholder:text-[var(--theme-muted-text)] focus:ring-2 focus:ring-[var(--theme-accent)] focus:border-[var(--theme-accent)] ${
+                validationErrors.coverFront ? "border-[var(--theme-error-border)]" : "border-[var(--theme-card-border)]"
               }`}
               placeholder="front-cover.jpg"
             />
             {validationErrors.coverFront && (
-              <p className="mt-1 text-sm text-red-600">{validationErrors.coverFront}</p>
+              <p className="mt-1 text-sm text-[var(--theme-error-text)]">{validationErrors.coverFront}</p>
             )}
             {formData.images?.coverFront && (
               <div className="mt-2">
@@ -899,7 +899,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
                 <img 
                   src={formData.images.coverFront} 
                   alt="Front cover preview" 
-                  className="h-32 w-32 object-cover rounded border"
+                  className="h-32 w-32 object-cover rounded border border-[var(--theme-card-border)]"
                   onError={(e) => {
                     (e.target as HTMLImageElement).style.display = 'none';
                   }}
@@ -909,7 +909,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
           </div>
 
             <div>
-              <label htmlFor="coverBack" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="coverBack" className="block text-sm font-medium text-[var(--theme-card-text)] mb-1">
                 Back Cover Filename
               </label>
               <input
@@ -920,13 +920,13 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
                   ...formData.images,
                   coverBack: e.target.value,
                 })}
-                className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  validationErrors.coverBack ? "border-red-500" : "border-gray-300"
+                className={`w-full px-3 py-2 border rounded-md bg-[var(--theme-input-bg)] text-[var(--theme-card-text)] placeholder:text-[var(--theme-muted-text)] focus:ring-2 focus:ring-[var(--theme-accent)] focus:border-[var(--theme-accent)] ${
+                  validationErrors.coverBack ? "border-[var(--theme-error-border)]" : "border-[var(--theme-card-border)]"
                 }`}
                 placeholder="back-cover.jpg"
               />
               {validationErrors.coverBack && (
-                <p className="mt-1 text-sm text-red-600">{validationErrors.coverBack}</p>
+                <p className="mt-1 text-sm text-[var(--theme-error-text)]">{validationErrors.coverBack}</p>
               )}
               {formData.images?.coverBack && (
                 <div className="mt-2">
@@ -934,7 +934,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
                   <img
                     src={formData.images.coverBack}
                     alt="Back cover preview"
-                    className="h-24 w-24 object-cover rounded border"
+                    className="h-24 w-24 object-cover rounded border border-[var(--theme-card-border)]"
                     onError={(e) => {
                       (e.target as HTMLImageElement).style.display = 'none';
                     }}
@@ -944,7 +944,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
             </div>
 
             <div>
-              <label htmlFor="thumbnail" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="thumbnail" className="block text-sm font-medium text-[var(--theme-card-text)] mb-1">
                 Thumbnail Filename
               </label>
               <input
@@ -955,13 +955,13 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
                   ...formData.images,
                   thumbnail: e.target.value,
                 })}
-                className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                  validationErrors.thumbnail ? "border-red-500" : "border-gray-300"
+                className={`w-full px-3 py-2 border rounded-md bg-[var(--theme-input-bg)] text-[var(--theme-card-text)] placeholder:text-[var(--theme-muted-text)] focus:ring-2 focus:ring-[var(--theme-accent)] focus:border-[var(--theme-accent)] ${
+                  validationErrors.thumbnail ? "border-[var(--theme-error-border)]" : "border-[var(--theme-card-border)]"
                 }`}
                 placeholder="thumbnail.jpg"
               />
               {validationErrors.thumbnail && (
-                <p className="mt-1 text-sm text-red-600">{validationErrors.thumbnail}</p>
+                <p className="mt-1 text-sm text-[var(--theme-error-text)]">{validationErrors.thumbnail}</p>
               )}
               {formData.images?.thumbnail && (
                 <div className="mt-2">
@@ -969,7 +969,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
                   <img
                     src={formData.images.thumbnail}
                     alt="Thumbnail preview"
-                    className="h-20 w-20 object-cover rounded border"
+                    className="h-20 w-20 object-cover rounded border border-[var(--theme-card-border)]"
                     onError={(e) => {
                       (e.target as HTMLImageElement).style.display = 'none';
                     }}
@@ -981,8 +981,8 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
       </div>
 
       {/* Track Listing */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Track Listing (Optional)</h2>
+      <div className="bg-[var(--theme-card-bg)] rounded-lg shadow-sm border border-[var(--theme-card-border)] p-6">
+        <h2 className="text-lg font-semibold text-[var(--theme-card-text)] mb-4">Track Listing (Optional)</h2>
         <TrackListEditor
           media={formData.media || []}
           onChange={(newMedia) => updateField("media", newMedia)}
@@ -990,16 +990,16 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
       </div>
 
       {/* External Links */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">External Links (Optional)</h2>
+      <div className="bg-[var(--theme-card-bg)] rounded-lg shadow-sm border border-[var(--theme-card-border)] p-6">
+        <h2 className="text-lg font-semibold text-[var(--theme-card-text)] mb-4">External Links (Optional)</h2>
         
         <div className="space-y-3">
           {formData.links?.map((link, index) => (
-            <div key={index} className="flex gap-2 items-start p-3 bg-gray-50 rounded">
+            <div key={index} className="flex gap-2 items-start p-3 bg-[var(--theme-sidebar-hover)] rounded border border-[var(--theme-card-border)]">
               <div className="flex-1 space-y-2">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                    <label className="block text-xs font-medium text-[var(--theme-card-text)] mb-1">
                       URL
                     </label>
                     <input
@@ -1010,12 +1010,12 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
                         newLinks[index] = { ...newLinks[index], url: e.target.value };
                         updateField("links", newLinks);
                       }}
-                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                      className="w-full px-2 py-1 text-sm border border-[var(--theme-card-border)] rounded bg-[var(--theme-input-bg)] text-[var(--theme-card-text)] placeholder:text-[var(--theme-muted-text)] focus:ring-1 focus:ring-[var(--theme-accent)]"
                       placeholder="https://..."
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                    <label className="block text-xs font-medium text-[var(--theme-card-text)] mb-1">
                       Type (Optional)
                     </label>
                     <select
@@ -1025,7 +1025,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
                         newLinks[index] = { ...newLinks[index], type: e.target.value };
                         updateField("links", newLinks);
                       }}
-                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                      className="w-full px-2 py-1 text-sm border border-[var(--theme-card-border)] rounded bg-[var(--theme-input-bg)] text-[var(--theme-card-text)] focus:ring-1 focus:ring-[var(--theme-accent)]"
                     >
                       <option value="">Select type...</option>
                       <option value="Discogs">Discogs</option>
@@ -1039,7 +1039,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-medium text-[var(--theme-card-text)] mb-1">
                     Description (Optional)
                   </label>
                   <input
@@ -1050,7 +1050,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
                       newLinks[index] = { ...newLinks[index], description: e.target.value };
                       updateField("links", newLinks);
                     }}
-                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                    className="w-full px-2 py-1 text-sm border border-[var(--theme-card-border)] rounded bg-[var(--theme-input-bg)] text-[var(--theme-card-text)] placeholder:text-[var(--theme-muted-text)] focus:ring-1 focus:ring-[var(--theme-accent)]"
                     placeholder="Optional description..."
                   />
                 </div>
@@ -1061,7 +1061,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
                   const newLinks = formData.links?.filter((_, i) => i !== index);
                   updateField("links", newLinks);
                 }}
-                className="mt-5 px-2 py-1 text-sm text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
+                className="mt-5 px-2 py-1 text-sm text-[var(--theme-error-text)] hover:opacity-80 hover:bg-[var(--theme-error-bg)] rounded"
               >
                 Remove
               </button>
@@ -1074,7 +1074,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
               const newLinks = [...(formData.links || []), { url: "", type: "", description: "" }];
               updateField("links", newLinks);
             }}
-            className="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-md text-gray-600 hover:border-gray-400 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-4 py-2 border-2 border-dashed border-[var(--theme-card-border)] rounded-md text-[var(--theme-muted-text)] hover:border-[var(--theme-accent)] hover:text-[var(--theme-card-text)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)]"
           >
             + Add Link
           </button>
@@ -1087,7 +1087,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
           <button
             type="button"
             onClick={onCancel}
-            className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-6 py-2 border border-[var(--theme-card-border)] rounded-md text-[var(--theme-card-text)] hover:bg-[var(--theme-sidebar-hover)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)]"
             disabled={loading}
           >
             Cancel
@@ -1096,7 +1096,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
         <button
           type="submit"
           disabled={loading}
-          className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-6 py-2 bg-[var(--theme-accent)] text-white rounded-md hover:bg-[var(--theme-accent-hover)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading 
             ? (releaseId ? "Updating..." : "Creating...") 

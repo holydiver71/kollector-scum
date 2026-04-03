@@ -137,7 +137,7 @@ export default function EditReleasePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--theme-body-bg-mid)] text-[var(--theme-foreground)] flex items-center justify-center">
         <LoadingSpinner />
       </div>
     );
@@ -145,13 +145,13 @@ export default function EditReleasePage() {
 
   if (error || !release) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--theme-body-bg-mid)] text-[var(--theme-foreground)] flex items-center justify-center">
         <div className="text-center">
-          <div className="text-red-600 text-xl mb-4">Error loading release</div>
-          <p className="text-gray-600 mb-4">{error || "Release not found"}</p>
+          <div className="text-[var(--theme-error-text)] text-xl mb-4">Error loading release</div>
+          <p className="text-[var(--theme-muted-text)] mb-4">{error || "Release not found"}</p>
           <button
             onClick={() => router.back()}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            className="bg-[var(--theme-accent)] text-white px-4 py-2 rounded hover:bg-[var(--theme-accent-hover)] focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)]"
           >
             Go Back
           </button>
@@ -211,8 +211,8 @@ export default function EditReleasePage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Edit Release</h1>
-        <p className="mt-2 text-gray-600">
+        <h1 className="text-3xl font-bold text-[var(--theme-foreground)]">Edit Release</h1>
+        <p className="mt-2 text-[var(--theme-muted-text)]">
           Update the details for &quot;{release.title}&quot;
         </p>
       </div>

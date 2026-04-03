@@ -101,12 +101,12 @@ export default function TrackListEditor({ media, onChange }: TrackListEditorProp
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-gray-700">Track Listing</h3>
+        <h3 className="text-sm font-medium text-[var(--theme-card-text)]">Track Listing</h3>
         {media.length === 0 && (
           <button
             type="button"
             onClick={addMedia}
-            className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="px-3 py-1 text-sm bg-[var(--theme-accent)] text-white rounded hover:bg-[var(--theme-accent-hover)]"
           >
             Add Disc/Media
           </button>
@@ -114,16 +114,16 @@ export default function TrackListEditor({ media, onChange }: TrackListEditorProp
       </div>
 
       {media.map((disc, mediaIndex) => (
-        <div key={mediaIndex} className="border rounded-md">
+        <div key={mediaIndex} className="border border-[var(--theme-card-border)] rounded-md bg-[var(--theme-card-bg)]">
           <div
-            className="flex items-center justify-between p-3 bg-gray-50 cursor-pointer hover:bg-gray-100"
+            className="flex items-center justify-between p-3 bg-[var(--theme-sidebar-hover)] cursor-pointer hover:opacity-90"
             onClick={() => setExpandedMedia(expandedMedia === mediaIndex ? -1 : mediaIndex)}
           >
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">
+              <span className="text-sm font-medium text-[var(--theme-card-text)]">
                 {disc.name || `Disc ${mediaIndex + 1}`}
               </span>
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-[var(--theme-muted-text)]">
                 ({disc.tracks.length} track{disc.tracks.length !== 1 ? 's' : ''})
               </span>
             </div>
@@ -134,11 +134,11 @@ export default function TrackListEditor({ media, onChange }: TrackListEditorProp
                   e.stopPropagation();
                   removeMedia(mediaIndex);
                 }}
-                className="px-2 py-1 text-xs text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
+                className="px-2 py-1 text-xs text-[var(--theme-error-text)] hover:opacity-80 hover:bg-[var(--theme-error-bg)] rounded"
               >
                 Remove Disc
               </button>
-              <span className="text-gray-400">
+              <span className="text-[var(--theme-muted-text)]">
                 {expandedMedia === mediaIndex ? '▼' : '▶'}
               </span>
             </div>
@@ -147,24 +147,24 @@ export default function TrackListEditor({ media, onChange }: TrackListEditorProp
           {expandedMedia === mediaIndex && (
             <div className="p-3 space-y-3">
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-medium text-[var(--theme-card-text)] mb-1">
                   Disc Name (Optional)
                 </label>
                 <input
                   type="text"
                   value={disc.name || ""}
                   onChange={(e) => updateMedia(mediaIndex, { ...disc, name: e.target.value })}
-                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                  className="w-full px-2 py-1 text-sm border border-[var(--theme-card-border)] rounded bg-[var(--theme-input-bg)] text-[var(--theme-card-text)] placeholder:text-[var(--theme-muted-text)] focus:ring-1 focus:ring-[var(--theme-accent)]"
                   placeholder={`Disc ${mediaIndex + 1}`}
                 />
               </div>
 
               <div className="space-y-2">
                 {disc.tracks.map((track, trackIndex) => (
-                  <div key={trackIndex} className="p-2 bg-gray-50 rounded border">
+                  <div key={trackIndex} className="p-2 bg-[var(--theme-sidebar-hover)] rounded border border-[var(--theme-card-border)]">
                     <div className="grid grid-cols-12 gap-2 items-start">
                       <div className="col-span-1">
-                        <label className="block text-xs text-gray-600 mb-1">#</label>
+                        <label className="block text-xs text-[var(--theme-muted-text)] mb-1">#</label>
                         <input
                           type="number"
                           value={track.index}
@@ -172,13 +172,13 @@ export default function TrackListEditor({ media, onChange }: TrackListEditorProp
                             ...track,
                             index: parseInt(e.target.value) || 1,
                           })}
-                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                          className="w-full px-2 py-1 text-sm border border-[var(--theme-card-border)] rounded bg-[var(--theme-input-bg)] text-[var(--theme-card-text)] focus:ring-1 focus:ring-[var(--theme-accent)]"
                           min="1"
                         />
                       </div>
 
                       <div className="col-span-6">
-                        <label className="block text-xs text-gray-600 mb-1">Title *</label>
+                        <label className="block text-xs text-[var(--theme-muted-text)] mb-1">Title *</label>
                         <input
                           type="text"
                           value={track.title}
@@ -186,13 +186,13 @@ export default function TrackListEditor({ media, onChange }: TrackListEditorProp
                             ...track,
                             title: e.target.value,
                           })}
-                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                          className="w-full px-2 py-1 text-sm border border-[var(--theme-card-border)] rounded bg-[var(--theme-input-bg)] text-[var(--theme-card-text)] placeholder:text-[var(--theme-muted-text)] focus:ring-1 focus:ring-[var(--theme-accent)]"
                           placeholder="Track title"
                         />
                       </div>
 
                       <div className="col-span-2">
-                        <label className="block text-xs text-gray-600 mb-1">Duration</label>
+                        <label className="block text-xs text-[var(--theme-muted-text)] mb-1">Duration</label>
                         <input
                           type="text"
                           value={track.lengthSecs ? formatDuration(track.lengthSecs) : ""}
@@ -203,13 +203,13 @@ export default function TrackListEditor({ media, onChange }: TrackListEditorProp
                               lengthSecs: duration,
                             });
                           }}
-                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                          className="w-full px-2 py-1 text-sm border border-[var(--theme-card-border)] rounded bg-[var(--theme-input-bg)] text-[var(--theme-card-text)] placeholder:text-[var(--theme-muted-text)] focus:ring-1 focus:ring-[var(--theme-accent)]"
                           placeholder="M:SS"
                         />
                       </div>
 
                       <div className="col-span-2">
-                        <label className="block text-xs text-gray-600 mb-1">Live</label>
+                        <label className="block text-xs text-[var(--theme-muted-text)] mb-1">Live</label>
                         <input
                           type="checkbox"
                           checked={track.live || false}
@@ -217,7 +217,7 @@ export default function TrackListEditor({ media, onChange }: TrackListEditorProp
                             ...track,
                             live: e.target.checked,
                           })}
-                          className="mt-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          className="mt-2 h-4 w-4 text-[var(--theme-accent)] focus:ring-[var(--theme-accent)] border-[var(--theme-card-border)] rounded"
                         />
                       </div>
 
@@ -225,7 +225,7 @@ export default function TrackListEditor({ media, onChange }: TrackListEditorProp
                         <button
                           type="button"
                           onClick={() => removeTrack(mediaIndex, trackIndex)}
-                          className="px-2 py-1 text-xs text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
+                          className="px-2 py-1 text-xs text-[var(--theme-error-text)] hover:opacity-80 hover:bg-[var(--theme-error-bg)] rounded"
                         >
                           ✕
                         </button>
@@ -234,7 +234,7 @@ export default function TrackListEditor({ media, onChange }: TrackListEditorProp
 
                     <div className="mt-2 grid grid-cols-2 gap-2">
                       <div>
-                        <label className="block text-xs text-gray-600 mb-1">
+                        <label className="block text-xs text-[var(--theme-muted-text)] mb-1">
                           Track Artists (comma-separated)
                         </label>
                         <input
@@ -250,13 +250,13 @@ export default function TrackListEditor({ media, onChange }: TrackListEditorProp
                               artists: artists.length > 0 ? artists : undefined,
                             });
                           }}
-                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                          className="w-full px-2 py-1 text-sm border border-[var(--theme-card-border)] rounded bg-[var(--theme-input-bg)] text-[var(--theme-card-text)] placeholder:text-[var(--theme-muted-text)] focus:ring-1 focus:ring-[var(--theme-accent)]"
                           placeholder="Leave empty to use album artists"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-xs text-gray-600 mb-1">
+                        <label className="block text-xs text-[var(--theme-muted-text)] mb-1">
                           Track Genres (comma-separated)
                         </label>
                         <input
@@ -272,7 +272,7 @@ export default function TrackListEditor({ media, onChange }: TrackListEditorProp
                               genres: genres.length > 0 ? genres : undefined,
                             });
                           }}
-                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                          className="w-full px-2 py-1 text-sm border border-[var(--theme-card-border)] rounded bg-[var(--theme-input-bg)] text-[var(--theme-card-text)] placeholder:text-[var(--theme-muted-text)] focus:ring-1 focus:ring-[var(--theme-accent)]"
                           placeholder="Leave empty to use album genres"
                         />
                       </div>
@@ -283,7 +283,7 @@ export default function TrackListEditor({ media, onChange }: TrackListEditorProp
                 <button
                   type="button"
                   onClick={() => addTrack(mediaIndex)}
-                  className="w-full px-3 py-2 border-2 border-dashed border-gray-300 rounded text-sm text-gray-600 hover:border-gray-400 hover:text-gray-700"
+                  className="w-full px-3 py-2 border-2 border-dashed border-[var(--theme-card-border)] rounded text-sm text-[var(--theme-muted-text)] hover:border-[var(--theme-accent)] hover:text-[var(--theme-card-text)]"
                 >
                   + Add Track
                 </button>
@@ -297,7 +297,7 @@ export default function TrackListEditor({ media, onChange }: TrackListEditorProp
         <button
           type="button"
           onClick={addMedia}
-          className="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded text-gray-600 hover:border-gray-400 hover:text-gray-700"
+          className="w-full px-4 py-2 border-2 border-dashed border-[var(--theme-card-border)] rounded text-[var(--theme-muted-text)] hover:border-[var(--theme-accent)] hover:text-[var(--theme-card-text)]"
         >
           + Add Another Disc/Media
         </button>
