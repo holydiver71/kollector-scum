@@ -112,6 +112,9 @@ namespace KollectorScum.Api.Services
                 Imported = job.ImportedReleases,
                 Skipped = job.SkippedReleases,
                 Failed = job.FailedReleases,
+                Percentage = job.Status == DiscogsImportJobStatus.Succeeded || job.Status == DiscogsImportJobStatus.Failed
+                    ? 100
+                    : CalculatePercentage(job.ImportedReleases, job.SkippedReleases, job.FailedReleases, job.EffectiveTotal),
                 Completed = job.Status == DiscogsImportJobStatus.Succeeded || job.Status == DiscogsImportJobStatus.Failed,
                 Success = job.Success,
                 ErrorMessage = job.ErrorMessage,
@@ -128,10 +131,23 @@ namespace KollectorScum.Api.Services
                 dto.Imported = liveProgress.Imported;
                 dto.Skipped = liveProgress.Skipped;
                 dto.Failed = liveProgress.Failed;
-                dto.Completed = liveProgress.Completed || dto.Completed;
+                dto.Percentage = liveProgress.Percentage > 0
+                    ? liveProgress.Percentage
+                    : CalculatePercentage(dto.Imported, dto.Skipped, dto.Failed, dto.EffectiveTotal);
             }
 
             return dto;
+        }
+
+        private static int CalculatePercentage(int imported, int skipped, int failed, int effectiveTotal)
+        {
+            var processed = imported + skipped + failed;
+            if (effectiveTotal <= 0)
+            {
+                return processed > 0 ? 100 : 0;
+            }
+
+            return Math.Clamp((int)Math.Round((processed / (double)effectiveTotal) * 100), 0, 100);
         }
 
         private static List<string> DeserializeErrors(string? errorsJson)

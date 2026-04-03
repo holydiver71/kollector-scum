@@ -16,6 +16,9 @@ namespace KollectorScum.Api.Services
     {
         // In-memory progress store to allow clients to poll import progress
         private static readonly ConcurrentDictionary<Guid, DiscogsImportProgress> _progressStore = new();
+        private const int ImportPhaseMaxPercentage = 85;
+        private const int TracklistPhaseSpanPercentage = 10;
+        private const int CoverArtPhaseSpanPercentage = 4;
 
         private readonly IDiscogsService _discogsService;
         private readonly IUnitOfWork _unitOfWork;
@@ -107,6 +110,7 @@ namespace KollectorScum.Api.Services
                     Imported = 0,
                     Skipped = 0,
                     Failed = 0,
+                    Percentage = 0,
                     Completed = false,
                     LastUpdatedUtc = DateTime.UtcNow
                 };
@@ -143,6 +147,7 @@ namespace KollectorScum.Api.Services
                 }
 
                 await EnrichTracklistsAsync(userId, importedDiscogsIds, cancellationToken);
+                await EnrichCoverArtAsync(userId, importedDiscogsIds, cancellationToken);
 
                 // Import is only successful if at least one release was imported
                 result.Success = result.ImportedReleases > 0;
@@ -165,6 +170,7 @@ namespace KollectorScum.Api.Services
                         Imported = result.ImportedReleases,
                         Skipped = result.SkippedReleases,
                         Failed = result.FailedReleases,
+                        Percentage = 100,
                         Completed = true,
                         LastUpdatedUtc = DateTime.UtcNow
                     };
@@ -216,6 +222,17 @@ namespace KollectorScum.Api.Services
             {
                 _logger.LogWarning("No releases to process");
                 return;
+            }
+            
+            // Track every Discogs ID seen in this batch (not only new inserts)
+            // so deferred enrichment can backfill releases that already existed.
+            foreach (var release in releases)
+            {
+                var discogsId = release.BasicInformation?.Id;
+                if (discogsId.HasValue && discogsId.Value > 0)
+                {
+                    importedDiscogsIds.Add(discogsId.Value);
+                }
             }
 
             // Trim to the max if a limit applies.
@@ -273,6 +290,33 @@ namespace KollectorScum.Api.Services
             var toImport = validReleases
                 .Where(r => !existingIds.Contains(r.BasicInformation!.Id))
                 .ToList();
+
+            // Discogs collections can contain multiple copies of the same release.
+            // Keep only the first occurrence per Discogs ID in this batch so we don't
+            // hit the unique index on (UserId, DiscogsId) during bulk insert.
+            var dedupedToImport = new List<DiscogsCollectionReleaseDto>(toImport.Count);
+            var seenDiscogsIds = new HashSet<int>();
+            var duplicateInBatchCount = 0;
+            foreach (var release in toImport)
+            {
+                var discogsId = release.BasicInformation!.Id;
+                if (seenDiscogsIds.Add(discogsId))
+                {
+                    dedupedToImport.Add(release);
+                }
+                else
+                {
+                    duplicateInBatchCount++;
+                }
+            }
+
+            if (duplicateInBatchCount > 0)
+            {
+                result.SkippedReleases += duplicateInBatchCount;
+                UpdateProgressSnapshot(userId, result);
+            }
+
+            toImport = dedupedToImport;
 
             if (toImport.Count == 0) return;
 
@@ -350,15 +394,18 @@ namespace KollectorScum.Api.Services
                 return;
             }
 
-            var releasesToEnrich = (await _unitOfWork.MusicReleases.GetAsync(
+            var importedReleases = (await _unitOfWork.MusicReleases.GetAsync(
                     mr => mr.UserId == userId
                         && mr.DiscogsId.HasValue
                         && mr.DiscogsId.Value > 0
-                        && importedDiscogsIds.Contains(mr.DiscogsId.Value)
-                        && string.IsNullOrWhiteSpace(mr.Media),
+                        && importedDiscogsIds.Contains(mr.DiscogsId.Value),
                     null,
                     "",
                     cancellationToken))
+                .ToList();
+
+            var releasesToEnrich = importedReleases
+                .Where(NeedsTracklistEnrichment)
                 .ToList();
 
             if (releasesToEnrich.Count == 0)
@@ -369,12 +416,15 @@ namespace KollectorScum.Api.Services
             _logger.LogInformation("Starting deferred tracklist enrichment for {Count} releases", releasesToEnrich.Count);
 
             var enrichedCount = 0;
+            var processedCount = 0;
             foreach (var release in releasesToEnrich)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 if (!release.DiscogsId.HasValue)
                 {
+                    processedCount++;
+                    UpdatePhaseProgress(userId, ImportPhaseMaxPercentage, TracklistPhaseSpanPercentage, processedCount, releasesToEnrich.Count);
                     continue;
                 }
 
@@ -414,6 +464,9 @@ namespace KollectorScum.Api.Services
                 {
                     _logger.LogWarning(ex, "Deferred tracklist enrichment failed for Discogs ID {DiscogsId}", release.DiscogsId);
                 }
+
+                processedCount++;
+                UpdatePhaseProgress(userId, ImportPhaseMaxPercentage, TracklistPhaseSpanPercentage, processedCount, releasesToEnrich.Count);
             }
 
             if (enrichedCount > 0)
@@ -421,6 +474,89 @@ namespace KollectorScum.Api.Services
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
                 _logger.LogInformation("Completed deferred tracklist enrichment for {Count} releases", enrichedCount);
             }
+
+            UpdatePhaseProgress(userId, ImportPhaseMaxPercentage + TracklistPhaseSpanPercentage, 0, 1, 1);
+        }
+
+        private async Task EnrichCoverArtAsync(Guid userId, ISet<int> importedDiscogsIds, CancellationToken cancellationToken)
+        {
+            if (importedDiscogsIds.Count == 0)
+            {
+                return;
+            }
+
+            var releasesToMirror = (await _unitOfWork.MusicReleases.GetAsync(
+                    mr => mr.UserId == userId
+                        && mr.DiscogsId.HasValue
+                        && mr.DiscogsId.Value > 0
+                        && importedDiscogsIds.Contains(mr.DiscogsId.Value)
+                        && !string.IsNullOrWhiteSpace(mr.Images),
+                    null,
+                    "",
+                    cancellationToken))
+                .ToList();
+
+            if (releasesToMirror.Count == 0)
+            {
+                return;
+            }
+
+            _logger.LogInformation("Starting deferred cover-art mirroring for {Count} releases", releasesToMirror.Count);
+
+            var mirroredCount = 0;
+            var processedCount = 0;
+            foreach (var release in releasesToMirror)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var coverUrl = ExtractCoverFrontFromImages(release.Images);
+                if (string.IsNullOrWhiteSpace(coverUrl) || !coverUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                {
+                    processedCount++;
+                    UpdatePhaseProgress(userId, ImportPhaseMaxPercentage + TracklistPhaseSpanPercentage, CoverArtPhaseSpanPercentage, processedCount, releasesToMirror.Count);
+                    continue;
+                }
+
+                try
+                {
+                    var year = release.ReleaseYear?.Year > 0 ? release.ReleaseYear.Value.Year.ToString() : null;
+                    var mirrored = await _imageService.DownloadAndStoreCoverArtAsync(
+                        coverUrl,
+                        "Unknown",
+                        release.Title,
+                        year,
+                        userId);
+
+                    var normalizedPath = NormalizeMirroredImagePath(mirrored, userId);
+                    if (string.IsNullOrWhiteSpace(normalizedPath))
+                    {
+                        continue;
+                    }
+
+                    release.Images = JsonSerializer.Serialize(new { CoverFront = normalizedPath });
+                    release.LastModified = DateTime.UtcNow;
+                    mirroredCount++;
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Deferred cover-art mirroring failed for Discogs ID {DiscogsId}", release.DiscogsId);
+                }
+
+                processedCount++;
+                UpdatePhaseProgress(userId, ImportPhaseMaxPercentage + TracklistPhaseSpanPercentage, CoverArtPhaseSpanPercentage, processedCount, releasesToMirror.Count);
+            }
+
+            if (mirroredCount > 0)
+            {
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
+                _logger.LogInformation("Completed deferred cover-art mirroring for {Count} releases", mirroredCount);
+            }
+
+            UpdatePhaseProgress(userId, 99, 0, 1, 1);
         }
 
         private static List<int> DeserializeIds(string? serializedIds)
@@ -440,6 +576,49 @@ namespace KollectorScum.Api.Services
             }
         }
 
+        private static string? ExtractCoverFrontFromImages(string? serializedImages)
+        {
+            if (string.IsNullOrWhiteSpace(serializedImages))
+            {
+                return null;
+            }
+
+            try
+            {
+                using var doc = JsonDocument.Parse(serializedImages);
+                if (doc.RootElement.TryGetProperty("CoverFront", out var coverFront)
+                    && coverFront.ValueKind == JsonValueKind.String)
+                {
+                    return coverFront.GetString();
+                }
+            }
+            catch
+            {
+                return null;
+            }
+
+            return null;
+        }
+
+        private static string? NormalizeMirroredImagePath(string? mirroredResult, Guid userId)
+        {
+            if (string.IsNullOrWhiteSpace(mirroredResult))
+            {
+                return null;
+            }
+
+            var trimmed = mirroredResult.Trim();
+            if (trimmed.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+                || trimmed.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+                || trimmed.StartsWith("/cover-art/", StringComparison.OrdinalIgnoreCase))
+            {
+                return trimmed;
+            }
+
+            var fileName = trimmed.Contains('/') ? trimmed.Split('/').Last() : trimmed;
+            return $"/cover-art/{userId}/{fileName}";
+        }
+
         /// <summary>
         /// Updates the in-memory progress snapshot used by polling clients.
         /// </summary>
@@ -450,6 +629,31 @@ namespace KollectorScum.Api.Services
                 snap.Imported = result.ImportedReleases + pendingImportedInBatch;
                 snap.Skipped = result.SkippedReleases;
                 snap.Failed = result.FailedReleases;
+                var processed = snap.Imported + snap.Skipped + snap.Failed;
+                var importPhasePercentage = snap.EffectiveTotal > 0
+                    ? (int)Math.Round((processed / (double)snap.EffectiveTotal) * ImportPhaseMaxPercentage)
+                    : 0;
+                snap.Percentage = Math.Max(snap.Percentage, Math.Clamp(importPhasePercentage, 0, ImportPhaseMaxPercentage));
+                snap.LastUpdatedUtc = DateTime.UtcNow;
+                _progressStore[userId] = snap;
+            }
+        }
+
+        private void UpdatePhaseProgress(Guid userId, int basePercentage, int phaseSpan, int processedCount, int totalCount)
+        {
+            if (!_progressStore.TryGetValue(userId, out var snap))
+            {
+                return;
+            }
+
+            var phaseProgress = phaseSpan <= 0 || totalCount <= 0
+                ? 0
+                : (int)Math.Round((processedCount / (double)totalCount) * phaseSpan);
+
+            var target = Math.Clamp(basePercentage + phaseProgress, 0, 99);
+            if (target > snap.Percentage)
+            {
+                snap.Percentage = target;
                 snap.LastUpdatedUtc = DateTime.UtcNow;
                 _progressStore[userId] = snap;
             }
@@ -570,6 +774,30 @@ namespace KollectorScum.Api.Services
             };
 
             return mediaList;
+        }
+
+        private static bool NeedsTracklistEnrichment(MusicRelease release)
+        {
+            if (string.IsNullOrWhiteSpace(release.Media))
+            {
+                return true;
+            }
+
+            try
+            {
+                var media = JsonSerializer.Deserialize<List<MusicReleaseMediaDto>>(release.Media);
+                if (media == null || media.Count == 0)
+                {
+                    return true;
+                }
+
+                return media.All(m => m.Tracks == null || m.Tracks.Count == 0);
+            }
+            catch (JsonException)
+            {
+                // Invalid/legacy media JSON should be eligible for refresh.
+                return true;
+            }
         }
 
         private int ParseDuration(string? duration)

@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Linq.Expressions;
 using System.Threading;
+using System.Text.Json;
 
 namespace KollectorScum.Api.Services
 {
@@ -23,6 +24,12 @@ namespace KollectorScum.Api.Services
         private readonly KollectorScumDbContext _context;
         private readonly ILogger<MusicReleaseQueryService> _logger;
         private readonly IUserContext _userContext;
+        private readonly IDiscogsService? _discogsService;
+
+        private static readonly JsonSerializerOptions CaseInsensitiveJson = new()
+        {
+            PropertyNameCaseInsensitive = true
+        };
 
         public MusicReleaseQueryService(
             IRepository<MusicRelease> musicReleaseRepository,
@@ -32,7 +39,8 @@ namespace KollectorScum.Api.Services
             ICollectionStatisticsService statisticsService,
             KollectorScumDbContext context,
             ILogger<MusicReleaseQueryService> logger,
-            IUserContext userContext)
+            IUserContext userContext,
+            IDiscogsService? discogsService = null)
         {
             _musicReleaseRepository = musicReleaseRepository ?? throw new ArgumentNullException(nameof(musicReleaseRepository));
             _artistRepository = artistRepository ?? throw new ArgumentNullException(nameof(artistRepository));
@@ -42,6 +50,7 @@ namespace KollectorScum.Api.Services
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _userContext = userContext ?? throw new ArgumentNullException(nameof(userContext));
+            _discogsService = discogsService;
         }
 
         public async Task<PagedResult<MusicReleaseSummaryDto>> GetMusicReleasesAsync(
@@ -360,6 +369,8 @@ namespace KollectorScum.Api.Services
                 return null;
             }
 
+            await TryBackfillTracklistFromDiscogsAsync(musicRelease, cancellationToken);
+
             var dto = await _mapper.MapToFullDtoAsync(musicRelease);
 
             // Get the last played date
@@ -374,6 +385,143 @@ namespace KollectorScum.Api.Services
 
         public async Task<MusicReleaseDto?> GetMusicReleaseAsync(int id)
             => await GetMusicReleaseAsync(id, CancellationToken.None);
+
+        private async Task TryBackfillTracklistFromDiscogsAsync(MusicRelease musicRelease, CancellationToken cancellationToken)
+        {
+            if (_discogsService == null || !NeedsTracklistBackfill(musicRelease.Media) || !musicRelease.DiscogsId.HasValue || musicRelease.DiscogsId.Value <= 0)
+            {
+                return;
+            }
+
+            try
+            {
+                var details = await _discogsService.GetReleaseDetailsAsync(musicRelease.DiscogsId.Value.ToString());
+                if (details?.Tracklist == null || details.Tracklist.Count == 0)
+                {
+                    return;
+                }
+
+                var artistIds = DeserializeIds(musicRelease.Artists)
+                    .Select(id => id.ToString())
+                    .ToList();
+                var genreIds = DeserializeIds(musicRelease.Genres)
+                    .Select(id => id.ToString())
+                    .ToList();
+
+                var tracks = new List<object>();
+                var trackIndex = 1;
+                foreach (var track in details.Tracklist)
+                {
+                    if (string.IsNullOrWhiteSpace(track.Title))
+                    {
+                        continue;
+                    }
+
+                    tracks.Add(new
+                    {
+                        Title = track.Title,
+                        ReleaseYear = musicRelease.ReleaseYear?.ToString("yyyy-MM-dd") ?? string.Empty,
+                        Artists = artistIds,
+                        Genres = genreIds,
+                        Live = false,
+                        LengthSecs = ParseDuration(track.Duration),
+                        Index = trackIndex++
+                    });
+                }
+
+                if (tracks.Count == 0)
+                {
+                    return;
+                }
+
+                var media = new List<object>
+                {
+                    new
+                    {
+                        Title = musicRelease.Title,
+                        FormatId = musicRelease.FormatId ?? 0,
+                        Index = 1,
+                        Tracks = tracks
+                    }
+                };
+
+                musicRelease.Media = JsonSerializer.Serialize(media);
+                musicRelease.LastModified = DateTime.UtcNow;
+                await _context.SaveChangesAsync(cancellationToken);
+
+                _logger.LogInformation("Backfilled tracklist from Discogs for release {Id} (DiscogsId={DiscogsId})", musicRelease.Id, musicRelease.DiscogsId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Tracklist backfill failed for release {Id} (DiscogsId={DiscogsId})", musicRelease.Id, musicRelease.DiscogsId);
+            }
+        }
+
+        private static bool NeedsTracklistBackfill(string? mediaJson)
+        {
+            if (string.IsNullOrWhiteSpace(mediaJson))
+            {
+                return true;
+            }
+
+            try
+            {
+                var media = JsonSerializer.Deserialize<List<MusicReleaseMediaDto>>(mediaJson, CaseInsensitiveJson);
+                if (media == null || media.Count == 0)
+                {
+                    return true;
+                }
+
+                return media.All(m => m.Tracks == null || m.Tracks.Count == 0);
+            }
+            catch (JsonException)
+            {
+                return true;
+            }
+        }
+
+        private static List<int> DeserializeIds(string? serializedIds)
+        {
+            if (string.IsNullOrWhiteSpace(serializedIds))
+            {
+                return new List<int>();
+            }
+
+            try
+            {
+                return JsonSerializer.Deserialize<List<int>>(serializedIds) ?? new List<int>();
+            }
+            catch (JsonException)
+            {
+                return new List<int>();
+            }
+        }
+
+        private static int ParseDuration(string? duration)
+        {
+            if (string.IsNullOrWhiteSpace(duration))
+            {
+                return 0;
+            }
+
+            var parts = duration.Split(':');
+            if (parts.Length == 2
+                && int.TryParse(parts[0], out var minutes)
+                && int.TryParse(parts[1], out var seconds))
+            {
+                return (minutes * 60) + seconds;
+            }
+
+            if (parts.Length == 3
+                && int.TryParse(parts[0], out var hours)
+                && int.TryParse(parts[1], out var hhMinutes)
+                && int.TryParse(parts[2], out var hhSeconds))
+            {
+                return (hours * 3600) + (hhMinutes * 60) + hhSeconds;
+            }
+
+            return 0;
+        }
 
         public async Task<List<SearchSuggestionDto>> GetSearchSuggestionsAsync(string query, int limit, CancellationToken cancellationToken = default)
         {

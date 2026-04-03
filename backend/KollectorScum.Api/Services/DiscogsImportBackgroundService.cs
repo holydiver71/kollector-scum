@@ -45,10 +45,19 @@ namespace KollectorScum.Api.Services
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
             var jobRepository = unitOfWork.GetRepository<DiscogsImportJob>();
 
-            var pendingJobs = await jobRepository.Query()
-                .Where(job => job.Status == DiscogsImportJobStatus.Queued || job.Status == DiscogsImportJobStatus.Running)
-                .OrderBy(job => job.CreatedAtUtc)
-                .ToListAsync(cancellationToken);
+            List<DiscogsImportJob> pendingJobs;
+            try
+            {
+                pendingJobs = await jobRepository.Query()
+                    .Where(job => job.Status == DiscogsImportJobStatus.Queued || job.Status == DiscogsImportJobStatus.Running)
+                    .OrderBy(job => job.CreatedAtUtc)
+                    .ToListAsync(cancellationToken);
+            }
+            catch (Exception ex) when (IsMissingImportJobTable(ex))
+            {
+                _logger.LogWarning(ex, "Skipping Discogs import job recovery because DiscogsImportJobs table is unavailable.");
+                return;
+            }
 
             if (pendingJobs.Count == 0)
             {
@@ -74,6 +83,13 @@ namespace KollectorScum.Api.Services
             }
 
             _logger.LogInformation("Recovered {PendingJobCount} pending Discogs import jobs", pendingJobs.Count);
+        }
+
+        private static bool IsMissingImportJobTable(Exception ex)
+        {
+            return ex.Message.Contains("DiscogsImportJobs", StringComparison.OrdinalIgnoreCase)
+                && (ex.Message.Contains("no such table", StringComparison.OrdinalIgnoreCase)
+                    || ex.Message.Contains("does not exist", StringComparison.OrdinalIgnoreCase));
         }
 
         private async Task ProcessJobAsync(Guid jobId, CancellationToken cancellationToken)
