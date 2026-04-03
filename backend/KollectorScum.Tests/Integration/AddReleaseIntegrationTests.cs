@@ -85,7 +85,6 @@ namespace KollectorScum.Tests.Integration
 
         public void Dispose()
         {
-            _factory.Dispose();
             _connection.Dispose();
         }
 
