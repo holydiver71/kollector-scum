@@ -1,7 +1,11 @@
+using System;
 using KollectorScum.Api.Data;
 using KollectorScum.Api.Interfaces;
 using KollectorScum.Api.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using System.Data;
+using System.Data.Common;
 using System.Threading;
 
 namespace KollectorScum.Api.Repositories
@@ -256,6 +260,56 @@ namespace KollectorScum.Api.Repositories
             {
                 _currentTransaction?.Dispose();
                 _context?.Dispose();
+            }
+        }
+
+        /// <summary>
+        /// Checks whether a table exists in the current database.
+        /// This method is provider-aware for SQLite and other relational DBs.
+        /// </summary>
+        public async Task<bool> TableExistsAsync(string tableName, CancellationToken cancellationToken)
+        {
+            var connection = _context.Database.GetDbConnection();
+            var openedHere = false;
+            try
+            {
+                if (connection.State == ConnectionState.Closed)
+                {
+                    await connection.OpenAsync(cancellationToken);
+                    openedHere = true;
+                }
+
+                using var cmd = connection.CreateCommand();
+                var providerName = connection.GetType().Name ?? string.Empty;
+
+                var param = cmd.CreateParameter();
+                param.ParameterName = "@name";
+                param.Value = tableName;
+                cmd.Parameters.Add(param);
+
+                if (providerName.IndexOf("Sqlite", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    cmd.CommandText = "SELECT COUNT(name) FROM sqlite_master WHERE type='table' AND name=@name";
+                    var result = await cmd.ExecuteScalarAsync(cancellationToken);
+                    return Convert.ToInt32(result) > 0;
+                }
+                else
+                {
+                    cmd.CommandText = "SELECT COUNT(*) FROM information_schema.tables WHERE table_name = @name";
+                    var result = await cmd.ExecuteScalarAsync(cancellationToken);
+                    return Convert.ToInt32(result) > 0;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+            finally
+            {
+                if (openedHere)
+                {
+                    try { await connection.CloseAsync(); } catch { }
+                }
             }
         }
     }

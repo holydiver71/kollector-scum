@@ -45,19 +45,18 @@ namespace KollectorScum.Api.Services
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
             var jobRepository = unitOfWork.GetRepository<DiscogsImportJob>();
 
-            List<DiscogsImportJob> pendingJobs;
-            try
+            // Check if the underlying table exists before issuing a query to avoid noisy provider errors
+            var tableExists = await unitOfWork.TableExistsAsync("DiscogsImportJobs", cancellationToken);
+            if (!tableExists)
             {
-                pendingJobs = await jobRepository.Query()
-                    .Where(job => job.Status == DiscogsImportJobStatus.Queued || job.Status == DiscogsImportJobStatus.Running)
-                    .OrderBy(job => job.CreatedAtUtc)
-                    .ToListAsync(cancellationToken);
-            }
-            catch (Exception ex) when (IsMissingImportJobTable(ex))
-            {
-                _logger.LogWarning(ex, "Skipping Discogs import job recovery because DiscogsImportJobs table is unavailable.");
+                _logger.LogWarning("Skipping Discogs import job recovery because DiscogsImportJobs table is unavailable.");
                 return;
             }
+
+            List<DiscogsImportJob> pendingJobs = await jobRepository.Query()
+                .Where(job => job.Status == DiscogsImportJobStatus.Queued || job.Status == DiscogsImportJobStatus.Running)
+                .OrderBy(job => job.CreatedAtUtc)
+                .ToListAsync(cancellationToken);
 
             if (pendingJobs.Count == 0)
             {
