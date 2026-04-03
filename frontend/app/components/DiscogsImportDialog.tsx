@@ -347,12 +347,13 @@ export function DiscogsImportDialog({
       setCooldownSecondsLeft(null);
       return;
     }
-    const tick = () => {
-      const secsLeft = Math.max(0, Math.round((new Date(progress.cooldownUntilUtc!).getTime() - Date.now()) / 1000));
-      setCooldownSecondsLeft(secsLeft > 0 ? secsLeft : null);
+    const cooldownEnd = new Date(progress.cooldownUntilUtc).getTime();
+    const computeSecsLeft = (): number | null => {
+      const secsLeft = Math.max(0, Math.round((cooldownEnd - Date.now()) / 1000));
+      return secsLeft > 0 ? secsLeft : null;
     };
-    tick();
-    const id = window.setInterval(tick, 1000);
+    setCooldownSecondsLeft(computeSecsLeft());
+    const id = window.setInterval(() => setCooldownSecondsLeft(computeSecsLeft()), 1000);
     return () => window.clearInterval(id);
   }, [progress?.cooldownUntilUtc]);
 
