@@ -134,6 +134,7 @@ namespace KollectorScum.Api.Services
                 dto.Percentage = liveProgress.Percentage > 0
                     ? liveProgress.Percentage
                     : CalculatePercentage(dto.Imported, dto.Skipped, dto.Failed, dto.EffectiveTotal);
+                dto.CooldownUntilUtc = liveProgress.CooldownUntilUtc;
             }
 
             return dto;
