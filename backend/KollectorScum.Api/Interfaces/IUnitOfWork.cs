@@ -103,6 +103,13 @@ namespace KollectorScum.Api.Interfaces
         IRepository<T> GetRepository<T>() where T : class;
 
         /// <summary>
+        /// Checks whether a table exists in the underlying database.
+        /// </summary>
+        /// <param name="tableName">Table name to check</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>True if table exists</returns>
+        Task<bool> TableExistsAsync(string tableName, CancellationToken cancellationToken);
+        /// <summary>
         /// Atomically upserts a Format and returns its Id.
         /// </summary>
         Task<int> UpsertFormatAsync(Guid userId, string name);

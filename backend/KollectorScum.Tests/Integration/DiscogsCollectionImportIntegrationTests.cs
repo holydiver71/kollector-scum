@@ -121,6 +121,13 @@ public class DiscogsCollectionImportIntegrationTests : IDisposable
             return new Repository<T>(_context);
         }
 
+        public Task<bool> TableExistsAsync(string tableName, CancellationToken cancellationToken)
+        {
+            // Integration test uses an in-memory SQLite database and calls EnsureCreated,
+            // so for the purposes of these tests assume the table exists.
+            return Task.FromResult(true);
+        }
+
         // This integration test uses releases with empty lookup payloads,
         // so these methods are defensive fallbacks and should not be called.
         public Task<int> UpsertFormatAsync(Guid userId, string name) => UpsertByNameAsync(_context, _context.Formats, userId, name);
