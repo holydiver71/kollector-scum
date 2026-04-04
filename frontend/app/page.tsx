@@ -78,8 +78,11 @@ export default function Dashboard() {
 
         const hadCollectionBefore = localStorage.getItem(collectionFlagKey) === '1';
 
-        // Update collection context and show welcome screen for empty collections
-        setHasCollection(totalReleases > 0 || hadCollectionBefore);
+        // Update collection context based on the actual live count — this drives
+        // sidebar visibility and route guards.
+        setHasCollection(totalReleases > 0);
+        // Show the welcome screen only when the collection is genuinely empty
+        // and the user hasn't dismissed it before (hadCollectionBefore flag).
         if (totalReleases === 0 && !hadCollectionBefore) {
           setShowWelcome(true);
         }

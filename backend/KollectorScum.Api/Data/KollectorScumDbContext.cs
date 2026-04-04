@@ -906,5 +906,107 @@ LIMIT 1;";
                 // Context manages connection lifecycle
             }
         }
+
+        /// <summary>
+        /// Performs an atomic upsert for a Packaging row keyed by (UserId, Name).
+        /// Returns the Id of the inserted or existing row.
+        /// </summary>
+        public async Task<int> UpsertPackagingAsync(Guid userId, string name, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Name must be provided", nameof(name));
+
+            var sql = @"WITH ins AS (
+  INSERT INTO ""Packagings"" (""UserId"",""Name"") VALUES (@userId, @name)
+  ON CONFLICT (""UserId"",""Name"") DO NOTHING
+  RETURNING ""Id""
+)
+SELECT ""Id"" FROM ins
+UNION
+SELECT ""Id"" FROM ""Packagings"" WHERE ""UserId"" = @userId AND ""Name"" = @name
+LIMIT 1;";
+
+            var conn = Database.GetDbConnection();
+            try
+            {
+                if (conn.State != ConnectionState.Open)
+                {
+                    await conn.OpenAsync(cancellationToken);
+                }
+
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = sql;
+
+                var pUser = cmd.CreateParameter();
+                pUser.ParameterName = "@userId";
+                pUser.Value = userId;
+                pUser.DbType = DbType.Guid;
+                cmd.Parameters.Add(pUser);
+
+                var pName = cmd.CreateParameter();
+                pName.ParameterName = "@name";
+                pName.Value = name;
+                pName.DbType = DbType.String;
+                cmd.Parameters.Add(pName);
+
+                var result = await cmd.ExecuteScalarAsync(cancellationToken);
+                if (result == null || result == DBNull.Value)
+                {
+                    throw new InvalidOperationException("Failed to upsert Packaging and retrieve Id.");
+                }
+
+                return Convert.ToInt32(result);
+            }
+            catch (PostgresException pex) when (pex.SqlState == "23505")
+            {
+                using var selectCmd = conn.CreateCommand();
+                selectCmd.CommandText = "SELECT \"Id\" FROM \"Packagings\" WHERE \"UserId\" = @userId AND \"Name\" = @name LIMIT 1;";
+
+                var spUser = selectCmd.CreateParameter();
+                spUser.ParameterName = "@userId";
+                spUser.Value = userId;
+                spUser.DbType = DbType.Guid;
+                selectCmd.Parameters.Add(spUser);
+
+                var spName = selectCmd.CreateParameter();
+                spName.ParameterName = "@name";
+                spName.Value = name;
+                spName.DbType = DbType.String;
+                selectCmd.Parameters.Add(spName);
+
+                var sel = await selectCmd.ExecuteScalarAsync(cancellationToken);
+                if (sel != null && sel != DBNull.Value)
+                {
+                    return Convert.ToInt32(sel);
+                }
+
+                using var fixCmd = conn.CreateCommand();
+                fixCmd.CommandText = "SELECT setval(pg_get_serial_sequence('\"Packagings\"','Id'), (SELECT COALESCE(MAX(\"Id\"),0) FROM \"Packagings\"));";
+                await fixCmd.ExecuteNonQueryAsync(cancellationToken);
+
+                using var retryCmd = conn.CreateCommand();
+                retryCmd.CommandText = sql;
+                var rUser = retryCmd.CreateParameter();
+                rUser.ParameterName = "@userId";
+                rUser.Value = userId;
+                rUser.DbType = DbType.Guid;
+                retryCmd.Parameters.Add(rUser);
+                var rName = retryCmd.CreateParameter();
+                rName.ParameterName = "@name";
+                rName.Value = name;
+                rName.DbType = DbType.String;
+                retryCmd.Parameters.Add(rName);
+
+                var retryRes = await retryCmd.ExecuteScalarAsync(cancellationToken);
+                if (retryRes == null || retryRes == DBNull.Value)
+                {
+                    throw;
+                }
+                return Convert.ToInt32(retryRes);
+            }
+            finally
+            {
+                // Context manages connection lifecycle
+            }
+        }
     }
 }
