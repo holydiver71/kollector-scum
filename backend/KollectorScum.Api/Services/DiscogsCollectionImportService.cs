@@ -464,6 +464,7 @@ namespace KollectorScum.Api.Services
 
                     release.Media = JsonSerializer.Serialize(media);
                     release.LastModified = DateTime.UtcNow;
+                    _unitOfWork.MusicReleases.Update(release);
                     enrichedCount++;
                 }
                 catch (OperationCanceledException)
@@ -530,9 +531,19 @@ namespace KollectorScum.Api.Services
                 try
                 {
                     var year = release.ReleaseYear?.Year > 0 ? release.ReleaseYear.Value.Year.ToString() : null;
+
+                    var artistName = "Unknown";
+                    var artistIds = DeserializeIds(release.Artists);
+                    if (artistIds.Count > 0)
+                    {
+                        var firstId = artistIds[0];
+                        var matchedArtists = await _unitOfWork.Artists.GetAsync(a => a.Id == firstId && a.UserId == userId);
+                        artistName = matchedArtists.FirstOrDefault()?.Name ?? "Unknown";
+                    }
+
                     var mirrored = await _imageService.DownloadAndStoreCoverArtAsync(
                         coverUrl,
-                        "Unknown",
+                        artistName,
                         release.Title,
                         year,
                         userId);
@@ -545,6 +556,7 @@ namespace KollectorScum.Api.Services
 
                     release.Images = JsonSerializer.Serialize(new { CoverFront = normalizedPath });
                     release.LastModified = DateTime.UtcNow;
+                    _unitOfWork.MusicReleases.Update(release);
                     mirroredCount++;
                 }
                 catch (OperationCanceledException)

@@ -81,16 +81,9 @@ namespace KollectorScum.Tests.Services
         public async Task DeleteMusicReleaseAsync_WithValidId_DeletesReleaseAndImages()
         {
             // Arrange
-            var coversPath = Path.Combine(_testImagesPath, "covers");
-            var thumbnailsPath = Path.Combine(_testImagesPath, "thumbnails");
             var frontCoverFile = "test-front.jpg";
             var backCoverFile = "test-back.jpg";
             var thumbnailFile = "test-thumb.jpg";
-
-            // Create test image files
-            File.WriteAllText(Path.Combine(coversPath, frontCoverFile), "test front cover");
-            File.WriteAllText(Path.Combine(coversPath, backCoverFile), "test back cover");
-            File.WriteAllText(Path.Combine(thumbnailsPath, thumbnailFile), "test thumbnail");
 
             var imageDto = new MusicReleaseImageDto
             {
@@ -112,26 +105,21 @@ namespace KollectorScum.Tests.Services
             _mockMusicReleaseRepo.Setup(r => r.Delete(It.IsAny<MusicRelease>()));
             _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
-            // Verify files exist before deletion
-            Assert.True(File.Exists(Path.Combine(coversPath, frontCoverFile)));
-            Assert.True(File.Exists(Path.Combine(coversPath, backCoverFile)));
-            Assert.True(File.Exists(Path.Combine(thumbnailsPath, thumbnailFile)));
-
             // Act
             var result = await _service.DeleteMusicReleaseAsync(1);
 
             // Assert
             Assert.True(result.IsSuccess);
             Assert.True(result.Value);
-            
+
             // Verify database operations
             _mockMusicReleaseRepo.Verify(r => r.Delete(It.IsAny<MusicRelease>()), Times.Once);
             _mockUnitOfWork.Verify(u => u.SaveChangesAsync(), Times.Once);
 
-            // Verify image files were deleted from correct folders
-            Assert.False(File.Exists(Path.Combine(coversPath, frontCoverFile)));
-            Assert.False(File.Exists(Path.Combine(coversPath, backCoverFile)));
-            Assert.False(File.Exists(Path.Combine(thumbnailsPath, thumbnailFile)));
+            // Verify image files were deleted via the storage service
+            _mockStorageService.Verify(s => s.DeleteFileAsync(It.IsAny<string>(), defaultUserId.ToString(), frontCoverFile), Times.Once);
+            _mockStorageService.Verify(s => s.DeleteFileAsync(It.IsAny<string>(), defaultUserId.ToString(), backCoverFile), Times.Once);
+            _mockStorageService.Verify(s => s.DeleteFileAsync(It.IsAny<string>(), defaultUserId.ToString(), thumbnailFile), Times.Once);
         }
 
         [Fact]
@@ -165,12 +153,7 @@ namespace KollectorScum.Tests.Services
         public async Task DeleteMusicReleaseAsync_WithPartialImages_DeletesExistingImages()
         {
             // Arrange
-            var coversPath = Path.Combine(_testImagesPath, "covers");
-            var thumbnailsPath = Path.Combine(_testImagesPath, "thumbnails");
             var frontCoverFile = "test-front-only.jpg";
-
-            // Create only front cover file
-            File.WriteAllText(Path.Combine(coversPath, frontCoverFile), "test front cover");
 
             var imageDto = new MusicReleaseImageDto
             {
@@ -192,18 +175,16 @@ namespace KollectorScum.Tests.Services
             _mockMusicReleaseRepo.Setup(r => r.Delete(It.IsAny<MusicRelease>()));
             _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
 
-            // Verify file exists before deletion
-            Assert.True(File.Exists(Path.Combine(coversPath, frontCoverFile)));
-
             // Act
             var result = await _service.DeleteMusicReleaseAsync(1);
 
             // Assert
             Assert.True(result.IsSuccess);
             Assert.True(result.Value);
-            
-            // Verify image file was deleted
-            Assert.False(File.Exists(Path.Combine(coversPath, frontCoverFile)));
+
+            // Verify only the front cover was deleted
+            _mockStorageService.Verify(s => s.DeleteFileAsync(It.IsAny<string>(), defaultUserId.ToString(), frontCoverFile), Times.Once);
+            _mockStorageService.Verify(s => s.DeleteFileAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Once);
         }
 
         [Fact]
@@ -314,71 +295,49 @@ namespace KollectorScum.Tests.Services
         [Fact]
         public async Task DeleteMusicReleaseAsync_WithLockedImageFile_StillDeletesRelease()
         {
-            // Arrange
-            var coversPath = Path.Combine(_testImagesPath, "covers");
+            // Arrange – storage service throws when deleting the image,
+            // but the release should still be deleted successfully.
             var frontCoverFile = "locked-file.jpg";
-            var fullPath = Path.Combine(coversPath, frontCoverFile);
 
-            // Create and lock a file
-            File.WriteAllText(fullPath, "locked content");
-            FileStream? lockStream = null;
+            _mockStorageService
+                .Setup(s => s.DeleteFileAsync(It.IsAny<string>(), It.IsAny<string>(), frontCoverFile))
+                .ThrowsAsync(new IOException("File is locked"));
 
-            try
+            var imageDto = new MusicReleaseImageDto
             {
-                lockStream = File.Open(fullPath, FileMode.Open, FileAccess.Read, FileShare.None);
+                CoverFront = frontCoverFile
+            };
 
-                var imageDto = new MusicReleaseImageDto
-                {
-                    CoverFront = frontCoverFile
-                };
-
-                var existingRelease = new MusicRelease
-                {
-                    Id = 1,
-                    Title = "Album with Locked Image",
-                    Images = JsonSerializer.Serialize(imageDto),
-                    UserId = defaultUserId
-                };
-
-                _mockMusicReleaseRepo.Setup(r => r.GetByIdAsync(1))
-                    .ReturnsAsync(existingRelease);
-                _mockMusicReleaseRepo.Setup(r => r.Delete(It.IsAny<MusicRelease>()));
-                _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
-
-                // Act
-                var result = await _service.DeleteMusicReleaseAsync(1);
-
-                // Assert - Should succeed even if image deletion fails
-                Assert.True(result.IsSuccess);
-                Assert.True(result.Value);
-                _mockMusicReleaseRepo.Verify(r => r.Delete(It.IsAny<MusicRelease>()), Times.Once);
-                _mockUnitOfWork.Verify(u => u.SaveChangesAsync(), Times.Once);
-            }
-            finally
+            var existingRelease = new MusicRelease
             {
-                // Cleanup: release the lock
-                lockStream?.Dispose();
-                if (File.Exists(fullPath))
-                {
-                    File.Delete(fullPath);
-                }
-            }
+                Id = 1,
+                Title = "Album with Locked Image",
+                Images = JsonSerializer.Serialize(imageDto),
+                UserId = defaultUserId
+            };
+
+            _mockMusicReleaseRepo.Setup(r => r.GetByIdAsync(1))
+                .ReturnsAsync(existingRelease);
+            _mockMusicReleaseRepo.Setup(r => r.Delete(It.IsAny<MusicRelease>()));
+            _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+
+            // Act
+            var result = await _service.DeleteMusicReleaseAsync(1);
+
+            // Assert – Should succeed even if image deletion fails
+            Assert.True(result.IsSuccess);
+            Assert.True(result.Value);
+            _mockMusicReleaseRepo.Verify(r => r.Delete(It.IsAny<MusicRelease>()), Times.Once);
+            _mockUnitOfWork.Verify(u => u.SaveChangesAsync(), Times.Once);
         }
 
         [Fact]
         public async Task DeleteMusicReleaseAsync_WithAllThreeImageTypes_DeletesAllFiles()
         {
             // Arrange
-            var coversPath = Path.Combine(_testImagesPath, "covers");
-            var thumbnailsPath = Path.Combine(_testImagesPath, "thumbnails");
             var frontCoverFile = "album-front.jpg";
             var backCoverFile = "album-back.jpg";
             var thumbnailFile = "album-thumb.jpg";
-
-            // Create all three image files
-            File.WriteAllText(Path.Combine(coversPath, frontCoverFile), "front");
-            File.WriteAllText(Path.Combine(coversPath, backCoverFile), "back");
-            File.WriteAllText(Path.Combine(thumbnailsPath, thumbnailFile), "thumb");
 
             var imageDto = new MusicReleaseImageDto
             {
@@ -405,11 +364,11 @@ namespace KollectorScum.Tests.Services
 
             // Assert
             Assert.True(result.IsSuccess);
-            
-            // Verify all three files were deleted from correct locations
-            Assert.False(File.Exists(Path.Combine(coversPath, frontCoverFile)), "Front cover should be deleted from covers folder");
-            Assert.False(File.Exists(Path.Combine(coversPath, backCoverFile)), "Back cover should be deleted from covers folder");
-            Assert.False(File.Exists(Path.Combine(thumbnailsPath, thumbnailFile)), "Thumbnail should be deleted from thumbnails folder");
+
+            // Verify all three image types were deleted via the storage service
+            _mockStorageService.Verify(s => s.DeleteFileAsync(It.IsAny<string>(), defaultUserId.ToString(), frontCoverFile), Times.Once);
+            _mockStorageService.Verify(s => s.DeleteFileAsync(It.IsAny<string>(), defaultUserId.ToString(), backCoverFile), Times.Once);
+            _mockStorageService.Verify(s => s.DeleteFileAsync(It.IsAny<string>(), defaultUserId.ToString(), thumbnailFile), Times.Once);
         }
 
         #endregion
