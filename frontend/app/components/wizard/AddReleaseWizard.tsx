@@ -192,7 +192,9 @@ export default function AddReleaseWizard({
     try {
       const dto = toCreateDto(formData);
       if (releaseId !== undefined) {
-        // Edit mode – PUT to update the existing release
+        // Edit mode – PUT to update the existing release.
+        // updateRelease calls fetchJson which throws on any non-2xx response,
+        // so if the call returns without throwing the update succeeded.
         await updateRelease(releaseId, dto);
         onSuccess?.(releaseId);
       } else {
