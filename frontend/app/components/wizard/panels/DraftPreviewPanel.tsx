@@ -24,6 +24,8 @@ interface Props {
    * When provided, replaces the default Back / Save Release buttons.
    */
   actions?: React.ReactNode;
+  /** Label for the submit button. Defaults to "Add to Collection". */
+  submitLabel?: string;
 }
 
 // ─── Helper functions ─────────────────────────────────────────────────────────
@@ -172,6 +174,7 @@ export default function DraftPreviewPanel({
   isSubmitting = false,
   submitError,
   actions,
+  submitLabel = "Add to Collection",
 }: Props) {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const total = totalSeconds(data);
@@ -577,7 +580,7 @@ export default function DraftPreviewPanel({
                           d="M4.5 12.75l6 6 9-13.5"
                         />
                       </svg>
-                      Add to Collection
+                      {submitLabel}
                     </>
                   )}
                 </button>
