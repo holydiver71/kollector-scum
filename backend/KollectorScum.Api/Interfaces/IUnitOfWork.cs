@@ -133,5 +133,11 @@ namespace KollectorScum.Api.Interfaces
         /// Atomically upserts a Genre and returns its Id.
         /// </summary>
         Task<int> UpsertGenreAsync(Guid userId, string name);
+
+        /// <summary>
+        /// Detaches all tracked entities from the change tracker so that subsequent
+        /// AsNoTracking queries can be re-attached via Update() without conflicts.
+        /// </summary>
+        void ClearChangeTracker();
     }
 }

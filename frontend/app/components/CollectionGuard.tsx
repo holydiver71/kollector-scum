@@ -8,6 +8,7 @@ import { isAuthenticated } from '../lib/auth';
 // Routes that are allowed when collection is empty
 const ALLOWED_EMPTY_ROUTES = [
   '/',
+  '/add',
   '/profile',
   '/settings',
 ];
