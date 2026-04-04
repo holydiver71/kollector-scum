@@ -393,6 +393,10 @@ namespace KollectorScum.Api.Services
                 }
             }
 
+            // Detach all tracked entities so the enrichment phase can freely call Update()
+            // on AsNoTracking copies without causing EF tracking conflicts.
+            _unitOfWork.ClearChangeTracker();
+
             UpdateProgressSnapshot(userId, result);
             _logger.LogInformation("Batch-inserted {Count} releases into the database.", newReleases.Count);
         }
@@ -415,7 +419,7 @@ namespace KollectorScum.Api.Services
                 .ToList();
 
             var releasesToEnrich = importedReleases
-                .Where(NeedsTracklistEnrichment)
+                .Where(r => NeedsTracklistEnrichment(r) || !r.CountryId.HasValue || string.IsNullOrEmpty(r.Upc))
                 .ToList();
 
             if (releasesToEnrich.Count == 0)
@@ -426,6 +430,7 @@ namespace KollectorScum.Api.Services
             _logger.LogInformation("Starting deferred tracklist enrichment for {Count} releases", releasesToEnrich.Count);
 
             var enrichedCount = 0;
+            var modifiedCount = 0;
             var processedCount = 0;
             foreach (var release in releasesToEnrich)
             {
@@ -441,31 +446,65 @@ namespace KollectorScum.Api.Services
                 try
                 {
                     var fullRelease = await _discogsService.GetReleaseDetailsAsync(release.DiscogsId.Value.ToString());
-                    if (fullRelease?.Tracklist == null || fullRelease.Tracklist.Count == 0)
+                    if (fullRelease == null)
                     {
                         continue;
                     }
 
-                    var artistIds = DeserializeIds(release.Artists);
-                    var genreIds = DeserializeIds(release.Genres);
+                    var releaseModified = false;
 
-                    var media = BuildMediaFromTracklist(
-                        fullRelease.Tracklist,
-                        release.Title,
-                        release.FormatId,
-                        artistIds,
-                        genreIds,
-                        release.ReleaseYear);
-
-                    if (media == null)
+                    // The Discogs collection API does not include country in basic_information,
+                    // so we populate it here from the full release details.
+                    if (!release.CountryId.HasValue && !string.IsNullOrEmpty(fullRelease.Country))
                     {
-                        continue;
+                        var countryId = await GetOrCreateCountryAsync(fullRelease.Country, userId);
+                        if (countryId.HasValue)
+                        {
+                            release.CountryId = countryId;
+                            releaseModified = true;
+                        }
                     }
 
-                    release.Media = JsonSerializer.Serialize(media);
-                    release.LastModified = DateTime.UtcNow;
-                    _unitOfWork.MusicReleases.Update(release);
-                    enrichedCount++;
+                    // Barcode / UPC is only available from the full release details (identifiers list).
+                    if (string.IsNullOrEmpty(release.Upc))
+                    {
+                        var barcode = fullRelease.Identifiers
+                            ?.FirstOrDefault(id => id.Type.Equals("Barcode", StringComparison.OrdinalIgnoreCase))
+                            ?.Value;
+                        if (!string.IsNullOrWhiteSpace(barcode))
+                        {
+                            release.Upc = barcode.Trim();
+                            releaseModified = true;
+                        }
+                    }
+
+                    if (fullRelease.Tracklist?.Count > 0)
+                    {
+                        var artistIds = DeserializeIds(release.Artists);
+                        var genreIds = DeserializeIds(release.Genres);
+
+                        var media = BuildMediaFromTracklist(
+                            fullRelease.Tracklist,
+                            release.Title,
+                            release.FormatId,
+                            artistIds,
+                            genreIds,
+                            release.ReleaseYear);
+
+                        if (media != null)
+                        {
+                            release.Media = JsonSerializer.Serialize(media);
+                            releaseModified = true;
+                            enrichedCount++;
+                        }
+                    }
+
+                    if (releaseModified)
+                    {
+                        release.LastModified = DateTime.UtcNow;
+                        _unitOfWork.MusicReleases.Update(release);
+                        modifiedCount++;
+                    }
                 }
                 catch (OperationCanceledException)
                 {
@@ -480,10 +519,10 @@ namespace KollectorScum.Api.Services
                 UpdatePhaseProgress(userId, ImportPhaseMaxPercentage, TracklistPhaseSpanPercentage, processedCount, releasesToEnrich.Count);
             }
 
-            if (enrichedCount > 0)
+            if (modifiedCount > 0)
             {
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
-                _logger.LogInformation("Completed deferred tracklist enrichment for {Count} releases", enrichedCount);
+                _logger.LogInformation("Completed deferred enrichment: {EnrichedCount} tracklists added, {ModifiedCount} releases updated", enrichedCount, modifiedCount);
             }
 
             UpdatePhaseProgress(userId, ImportPhaseMaxPercentage + TracklistPhaseSpanPercentage, 0, 1, 1);
@@ -717,6 +756,9 @@ namespace KollectorScum.Api.Services
                     _logger.LogWarning("Year value {Year} out of valid range for release {Title}", basicInfo.Year.Value, basicInfo.Title);
                 }
 
+                // Catalog number from the first label (available in collection response)
+                var labelNumber = basicInfo.Labels?.FirstOrDefault()?.CatalogNumber;
+
                 // Create MusicRelease entity
                 var musicRelease = new MusicRelease
                 {
@@ -726,6 +768,7 @@ namespace KollectorScum.Api.Services
                     ReleaseYear = releaseYear,
                     FormatId = formatId,
                     LabelId = labelId,
+                    LabelNumber = string.IsNullOrWhiteSpace(labelNumber) ? null : labelNumber.Trim(),
                     CountryId = countryId,
                     Artists = artistIds.Count > 0 ? JsonSerializer.Serialize(artistIds) : null,
                     Genres = genreIds.Count > 0 ? JsonSerializer.Serialize(genreIds) : null,
@@ -734,12 +777,25 @@ namespace KollectorScum.Api.Services
                     LastModified = DateTime.UtcNow
                 };
 
-                // Keep the initial import fast by storing the Discogs-hosted image URL.
-                // Mirroring to R2 is handled as deferred enrichment work.
-                var fallbackUrl = basicInfo.CoverImage ?? basicInfo.Thumb;
-                if (!string.IsNullOrEmpty(fallbackUrl))
+                // Set the Discogs web URL in the links list so it is surfaced in the release detail view.
+                // The web URL can be constructed directly from the Discogs release ID – no extra API call needed.
+                var discogsUrl = $"https://www.discogs.com/release/{basicInfo.Id}";
+                musicRelease.Links = JsonSerializer.Serialize(new[]
                 {
-                    var images = new { CoverFront = fallbackUrl };
+                    new MusicReleaseLinkDto { Url = discogsUrl, Type = "Discogs", Description = "" }
+                });
+
+                // Keep the initial import fast by storing the Discogs-hosted image URLs.
+                // Mirroring to R2 is handled as deferred enrichment work.
+                var coverUrl = basicInfo.CoverImage;
+                var thumbUrl = basicInfo.Thumb;
+                if (!string.IsNullOrEmpty(coverUrl) || !string.IsNullOrEmpty(thumbUrl))
+                {
+                    var images = new
+                    {
+                        CoverFront = coverUrl ?? thumbUrl,
+                        Thumbnail = thumbUrl ?? coverUrl
+                    };
                     musicRelease.Images = JsonSerializer.Serialize(images);
                 }
 
