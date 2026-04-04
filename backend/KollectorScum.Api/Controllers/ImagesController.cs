@@ -438,10 +438,11 @@ namespace KollectorScum.Api.Controllers
         /// Returns up to 4 results ordered by confidence.
         /// </summary>
         /// <param name="q">
-        /// Free-text search query (e.g. "Iron Maiden Killers 1981 CD"). Max 200 characters.
+        /// Free-text search query (e.g. "Iron Maiden Killers 1981 CD"). Max 200 characters. Optional when barcode or catalogueNumber is supplied.
         /// </param>
         /// <param name="catalogueNumber">Optional catalogue number to refine search via Discogs. Max 50 characters.</param>
-        /// <param name="limit">Maximum results to return (1–10, default 4).</param>
+        /// <param name="barcode">Optional UPC/EAN barcode for highest-confidence lookup via MusicBrainz.</param>
+        /// <param name="limit">Maximum results to return (1–10, default 8).</param>
         /// <param name="cancellationToken">Propagates request cancellation.</param>
         /// <returns>Array of <see cref="CoverArtSearchResultDto"/> ordered by confidence descending.</returns>
         [HttpGet("search")]
@@ -451,22 +452,32 @@ namespace KollectorScum.Api.Controllers
         public async Task<IActionResult> SearchCoverArt(
             [FromQuery] string? q,
             [FromQuery] string? catalogueNumber = null,
-            [FromQuery] int limit = 4,
+            [FromQuery] string? barcode = null,
+            [FromQuery] int limit = 8,
             CancellationToken cancellationToken = default)
         {
-            if (string.IsNullOrWhiteSpace(q))
-                return BadRequest("Query parameter 'q' is required.");
+            var hasQ = !string.IsNullOrWhiteSpace(q);
+            var hasCatNo = !string.IsNullOrWhiteSpace(catalogueNumber);
+            var hasBarcode = !string.IsNullOrWhiteSpace(barcode);
 
-            if (q.Length > 200)
+            if (!hasQ && !hasCatNo && !hasBarcode)
+                return BadRequest("At least one of 'q', 'catalogueNumber', or 'barcode' is required.");
+
+            if (hasQ && q!.Length > 200)
                 return BadRequest("Query must not exceed 200 characters.");
 
-            if (!string.IsNullOrWhiteSpace(catalogueNumber) && catalogueNumber.Length > 50)
+            if (hasCatNo && catalogueNumber!.Length > 50)
                 return BadRequest("Catalogue number must not exceed 50 characters.");
 
             if (limit < 1 || limit > 10)
                 return BadRequest("Limit must be between 1 and 10.");
 
-            var results = await _coverArtSearch.SearchAsync(q.Trim(), catalogueNumber?.Trim(), limit, cancellationToken);
+            var results = await _coverArtSearch.SearchAsync(
+                q?.Trim() ?? string.Empty,
+                catalogueNumber?.Trim(),
+                barcode?.Trim(),
+                limit,
+                cancellationToken);
 
             if (results.Count == 0)
                 return NoContent();

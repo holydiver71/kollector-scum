@@ -10,6 +10,8 @@ interface ImageSearchModalProps {
   defaultQuery: string;
   /** Optional catalogue number to refine search via Discogs. */
   defaultCatalogueNumber?: string;
+  /** Optional UPC/EAN barcode for highest-confidence barcode lookup (Tier 1 of waterfall). */
+  barcode?: string;
   /** Called with the selected full-resolution image URL. */
   onSelect: (imageUrl: string, thumbnailUrl: string) => void;
   /** Called when the user closes the modal without selecting. */
@@ -37,7 +39,75 @@ function ConfidenceBadge({ label, confidence }: { label: string; confidence: num
   );
 }
 
-// ─── Result card ─────────────────────────────────────────────────────────────
+// ─── Featured result card (barcode exact match) ───────────────────────────────
+
+/**
+ * Horizontal card displayed at the top of results when the search found a
+ * barcode-matched release. Uses an emerald accent to visually distinguish it
+ * from the "Other Editions" grid below.
+ */
+function FeaturedResultCard({
+  result,
+  onSelect,
+}: {
+  result: CoverArtSearchResult;
+  onSelect: () => void;
+}) {
+  const [imgError, setImgError] = useState(false);
+
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className="w-full flex gap-4 rounded-xl border border-emerald-600/40 bg-[#0A0A12] hover:border-emerald-500 hover:bg-[#0D0D17] transition-all text-left overflow-hidden focus:outline-none focus:ring-2 focus:ring-emerald-500 p-3"
+      aria-label={`Select ${result.artist} – ${result.title} (exact barcode match)`}
+    >
+      {/* Thumbnail */}
+      <div className="shrink-0 w-20 h-20 rounded-lg bg-[#0F0F1A] flex items-center justify-center overflow-hidden">
+        {result.thumbnailUrl && !imgError ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={result.thumbnailUrl}
+            alt={`${result.artist} – ${result.title}`}
+            className="w-full h-full object-cover"
+            referrerPolicy="no-referrer"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <svg className="w-8 h-8 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+          </svg>
+        )}
+      </div>
+
+      {/* Metadata */}
+      <div className="flex-1 min-w-0 space-y-1">
+        <div className="flex items-center gap-2">
+          <span className="inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded border bg-emerald-600/20 text-emerald-400 border-emerald-600/40">
+            Barcode Match
+          </span>
+          <ConfidenceBadge label={result.confidenceLabel} confidence={result.confidence} />
+        </div>
+        <p className="text-white text-sm font-semibold truncate leading-snug">{result.title}</p>
+        <p className="text-gray-400 text-xs truncate">{result.artist}</p>
+        <p className="text-gray-500 text-[11px]">
+          {[result.year, result.format, result.country].filter(Boolean).join(" · ")}
+        </p>
+        {result.label && <p className="text-gray-600 text-[10px] truncate">{result.label}</p>}
+        {result.catalogueNumber && (
+          <p className="text-gray-600 text-[10px] truncate font-mono">{result.catalogueNumber}</p>
+        )}
+      </div>
+
+      {/* CTA arrow */}
+      <div className="shrink-0 self-center text-emerald-500 text-xs font-semibold whitespace-nowrap pr-1">
+        Select →
+      </div>
+    </button>
+  );
+}
+
+// ─── Regular result card ──────────────────────────────────────────────────────
 
 function ResultCard({
   result,
@@ -112,29 +182,33 @@ const SEARCH_DEBOUNCE_MS = 400;
 /**
  * Full-screen overlay modal for searching and selecting album cover art.
  *
- * Features:
- * - Search bar pre-populated with the default query; pressing Enter triggers search.
- * - Optional catalogue number parameter to refine search via Discogs.
- * - Auto-search on input change (debounced 400 ms — "auto-search while typing").
- * - Up to 4 results displayed in a responsive grid with confidence indicators.
- * - Loading spinner, empty state and error state.
+ * On open, automatically fires a waterfall search:
+ *   Tier 1 — barcode (UPC/EAN) via MusicBrainz barcode: field
+ *   Tier 2 — catalogue number via Discogs
+ *   Tier 3 — broad free-text via MusicBrainz
+ *
+ * Results are displayed with any barcode-matched release as a featured
+ * "Best Match" card (emerald border) above an "Other Editions" grid.
+ * The search box is labelled "Refine Search" so it's clear the initial
+ * search has already run.
  */
 export default function ImageSearchModal({
   defaultQuery,
   defaultCatalogueNumber,
+  barcode,
   onSelect,
   onClose,
 }: ImageSearchModalProps) {
-  const [query, setQuery] = useState(defaultQuery);
+  const [query, setQuery] = useState("");
+  const [hasAutoSearched, setHasAutoSearched] = useState(false);
   const { results, isLoading, error, search, clear } = useImageSearch();
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Run initial search when the modal opens
+  // Run initial waterfall search when the modal opens
   useEffect(() => {
-    if (defaultQuery.trim()) {
-      search(defaultQuery.trim(), defaultCatalogueNumber);
-    }
+    search(defaultQuery.trim(), defaultCatalogueNumber, barcode);
+    setHasAutoSearched(true);
     inputRef.current?.focus();
     return () => clear();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -152,21 +226,32 @@ export default function ImageSearchModal({
   const handleQueryChange = (value: string) => {
     setQuery(value);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    // Auto-search while typing (consideration #1 from Image Search Research)
     debounceRef.current = setTimeout(() => {
-      search(value, defaultCatalogueNumber);
+      // Always pass barcode so the featured card persists while refining
+      search(value, defaultCatalogueNumber, barcode);
     }, SEARCH_DEBOUNCE_MS);
   };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    search(query, defaultCatalogueNumber);
+    search(query, defaultCatalogueNumber, barcode);
   };
 
   const handleSelect = (result: CoverArtSearchResult) => {
     onSelect(result.imageUrl ?? result.thumbnailUrl ?? "", result.thumbnailUrl ?? result.imageUrl ?? "");
   };
+
+  // Split results: barcode match → featured; everything else → grid
+  const bestMatch = results.find((r) => r.matchType === "barcode") ?? null;
+  const otherResults = bestMatch ? results.filter((r) => r !== bestMatch) : results;
+
+  // Describe which source(s) powered the auto-search
+  const autoSearchSource = barcode
+    ? "barcode, catalogue number & title"
+    : defaultCatalogueNumber
+    ? "catalogue number & title"
+    : "title & artist";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -199,20 +284,30 @@ export default function ImageSearchModal({
           </button>
         </div>
 
-        {/* Search bar */}
+        {/* Auto-search banner */}
+        {hasAutoSearched && (
+          <div className="px-5 py-2 bg-[#0A0A12] border-b border-[#1C1C28] text-[11px] text-gray-500">
+            Auto-searched using <span className="text-gray-400">{autoSearchSource}</span>
+          </div>
+        )}
+
+        {/* Refine search bar */}
         <form onSubmit={handleSearchSubmit} className="px-5 py-3 border-b border-[#1C1C28]">
+          <label className="block text-[11px] font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">
+            Refine Search
+          </label>
           <div className="flex gap-2">
             <input
               ref={inputRef}
               type="text"
               value={query}
               onChange={(e) => handleQueryChange(e.target.value)}
-              placeholder="Search artist, album, year…"
+              placeholder="Artist, album, year…"
               className="flex-1 bg-[#0F0F1A] border border-[#2A2A3C] rounded-xl px-4 py-2.5 text-white placeholder-gray-600 text-sm focus:outline-none focus:ring-1 focus:border-[#8B5CF6] focus:ring-[#8B5CF6] transition-colors"
             />
             <button
               type="submit"
-              disabled={isLoading || !query.trim()}
+              disabled={isLoading}
               className="px-4 py-2.5 rounded-xl bg-[#8B5CF6] hover:bg-[#7C3AED] disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors"
             >
               {isLoading ? "Searching…" : "Search"}
@@ -224,24 +319,9 @@ export default function ImageSearchModal({
         <div className="overflow-y-auto flex-1 px-5 py-4 min-h-[200px]">
           {isLoading && (
             <div className="flex items-center justify-center h-40" role="status" aria-label="Searching…">
-              <svg
-                className="w-8 h-8 text-[#8B5CF6] animate-spin"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8v8H4z"
-                />
+              <svg className="w-8 h-8 text-[#8B5CF6] animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
               </svg>
             </div>
           )}
@@ -254,21 +334,43 @@ export default function ImageSearchModal({
 
           {!isLoading && !error && results.length === 0 && (
             <div className="flex items-center justify-center h-40 text-gray-500 text-sm">
-              {query.trim() ? "No cover art found for this search." : "Enter a search query above."}
+              {hasAutoSearched ? "No cover art found. Try refining your search." : "Enter a search query above."}
             </div>
           )}
 
           {!isLoading && !error && results.length > 0 && (
-            <div
-              className="grid grid-cols-2 sm:grid-cols-4 gap-3 items-stretch"
-              role="list"
-              aria-label="Cover art search results"
-            >
-              {results.map((result) => (
-                <div key={result.mbId} role="listitem" className="flex">
-                  <ResultCard result={result} onSelect={() => handleSelect(result)} />
+            <div className="space-y-4">
+              {/* Tier 1 — Featured barcode match */}
+              {bestMatch && (
+                <div>
+                  <p className="text-[11px] font-semibold text-emerald-500/80 uppercase tracking-wider mb-2">
+                    Best Match
+                  </p>
+                  <FeaturedResultCard result={bestMatch} onSelect={() => handleSelect(bestMatch)} />
                 </div>
-              ))}
+              )}
+
+              {/* Tier 2 & 3 — Other editions grid */}
+              {otherResults.length > 0 && (
+                <div>
+                  {bestMatch && (
+                    <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                      Other Editions
+                    </p>
+                  )}
+                  <div
+                    className="grid grid-cols-2 sm:grid-cols-4 gap-3 items-stretch"
+                    role="list"
+                    aria-label="Cover art search results"
+                  >
+                    {otherResults.map((result) => (
+                      <div key={result.mbId} role="listitem" className="flex">
+                        <ResultCard result={result} onSelect={() => handleSelect(result)} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -299,3 +401,4 @@ export default function ImageSearchModal({
     </div>
   );
 }
+
