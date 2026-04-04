@@ -4,7 +4,9 @@ export const runtime = 'edge';
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { fetchJson } from "../../../lib/api";
-import AddReleaseForm, { type CreateMusicReleaseDto, type InitialSelectedItems } from "../../../components/AddReleaseForm";
+import { fromCreateDto } from "../../../components/wizard/types";
+import type { CreateMusicReleaseDto } from "../../../components/AddReleaseForm";
+import AddReleaseWizard from "../../../components/wizard/AddReleaseWizard";
 import { LoadingSpinner } from "../../../components/LoadingComponents";
 
 // Type definitions matching the release detail page
@@ -160,13 +162,16 @@ export default function EditReleasePage() {
     );
   }
 
-  // Transform the release data into the format expected by AddReleaseForm
-  const initialData: Partial<CreateMusicReleaseDto> = {
+  // Build a CreateMusicReleaseDto from the fetched release.
+  // Only IDs are sent for artists/genres/label/etc. so the API can look them up.
+  // Names are NOT included in artistNames/genreNames because those fields mean
+  // "create new entities" – they are only needed for the display layer below.
+  const dto: Partial<CreateMusicReleaseDto> = {
     title: release.title,
     releaseYear: release.releaseYear,
     origReleaseYear: release.origReleaseYear,
-    artistIds: release.artists?.map(a => a.id) || [],
-    genreIds: release.genres?.map(g => g.id) || [],
+    artistIds: release.artists?.map(a => a.id) ?? [],
+    genreIds: release.genres?.map(g => g.id) ?? [],
     live: release.live,
     labelId: release.label?.id,
     countryId: release.country?.id,
@@ -178,8 +183,8 @@ export default function EditReleasePage() {
     purchaseInfo: release.purchaseInfo,
     images: release.images,
     links: release.links?.map(link => ({
-      url: link.url || "",
-      type: link.type || "",
+      url: link.url ?? "",
+      type: link.type ?? "",
       description: link.description,
     })),
     media: release.media?.map(m => ({
@@ -191,22 +196,15 @@ export default function EditReleasePage() {
         artists: t.artists,
         genres: t.genres,
         live: t.live,
-      })) || [],
+      })) ?? [],
     })),
   };
 
-  // Provide pre-selected items so they display in ComboBoxes even if not in paginated list
-  const initialSelectedItems: InitialSelectedItems = {
-    artists: release.artists,
-    genres: release.genres,
-    label: release.label ?? undefined,
-    country: release.country ?? undefined,
-    format: release.format ?? undefined,
-    packaging: release.packaging ?? undefined,
-    store: release.purchaseInfo?.storeId && release.purchaseInfo?.storeName 
-      ? { id: release.purchaseInfo.storeId, name: release.purchaseInfo.storeName }
-      : undefined,
-  };
+  // Convert the DTO to WizardFormData and override the display-only
+  // artistDisplayNames so the DraftPreviewPanel shows correct names without
+  // requiring the user to interact with the Basic Information step first.
+  const initialFormData = fromCreateDto(dto);
+  initialFormData.artistDisplayNames = release.artists?.map(a => a.name) ?? [];
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -217,12 +215,11 @@ export default function EditReleasePage() {
         </p>
       </div>
 
-      <AddReleaseForm
+      <AddReleaseWizard
+        prebuiltFormData={initialFormData}
+        releaseId={parseInt(id)}
         onSuccess={handleSuccess}
         onCancel={handleCancel}
-        initialData={initialData}
-        releaseId={parseInt(id)}
-        initialSelectedItems={initialSelectedItems}
       />
     </div>
   );
