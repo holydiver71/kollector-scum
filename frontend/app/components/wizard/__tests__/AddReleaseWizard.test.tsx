@@ -442,7 +442,7 @@ describe("AddReleaseWizard – edit mode (releaseId provided)", () => {
     expect(screen.getByTestId("save-btn")).toHaveTextContent("Save Changes");
   });
 
-  it("uses prebuiltFormData as initial form state when provided", async () => {
+  it("uses prebuiltFormData as initial form state, bypassing required-field validation on step 0", async () => {
     const user = userEvent.setup();
     const prebuilt = {
       title: "Prebuilt Title",
@@ -467,7 +467,13 @@ describe("AddReleaseWizard – edit mode (releaseId provided)", () => {
     };
     mockUpdateRelease.mockResolvedValueOnce(undefined);
     render(<AddReleaseWizard prebuiltFormData={prebuilt} releaseId={99} />);
-    // Wizard starts at step 0 (Basic Information panel is visible)
-    expect(screen.getByTestId("basic-panel")).toBeInTheDocument();
+    // Step 0 is pre-populated via prebuiltFormData; clicking Next without the
+    // "Fill" button should advance because title + artistIds are already set.
+    await clickNext(user);
+    // If prebuilt data was used, we are now on step 1 (Classification panel).
+    expect(screen.getByTestId("classification-panel")).toBeInTheDocument();
+    // No validation errors should appear since the prebuilt data is valid.
+    expect(screen.queryByTestId("title-error")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("artists-error")).not.toBeInTheDocument();
   });
 });
