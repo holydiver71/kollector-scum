@@ -70,6 +70,10 @@ namespace KollectorScum.Api.Services
                 totalSeeded += await _artistSeeder.SeedAsync();
                 totalSeeded += await _packagingSeeder.SeedAsync();
 
+                // Reset all sequences to the current max Id to prevent PK collisions when
+                // the seeders insert rows with explicit Ids that bypass the sequence.
+                await _unitOfWork.ResetSequencesAsync();
+
                 _logger.LogInformation("Lookup data seeding completed successfully. Total records seeded: {TotalSeeded}", totalSeeded);
                 return totalSeeded;
             }

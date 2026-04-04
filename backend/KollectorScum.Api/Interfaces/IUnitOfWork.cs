@@ -135,6 +135,17 @@ namespace KollectorScum.Api.Interfaces
         Task<int> UpsertGenreAsync(Guid userId, string name);
 
         /// <summary>
+        /// Atomically upserts a Packaging and returns its Id.
+        /// </summary>
+        Task<int> UpsertPackagingAsync(Guid userId, string name);
+
+        /// <summary>
+        /// Resets all lookup-table PostgreSQL sequences to the current maximum Id.
+        /// Must be called after any bulk seed that inserts rows with explicit Ids.
+        /// </summary>
+        Task ResetSequencesAsync();
+
+        /// <summary>
         /// Detaches all tracked entities from the change tracker so that subsequent
         /// AsNoTracking queries can be re-attached via Update() without conflicts.
         /// </summary>

@@ -92,12 +92,17 @@ const Sidebar: React.FC = () => {
   // Don't show sidebar if not logged in
   if (!isLoggedIn) return null;
 
-  const navigationItems: NavigationItem[] = [
+  // Always visible regardless of collection state
+  const alwaysVisibleItems: NavigationItem[] = [
     { name: 'Home', href: '/', icon: Home },
+    { name: 'Add Music', href: '/add', icon: PlusCircle },
+  ];
+
+  // Only visible once the user has at least one release in their collection
+  const collectionItems: NavigationItem[] = [
     { name: 'Collection', href: '/collection', icon: Music },
     { name: 'Kollections', href: '/kollections', icon: FolderOpen },
     { name: 'Lists', href: '/lists', icon: List },
-    { name: 'Add Music', href: '/add', icon: PlusCircle },
     { name: 'Artists', href: '/artists', icon: User },
     { name: 'Genres', href: '/genres', icon: List },
     { name: 'Statistics', href: '/statistics', icon: BarChart3 },
@@ -137,10 +142,11 @@ const Sidebar: React.FC = () => {
       {/* Main Navigation */}
       <nav className="flex-1 py-6 overflow-y-auto overflow-x-hidden">
         <ul className="space-y-2">
-          {navigationItems.map((item) => {
+          {/* Always-visible items: Home and Add Music */}
+          {alwaysVisibleItems.map((item) => {
             const Icon = item.icon;
             const isActive = isActiveLink(item.href);
-            
+
             return (
               <li key={item.name} className="relative group">
                 <Link
@@ -169,36 +175,71 @@ const Sidebar: React.FC = () => {
             );
           })}
 
-          {/* Random Album quick action */}
-          <li className="relative group">
-            <button
-              onClick={async () => {
-                try {
-                  const id = await getRandomReleaseId();
-                  if (id) {
-                    router.push(`/releases/${id}`);
+          {/* Collection-dependent items: only shown when user has ≥1 release */}
+          {hasCollection === true && collectionItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = isActiveLink(item.href);
+
+            return (
+              <li key={item.name} className="relative group">
+                <Link
+                  href={item.href}
+                  className={`flex items-center px-4 py-3 transition-colors ${
+                    isActive
+                      ? 'bg-[#8B5CF6]'
+                      : 'hover:bg-[#1C1C28]'
+                  }`}
+                >
+                  <Icon className="sidebar-icon w-6 h-6 min-w-6 text-center" />
+                  <span
+                    className={`ml-4 sidebar-text whitespace-nowrap overflow-hidden transition-opacity duration-300 ${
+                      isExpanded ? 'opacity-100' : 'opacity-0'
+                    }`}
+                  >
+                    {item.name}
+                  </span>
+                </Link>
+                {!isExpanded && (
+                  <div className="tooltip absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-[#1C1C28] text-white px-3 py-1 rounded text-sm whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+                    {item.name}
+                  </div>
+                )}
+              </li>
+            );
+          })}
+
+          {/* Random Album quick action — only available when collection is non-empty */}
+          {hasCollection === true && (
+            <li className="relative group">
+              <button
+                onClick={async () => {
+                  try {
+                    const id = await getRandomReleaseId();
+                    if (id) {
+                      router.push(`/releases/${id}`);
+                    }
+                  } catch (err) {
+                    console.error('Failed to get random release id', err);
                   }
-                } catch (err) {
-                  console.error('Failed to get random release id', err);
-                }
-              }}
-              className={`flex items-center w-full text-left px-4 py-3 transition-colors hover:bg-[#1C1C28]`}
-            >
-              <Shuffle className="sidebar-icon w-6 h-6 min-w-6 text-center" />
-              <span
-                className={`ml-4 sidebar-text whitespace-nowrap overflow-hidden transition-opacity duration-300 ${
-                  isExpanded ? 'opacity-100' : 'opacity-0'
-                }`}
+                }}
+                className={`flex items-center w-full text-left px-4 py-3 transition-colors hover:bg-[#1C1C28]`}
               >
-                Random Album
-              </span>
-            </button>
-            {!isExpanded && (
-              <div className="tooltip absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-[#1C1C28] text-white px-3 py-1 rounded text-sm whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
-                Random Album
-              </div>
-            )}
-          </li>
+                <Shuffle className="sidebar-icon w-6 h-6 min-w-6 text-center" />
+                <span
+                  className={`ml-4 sidebar-text whitespace-nowrap overflow-hidden transition-opacity duration-300 ${
+                    isExpanded ? 'opacity-100' : 'opacity-0'
+                  }`}
+                >
+                  Random Album
+                </span>
+              </button>
+              {!isExpanded && (
+                <div className="tooltip absolute left-full ml-2 top-1/2 -translate-y-1/2 bg-[#1C1C28] text-white px-3 py-1 rounded text-sm whitespace-nowrap pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+                  Random Album
+                </div>
+              )}
+            </li>
+          )}
         </ul>
       </nav>
 

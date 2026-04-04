@@ -170,17 +170,18 @@ namespace KollectorScum.Api.Services
             CreatedEntitiesDto createdEntities)
         {
             if (packagingId.HasValue) return packagingId;
-            var userId = RequireUserId();
+            if (string.IsNullOrWhiteSpace(packagingName)) return null;
 
-            return await ResolveOrCreateSingleEntityAsync(
-                packagingName, userId, _packagingRepository,
-                n => new Packaging { Name = n, UserId = userId },
-                entity =>
-                {
-                    createdEntities.Packagings ??= new List<PackagingDto>();
-                    createdEntities.Packagings.Add(new PackagingDto { Id = entity.Id, Name = entity.Name });
-                },
-                "packaging");
+            var userId = RequireUserId();
+            var trimmedName = packagingName.Trim();
+
+            var id = await _unitOfWork.UpsertPackagingAsync(userId, trimmedName);
+
+            createdEntities.Packagings ??= new List<PackagingDto>();
+            createdEntities.Packagings.Add(new PackagingDto { Id = id, Name = trimmedName });
+
+            _logger.LogDebug("Resolved or created packaging: {Name} (ID: {Id})", trimmedName, id);
+            return id;
         }
 
         #region Private Generic Helpers
