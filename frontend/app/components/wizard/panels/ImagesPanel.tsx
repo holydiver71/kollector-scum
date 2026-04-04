@@ -36,6 +36,8 @@ interface CoverFrontFieldProps {
   error?: string;
   defaultSearchQuery: string;
   defaultCatalogueNumber?: string;
+  /** Optional UPC/EAN barcode passed to the Tier-1 barcode waterfall search. */
+  barcode?: string;
   /** Suggested filename (Artist-Title-Year.jpg) for consistent naming. */
   suggestedFilename: string;
 }
@@ -53,6 +55,7 @@ function CoverFrontField({
   error,
   defaultSearchQuery,
   defaultCatalogueNumber,
+  barcode,
   suggestedFilename,
 }: CoverFrontFieldProps) {
   const [searchOpen, setSearchOpen] = useState(false);
@@ -284,6 +287,7 @@ function CoverFrontField({
         <ImageSearchModal
           defaultQuery={defaultSearchQuery}
           defaultCatalogueNumber={defaultCatalogueNumber}
+          barcode={barcode}
           onSelect={handleSearchSelect}
           onClose={() => setSearchOpen(false)}
         />
@@ -368,6 +372,7 @@ export default function ImagesPanel({ data, onChange, errors }: Props) {
           error={errors.coverFront}
           defaultSearchQuery={searchQuery}
           defaultCatalogueNumber={data.labelNumber}
+          barcode={data.upc || undefined}
           suggestedFilename={suggestedFilename}
         />
       </div>

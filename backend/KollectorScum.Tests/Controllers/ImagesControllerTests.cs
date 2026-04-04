@@ -181,7 +181,7 @@ namespace KollectorScum.Tests.Controllers
         [Fact]
         public async Task SearchCoverArt_NoResults_ReturnsNoContent()
         {
-            _mockSearch.Setup(s => s.SearchAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            _mockSearch.Setup(s => s.SearchAsync(It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<CoverArtSearchResultDto>());
 
             var controller = CreateController();
@@ -196,7 +196,7 @@ namespace KollectorScum.Tests.Controllers
             {
                 new() { MbId = "mbid-1", Title = "Killers", Artist = "Iron Maiden", Confidence = 1.0 },
             };
-            _mockSearch.Setup(s => s.SearchAsync("iron maiden killers", null, 4, It.IsAny<CancellationToken>()))
+            _mockSearch.Setup(s => s.SearchAsync("iron maiden killers", null, null, 8, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(expected);
 
             var controller = CreateController();
@@ -214,7 +214,7 @@ namespace KollectorScum.Tests.Controllers
             {
                 new() { Title = "Album", Artist = "Artist", CatalogueNumber = "CAT001", Confidence = 0.95 },
             };
-            _mockSearch.Setup(s => s.SearchAsync("artist album", "CAT001", 4, It.IsAny<CancellationToken>()))
+            _mockSearch.Setup(s => s.SearchAsync("artist album", "CAT001", null, 8, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(expected);
 
             var controller = CreateController();

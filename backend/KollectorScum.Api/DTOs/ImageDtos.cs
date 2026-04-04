@@ -56,6 +56,12 @@ namespace KollectorScum.Api.DTOs
             Confidence >= 0.95 ? "Exact match" :
             Confidence >= 0.75 ? "Good match" :
             "Possible match";
+
+        /// <summary>
+        /// Indicates which tier of the search waterfall found this result.
+        /// Values: "barcode" (UPC/EAN exact lookup), "catalogueNumber" (Discogs catNo), or "freeText" (broad MusicBrainz query).
+        /// </summary>
+        public string MatchType { get; set; } = "freeText";
     }
 
     /// <summary>
