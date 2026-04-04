@@ -19,6 +19,10 @@ namespace KollectorScum.Api.Interfaces
         /// <param name="catalogueNumber">
         /// Optional catalogue number to refine the search (searches via Discogs when provided).
         /// </param>
+        /// <param name="barcode">
+        /// Optional UPC/EAN barcode. When provided, a MusicBrainz barcode lookup is attempted first
+        /// as the highest-confidence tier of the search waterfall.
+        /// </param>
         /// <param name="limit">Maximum number of results to return (1–20, default 8).</param>
         /// <param name="cancellationToken">Propagates notification that the operation should be cancelled.</param>
         /// <returns>
@@ -28,6 +32,7 @@ namespace KollectorScum.Api.Interfaces
         Task<IReadOnlyList<CoverArtSearchResultDto>> SearchAsync(
             string query,
             string? catalogueNumber = null,
+            string? barcode = null,
             int limit = 8,
             CancellationToken cancellationToken = default);
     }
