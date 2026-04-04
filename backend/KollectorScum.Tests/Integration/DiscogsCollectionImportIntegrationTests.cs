@@ -136,6 +136,8 @@ public class DiscogsCollectionImportIntegrationTests : IDisposable
         public Task<int> UpsertCountryAsync(Guid userId, string name) => UpsertByNameAsync(_context, _context.Countries, userId, name);
         public Task<int> UpsertArtistAsync(Guid userId, string name) => UpsertByNameAsync(_context, _context.Artists, userId, name);
         public Task<int> UpsertGenreAsync(Guid userId, string name) => UpsertByNameAsync(_context, _context.Genres, userId, name);
+        public Task<int> UpsertPackagingAsync(Guid userId, string name) => UpsertByNameAsync(_context, _context.Packagings, userId, name);
+        public Task ResetSequencesAsync() => Task.CompletedTask;
 
         public void Dispose()
         {

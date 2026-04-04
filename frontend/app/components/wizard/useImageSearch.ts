@@ -28,6 +28,8 @@ export interface CoverArtSearchResult {
   confidence: number;
   /** Human-readable confidence label ("Exact match" | "Good match" | "Possible match") */
   confidenceLabel: string;
+  /** Which search tier found this result: "barcode" | "catalogueNumber" | "freeText" */
+  matchType?: string;
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
@@ -39,8 +41,8 @@ interface UseImageSearchResult {
   isLoading: boolean;
   /** Error message when the last search failed, null otherwise. */
   error: string | null;
-  /** Executes an immediate search for the given query string and optional catalogue number. */
-  search: (query: string, catalogueNumber?: string) => Promise<void>;
+  /** Executes an immediate search for the given query string, optional catalogue number, and optional barcode. */
+  search: (query: string, catalogueNumber?: string, barcode?: string) => Promise<void>;
   /** Clears results, error and loading state. */
   clear: () => void;
 }
@@ -61,9 +63,13 @@ export function useImageSearch(): UseImageSearchResult {
   // AbortController to cancel stale in-flight requests
   const abortRef = useRef<AbortController | null>(null);
 
-  const search = useCallback(async (query: string, catalogueNumber?: string) => {
+  const search = useCallback(async (query: string, catalogueNumber?: string, barcode?: string) => {
     const trimmed = query.trim();
-    if (!trimmed) {
+    const trimmedBarcode = barcode?.trim();
+    const trimmedCatNo = catalogueNumber?.trim();
+
+    // Need at least one search criterion
+    if (!trimmed && !trimmedBarcode && !trimmedCatNo) {
       setResults([]);
       setError(null);
       return;
@@ -78,9 +84,13 @@ export function useImageSearch(): UseImageSearchResult {
     setError(null);
 
     try {
-      let url = `/api/images/search?q=${encodeURIComponent(trimmed)}&limit=8`;
-      if (catalogueNumber?.trim()) {
-        url += `&catalogueNumber=${encodeURIComponent(catalogueNumber.trim())}`;
+      let url = `/api/images/search?limit=8`;
+      if (trimmed) url += `&q=${encodeURIComponent(trimmed)}`;
+      if (trimmedCatNo) {
+        url += `&catalogueNumber=${encodeURIComponent(trimmedCatNo)}`;
+      }
+      if (trimmedBarcode) {
+        url += `&barcode=${encodeURIComponent(trimmedBarcode)}`;
       }
 
       const data = await fetchJson<CoverArtSearchResult[]>(

@@ -40,27 +40,42 @@ namespace KollectorScum.Api.Services
         public async Task<IReadOnlyList<CoverArtSearchResultDto>> SearchAsync(
             string query,
             string? catalogueNumber = null,
+            string? barcode = null,
             int limit = 8,
             CancellationToken cancellationToken = default)
         {
-            if (string.IsNullOrWhiteSpace(query))
-                return Array.Empty<CoverArtSearchResultDto>();
-
             limit = Math.Clamp(limit, 1, 20);
 
             var results = new List<CoverArtSearchResultDto>();
 
-            // If catalogue number is provided, search Discogs first
-            if (!string.IsNullOrWhiteSpace(catalogueNumber))
+            // Tier 1 — Barcode: exact MusicBrainz lookup via barcode: Lucene field
+            if (!string.IsNullOrWhiteSpace(barcode))
             {
-                var discogsResults = await SearchDiscogsAsync(catalogueNumber, query, limit, cancellationToken);
+                var barcodeResults = await SearchMusicBrainzAsync(
+                    $"barcode:{barcode.Trim()}", 2, cancellationToken);
+                foreach (var r in barcodeResults)
+                {
+                    r.Confidence = Math.Max(r.Confidence, 0.99);
+                    r.MatchType = "barcode";
+                }
+                results.AddRange(barcodeResults);
+            }
+
+            // Tier 2 — Catalogue number: Discogs lookup
+            if (results.Count < limit && !string.IsNullOrWhiteSpace(catalogueNumber))
+            {
+                var discogsResults = await SearchDiscogsAsync(
+                    catalogueNumber, query, limit - results.Count, cancellationToken);
+                foreach (var r in discogsResults)
+                    r.MatchType = "catalogueNumber";
                 results.AddRange(discogsResults);
             }
 
-            // If we haven't reached the limit, also search MusicBrainz
-            if (results.Count < limit)
+            // Tier 3 — Free-text: broad MusicBrainz search
+            if (results.Count < limit && !string.IsNullOrWhiteSpace(query))
             {
                 var mbResults = await SearchMusicBrainzAsync(query, limit - results.Count, cancellationToken);
+                // MatchType stays "freeText" (default)
                 results.AddRange(mbResults);
             }
 
