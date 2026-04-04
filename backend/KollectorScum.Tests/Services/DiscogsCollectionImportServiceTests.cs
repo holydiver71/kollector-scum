@@ -20,6 +20,7 @@ namespace KollectorScum.Tests.Services
         private readonly Mock<IDiscogsService> _mockDiscogsService;
         private readonly Mock<IUnitOfWork> _mockUnitOfWork;
         private readonly Mock<IRepository<MusicRelease>> _mockMusicRepo;
+        private readonly Mock<IRepository<Label>> _mockLabelRepo;
         private readonly Mock<IDiscogsImageService> _mockImageService;
         private readonly Mock<ILogger<DiscogsCollectionImportService>> _mockLogger;
         private readonly Mock<IHostEnvironment> _mockEnv;
@@ -29,11 +30,13 @@ namespace KollectorScum.Tests.Services
             _mockDiscogsService = new Mock<IDiscogsService>();
             _mockUnitOfWork = new Mock<IUnitOfWork>();
             _mockMusicRepo = new Mock<IRepository<MusicRelease>>();
+            _mockLabelRepo = new Mock<IRepository<Label>>();
             _mockImageService = new Mock<IDiscogsImageService>();
             _mockLogger = new Mock<ILogger<DiscogsCollectionImportService>>();
             _mockEnv = new Mock<IHostEnvironment>();
 
             _mockUnitOfWork.Setup(u => u.MusicReleases).Returns(_mockMusicRepo.Object);
+            _mockUnitOfWork.Setup(u => u.Labels).Returns(_mockLabelRepo.Object);
             _mockMusicRepo.Setup(r => r.Query()).Returns(new List<MusicRelease>().AsQueryable());
             // Default behaviors to keep MapToMusicReleaseAsync lightweight
             _mockMusicRepo.Setup(r => r.CountAsync(It.IsAny<System.Linq.Expressions.Expression<Func<MusicRelease,bool>>?>()))
@@ -44,11 +47,15 @@ namespace KollectorScum.Tests.Services
             // 4-param overload (with CT) — used by the new batch duplicate-check query
             _mockMusicRepo.Setup(r => r.GetAsync(It.IsAny<System.Linq.Expressions.Expression<Func<MusicRelease,bool>>>(), null, "", It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new List<MusicRelease>());
+            // Labels repo: return empty list by default (triggers UpsertLabelAsync)
+            _mockLabelRepo.Setup(r => r.GetAsync(It.IsAny<Expression<Func<Label, bool>>>(), null, ""))
+                .ReturnsAsync(new List<Label>());
             _mockUnitOfWork.Setup(u => u.UpsertFormatAsync(It.IsAny<Guid>(), It.IsAny<string>())).ReturnsAsync(1);
             _mockUnitOfWork.Setup(u => u.UpsertLabelAsync(It.IsAny<Guid>(), It.IsAny<string>())).ReturnsAsync(1);
             _mockUnitOfWork.Setup(u => u.UpsertCountryAsync(It.IsAny<Guid>(), It.IsAny<string>())).ReturnsAsync(1);
             _mockUnitOfWork.Setup(u => u.UpsertArtistAsync(It.IsAny<Guid>(), It.IsAny<string>())).ReturnsAsync(1);
             _mockUnitOfWork.Setup(u => u.UpsertGenreAsync(It.IsAny<Guid>(), It.IsAny<string>())).ReturnsAsync(1);
+            _mockUnitOfWork.Setup(u => u.ClearChangeTracker());
             _mockMusicRepo.Setup(r => r.AddRangeAsync(It.IsAny<IEnumerable<MusicRelease>>())).Returns(Task.CompletedTask);
             _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
             _mockUnitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
@@ -370,7 +377,7 @@ namespace KollectorScum.Tests.Services
             Assert.Equal(1, result.ImportedReleases);
             Assert.NotNull(insertedReleases);
             Assert.Single(insertedReleases!);
-            Assert.Equal("{\"CoverFront\":\"https://img.discogs.com/cover.jpg\"}", insertedImagePayload);
+            Assert.Equal("{\"CoverFront\":\"https://img.discogs.com/cover.jpg\",\"Thumbnail\":\"https://img.discogs.com/thumb.jpg\"}", insertedImagePayload);
             Assert.True(mediaWasEmptyAtInsert);
             Assert.False(string.IsNullOrWhiteSpace(persistedReleases[0].Media));
             Assert.Equal($"{{\"CoverFront\":\"/cover-art/{userId}/mirrored.jpg\"}}", persistedReleases[0].Images);
@@ -569,7 +576,262 @@ namespace KollectorScum.Tests.Services
             Assert.True(result.Success);
             Assert.Equal(1, result.ImportedReleases);
             Assert.Single(persistedReleases);
-            Assert.Equal("{\"CoverFront\":\"https://img.discogs.com/fail.jpg\"}", persistedReleases[0].Images);
+            Assert.Equal("{\"CoverFront\":\"https://img.discogs.com/fail.jpg\",\"Thumbnail\":\"https://img.discogs.com/fail.jpg\"}", persistedReleases[0].Images);
+        }
+
+        [Fact]
+        public async Task ImportCollectionAsync_SetsLabelNumberFromCatalogNumber_OnInsert()
+        {
+            // Arrange
+            var username = "labelnumberuser";
+            var userId = Guid.NewGuid();
+            _mockEnv.SetupGet(e => e.EnvironmentName).Returns("Production");
+
+            string? capturedLabelNumber = null;
+            _mockMusicRepo.Setup(r => r.AddRangeAsync(It.IsAny<IEnumerable<MusicRelease>>()))
+                .Callback<IEnumerable<MusicRelease>>(releases =>
+                {
+                    capturedLabelNumber = releases.First().LabelNumber;
+                })
+                .Returns(Task.CompletedTask);
+
+            var release = new DiscogsCollectionReleaseDto
+            {
+                InstanceId = Guid.NewGuid().ToString(),
+                BasicInformation = new DiscogsBasicInfoDto
+                {
+                    Id = 12345,
+                    Title = "Catalog Number Test",
+                    Labels = new List<DiscogsLabelDto>
+                    {
+                        new DiscogsLabelDto { Name = "Test Label", CatalogNumber = "CAT-001" }
+                    }
+                }
+            };
+
+            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100))
+                .ReturnsAsync(MakePage(1, release));
+
+            var service = CreateService();
+
+            // Act
+            await service.ImportCollectionAsync(username, userId);
+
+            // Assert
+            Assert.Equal("CAT-001", capturedLabelNumber);
+        }
+
+        [Fact]
+        public async Task ImportCollectionAsync_SetsUpcFromBarcodeIdentifier_DuringEnrichment()
+        {
+            // Arrange
+            var username = "upcuser";
+            var userId = Guid.NewGuid();
+            _mockEnv.SetupGet(e => e.EnvironmentName).Returns("Production");
+
+            var persistedReleases = new List<MusicRelease>();
+            _mockMusicRepo.Setup(r => r.AddRangeAsync(It.IsAny<IEnumerable<MusicRelease>>()))
+                .Callback<IEnumerable<MusicRelease>>(releases => persistedReleases.AddRange(releases))
+                .Returns(Task.CompletedTask);
+            _mockMusicRepo.Setup(r => r.Query()).Returns(() => persistedReleases.AsQueryable());
+            _mockMusicRepo.Setup(r => r.GetAsync(
+                    It.IsAny<Expression<Func<MusicRelease, bool>>>(),
+                    null,
+                    "",
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Expression<Func<MusicRelease, bool>> filter,
+                    Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>>? _,
+                    string __,
+                    CancellationToken ___) => persistedReleases.Where(filter.Compile()).ToList());
+
+            var release = new DiscogsCollectionReleaseDto
+            {
+                InstanceId = Guid.NewGuid().ToString(),
+                BasicInformation = new DiscogsBasicInfoDto { Id = 777, Title = "UPC Test" }
+            };
+
+            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100))
+                .ReturnsAsync(MakePage(1, release));
+            _mockDiscogsService.Setup(s => s.GetReleaseDetailsAsync("777"))
+                .ReturnsAsync(new DiscogsReleaseDto
+                {
+                    Country = "",
+                    Tracklist = new List<DiscogsTrackDto>(),
+                    Identifiers = new List<DiscogsIdentifierDto>
+                    {
+                        new DiscogsIdentifierDto { Type = "Barcode", Value = "5099902987927" }
+                    }
+                });
+
+            var service = CreateService();
+
+            // Act
+            var result = await service.ImportCollectionAsync(username, userId);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.Single(persistedReleases);
+            Assert.Equal("5099902987927", persistedReleases[0].Upc);
+        }
+
+        [Fact]
+        public async Task ImportCollectionAsync_SetsDiscogsUrlInLinks_OnInsert()
+        {
+            // Arrange
+            var username = "linksuser";
+            var userId = Guid.NewGuid();
+            _mockEnv.SetupGet(e => e.EnvironmentName).Returns("Production");
+
+            string? linksPayload = null;
+            _mockMusicRepo.Setup(r => r.AddRangeAsync(It.IsAny<IEnumerable<MusicRelease>>()))
+                .Callback<IEnumerable<MusicRelease>>(releases =>
+                {
+                    linksPayload = releases.First().Links;
+                })
+                .Returns(Task.CompletedTask);
+
+            var release = new DiscogsCollectionReleaseDto
+            {
+                InstanceId = Guid.NewGuid().ToString(),
+                BasicInformation = new DiscogsBasicInfoDto { Id = 99999, Title = "Link Test" }
+            };
+
+            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100))
+                .ReturnsAsync(MakePage(1, release));
+
+            var service = CreateService();
+
+            // Act
+            await service.ImportCollectionAsync(username, userId);
+
+            // Assert
+            Assert.NotNull(linksPayload);
+            Assert.Contains("https://www.discogs.com/release/99999", linksPayload);
+            Assert.Contains("Discogs", linksPayload);
+        }
+
+        [Fact]
+        public async Task ImportCollectionAsync_EnrichesCountryFromFullRelease_DuringTracklistEnrichment()
+        {
+            // Arrange
+            var username = "countryuser";
+            var userId = Guid.NewGuid();
+            _mockEnv.SetupGet(e => e.EnvironmentName).Returns("Production");
+
+            var mockCountryRepo = new Mock<IRepository<Country>>();
+            mockCountryRepo
+                .Setup(r => r.GetAsync(It.IsAny<Expression<Func<Country, bool>>>(), null, ""))
+                .ReturnsAsync(new List<Country>());
+            _mockUnitOfWork.Setup(u => u.Countries).Returns(mockCountryRepo.Object);
+            _mockUnitOfWork.Setup(u => u.UpsertCountryAsync(userId, "UK")).ReturnsAsync(77);
+
+            var persistedReleases = new List<MusicRelease>();
+            _mockMusicRepo.Setup(r => r.AddRangeAsync(It.IsAny<IEnumerable<MusicRelease>>()))
+                .Callback<IEnumerable<MusicRelease>>(releases => persistedReleases.AddRange(releases))
+                .Returns(Task.CompletedTask);
+            _mockMusicRepo.Setup(r => r.Query()).Returns(() => persistedReleases.AsQueryable());
+            _mockMusicRepo.Setup(r => r.GetAsync(
+                    It.IsAny<Expression<Func<MusicRelease, bool>>>(),
+                    null,
+                    "",
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Expression<Func<MusicRelease, bool>> filter,
+                    Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>>? _,
+                    string __,
+                    CancellationToken ___) => persistedReleases.Where(filter.Compile()).ToList());
+
+            var release = new DiscogsCollectionReleaseDto
+            {
+                InstanceId = Guid.NewGuid().ToString(),
+                BasicInformation = new DiscogsBasicInfoDto { Id = 555, Title = "Country Test" }
+            };
+
+            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100))
+                .ReturnsAsync(MakePage(1, release));
+            _mockDiscogsService.Setup(s => s.GetReleaseDetailsAsync("555"))
+                .ReturnsAsync(new DiscogsReleaseDto
+                {
+                    Country = "UK",
+                    Tracklist = new List<DiscogsTrackDto>
+                    {
+                        new DiscogsTrackDto { Title = "Track 1", Duration = "3:00" }
+                    }
+                });
+
+            var service = CreateService();
+
+            // Act
+            var result = await service.ImportCollectionAsync(username, userId);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.Single(persistedReleases);
+            Assert.Equal(77, persistedReleases[0].CountryId);
+            _mockUnitOfWork.Verify(u => u.UpsertCountryAsync(userId, "UK"), Times.Once);
+        }
+
+        [Fact]
+        public async Task ImportCollectionAsync_EnrichesCountry_EvenWhenTracklistAlreadyPresent()
+        {
+            // Arrange – release already has media (tracklist), so NeedsTracklistEnrichment returns false.
+            // Country must still be populated from the full release details.
+            var username = "countrywithtracklist";
+            var userId = Guid.NewGuid();
+            _mockEnv.SetupGet(e => e.EnvironmentName).Returns("Production");
+
+            var mockCountryRepo = new Mock<IRepository<Country>>();
+            mockCountryRepo
+                .Setup(r => r.GetAsync(It.IsAny<Expression<Func<Country, bool>>>(), null, ""))
+                .ReturnsAsync(new List<Country>());
+            _mockUnitOfWork.Setup(u => u.Countries).Returns(mockCountryRepo.Object);
+            _mockUnitOfWork.Setup(u => u.UpsertCountryAsync(userId, "UK")).ReturnsAsync(42);
+
+            var persistedReleases = new List<MusicRelease>();
+            _mockMusicRepo.Setup(r => r.AddRangeAsync(It.IsAny<IEnumerable<MusicRelease>>()))
+                .Callback<IEnumerable<MusicRelease>>(releases =>
+                {
+                    // Simulate media already being populated at insert time (e.g., from a prior import)
+                    foreach (var r in releases)
+                        r.Media = "[{\"name\":\"Disc 1\",\"tracks\":[{\"title\":\"Track 1\"}]}]";
+                    persistedReleases.AddRange(releases);
+                })
+                .Returns(Task.CompletedTask);
+            _mockMusicRepo.Setup(r => r.Query()).Returns(() => persistedReleases.AsQueryable());
+            _mockMusicRepo.Setup(r => r.GetAsync(
+                    It.IsAny<Expression<Func<MusicRelease, bool>>>(),
+                    null,
+                    "",
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Expression<Func<MusicRelease, bool>> filter,
+                    Func<IQueryable<MusicRelease>, IOrderedQueryable<MusicRelease>>? _,
+                    string __,
+                    CancellationToken ___) => persistedReleases.Where(filter.Compile()).ToList());
+
+            var release = new DiscogsCollectionReleaseDto
+            {
+                InstanceId = Guid.NewGuid().ToString(),
+                BasicInformation = new DiscogsBasicInfoDto { Id = 4326, Title = "Another Return" }
+            };
+
+            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100))
+                .ReturnsAsync(MakePage(1, release));
+            _mockDiscogsService.Setup(s => s.GetReleaseDetailsAsync("4326"))
+                .ReturnsAsync(new DiscogsReleaseDto { Country = "UK", Tracklist = new List<DiscogsTrackDto>() });
+
+            var service = CreateService();
+
+            // Act
+            var result = await service.ImportCollectionAsync(username, userId);
+
+            // Assert
+            Assert.True(result.Success);
+            Assert.Single(persistedReleases);
+            Assert.False(string.IsNullOrWhiteSpace(persistedReleases[0].Media),
+                "Media should be preserved after enrichment");
+            Assert.Equal(42, persistedReleases[0].CountryId);
+            _mockUnitOfWork.Verify(u => u.UpsertCountryAsync(userId, "UK"), Times.Once);
+            // SaveChangesAsync must be called even though no tracklist was added
+            _mockUnitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.AtLeastOnce);
         }
     }
 }
