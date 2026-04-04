@@ -231,4 +231,36 @@ describe("fromCreateDto", () => {
     expect(result.media).toEqual([]);
     expect(result.links).toEqual([]);
   });
+
+  it("maps formatId, formatName, packagingId, packagingName correctly", () => {
+    const result = fromCreateDto({ formatId: 5, formatName: "Vinyl", packagingId: 6, packagingName: "Jewel Case" });
+    expect(result.formatId).toBe(5);
+    expect(result.formatName).toBe("Vinyl");
+    expect(result.packagingId).toBe(6);
+    expect(result.packagingName).toBe("Jewel Case");
+  });
+
+  it("maps countryId and countryName correctly", () => {
+    const result = fromCreateDto({ countryId: 4, countryName: "USA" });
+    expect(result.countryId).toBe(4);
+    expect(result.countryName).toBe("USA");
+  });
+
+  it("maps labelId and labelName correctly", () => {
+    const result = fromCreateDto({ labelId: 3, labelName: "EMI" });
+    expect(result.labelId).toBe(3);
+    expect(result.labelName).toBe("EMI");
+  });
+
+  it("defaults labelName to empty string when not provided", () => {
+    const result = fromCreateDto({});
+    expect(result.labelName).toBe("");
+  });
+
+  it("defaults formatName, packagingName, countryName to empty string when not provided", () => {
+    const result = fromCreateDto({});
+    expect(result.formatName).toBe("");
+    expect(result.packagingName).toBe("");
+    expect(result.countryName).toBe("");
+  });
 });

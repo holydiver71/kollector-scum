@@ -160,6 +160,14 @@ namespace KollectorScum.Api.Repositories
         }
 
         /// <summary>
+        /// Detaches all tracked entities from the change tracker.
+        /// </summary>
+        public void ClearChangeTracker()
+        {
+            _context.ChangeTracker.Clear();
+        }
+
+        /// <summary>
         /// Saves all changes to the database
         /// </summary>
         /// <returns>Number of state entries written to the database</returns>

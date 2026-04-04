@@ -79,8 +79,13 @@ namespace KollectorScum.Api.Services
                 try
                 {
                     var publicUrl = await _storageService.UploadFileAsync(_bucketName, userId.ToString(), filename, ms, contentType);
-                    _logger.LogDebug("Uploaded cover art to R2: {Filename} -> {Url}", filename, publicUrl);
-                    return filename;
+                    // Extract the actual stored filename from the returned URL — UploadFileAsync may have
+                    // appended a numeric suffix (e.g. -1, -2) to avoid overwriting an existing file.
+                    // Using Path.GetFileName works for both local relative paths (/bucket/userId/file.jpg)
+                    // and full R2 HTTPS URLs.
+                    var storedFilename = Path.GetFileName(publicUrl);
+                    _logger.LogDebug("Uploaded cover art to storage: {RequestedFilename} -> {StoredFilename} (Url={Url})", filename, storedFilename, publicUrl);
+                    return storedFilename;
                 }
                 catch (Exception exUpload)
                 {
