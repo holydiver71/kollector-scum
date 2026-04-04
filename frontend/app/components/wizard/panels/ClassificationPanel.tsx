@@ -90,6 +90,23 @@ function buildInitialGenres(
 }
 
 /**
+ * Resolve the display name for a lookup selection.
+ * Prefers looking up by ID (reliable) when items are loaded; falls back to the
+ * stored name string for free-text / custom entries.
+ */
+function resolveDisplayName(
+  id: number | undefined,
+  storedName: string,
+  items: LookupItem[]
+): string {
+  if (id !== undefined && items.length > 0) {
+    const match = items.find((i) => i.id === id);
+    if (match) return match.name;
+  }
+  return storedName;
+}
+
+/**
  * Panel 2 – Release Information.
  * Collects format, packaging, country, genres and a live recording toggle.
  * All fields are optional; genre supports both existing DB entries and free text.
@@ -101,6 +118,12 @@ export default function ClassificationPanel({ data, onChange, errors, lookups }:
   const [selectedGenres, setSelectedGenres] = useState<SelectedGenre[]>(() =>
     buildInitialGenres(data.genreIds, data.genreNames, lookups.genres)
   );
+
+  // Resolve display values from lookup IDs so pre-populated edits show
+  // correctly even if the stored name string diverges from the lookup list.
+  const displayFormatName = resolveDisplayName(data.formatId, data.formatName, lookups.formats);
+  const displayPackagingName = resolveDisplayName(data.packagingId, data.packagingName, lookups.packagings);
+  const displayCountryName = resolveDisplayName(data.countryId, data.countryName, lookups.countries);
 
   const filteredGenres = genreInput.trim()
     ? lookups.genres
@@ -143,7 +166,7 @@ export default function ClassificationPanel({ data, onChange, errors, lookups }:
           <LookupSelect
             id="wiz-format"
             label="Format"
-            value={data.formatName}
+            value={displayFormatName}
             items={lookups.formats}
             placeholder="Select format…"
             onSelect={(id, name) => onChange({ formatId: id, formatName: name })}
@@ -151,7 +174,7 @@ export default function ClassificationPanel({ data, onChange, errors, lookups }:
           <LookupSelect
             id="wiz-packaging"
             label="Packaging"
-            value={data.packagingName}
+            value={displayPackagingName}
             items={lookups.packagings}
             placeholder="Select packaging…"
             onSelect={(id, name) => onChange({ packagingId: id, packagingName: name })}
@@ -159,7 +182,7 @@ export default function ClassificationPanel({ data, onChange, errors, lookups }:
           <LookupSelect
             id="wiz-country"
             label="Country"
-            value={data.countryName}
+            value={displayCountryName}
             items={lookups.countries}
             placeholder="Select country…"
             onSelect={(id, name) => onChange({ countryId: id, countryName: name })}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { WizardFormData, ValidationErrors, LookupItem } from "../types";
 import type { ReleaseLookups } from "../useReleaseLookups";
 
@@ -27,6 +27,19 @@ interface Props {
 export default function LabelInformationPanel({ data, onChange, errors, lookups }: Props) {
   const [labelInput, setLabelInput] = useState(data.labelName);
   const [showLabelSuggestions, setShowLabelSuggestions] = useState(false);
+
+  // When the labels lookup loads and the input is still blank but an ID is
+  // already set (e.g. editing a release where only labelId was provided),
+  // resolve and display the name from the loaded list.
+  useEffect(() => {
+    if (!labelInput && data.labelId && lookups.labels.length > 0) {
+      const found = lookups.labels.find((l) => l.id === data.labelId);
+      if (found) {
+        setLabelInput(found.name);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.labelId, lookups.labels]);
 
   const filteredLabels: LookupItem[] = labelInput.trim()
     ? lookups.labels

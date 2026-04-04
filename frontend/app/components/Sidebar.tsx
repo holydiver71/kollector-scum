@@ -81,16 +81,16 @@ const Sidebar: React.FC = () => {
 
   // Keep a global CSS variable so Header (a sibling) can read the sidebar offset
   useEffect(() => {
-    if (!isLoggedIn || hasCollection === false) {
+    if (!isLoggedIn) {
       document.documentElement.style.setProperty('--sidebar-offset', '0px');
       return;
     }
     const offset = isExpanded ? '240px' : '64px';
     document.documentElement.style.setProperty('--sidebar-offset', offset);
-  }, [isExpanded, isLoggedIn, hasCollection]);
+  }, [isExpanded, isLoggedIn]);
 
-  // Don't show sidebar if not logged in or collection is empty
-  if (!isLoggedIn || hasCollection === false) return null;
+  // Don't show sidebar if not logged in
+  if (!isLoggedIn) return null;
 
   const navigationItems: NavigationItem[] = [
     { name: 'Home', href: '/', icon: Home },
