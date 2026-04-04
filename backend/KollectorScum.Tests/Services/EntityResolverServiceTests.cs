@@ -441,15 +441,8 @@ namespace KollectorScum.Tests.Services
             // Arrange
             var createdEntities = new CreatedEntitiesDto();
 
-            _mockPackagingRepo.Setup(r => r.GetFirstOrDefaultAsync(
-                It.IsAny<Expression<Func<Packaging, bool>>>(), It.IsAny<string>()))
-                .ReturnsAsync((Packaging?)null);
-
-            _mockPackagingRepo.Setup(r => r.AddAsync(It.IsAny<Packaging>()))
-                .Callback<Packaging>(p => p.Id = 1)
-                .ReturnsAsync((Packaging p) => p);
-
-            _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+            _mockUnitOfWork.Setup(u => u.UpsertPackagingAsync(It.IsAny<Guid>(), "Digipak"))
+                .ReturnsAsync(1);
 
             // Act
             var result = await _service.ResolveOrCreatePackagingAsync(null, "Digipak", createdEntities);
@@ -459,7 +452,7 @@ namespace KollectorScum.Tests.Services
             Assert.NotNull(createdEntities.Packagings);
             Assert.Single(createdEntities.Packagings);
             Assert.Equal("Digipak", createdEntities.Packagings[0].Name);
-            _mockPackagingRepo.Verify(r => r.AddAsync(It.IsAny<Packaging>()), Times.Once);
+            _mockUnitOfWork.Verify(u => u.UpsertPackagingAsync(It.IsAny<Guid>(), "Digipak"), Times.Once);
         }
 
         [Fact]

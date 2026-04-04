@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using KollectorScum.Api.DTOs;
 using KollectorScum.Api.Interfaces;
 
@@ -250,6 +251,7 @@ namespace KollectorScum.Api.Controllers
         /// <param name="generateThumbnail">When <c>true</c>, also stores a 300px thumbnail.</param>
         /// <returns>Success or error response containing stored filenames.</returns>
         [HttpPost("download")]
+        [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> DownloadImage(
@@ -294,11 +296,15 @@ namespace KollectorScum.Api.Controllers
                 var imageBytes = await response.Content.ReadAsByteArrayAsync();
                 var contentType = response.Content.Headers.ContentType?.MediaType ?? "image/jpeg";
 
-                // Generate unique filenames
-                var baseName = Guid.NewGuid().ToString();
+                // Generate filenames — use the requested filename hint when provided so that
+                // the file on disk matches the path already stored in the database (e.g.
+                // "Hellripper-Coronach-2026.jpg" rather than a random GUID).
                 var ext = !string.IsNullOrWhiteSpace(request.Filename)
                     ? (Path.GetExtension(request.Filename).ToLowerInvariant() is { } e && e.Length > 0 ? e : ".jpg")
                     : ".jpg";
+                var baseName = !string.IsNullOrWhiteSpace(request.Filename)
+                    ? Path.GetFileNameWithoutExtension(request.Filename)
+                    : Guid.NewGuid().ToString();
                 var filename = $"{baseName}{ext}";
                 var thumbFilename = $"thumb-{baseName}{ext}";
 
@@ -357,6 +363,7 @@ namespace KollectorScum.Api.Controllers
         /// <param name="file">The image file to upload (max 5 MB; JPEG, PNG, GIF, WebP, BMP or TIFF).</param>
         /// <returns>An <see cref="ImageUploadResponseDto"/> containing the stored filenames and public URLs.</returns>
         [HttpPost("upload")]
+        [Authorize]
         [ProducesResponseType(typeof(ImageUploadResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [RequestSizeLimit(MaxUploadBytes + 1024)]

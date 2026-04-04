@@ -8,6 +8,16 @@ jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
 }));
 
+// Mock CollectionContext — tests in this file are concerned with offset/layout,
+// so we expose a collection with items to keep all navigation visible.
+jest.mock('../../contexts/CollectionContext', () => ({
+  useCollection: () => ({
+    hasCollection: true,
+    setHasCollection: jest.fn(),
+    isReady: true,
+  }),
+}));
+
 describe('Sidebar ↔ Header offset sync', () => {
   beforeEach(() => {
     // Ensure no leftover value

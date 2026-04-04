@@ -234,6 +234,128 @@ namespace KollectorScum.Tests.Controllers
             Assert.IsType<BadRequestObjectResult>(result);
         }
 
+        // ─── DownloadImage ────────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// When a filename hint is provided the file must be stored using that name so that the
+        /// path already persisted in the database matches the file on disk.
+        /// </summary>
+        [Fact]
+        public async Task DownloadImage_WithFilenameHint_UsesHintAsStoredFilename()
+        {
+            var imageBytes = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 }; // minimal JPEG header
+            var upstreamResponse = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new ByteArrayContent(imageBytes),
+            };
+            upstreamResponse.Content.Headers.ContentType =
+                new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg");
+
+            var client = BuildMockHttpClient(upstreamResponse);
+            _mockHttpClientFactory
+                .Setup(f => f.CreateClient(ImagesController.ImageDownloadClientName))
+                .Returns(client);
+
+            var resizedStream = new MemoryStream(imageBytes);
+            _mockResizer.Setup(r => r.ResizeAsync(It.IsAny<Stream>(), 1600))
+                .ReturnsAsync(resizedStream);
+
+            string? capturedFilename = null;
+            _mockStorage
+                .Setup(s => s.UploadFileAsync(
+                    It.IsAny<string>(), It.IsAny<string>(),
+                    It.IsAny<string>(), It.IsAny<Stream>(), It.IsAny<string>()))
+                .Callback<string, string, string, Stream, string>((_, _, fn, _, _) => capturedFilename = fn)
+                .ReturnsAsync("/cover-art/user/Hellripper-Coronach-2026.jpg");
+
+            var controller = CreateController();
+            var request = new ImageDownloadRequest
+            {
+                Url = "https://i.discogs.com/abc/cover.jpg",
+                Filename = "Hellripper-Coronach-2026.jpg",
+            };
+
+            var result = await controller.DownloadImage(request);
+
+            Assert.IsType<OkObjectResult>(result);
+            Assert.Equal("Hellripper-Coronach-2026.jpg", capturedFilename);
+        }
+
+        /// <summary>
+        /// When no filename hint is provided a GUID-based name is generated (existing behaviour).
+        /// </summary>
+        [Fact]
+        public async Task DownloadImage_WithoutFilenameHint_UsesGuidFilename()
+        {
+            var imageBytes = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0 };
+            var upstreamResponse = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new ByteArrayContent(imageBytes),
+            };
+            upstreamResponse.Content.Headers.ContentType =
+                new System.Net.Http.Headers.MediaTypeHeaderValue("image/jpeg");
+
+            var client = BuildMockHttpClient(upstreamResponse);
+            _mockHttpClientFactory
+                .Setup(f => f.CreateClient(ImagesController.ImageDownloadClientName))
+                .Returns(client);
+
+            var resizedStream = new MemoryStream(imageBytes);
+            _mockResizer.Setup(r => r.ResizeAsync(It.IsAny<Stream>(), 1600))
+                .ReturnsAsync(resizedStream);
+
+            string? capturedFilename = null;
+            _mockStorage
+                .Setup(s => s.UploadFileAsync(
+                    It.IsAny<string>(), It.IsAny<string>(),
+                    It.IsAny<string>(), It.IsAny<Stream>(), It.IsAny<string>()))
+                .Callback<string, string, string, Stream, string>((_, _, fn, _, _) => capturedFilename = fn)
+                .ReturnsAsync("/cover-art/user/someguid.jpg");
+
+            var controller = CreateController();
+            var request = new ImageDownloadRequest
+            {
+                Url = "https://i.discogs.com/abc/cover.jpg",
+                Filename = "",
+            };
+
+            var result = await controller.DownloadImage(request);
+
+            Assert.IsType<OkObjectResult>(result);
+            // Without a hint the base name should be a valid GUID
+            Assert.NotNull(capturedFilename);
+            var baseName = Path.GetFileNameWithoutExtension(capturedFilename!);
+            Assert.True(Guid.TryParse(baseName, out _), $"Expected a GUID base name but got: {baseName}");
+        }
+
+        /// <summary>
+        /// When the URL is relative (not absolute HTTP/HTTPS) the endpoint must reject it.
+        /// </summary>
+        [Fact]
+        public async Task DownloadImage_RelativeUrl_ReturnsBadRequest()
+        {
+            var controller = CreateController();
+            var request = new ImageDownloadRequest { Url = "/relative/path.jpg" };
+            var result = await controller.DownloadImage(request);
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+
+        /// <summary>
+        /// A directory-traversal attempt in the filename hint must be rejected.
+        /// </summary>
+        [Fact]
+        public async Task DownloadImage_TraversalFilename_ReturnsBadRequest()
+        {
+            var controller = CreateController();
+            var request = new ImageDownloadRequest
+            {
+                Url = "https://i.discogs.com/abc/cover.jpg",
+                Filename = "../../etc/passwd",
+            };
+            var result = await controller.DownloadImage(request);
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+
         #region ProxyImage Tests
 
         /// <summary>
