@@ -103,6 +103,7 @@ public class DiscogsCollectionImportIntegrationTests : IDisposable
 
         public Task<int> SaveChangesAsync() => _context.SaveChangesAsync();
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken) => _context.SaveChangesAsync(cancellationToken);
+        public void ClearChangeTracker() => _context.ChangeTracker.Clear();
 
         public Task BeginTransactionAsync() => Task.CompletedTask;
         public Task BeginTransactionAsync(CancellationToken cancellationToken) => Task.CompletedTask;
