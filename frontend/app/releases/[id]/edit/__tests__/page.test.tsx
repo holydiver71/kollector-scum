@@ -19,19 +19,30 @@ jest.mock('../../../../lib/api', () => ({
   updateRelease: jest.fn(),
 }));
 
-// Mock AddReleaseForm component
-jest.mock('../../../../components/AddReleaseForm', () => {
-   
-  return ({ initialData, releaseId, onSuccess, onCancel }: any) => (
-    <div data-testid="add-release-form">
-      <div data-testid="form-release-id">{releaseId}</div>
-      <div data-testid="form-title">{initialData?.title}</div>
-      <div data-testid="form-artist-ids">{JSON.stringify(initialData?.artistIds)}</div>
+// Mock AddReleaseWizard – captures prebuiltFormData so tests can inspect it
+const mockWizardOnSuccess = jest.fn();
+const mockWizardOnCancel = jest.fn();
+
+jest.mock('../../../../components/wizard/AddReleaseWizard', () => ({
+  __esModule: true,
+  default: ({ prebuiltFormData, releaseId, onSuccess, onCancel }: any) => (
+    <div data-testid="add-release-wizard">
+      <div data-testid="wizard-release-id">{releaseId}</div>
+      <div data-testid="wizard-title">{prebuiltFormData?.title}</div>
+      <div data-testid="wizard-artist-ids">{JSON.stringify(prebuiltFormData?.artistIds)}</div>
+      <div data-testid="wizard-format-id">{prebuiltFormData?.formatId}</div>
+      <div data-testid="wizard-format-name">{prebuiltFormData?.formatName}</div>
+      <div data-testid="wizard-country-id">{prebuiltFormData?.countryId}</div>
+      <div data-testid="wizard-country-name">{prebuiltFormData?.countryName}</div>
+      <div data-testid="wizard-packaging-id">{prebuiltFormData?.packagingId}</div>
+      <div data-testid="wizard-packaging-name">{prebuiltFormData?.packagingName}</div>
+      <div data-testid="wizard-label-id">{prebuiltFormData?.labelId}</div>
+      <div data-testid="wizard-label-name">{prebuiltFormData?.labelName}</div>
       <button onClick={() => onSuccess(123)}>Submit</button>
       <button onClick={onCancel}>Cancel</button>
     </div>
-  );
-});
+  ),
+}));
 
 // Mock LoadingSpinner
 jest.mock('../../../../components/LoadingComponents', () => ({
@@ -116,31 +127,50 @@ describe('EditReleasePage', () => {
     });
   });
 
-  it('renders form with release data after loading', async () => {
+  it('renders wizard with release data after loading', async () => {
     (api.fetchJson as jest.Mock).mockResolvedValue(mockRelease);
     
     render(<EditReleasePage />);
     
     await waitFor(() => {
-      expect(screen.getByTestId('add-release-form')).toBeInTheDocument();
+      expect(screen.getByTestId('add-release-wizard')).toBeInTheDocument();
     });
 
-    expect(screen.getByTestId('form-title')).toHaveTextContent('Test Album');
-    expect(screen.getByTestId('form-release-id')).toHaveTextContent('1');
-    expect(screen.getByTestId('form-artist-ids')).toHaveTextContent('[1]');
+    expect(screen.getByTestId('wizard-title')).toHaveTextContent('Test Album');
+    expect(screen.getByTestId('wizard-release-id')).toHaveTextContent('1');
+    expect(screen.getByTestId('wizard-artist-ids')).toHaveTextContent('[1]');
   });
 
-  it('passes correct initialData to form', async () => {
+  it('passes correct prebuiltFormData to wizard', async () => {
     (api.fetchJson as jest.Mock).mockResolvedValue(mockRelease);
     
     render(<EditReleasePage />);
     
     await waitFor(() => {
-      expect(screen.getByTestId('add-release-form')).toBeInTheDocument();
+      expect(screen.getByTestId('add-release-wizard')).toBeInTheDocument();
     });
 
-    // Form should receive artistIds
-    expect(screen.getByTestId('form-artist-ids')).toHaveTextContent('[1]');
+    // Wizard should receive artistIds
+    expect(screen.getByTestId('wizard-artist-ids')).toHaveTextContent('[1]');
+  });
+
+  it('passes formatId, formatName, countryId and countryName to wizard', async () => {
+    (api.fetchJson as jest.Mock).mockResolvedValue(mockRelease);
+
+    render(<EditReleasePage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('add-release-wizard')).toBeInTheDocument();
+    });
+
+    expect(screen.getByTestId('wizard-format-id')).toHaveTextContent('5');
+    expect(screen.getByTestId('wizard-format-name')).toHaveTextContent('Vinyl');
+    expect(screen.getByTestId('wizard-country-id')).toHaveTextContent('4');
+    expect(screen.getByTestId('wizard-country-name')).toHaveTextContent('USA');
+    expect(screen.getByTestId('wizard-packaging-id')).toHaveTextContent('6');
+    expect(screen.getByTestId('wizard-packaging-name')).toHaveTextContent('Jewel Case');
+    expect(screen.getByTestId('wizard-label-id')).toHaveTextContent('3');
+    expect(screen.getByTestId('wizard-label-name')).toHaveTextContent('Test Label');
   });
 
   it('navigates to release detail page on success', async () => {
@@ -149,7 +179,7 @@ describe('EditReleasePage', () => {
     render(<EditReleasePage />);
     
     await waitFor(() => {
-      expect(screen.getByTestId('add-release-form')).toBeInTheDocument();
+      expect(screen.getByTestId('add-release-wizard')).toBeInTheDocument();
     });
 
     const submitButton = screen.getByRole('button', { name: /submit/i });
@@ -164,7 +194,7 @@ describe('EditReleasePage', () => {
     render(<EditReleasePage />);
     
     await waitFor(() => {
-      expect(screen.getByTestId('add-release-form')).toBeInTheDocument();
+      expect(screen.getByTestId('add-release-wizard')).toBeInTheDocument();
     });
 
     const cancelButton = screen.getByRole('button', { name: /cancel/i });
@@ -213,21 +243,20 @@ describe('EditReleasePage', () => {
     render(<EditReleasePage />);
     
     await waitFor(() => {
-      expect(screen.getByTestId('add-release-form')).toBeInTheDocument();
+      expect(screen.getByTestId('add-release-wizard')).toBeInTheDocument();
     });
 
-    // The form should receive the purchaseInfo as-is
-    // (the form component handles the conversion)
+    // The wizard receives prebuiltFormData which includes purchaseInfo from the release
   });
 
-  it('passes releaseId to form component', async () => {
+  it('passes releaseId to wizard component', async () => {
     (api.fetchJson as jest.Mock).mockResolvedValue(mockRelease);
     mockUseParams.mockReturnValue({ id: '456' });
     
     render(<EditReleasePage />);
     
     await waitFor(() => {
-      expect(screen.getByTestId('form-release-id')).toHaveTextContent('456');
+      expect(screen.getByTestId('wizard-release-id')).toHaveTextContent('456');
     });
   });
 });
