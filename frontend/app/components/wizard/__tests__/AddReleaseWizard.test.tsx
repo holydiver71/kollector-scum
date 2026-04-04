@@ -21,8 +21,11 @@ jest.mock("../useReleaseLookups", () => ({
 
 jest.mock("../../../lib/api", () => ({
   fetchJson: jest.fn(),
+  updateRelease: jest.fn(),
 }));
 const mockFetchJson = fetchJson as jest.MockedFunction<typeof fetchJson>;
+import { updateRelease } from "../../../lib/api";
+const mockUpdateRelease = updateRelease as jest.MockedFunction<typeof updateRelease>;
 
 // ── Panel mocks ──────────────────────────────────────────────────────────────
 
@@ -110,11 +113,13 @@ jest.mock("../panels/DraftPreviewPanel", () => ({
     onSubmit,
     isSubmitting,
     submitError,
+    submitLabel,
   }: {
     onGoBack: () => void;
     onSubmit: () => void;
     isSubmitting?: boolean;
     submitError?: string | null;
+    submitLabel?: string;
   }) {
     return (
       <div data-testid="draft-preview">
@@ -131,7 +136,7 @@ jest.mock("../panels/DraftPreviewPanel", () => ({
           onClick={onSubmit}
           disabled={!!isSubmitting}
         >
-          {isSubmitting ? "Saving..." : "Save Release"}
+          {isSubmitting ? "Saving..." : (submitLabel ?? "Save Release")}
         </button>
       </div>
     );
@@ -383,5 +388,86 @@ describe("AddReleaseWizard – submission", () => {
     const saveBtn = screen.getByTestId("save-btn");
     await user.click(saveBtn);
     expect(saveBtn).toBeDisabled();
+  });
+});
+
+describe("AddReleaseWizard – edit mode (releaseId provided)", () => {
+  it("calls updateRelease (PUT) instead of fetchJson (POST) in edit mode", async () => {
+    mockUpdateRelease.mockResolvedValueOnce(undefined);
+    const user = userEvent.setup();
+    render(<AddReleaseWizard releaseId={99} />);
+    await navigateToPreview(user);
+    await user.click(screen.getByTestId("save-btn"));
+    await waitFor(() => {
+      expect(mockUpdateRelease).toHaveBeenCalledWith(
+        99,
+        expect.objectContaining({ title: "My Release" })
+      );
+      expect(mockFetchJson).not.toHaveBeenCalledWith(
+        "/api/musicreleases",
+        expect.objectContaining({ method: "POST" })
+      );
+    });
+  });
+
+  it("calls onSuccess with the existing releaseId after a successful update", async () => {
+    const onSuccess = jest.fn();
+    mockUpdateRelease.mockResolvedValueOnce(undefined);
+    const user = userEvent.setup();
+    render(<AddReleaseWizard releaseId={99} onSuccess={onSuccess} />);
+    await navigateToPreview(user);
+    await user.click(screen.getByTestId("save-btn"));
+    await waitFor(() => expect(onSuccess).toHaveBeenCalledWith(99));
+  });
+
+  it("shows a submit error when updateRelease throws in edit mode", async () => {
+    mockUpdateRelease.mockRejectedValueOnce(new Error("Update failed"));
+    const user = userEvent.setup();
+    render(<AddReleaseWizard releaseId={99} />);
+    await navigateToPreview(user);
+    await user.click(screen.getByTestId("save-btn"));
+    await waitFor(() =>
+      expect(screen.getByTestId("submit-error")).toBeInTheDocument()
+    );
+    expect(screen.getByTestId("submit-error")).toHaveTextContent(
+      /Update failed/i
+    );
+  });
+
+  it("passes submitLabel='Save Changes' to DraftPreviewPanel in edit mode", async () => {
+    mockUpdateRelease.mockResolvedValueOnce(undefined);
+    const user = userEvent.setup();
+    render(<AddReleaseWizard releaseId={99} />);
+    await navigateToPreview(user);
+    expect(screen.getByTestId("save-btn")).toHaveTextContent("Save Changes");
+  });
+
+  it("uses prebuiltFormData as initial form state when provided", async () => {
+    const user = userEvent.setup();
+    const prebuilt = {
+      title: "Prebuilt Title",
+      artistIds: [5],
+      artistNames: [],
+      artistDisplayNames: ["Prebuilt Artist"],
+      genreIds: [],
+      genreNames: [],
+      live: false,
+      formatName: "",
+      packagingName: "",
+      countryName: "",
+      releaseYear: "",
+      origReleaseYear: "",
+      labelName: "",
+      labelNumber: "",
+      upc: "",
+      purchaseInfo: { currency: "GBP" },
+      images: {},
+      media: [],
+      links: [],
+    };
+    mockUpdateRelease.mockResolvedValueOnce(undefined);
+    render(<AddReleaseWizard prebuiltFormData={prebuilt} releaseId={99} />);
+    // Wizard starts at step 0 (Basic Information panel is visible)
+    expect(screen.getByTestId("basic-panel")).toBeInTheDocument();
   });
 });

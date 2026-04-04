@@ -21,7 +21,7 @@ import TrackListingPanel from "./panels/TrackListingPanel";
 import ExternalLinksPanel from "./panels/ExternalLinksPanel";
 import DraftPreviewPanel from "./panels/DraftPreviewPanel";
 import ConfirmDialog from "./ConfirmDialog";
-import { fetchJson } from "../../lib/api";
+import { fetchJson, updateRelease } from "../../lib/api";
 
 // ─── Validation ────────────────────────────────────────────────────────────────
 
@@ -50,21 +50,36 @@ interface AddReleaseWizardProps {
   /**
    * Optional pre-fill data (e.g. from Discogs import).
    * Passed through fromCreateDto() so the wizard form understands it.
+   * Ignored when `prebuiltFormData` is also supplied.
    */
   initialData?: Partial<CreateMusicReleaseDto>;
-  /** Called with the new release's ID after a successful POST */
+  /**
+   * Fully-built WizardFormData to use as the initial form state.
+   * Takes precedence over `initialData` when both are supplied.
+   * Useful when the caller needs to set display-only fields (e.g. artistDisplayNames)
+   * that have no equivalent in CreateMusicReleaseDto.
+   */
+  prebuiltFormData?: WizardFormData;
+  /** Called with the release's ID after a successful save */
   onSuccess?: (releaseId: number) => void;
   /** Called when the user abandons the wizard */
   onCancel?: () => void;
+  /**
+   * When provided the wizard operates in edit mode: the final step PUTs to
+   * `/api/musicreleases/{releaseId}` instead of POSTing to `/api/musicreleases`.
+   */
+  releaseId?: number;
 }
 
 // ─── Component ─────────────────────────────────────────────────────────────────
 
 /**
- * AddReleaseWizard – the guided manual add-release flow.
+ * AddReleaseWizard – the guided manual add/edit release flow.
  *
  * Renders one panel at a time behind a step indicator and fires a real
  * POST /api/musicreleases when the user confirms the draft preview.
+ * When `releaseId` is supplied the wizard switches to edit mode and sends
+ * a PUT /api/musicreleases/{releaseId} instead.
  *
  * Navigation rules:
  *  - Back is always available except on step 0.
@@ -78,13 +93,16 @@ interface AddReleaseWizardProps {
  */
 export default function AddReleaseWizard({
   initialData,
+  prebuiltFormData,
   onSuccess,
   onCancel,
+  releaseId,
 }: AddReleaseWizardProps) {
   // ── Form state ──────────────────────────────────────────────────────────────
-  const [formData, setFormData] = useState<WizardFormData>(() =>
-    initialData ? fromCreateDto(initialData) : { ...EMPTY_FORM_DATA }
-  );
+  const [formData, setFormData] = useState<WizardFormData>(() => {
+    if (prebuiltFormData) return prebuiltFormData;
+    return initialData ? fromCreateDto(initialData) : { ...EMPTY_FORM_DATA };
+  });
   const [currentStep, setCurrentStep] = useState(0);
   const [visitedSteps, setVisitedSteps] = useState<number[]>([0]);
 
@@ -173,21 +191,28 @@ export default function AddReleaseWizard({
     setSubmitError(null);
     try {
       const dto = toCreateDto(formData);
-      const response = await fetchJson<{ release: { id: number } }>(
-        "/api/musicreleases",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(dto),
-        }
-      );
-      const releaseId = response?.release?.id;
-      if (releaseId) {
+      if (releaseId !== undefined) {
+        // Edit mode – PUT to update the existing release
+        await updateRelease(releaseId, dto);
         onSuccess?.(releaseId);
       } else {
-        setSubmitError(
-          "The release was saved but the server did not return an ID. Please check your collection."
+        // Create mode – POST to add a new release
+        const response = await fetchJson<{ release: { id: number } }>(
+          "/api/musicreleases",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(dto),
+          }
         );
+        const newId = response?.release?.id;
+        if (newId) {
+          onSuccess?.(newId);
+        } else {
+          setSubmitError(
+            "The release was saved but the server did not return an ID. Please check your collection."
+          );
+        }
       }
     } catch (err: unknown) {
       const message =
@@ -365,6 +390,7 @@ export default function AddReleaseWizard({
               onCancel={onCancel}
               isSubmitting={isSubmitting}
               submitError={submitError}
+              submitLabel={releaseId !== undefined ? "Save Changes" : undefined}
             />
           )}
         </div>
