@@ -355,9 +355,6 @@ namespace KollectorScum.Api.Services
 
             try
             {
-                var imagesPath = _configuration["ImagesPath"] ?? "/home/andy/music-images";
-                var coversPath = Path.Combine(imagesPath, "covers");
-                var thumbnailsPath = Path.Combine(imagesPath, "thumbnails");
                 var bucketName = _configuration["R2:BucketName"] ?? _configuration["R2__BucketName"] ?? "cover-art-staging";
 
                 // Parse the Images JSON
@@ -371,19 +368,19 @@ namespace KollectorScum.Api.Services
                 // Delete front cover
                 if (!string.IsNullOrWhiteSpace(imageData.CoverFront))
                 {
-                    await DeleteImageAsync(imageData.CoverFront, coversPath, bucketName, musicRelease.UserId, "front cover");
+                    await DeleteImageAsync(imageData.CoverFront, bucketName, musicRelease.UserId, "front cover");
                 }
 
                 // Delete back cover
                 if (!string.IsNullOrWhiteSpace(imageData.CoverBack))
                 {
-                    await DeleteImageAsync(imageData.CoverBack, coversPath, bucketName, musicRelease.UserId, "back cover");
+                    await DeleteImageAsync(imageData.CoverBack, bucketName, musicRelease.UserId, "back cover");
                 }
 
                 // Delete thumbnail (stored in separate thumbnails folder)
                 if (!string.IsNullOrWhiteSpace(imageData.Thumbnail))
                 {
-                    await DeleteImageAsync(imageData.Thumbnail, thumbnailsPath, bucketName, musicRelease.UserId, "thumbnail");
+                    await DeleteImageAsync(imageData.Thumbnail, bucketName, musicRelease.UserId, "thumbnail");
                 }
             }
             catch (Exception ex)
@@ -394,35 +391,33 @@ namespace KollectorScum.Api.Services
         }
 
         /// <summary>
-        /// Deletes an image from R2 storage or local filesystem
+        /// Deletes an image via IStorageService, which handles both R2 and local filesystem correctly.
+        /// Accepts full HTTPS URLs, http:// API URLs, and relative paths in the form /{bucket}/{userId}/{filename}.
         /// </summary>
-        private async Task DeleteImageAsync(string imageUrl, string localFolderPath, string bucketName, Guid userId, string imageType)
+        private async Task DeleteImageAsync(string imageUrl, string bucketName, Guid userId, string imageType)
         {
             try
             {
-                // Check if it's an R2/HTTPS URL
-                if (imageUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                var filename = ExtractFilenameFromUrl(imageUrl);
+                if (string.IsNullOrWhiteSpace(filename))
                 {
-                    // Extract filename from URL
-                    var filename = ExtractFilenameFromUrl(imageUrl);
-                    
-                    // Try to delete from R2
-                    try
-                    {
-                        await _storageService.DeleteFileAsync(bucketName, userId.ToString(), filename);
-                        _logger.LogInformation("Deleted {ImageType} from R2: {Bucket}/{UserId}/{Filename}", imageType, bucketName, userId, filename);
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "Failed to delete {ImageType} from R2: {Filename}", imageType, filename);
-                    }
+                    _logger.LogWarning("Could not extract filename for {ImageType}: {Url}", imageType, imageUrl);
+                    return;
                 }
-                else
+
+                // For relative local storage paths (/{bucket}/{userId}/{filename}), parse the bucket
+                var resolvedBucket = imageUrl.StartsWith("/")
+                    ? ExtractFirstPathSegment(imageUrl) ?? bucketName
+                    : bucketName;
+
+                try
                 {
-                    // Local filesystem deletion (fallback for old releases)
-                    var filename = ExtractFilenameFromUrl(imageUrl);
-                    var fullPath = Path.Combine(localFolderPath, filename);
-                    DeleteImageFile(fullPath, imageType);
+                    await _storageService.DeleteFileAsync(resolvedBucket, userId.ToString(), filename);
+                    _logger.LogInformation("Deleted {ImageType}: {Bucket}/{UserId}/{Filename}", imageType, resolvedBucket, userId, filename);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to delete {ImageType}: {Bucket}/{Filename}", imageType, resolvedBucket, filename);
                 }
             }
             catch (Exception ex)
@@ -432,52 +427,39 @@ namespace KollectorScum.Api.Services
         }
 
         /// <summary>
-        /// Extracts the filename from a URL (e.g., "http://localhost:5072/api/images/covers/file.jpg" -> "file.jpg")
+        /// Extracts the filename from a URL or path.
+        /// Handles full URLs (https://, http://), relative paths (/{bucket}/{userId}/{filename}), and bare filenames.
         /// </summary>
         private string ExtractFilenameFromUrl(string urlOrFilename)
         {
-            // If it's already just a filename (no protocol), return as-is
-            if (!urlOrFilename.StartsWith("http://") && !urlOrFilename.StartsWith("https://"))
+            if (urlOrFilename.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                urlOrFilename.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
             {
-                return urlOrFilename;
+                try
+                {
+                    var uri = new Uri(urlOrFilename);
+                    return Path.GetFileName(uri.LocalPath);
+                }
+                catch
+                {
+                    var lastSlashIndex = urlOrFilename.LastIndexOf('/');
+                    return lastSlashIndex >= 0 ? urlOrFilename[(lastSlashIndex + 1)..] : urlOrFilename;
+                }
             }
 
-            // Extract filename from URL
-            try
-            {
-                var uri = new Uri(urlOrFilename);
-                return Path.GetFileName(uri.LocalPath);
-            }
-            catch
-            {
-                // If URL parsing fails, try to get the part after the last slash
-                var lastSlashIndex = urlOrFilename.LastIndexOf('/');
-                return lastSlashIndex >= 0 ? urlOrFilename.Substring(lastSlashIndex + 1) : urlOrFilename;
-            }
+            // Relative path (e.g. /{bucket}/{userId}/{filename}) or bare filename
+            return Path.GetFileName(urlOrFilename);
         }
 
         /// <summary>
-        /// Helper method to delete a single image file
+        /// Extracts the first non-empty path segment from a path starting with '/'.
+        /// e.g. "/cover-art-staging/userId/filename.jpg" returns "cover-art-staging".
         /// </summary>
-        private void DeleteImageFile(string fullPath, string imageType)
+        private static string? ExtractFirstPathSegment(string path)
         {
-            try
-            {
-                if (File.Exists(fullPath))
-                {
-                    File.Delete(fullPath);
-                    _logger.LogInformation("Deleted {ImageType} file: {FilePath}", imageType, fullPath);
-                }
-                else
-                {
-                    _logger.LogDebug("{ImageType} file not found (skipping): {FilePath}", imageType, fullPath);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to delete {ImageType} file: {FilePath}", imageType, fullPath);
-                // Continue even if one file fails to delete
-            }
+            var trimmed = path.TrimStart('/');
+            var slashIdx = trimmed.IndexOf('/');
+            return slashIdx > 0 ? trimmed[..slashIdx] : (trimmed.Length > 0 ? trimmed : null);
         }
 
         /// <summary>
