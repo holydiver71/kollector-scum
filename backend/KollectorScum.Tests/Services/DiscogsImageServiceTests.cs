@@ -84,7 +84,7 @@ namespace KollectorScum.Tests.Services
         #region DownloadAndStoreCoverArtAsync Tests
 
         [Fact]
-        public async Task DownloadAndStoreCoverArtAsync_SuccessfulDownload_ReturnsFilename()
+        public async Task DownloadAndStoreCoverArtAsync_SuccessfulDownload_ReturnsActualStoredFilename()
         {
             var userId = Guid.NewGuid();
             var mockHandler = new Mock<HttpMessageHandler>();
@@ -98,21 +98,52 @@ namespace KollectorScum.Tests.Services
                     Content = new ByteArrayContent(new byte[] { 1, 2, 3 })
                 });
 
+            // Storage returns the same filename — no suffix needed
             _mockStorageService.Setup(s => s.UploadFileAsync(
                 It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(),
                 It.IsAny<Stream>(), It.IsAny<string>()))
-                .ReturnsAsync("https://cdn.example.com/file.jpg");
+                .ReturnsAsync("https://cdn.example.com/Artist-Title-2023.jpg");
 
             var service = CreateService(mockHandler.Object);
 
             var result = await service.DownloadAndStoreCoverArtAsync(
                 "https://example.com/image.jpg", "Artist", "Title", "2023", userId);
 
-            Assert.NotNull(result);
-            Assert.EndsWith(".jpg", result);
+            Assert.Equal("Artist-Title-2023.jpg", result);
             _mockStorageService.Verify(s => s.UploadFileAsync(
                 "test-bucket", userId.ToString(), It.IsAny<string>(),
                 It.IsAny<Stream>(), It.IsAny<string>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task DownloadAndStoreCoverArtAsync_WhenFilenameCollision_ReturnsActualSuffixedFilename()
+        {
+            // Arrange: storage returns a suffixed name (e.g. -1) because the original already exists
+            var userId = Guid.NewGuid();
+            var mockHandler = new Mock<HttpMessageHandler>();
+            mockHandler.Protected()
+                .Setup<Task<HttpResponseMessage>>("SendAsync",
+                    ItExpr.IsAny<HttpRequestMessage>(),
+                    ItExpr.IsAny<CancellationToken>())
+                .ReturnsAsync(new HttpResponseMessage
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    Content = new ByteArrayContent(new byte[] { 1, 2, 3 })
+                });
+
+            // Simulate LocalFileSystemStorageService appending -1 to avoid collision
+            _mockStorageService.Setup(s => s.UploadFileAsync(
+                It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(),
+                It.IsAny<Stream>(), It.IsAny<string>()))
+                .ReturnsAsync($"/cover-art/{userId}/PIXIES-Trompe Le Monde-1991-1.jpg");
+
+            var service = CreateService(mockHandler.Object);
+
+            var result = await service.DownloadAndStoreCoverArtAsync(
+                "https://img.discogs.com/cover.jpg", "PIXIES", "Trompe Le Monde", "1991", userId);
+
+            // Must return the suffixed filename, NOT the original "PIXIES-Trompe Le Monde-1991.jpg"
+            Assert.Equal("PIXIES-Trompe Le Monde-1991-1.jpg", result);
         }
 
         [Fact]
