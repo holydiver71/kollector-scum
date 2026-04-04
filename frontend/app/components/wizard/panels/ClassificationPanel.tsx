@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import type { WizardFormData, ValidationErrors, LookupItem } from "../types";
 import type { ReleaseLookups } from "../useReleaseLookups";
 
@@ -16,10 +16,11 @@ interface Props {
 }
 
 /**
- * A simple styled select for single-value lookups that captures both the
- * lookup item ID and name when the selection changes.
+ * A styled single-value combobox with creatable support.
+ * Allows selecting from existing lookup items or typing a free-text new value,
+ * matching the behaviour of the Artist and Genre fields.
  */
-function LookupSelect({
+function CreatableLookupInput({
   id,
   label,
   value,
@@ -34,6 +35,34 @@ function LookupSelect({
   placeholder: string;
   onSelect: (id: number | undefined, name: string) => void;
 }) {
+  const [inputValue, setInputValue] = useState(value);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const confirmedValue = useRef(value);
+
+  /** Sync local display when the external value changes (e.g. editing an existing release). */
+  useEffect(() => {
+    setInputValue(value);
+    confirmedValue.current = value;
+  }, [value]);
+
+  const filteredItems = inputValue.trim()
+    ? items
+        .filter((i) => i.name.toLowerCase().includes(inputValue.toLowerCase()))
+        .slice(0, 8)
+    : items.slice(0, 8);
+
+  /** Whether the current typed value is not an exact match for any existing item. */
+  const isNewValue =
+    inputValue.trim() !== "" &&
+    !items.some((i) => i.name.toLowerCase() === inputValue.trim().toLowerCase());
+
+  const commit = (itemId: number | undefined, name: string) => {
+    confirmedValue.current = name;
+    setInputValue(name);
+    setShowSuggestions(false);
+    onSelect(itemId, name);
+  };
+
   return (
     <div>
       <label
@@ -45,23 +74,86 @@ function LookupSelect({
           (optional)
         </span>
       </label>
-      <select
-        id={id}
-        value={value}
-        onChange={(e) => {
-          const name = e.target.value;
-          const item = items.find((i) => i.name === name);
-          onSelect(item?.id, name);
-        }}
-        className="w-full bg-[#0F0F1A] border border-[#2A2A3C] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#8B5CF6] focus:ring-1 focus:ring-[#8B5CF6] transition-colors appearance-none"
-      >
-        <option value="">{placeholder}</option>
-        {items.map((item) => (
-          <option key={item.id} value={item.name}>
-            {item.name}
-          </option>
-        ))}
-      </select>
+      <div className="relative">
+        <input
+          id={id}
+          type="text"
+          value={inputValue}
+          autoComplete="off"
+          onChange={(e) => {
+            const val = e.target.value;
+            setInputValue(val);
+            setShowSuggestions(true);
+            if (!val) {
+              confirmedValue.current = "";
+              onSelect(undefined, "");
+            }
+          }}
+          onFocus={() => setShowSuggestions(true)}
+          onBlur={() =>
+            setTimeout(() => {
+              setShowSuggestions(false);
+              // Revert to last committed value if the user typed but didn't confirm.
+              setInputValue(confirmedValue.current);
+            }, 150)
+          }
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              setShowSuggestions(false);
+              setInputValue(confirmedValue.current);
+              return;
+            }
+            if (e.key === "Enter") {
+              e.preventDefault();
+              const trimmed = inputValue.trim();
+              if (!trimmed) {
+                commit(undefined, "");
+                return;
+              }
+              const exact = items.find(
+                (i) => i.name.toLowerCase() === trimmed.toLowerCase()
+              );
+              if (exact) {
+                commit(exact.id, exact.name);
+              } else if (filteredItems.length > 0) {
+                // Auto-select the top suggestion on Enter (consistent with Genre field).
+                commit(filteredItems[0].id, filteredItems[0].name);
+              } else {
+                // No existing match — treat as a new entry.
+                commit(undefined, trimmed);
+              }
+            }
+          }}
+          placeholder={placeholder}
+          className="w-full bg-[#0F0F1A] border border-[#2A2A3C] rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#8B5CF6] focus:ring-1 focus:ring-[#8B5CF6] transition-colors"
+        />
+        {showSuggestions && (filteredItems.length > 0 || isNewValue) && (
+          <ul className="absolute z-20 w-full mt-1 bg-[#13131F] border border-[#1C1C28] rounded-lg shadow-xl overflow-hidden max-h-60 overflow-y-auto">
+            {filteredItems.map((item) => (
+              <li key={item.id}>
+                <button
+                  type="button"
+                  onMouseDown={() => commit(item.id, item.name)}
+                  className="w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-[#8B5CF6]/20 hover:text-white transition-colors"
+                >
+                  {item.name}
+                </button>
+              </li>
+            ))}
+            {isNewValue && (
+              <li>
+                <button
+                  type="button"
+                  onMouseDown={() => commit(undefined, inputValue.trim())}
+                  className="w-full text-left px-4 py-2.5 text-sm text-[#A78BFA] hover:bg-[#8B5CF6]/20 transition-colors border-t border-[#1C1C28]"
+                >
+                  + Add &quot;{inputValue.trim()}&quot; as new {label.toLowerCase()}
+                </button>
+              </li>
+            )}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }
@@ -163,28 +255,28 @@ export default function ClassificationPanel({ data, onChange, errors, lookups }:
       {/* Format, Packaging, Country */}
       <div className="bg-[#0A0A12] rounded-xl p-4 border border-[#1C1C28]">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <LookupSelect
+          <CreatableLookupInput
             id="wiz-format"
             label="Format"
             value={displayFormatName}
             items={lookups.formats}
-            placeholder="Select format…"
+            placeholder="Search or add format…"
             onSelect={(id, name) => onChange({ formatId: id, formatName: name })}
           />
-          <LookupSelect
+          <CreatableLookupInput
             id="wiz-packaging"
             label="Packaging"
             value={displayPackagingName}
             items={lookups.packagings}
-            placeholder="Select packaging…"
+            placeholder="Search or add packaging…"
             onSelect={(id, name) => onChange({ packagingId: id, packagingName: name })}
           />
-          <LookupSelect
+          <CreatableLookupInput
             id="wiz-country"
             label="Country"
             value={displayCountryName}
             items={lookups.countries}
-            placeholder="Select country…"
+            placeholder="Search or add country…"
             onSelect={(id, name) => onChange({ countryId: id, countryName: name })}
           />
         </div>
@@ -259,7 +351,7 @@ export default function ClassificationPanel({ data, onChange, errors, lookups }:
               }`}
             />
 
-            {showGenreSuggestions && filteredGenres.length > 0 && (
+            {showGenreSuggestions && (filteredGenres.length > 0 || (genreInput.trim() && !lookups.genres.some((g) => g.name.toLowerCase() === genreInput.trim().toLowerCase()))) && (
               <ul className="absolute z-20 w-full mt-1 bg-[#13131F] border border-[#1C1C28] rounded-lg shadow-xl overflow-hidden">
                 {filteredGenres.map((g) => (
                   <li key={g.id}>
@@ -274,7 +366,7 @@ export default function ClassificationPanel({ data, onChange, errors, lookups }:
                 ))}
                 {genreInput.trim() &&
                   !lookups.genres.some(
-                    (g) => g.name.toLowerCase() === genreInput.toLowerCase()
+                    (g) => g.name.toLowerCase() === genreInput.trim().toLowerCase()
                   ) && (
                     <li>
                       <button

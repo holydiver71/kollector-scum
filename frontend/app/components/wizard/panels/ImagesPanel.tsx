@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import type { WizardFormData, ValidationErrors } from "../types";
 import ImageSearchModal from "../ImageSearchModal";
 import { fetchJson, API_BASE_URL } from "../../../lib/api";
+import { generateImageFilename } from "../discogs/mapDiscogsRelease";
 
 // ─── Max upload size (5 MB) ───────────────────────────────────────────────────
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
@@ -35,6 +36,8 @@ interface CoverFrontFieldProps {
   error?: string;
   defaultSearchQuery: string;
   defaultCatalogueNumber?: string;
+  /** Suggested filename (Artist-Title-Year.jpg) for consistent naming. */
+  suggestedFilename: string;
 }
 
 /**
@@ -50,6 +53,7 @@ function CoverFrontField({
   error,
   defaultSearchQuery,
   defaultCatalogueNumber,
+  suggestedFilename,
 }: CoverFrontFieldProps) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -69,7 +73,7 @@ function CoverFrontField({
       ? looksLikeUrl
         ? value
         : value.startsWith("/")
-          ? `${API_BASE_URL}/api/images/${value.replace(/^\\+/, '')}`
+          ? `${API_BASE_URL}/api/images/${value.replace(/^\/+/, '')}`
           : `${API_BASE_URL}/api/images/${value}`
       : null);
 
@@ -89,12 +93,12 @@ function CoverFrontField({
       }>(`/api/images/download?generateThumbnail=true`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: imageUrl }),
+        body: JSON.stringify({ url: imageUrl, filename: suggestedFilename }),
       });
       // Switch preview to the stored URL once available (works with local storage too).
       if (data.publicUrl) {
         setPreviewUrl(
-          data.publicUrl.startsWith("http") ? data.publicUrl : `${API_BASE_URL}/api/images/${data.publicUrl.replace(/^\\+/, '')}`,
+          data.publicUrl.startsWith("http") ? data.publicUrl : `${API_BASE_URL}/api/images/${data.publicUrl.replace(/^\/+/, '')}`,
         );
       }
       // Store publicUrl (e.g. /cover-art/{userId}/uuid.jpg) as coverFront so the
@@ -156,7 +160,7 @@ function CoverFrontField({
       const data: { filename: string; thumbnailFilename?: string; publicUrl?: string } = await res.json();
       if (data.publicUrl) {
         setPreviewUrl(
-          data.publicUrl.startsWith("http") ? data.publicUrl : `${API_BASE_URL}/api/images/${data.publicUrl.replace(/^\\+/, '')}`,
+          data.publicUrl.startsWith("http") ? data.publicUrl : `${API_BASE_URL}/api/images/${data.publicUrl.replace(/^\/+/, '')}`,
         );
       }
       // Store publicUrl so the value is displayable on the Draft Preview step.
@@ -301,15 +305,23 @@ function CoverFrontField({
 export default function ImagesPanel({ data, onChange, errors }: Props) {
   const images = data.images ?? {};
 
-  /** Build the default search query from wizard metadata. */
+  /** Build the default search query: title, artist, year, country */
   const searchQuery = [
-    (data.artistDisplayNames ?? data.artistNames).join(", "),
     data.title,
+    (data.artistDisplayNames ?? data.artistNames).join(", "),
     data.releaseYear,
+    data.countryName,
   ]
     .filter(Boolean)
     .join(" ")
     .trim();
+
+  /** Standard filename for any cover art saved from this release. */
+  const suggestedFilename = generateImageFilename(
+    (data.artistDisplayNames ?? data.artistNames).join(", ") || "Unknown",
+    data.title || "Unknown",
+    data.releaseYear ? Number(data.releaseYear) : undefined,
+  );
 
   return (
     <div className="space-y-6">
@@ -356,6 +368,7 @@ export default function ImagesPanel({ data, onChange, errors }: Props) {
           error={errors.coverFront}
           defaultSearchQuery={searchQuery}
           defaultCatalogueNumber={data.labelNumber}
+          suggestedFilename={suggestedFilename}
         />
       </div>
     </div>
