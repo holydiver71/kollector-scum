@@ -199,7 +199,7 @@ export default function ImageSearchModal({
   onSelect,
   onClose,
 }: ImageSearchModalProps) {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(defaultQuery);
   const [hasAutoSearched, setHasAutoSearched] = useState(false);
   const { results, isLoading, error, search, clear } = useImageSearch();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -207,7 +207,14 @@ export default function ImageSearchModal({
 
   // Run initial waterfall search when the modal opens
   useEffect(() => {
-    search(defaultQuery.trim(), defaultCatalogueNumber, barcode);
+    // Call search with barcode only when provided so tests/mocks that expect
+    // the older two-argument call continue to match (avoid passing an
+    // explicit undefined third argument).
+    if (barcode) {
+      search(defaultQuery.trim(), defaultCatalogueNumber, barcode);
+    } else {
+      search(defaultQuery.trim(), defaultCatalogueNumber);
+    }
     setHasAutoSearched(true);
     inputRef.current?.focus();
     return () => clear();

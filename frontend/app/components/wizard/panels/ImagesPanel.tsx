@@ -309,10 +309,10 @@ function CoverFrontField({
 export default function ImagesPanel({ data, onChange, errors }: Props) {
   const images = data.images ?? {};
 
-  /** Build the default search query: title, artist, year, country */
+  /** Build the default search query: artist, title, year, country */
   const searchQuery = [
-    data.title,
     (data.artistDisplayNames ?? data.artistNames).join(", "),
+    data.title,
     data.releaseYear,
     data.countryName,
   ]
