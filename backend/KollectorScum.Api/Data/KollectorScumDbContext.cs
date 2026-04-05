@@ -915,6 +915,21 @@ LIMIT 1;";
         {
             if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Name must be provided", nameof(name));
 
+            // Non-PostgreSQL databases (e.g. SQLite in integration tests) don't support the
+            // CTE-with-INSERT pattern; fall back to an EF Core select-then-insert approach.
+            if (Database.ProviderName?.Contains("Npgsql") != true)
+            {
+                var trimmed = name.Trim();
+                var existing = await Packagings.FirstOrDefaultAsync(
+                    p => p.UserId == userId && p.Name == trimmed, cancellationToken);
+                if (existing != null) return existing.Id;
+
+                var entity = new Models.Packaging { UserId = userId, Name = trimmed };
+                Packagings.Add(entity);
+                await SaveChangesAsync(cancellationToken);
+                return entity.Id;
+            }
+
             var sql = @"WITH ins AS (
   INSERT INTO ""Packagings"" (""UserId"",""Name"") VALUES (@userId, @name)
   ON CONFLICT (""UserId"",""Name"") DO NOTHING
