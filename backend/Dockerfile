@@ -21,4 +21,11 @@ EXPOSE 8080
 
 COPY --from=build /app/publish .
 
+# Create a non-root user to run the app for improved container security
+RUN addgroup --system appuser \
+	&& adduser --system --ingroup appuser --home /nonexistent --no-create-home --shell /sbin/nologin appuser \
+	&& chown -R appuser:appuser /app || true
+
+USER appuser
+
 ENTRYPOINT ["dotnet", "KollectorScum.Api.dll"]
