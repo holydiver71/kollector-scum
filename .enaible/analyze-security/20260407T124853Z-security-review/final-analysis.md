@@ -79,21 +79,26 @@
 **Finding:** `QueryController` has no `[Authorize]` attribute, and `BaseApiController` provides no authentication requirement. The `POST /api/query/ask` endpoint is **publicly accessible without authentication**. Any caller can submit natural language queries that are converted by the LLM into SQL and executed directly against the database via `command.CommandText = sql`.  
 **Mitigating factor:** `SqlValidationService` enforces SELECT-only with a table allowlist (user/auth tables excluded). However: the allowlist permits full content of `MusicReleases`, `Artists`, `Labels`, etc., raw SQL execution bypasses EF Core row-level filters (multi-tenant scoping), and the LLM-generated SQL is executed without row-ownership checks, so user A can read user B's collection data unauthenticated.  
 **Fix:** Add `[Authorize]` to `QueryController`. Add tenant-scoping to `ExecuteQueryAsync` so the current user's context is applied even after SQL validation passes.
+**Status:** Fixed — `QueryController` now has `[Authorize]`, resolves the acting user via `IUserContext`, and `ExecuteQueryAsync` wraps validated SQL with tenant-scoped CTEs (`ApplyTenantScoping`) and passes a parameterised `@userId` to the DB command to enforce per-user isolation.
 
 ### 🔴 SEC-02: Real Discogs API Token in Git-Tracked File — CRITICAL (OWASP A02)
 **File:** `backend/KollectorScum.Api/appsettings.Development.json`  
 **Finding:** `appsettings.Development.json` is **tracked in git** (confirmed via `git ls-files`). It contains what appears to be a real Discogs personal access token (`dmIeuaRfMUWwzfZAqTUhlsLMnRYKYvlfpAYMtcSr`), a Google OAuth Client ID, and a JWT key. Even if these are "dev" credentials, they are committed to version history and accessible to anyone with repo access. The Google Client ID is a real cloud resource identifier.  
 **Fix:** Add `appsettings.Development.json` to `.gitignore` immediately. Rotate the Discogs token. Use `dotnet user-secrets` or environment variables for local dev credentials. Audit git history (`git log --all -- appsettings.Development.json`) and consider a history rewrite if the repo is or will be public.
+**Status:** Mitigated in-repo — the real `appsettings.Development.json` is no longer tracked and a redacted example file `backend/KollectorScum.Api/appsettings.Development.json.example` was added. IMPORTANT: rotate any exposed credentials immediately and consider rewriting history if this repository is public.
 
 ### 🔴 SEC-03: GitHub Actions Shell Injection — CRITICAL (OWASP A03)
 **Files:** `apply-migrations.yml:45`, `ci.yml:232`, `prevent-pr-to-master.yml:12`  
 **Finding:** All three workflows interpolate GitHub context expressions (`${{ github.event.inputs.* }}`, `${{ github.event.pull_request.base.ref }}`, `${{ github.ref_name }}`) directly into `run:` shell steps. An attacker who can control these values (e.g., via a crafted PR branch name or workflow_dispatch input) can inject arbitrary shell commands into the CI runner, which has access to repository secrets, cloud credentials, and the deployment pipeline.  
 **Fix:** Assign context values to environment variables first (`env: MY_VAR: ${{ ... }}`), then reference `$MY_VAR` in shell. GitHub Actions does not expand `$MY_VAR` as an expression, breaking the injection vector.
 
+**Status:** Fixed — workflows updated to map GitHub context expressions into step `env` variables and reference those variables in `run:` shells. Files updated: `.github/workflows/apply-migrations.yml`, `.github/workflows/ci.yml`, `.github/workflows/prevent-pr-to-master.yml`.
+
 ### 🔴 SEC-04: Docker Container Runs as Root — CRITICAL (OWASP A05)
 **File:** `backend/Dockerfile:24`  
 **Finding:** No `USER` directive exists in the Dockerfile. The application container runs as root. If the container is compromised (e.g., via the SQL endpoint above), the attacker has full root access inside the container, making lateral movement and escape significantly easier.  
 **Fix:** Add a non-root user: `RUN adduser --disabled-password --gecos '' appuser && USER appuser` before the `ENTRYPOINT`.
+**Status:** Fixed — `backend/Dockerfile` updated to create a system `appuser`, set ownership of `/app`, and run the container as the non-root user.
 
 ### 🟡 SEC-05: `minimst` Flagged as Malicious Package — HIGH (OWASP A06)
 **File:** `package.json` (root)  
