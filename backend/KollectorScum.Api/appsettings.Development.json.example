@@ -8,6 +8,37 @@
   "ConnectionStrings": {
     "DefaultConnection": "Host=localhost;Port=5432;Database=kollectorscum;Username=postgres;Password=postgres"
   },
+  "ImagesPath": "/path/to/your/local/music-images",
+  "Discogs": {
+    "Token": "REPLACE_WITH_YOUR_DISCOGS_PERSONAL_ACCESS_TOKEN",
+    "UserAgent": "your-app-name/1.0 (+https://your.domain)"
+  },
+  "Jwt": {
+    "Key": "REPLACE_WITH_A_SECURE_RANDOM_KEY_AT_LEAST_32_CHARACTERS",
+    "Issuer": "KollectorScumApi",
+    "Audience": "KollectorScumClient",
+    "ExpiryMinutes": "60"
+  },
+  "Google": {
+    "ClientId": "REPLACE_WITH_YOUR_GOOGLE_OAUTH_CLIENT_ID",
+    "ClientSecret": "REPLACE_WITH_GOOGLE_CLIENT_SECRET",
+    "RedirectUri": "http://localhost:5072/api/auth/google/callback"
+  },
+  "Features": {
+    "EnableBootstrapEndpoint": true,
+    "BootstrapSecret": "REPLACE_WITH_A_SECURE_BOOTSTRAP_SECRET"
+  }
+}
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=localhost;Port=5432;Database=kollectorscum;Username=postgres;Password=postgres"
+  },
   "ImagesPath": "/path/to/your/music-images",
   "Discogs": {
     "Token": "REPLACE_WITH_YOUR_DISCOGS_PERSONAL_ACCESS_TOKEN",
