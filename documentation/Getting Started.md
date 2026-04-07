@@ -9,7 +9,23 @@ Prerequisites
 
 Initial setup
 1. Clone the repo and change to the project root.
-2. Create a local `.env` file:
+2. Create your local development settings file from the example template:
+
+```bash
+cp backend/KollectorScum.Api/appsettings.Development.json.example \
+   backend/KollectorScum.Api/appsettings.Development.json
+```
+
+   Then edit `appsettings.Development.json` and replace every `REPLACE_WITH_*` placeholder with your real values:
+   - **Discogs.Token** — generate a personal access token at https://www.discogs.com/settings/developers
+   - **Jwt.Key** — any random string ≥ 32 characters (e.g. `openssl rand -base64 32`)
+   - **Google.ClientId** — your OAuth 2.0 client ID from the Google Cloud Console
+   - **Features.BootstrapSecret** — any local secret string
+
+   > ⚠️ `appsettings.Development.json` is gitignored and must **never** be committed.
+   > Real credentials must not appear in git history.
+
+3. Create a local `.env` file:
 
 ```bash
 # Copy example file and edit values locally
