@@ -43,6 +43,11 @@ obj/
 .env.test.local
 .env.production.local
 
+# ASP.NET Core secrets — never commit development credentials
+**/appsettings.Development.json
+**/appsettings.*.json
+!**/appsettings.Development.json.example
+
 # IDE files
 .vscode/
 .idea/
