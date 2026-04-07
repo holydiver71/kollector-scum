@@ -25,14 +25,14 @@ namespace KollectorScum.Tests.Controllers
         public void ApplyTenantScoping_PlainSelect_PrefixesTenantCtes()
         {
             // Arrange
-            const string sql = """SELECT "Title" FROM "MusicReleases" LIMIT 10""";
+            const string sql = "SELECT \"Title\" FROM \"MusicReleases\" LIMIT 10";
 
             // Act
             var result = QueryController.ApplyTenantScoping(sql);
 
             // Assert: CTE block is prepended and original SQL appears at the end
             Assert.StartsWith("WITH", result, StringComparison.OrdinalIgnoreCase);
-            Assert.Contains("""public."MusicReleases" WHERE "UserId" = @userId""", result);
+            Assert.Contains("public.\"MusicReleases\" WHERE \"UserId\" = @userId", result);
             Assert.EndsWith(sql, result);
         }
 
@@ -40,7 +40,7 @@ namespace KollectorScum.Tests.Controllers
         public void ApplyTenantScoping_AllAllowedTables_AreIncludedInCtes()
         {
             // Arrange
-            const string sql = """SELECT "Id" FROM "MusicReleases" LIMIT 1""";
+            const string sql = "SELECT \"Id\" FROM \"MusicReleases\" LIMIT 1";
 
             // Act
             var result = QueryController.ApplyTenantScoping(sql);
@@ -49,7 +49,7 @@ namespace KollectorScum.Tests.Controllers
             foreach (var table in new[]
                 { "MusicReleases", "Artists", "Labels", "Countries", "Formats", "Genres", "Packagings", "Stores" })
             {
-                Assert.Contains($"""public."{table}" WHERE "UserId" = @userId""", result);
+                Assert.Contains($"public.\"{table}\" WHERE \"UserId\" = @userId", result);
             }
         }
 
@@ -57,31 +57,28 @@ namespace KollectorScum.Tests.Controllers
         public void ApplyTenantScoping_NowPlayings_ScopedViaMusicReleasesFk()
         {
             // Arrange
-            const string sql = """SELECT * FROM "NowPlayings" LIMIT 10""";
+            const string sql = "SELECT * FROM \"NowPlayings\" LIMIT 10";
 
             // Act
             var result = QueryController.ApplyTenantScoping(sql);
 
             // Assert: NowPlayings CTE joins through scoped MusicReleases
-            Assert.Contains("""public."NowPlayings" np""", result);
-            Assert.Contains("""mr."UserId" = @userId""", result);
+            Assert.Contains("public.\"NowPlayings\" np", result);
+            Assert.Contains("mr.\"UserId\" = @userId", result);
         }
 
         [Fact]
         public void ApplyTenantScoping_SelectWithExistingWith_MergesCtes()
         {
             // Arrange — simulate an LLM-generated query that already has a CTE
-            const string sql = """
-                WITH ranked AS (SELECT "Title", ROW_NUMBER() OVER (ORDER BY "DateAdded" DESC) AS rn FROM "MusicReleases")
-                SELECT "Title" FROM ranked WHERE rn <= 10 LIMIT 10
-                """;
+            var sql = "WITH ranked AS (SELECT \"Title\", ROW_NUMBER() OVER (ORDER BY \"DateAdded\" DESC) AS rn FROM \"MusicReleases\")\nSELECT \"Title\" FROM ranked WHERE rn <= 10 LIMIT 10";
 
             // Act
             var result = QueryController.ApplyTenantScoping(sql);
 
             // Assert: original CTE is preserved, tenant CTEs come first
             Assert.StartsWith("WITH", result, StringComparison.OrdinalIgnoreCase);
-            Assert.Contains("""public."MusicReleases" WHERE "UserId" = @userId""", result);
+            Assert.Contains("public.\"MusicReleases\" WHERE \"UserId\" = @userId", result);
             Assert.Contains("ranked AS", result);
         }
 
@@ -89,7 +86,7 @@ namespace KollectorScum.Tests.Controllers
         public void ApplyTenantScoping_UserId_ParameterPlaceholderPresent()
         {
             // Arrange
-            const string sql = """SELECT COUNT(*) FROM "MusicReleases" LIMIT 1""";
+            const string sql = "SELECT COUNT(*) FROM \"MusicReleases\" LIMIT 1";
 
             // Act
             var result = QueryController.ApplyTenantScoping(sql);
