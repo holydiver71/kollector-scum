@@ -1,0 +1,577 @@
+{
+  "tool": "security:semgrep",
+  "analyzer_type": "security",
+  "success": true,
+  "exit_code": 0,
+  "started_at": "2026-04-07T12:54:03.759095+00:00",
+  "completed_at": "2026-04-07T12:54:42.267863+00:00",
+  "duration_ms": 38508,
+  "target": "/Users/andy.shutt/dotnetProjects/kollector-scum",
+  "findings": [
+    {
+      "id": "SECURITY001",
+      "title": "Security issue detected (yaml.github-actions.security.run-shell-injection.run-shell-injection)",
+      "description": "Semgrep detected: Security issue detected. Category: security. This requires security review and remediation.",
+      "severity": "critical",
+      "recommendation": "Review this security finding and apply appropriate security controls",
+      "file_path": ".github/workflows/apply-migrations.yml",
+      "line_number": 45,
+      "evidence": {
+        "tool": "semgrep",
+        "check_id": "yaml.github-actions.security.run-shell-injection.run-shell-injection",
+        "category": "security",
+        "line_content": "requires login",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "SECURITY002",
+      "title": "Security issue detected (yaml.github-actions.security.run-shell-injection.run-shell-injection)",
+      "description": "Semgrep detected: Security issue detected. Category: security. This requires security review and remediation.",
+      "severity": "critical",
+      "recommendation": "Review this security finding and apply appropriate security controls",
+      "file_path": ".github/workflows/ci.yml",
+      "line_number": 232,
+      "evidence": {
+        "tool": "semgrep",
+        "check_id": "yaml.github-actions.security.run-shell-injection.run-shell-injection",
+        "category": "security",
+        "line_content": "requires login",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "SECURITY003",
+      "title": "Security issue detected (yaml.github-actions.security.run-shell-injection.run-shell-injection)",
+      "description": "Semgrep detected: Security issue detected. Category: security. This requires security review and remediation.",
+      "severity": "critical",
+      "recommendation": "Review this security finding and apply appropriate security controls",
+      "file_path": ".github/workflows/prevent-pr-to-master.yml",
+      "line_number": 12,
+      "evidence": {
+        "tool": "semgrep",
+        "check_id": "yaml.github-actions.security.run-shell-injection.run-shell-injection",
+        "category": "security",
+        "line_content": "requires login",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "SECURITY004",
+      "title": "Security issue detected (dockerfile.security.missing-user-entrypoint.missing-user-entrypoint)",
+      "description": "Semgrep detected: Security issue detected. Category: security. This requires security review and remediation.",
+      "severity": "critical",
+      "recommendation": "Review this security finding and apply appropriate security controls",
+      "file_path": "backend/Dockerfile",
+      "line_number": 24,
+      "evidence": {
+        "tool": "semgrep",
+        "check_id": "dockerfile.security.missing-user-entrypoint.missing-user-entrypoint",
+        "category": "security",
+        "line_content": "requires login",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "SECURITY005",
+      "title": "Security issue detected (csharp.lang.security.sqli.csharp-sqli.csharp-sqli)",
+      "description": "Semgrep detected: Security issue detected. Category: security. This requires security review and remediation.",
+      "severity": "critical",
+      "recommendation": "Review this security finding and apply appropriate security controls",
+      "file_path": "backend/KollectorScum.Api/Controllers/QueryController.cs",
+      "line_number": 112,
+      "evidence": {
+        "tool": "semgrep",
+        "check_id": "csharp.lang.security.sqli.csharp-sqli.csharp-sqli",
+        "category": "security",
+        "line_content": "requires login",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "SECURITY006",
+      "title": "Security issue detected (javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal)",
+      "description": "Semgrep detected: Security issue detected. Category: security. This requires security review and remediation.",
+      "severity": "high",
+      "recommendation": "Review this security finding and apply appropriate security controls",
+      "file_path": "backend/scripts/resize-cover-images.js",
+      "line_number": 95,
+      "evidence": {
+        "tool": "semgrep",
+        "check_id": "javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal",
+        "category": "security",
+        "line_content": "requires login",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "SECURITY007",
+      "title": "Security issue detected (javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal)",
+      "description": "Semgrep detected: Security issue detected. Category: security. This requires security review and remediation.",
+      "severity": "high",
+      "recommendation": "Review this security finding and apply appropriate security controls",
+      "file_path": "backend/scripts/resize-cover-images.js",
+      "line_number": 95,
+      "evidence": {
+        "tool": "semgrep",
+        "check_id": "javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal",
+        "category": "security",
+        "line_content": "requires login",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "SECURITY008",
+      "title": "Security issue detected (javascript.lang.security.audit.unsafe-formatstring.unsafe-formatstring)",
+      "description": "Semgrep detected: Security issue detected. Category: security. This requires security review and remediation.",
+      "severity": "medium",
+      "recommendation": "Review this security finding and apply appropriate security controls",
+      "file_path": "frontend/app/components/AddReleaseForm.tsx",
+      "line_number": 426,
+      "evidence": {
+        "tool": "semgrep",
+        "check_id": "javascript.lang.security.audit.unsafe-formatstring.unsafe-formatstring",
+        "category": "security",
+        "line_content": "requires login",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "SECURITY009",
+      "title": "Security issue detected (javascript.lang.security.audit.unsafe-formatstring.unsafe-formatstring)",
+      "description": "Semgrep detected: Security issue detected. Category: security. This requires security review and remediation.",
+      "severity": "medium",
+      "recommendation": "Review this security finding and apply appropriate security controls",
+      "file_path": "frontend/app/components/LookupComponents.tsx",
+      "line_number": 232,
+      "evidence": {
+        "tool": "semgrep",
+        "check_id": "javascript.lang.security.audit.unsafe-formatstring.unsafe-formatstring",
+        "category": "security",
+        "line_content": "requires login",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "SECURITY010",
+      "title": "Security issue detected (javascript.lang.security.audit.unsafe-formatstring.unsafe-formatstring)",
+      "description": "Semgrep detected: Security issue detected. Category: security. This requires security review and remediation.",
+      "severity": "medium",
+      "recommendation": "Review this security finding and apply appropriate security controls",
+      "file_path": "frontend/app/components/LookupComponents.tsx",
+      "line_number": 253,
+      "evidence": {
+        "tool": "semgrep",
+        "check_id": "javascript.lang.security.audit.unsafe-formatstring.unsafe-formatstring",
+        "category": "security",
+        "line_content": "requires login",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "SECURITY011",
+      "title": "Security issue detected (javascript.lang.security.audit.unsafe-formatstring.unsafe-formatstring)",
+      "description": "Semgrep detected: Security issue detected. Category: security. This requires security review and remediation.",
+      "severity": "medium",
+      "recommendation": "Review this security finding and apply appropriate security controls",
+      "file_path": "frontend/app/components/MusicReleaseList.tsx",
+      "line_number": 322,
+      "evidence": {
+        "tool": "semgrep",
+        "check_id": "javascript.lang.security.audit.unsafe-formatstring.unsafe-formatstring",
+        "category": "security",
+        "line_content": "requires login",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "SECURITY012",
+      "title": "Security issue detected (javascript.lang.security.audit.unsafe-formatstring.unsafe-formatstring)",
+      "description": "Semgrep detected: Security issue detected. Category: security. This requires security review and remediation.",
+      "severity": "medium",
+      "recommendation": "Review this security finding and apply appropriate security controls",
+      "file_path": "frontend/app/components/wizard/useReleaseLookups.ts",
+      "line_number": 57,
+      "evidence": {
+        "tool": "semgrep",
+        "check_id": "javascript.lang.security.audit.unsafe-formatstring.unsafe-formatstring",
+        "category": "security",
+        "line_content": "requires login",
+        "confidence": "high"
+      }
+    }
+  ],
+  "summary": {
+    "critical": 5,
+    "high": 2,
+    "medium": 5,
+    "low": 0,
+    "info": 0
+  },
+  "metadata": {
+    "analyzer_type": "security",
+    "target_path": "/Users/andy.shutt/dotnetProjects/kollector-scum",
+    "files_analyzed": "handled_by_semgrep",
+    "files_processed": 10,
+    "files_skipped": 0,
+    "processing_errors": 0,
+    "total_findings": 12,
+    "severity_breakdown": {
+      "critical": 5,
+      "high": 2,
+      "medium": 5,
+      "low": 0,
+      "info": 0
+    },
+    "analyzer_config": {
+      "max_files": null,
+      "max_file_size_mb": 5,
+      "extensions_count": 26,
+      "skip_patterns_count": 23
+    },
+    "name": "Semgrep Security Analyzer",
+    "version": "2.0.0",
+    "description": "Semantic security analysis using Semgrep (replacing bespoke regex patterns)",
+    "category": "security",
+    "priority": "critical",
+    "capabilities": [
+      "OWASP Top 10 vulnerability detection",
+      "SQL injection analysis",
+      "XSS vulnerability detection",
+      "Authentication/authorization analysis",
+      "Hardcoded secrets detection",
+      "Input validation analysis",
+      "Cryptographic weakness detection",
+      "Multi-language semantic analysis",
+      "Real-time security rule updates"
+    ],
+    "supported_languages": [
+      "Python",
+      "JavaScript",
+      "TypeScript",
+      "Java",
+      "C#",
+      "PHP",
+      "Ruby",
+      "Go",
+      "Rust",
+      "C/C++",
+      "Swift",
+      "Kotlin",
+      "Scala",
+      "Dart",
+      "HTML",
+      "SQL",
+      "Shell",
+      "YAML",
+      "Terraform"
+    ],
+    "tool": "semgrep",
+    "replaces": [
+      "previous regex-based security checks"
+    ],
+    "total_findings_unfiltered": 12,
+    "severity_breakdown_unfiltered": {
+      "critical": 5,
+      "high": 2,
+      "medium": 5,
+      "low": 0,
+      "info": 0
+    }
+  },
+  "stats": {
+    "execution_time_seconds": 38.50870394706726
+  },
+  "errors": [],
+  "raw": {
+    "analysis_type": "security",
+    "script_name": "security_analyzer.py",
+    "target_path": "/Users/andy.shutt/dotnetProjects/kollector-scum",
+    "timestamp": "2026-04-07T13:54:03.759146",
+    "execution_time": 38.509,
+    "success": true,
+    "error_message": null,
+    "summary": {
+      "critical": 5,
+      "high": 2,
+      "medium": 5,
+      "low": 0,
+      "info": 0
+    },
+    "findings": [
+      {
+        "id": "SECURITY001",
+        "title": "Security issue detected (yaml.github-actions.security.run-shell-injection.run-shell-injection)",
+        "description": "Semgrep detected: Security issue detected. Category: security. This requires security review and remediation.",
+        "severity": "critical",
+        "file_path": ".github/workflows/apply-migrations.yml",
+        "line_number": 45,
+        "recommendation": "Review this security finding and apply appropriate security controls",
+        "evidence": {
+          "tool": "semgrep",
+          "check_id": "yaml.github-actions.security.run-shell-injection.run-shell-injection",
+          "category": "security",
+          "line_content": "requires login",
+          "confidence": "high"
+        }
+      },
+      {
+        "id": "SECURITY002",
+        "title": "Security issue detected (yaml.github-actions.security.run-shell-injection.run-shell-injection)",
+        "description": "Semgrep detected: Security issue detected. Category: security. This requires security review and remediation.",
+        "severity": "critical",
+        "file_path": ".github/workflows/ci.yml",
+        "line_number": 232,
+        "recommendation": "Review this security finding and apply appropriate security controls",
+        "evidence": {
+          "tool": "semgrep",
+          "check_id": "yaml.github-actions.security.run-shell-injection.run-shell-injection",
+          "category": "security",
+          "line_content": "requires login",
+          "confidence": "high"
+        }
+      },
+      {
+        "id": "SECURITY003",
+        "title": "Security issue detected (yaml.github-actions.security.run-shell-injection.run-shell-injection)",
+        "description": "Semgrep detected: Security issue detected. Category: security. This requires security review and remediation.",
+        "severity": "critical",
+        "file_path": ".github/workflows/prevent-pr-to-master.yml",
+        "line_number": 12,
+        "recommendation": "Review this security finding and apply appropriate security controls",
+        "evidence": {
+          "tool": "semgrep",
+          "check_id": "yaml.github-actions.security.run-shell-injection.run-shell-injection",
+          "category": "security",
+          "line_content": "requires login",
+          "confidence": "high"
+        }
+      },
+      {
+        "id": "SECURITY004",
+        "title": "Security issue detected (dockerfile.security.missing-user-entrypoint.missing-user-entrypoint)",
+        "description": "Semgrep detected: Security issue detected. Category: security. This requires security review and remediation.",
+        "severity": "critical",
+        "file_path": "backend/Dockerfile",
+        "line_number": 24,
+        "recommendation": "Review this security finding and apply appropriate security controls",
+        "evidence": {
+          "tool": "semgrep",
+          "check_id": "dockerfile.security.missing-user-entrypoint.missing-user-entrypoint",
+          "category": "security",
+          "line_content": "requires login",
+          "confidence": "high"
+        }
+      },
+      {
+        "id": "SECURITY005",
+        "title": "Security issue detected (csharp.lang.security.sqli.csharp-sqli.csharp-sqli)",
+        "description": "Semgrep detected: Security issue detected. Category: security. This requires security review and remediation.",
+        "severity": "critical",
+        "file_path": "backend/KollectorScum.Api/Controllers/QueryController.cs",
+        "line_number": 112,
+        "recommendation": "Review this security finding and apply appropriate security controls",
+        "evidence": {
+          "tool": "semgrep",
+          "check_id": "csharp.lang.security.sqli.csharp-sqli.csharp-sqli",
+          "category": "security",
+          "line_content": "requires login",
+          "confidence": "high"
+        }
+      },
+      {
+        "id": "SECURITY006",
+        "title": "Security issue detected (javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal)",
+        "description": "Semgrep detected: Security issue detected. Category: security. This requires security review and remediation.",
+        "severity": "high",
+        "file_path": "backend/scripts/resize-cover-images.js",
+        "line_number": 95,
+        "recommendation": "Review this security finding and apply appropriate security controls",
+        "evidence": {
+          "tool": "semgrep",
+          "check_id": "javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal",
+          "category": "security",
+          "line_content": "requires login",
+          "confidence": "high"
+        }
+      },
+      {
+        "id": "SECURITY007",
+        "title": "Security issue detected (javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal)",
+        "description": "Semgrep detected: Security issue detected. Category: security. This requires security review and remediation.",
+        "severity": "high",
+        "file_path": "backend/scripts/resize-cover-images.js",
+        "line_number": 95,
+        "recommendation": "Review this security finding and apply appropriate security controls",
+        "evidence": {
+          "tool": "semgrep",
+          "check_id": "javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal",
+          "category": "security",
+          "line_content": "requires login",
+          "confidence": "high"
+        }
+      },
+      {
+        "id": "SECURITY008",
+        "title": "Security issue detected (javascript.lang.security.audit.unsafe-formatstring.unsafe-formatstring)",
+        "description": "Semgrep detected: Security issue detected. Category: security. This requires security review and remediation.",
+        "severity": "medium",
+        "file_path": "frontend/app/components/AddReleaseForm.tsx",
+        "line_number": 426,
+        "recommendation": "Review this security finding and apply appropriate security controls",
+        "evidence": {
+          "tool": "semgrep",
+          "check_id": "javascript.lang.security.audit.unsafe-formatstring.unsafe-formatstring",
+          "category": "security",
+          "line_content": "requires login",
+          "confidence": "high"
+        }
+      },
+      {
+        "id": "SECURITY009",
+        "title": "Security issue detected (javascript.lang.security.audit.unsafe-formatstring.unsafe-formatstring)",
+        "description": "Semgrep detected: Security issue detected. Category: security. This requires security review and remediation.",
+        "severity": "medium",
+        "file_path": "frontend/app/components/LookupComponents.tsx",
+        "line_number": 232,
+        "recommendation": "Review this security finding and apply appropriate security controls",
+        "evidence": {
+          "tool": "semgrep",
+          "check_id": "javascript.lang.security.audit.unsafe-formatstring.unsafe-formatstring",
+          "category": "security",
+          "line_content": "requires login",
+          "confidence": "high"
+        }
+      },
+      {
+        "id": "SECURITY010",
+        "title": "Security issue detected (javascript.lang.security.audit.unsafe-formatstring.unsafe-formatstring)",
+        "description": "Semgrep detected: Security issue detected. Category: security. This requires security review and remediation.",
+        "severity": "medium",
+        "file_path": "frontend/app/components/LookupComponents.tsx",
+        "line_number": 253,
+        "recommendation": "Review this security finding and apply appropriate security controls",
+        "evidence": {
+          "tool": "semgrep",
+          "check_id": "javascript.lang.security.audit.unsafe-formatstring.unsafe-formatstring",
+          "category": "security",
+          "line_content": "requires login",
+          "confidence": "high"
+        }
+      },
+      {
+        "id": "SECURITY011",
+        "title": "Security issue detected (javascript.lang.security.audit.unsafe-formatstring.unsafe-formatstring)",
+        "description": "Semgrep detected: Security issue detected. Category: security. This requires security review and remediation.",
+        "severity": "medium",
+        "file_path": "frontend/app/components/MusicReleaseList.tsx",
+        "line_number": 322,
+        "recommendation": "Review this security finding and apply appropriate security controls",
+        "evidence": {
+          "tool": "semgrep",
+          "check_id": "javascript.lang.security.audit.unsafe-formatstring.unsafe-formatstring",
+          "category": "security",
+          "line_content": "requires login",
+          "confidence": "high"
+        }
+      },
+      {
+        "id": "SECURITY012",
+        "title": "Security issue detected (javascript.lang.security.audit.unsafe-formatstring.unsafe-formatstring)",
+        "description": "Semgrep detected: Security issue detected. Category: security. This requires security review and remediation.",
+        "severity": "medium",
+        "file_path": "frontend/app/components/wizard/useReleaseLookups.ts",
+        "line_number": 57,
+        "recommendation": "Review this security finding and apply appropriate security controls",
+        "evidence": {
+          "tool": "semgrep",
+          "check_id": "javascript.lang.security.audit.unsafe-formatstring.unsafe-formatstring",
+          "category": "security",
+          "line_content": "requires login",
+          "confidence": "high"
+        }
+      }
+    ],
+    "metadata": {
+      "analyzer_type": "security",
+      "target_path": "/Users/andy.shutt/dotnetProjects/kollector-scum",
+      "files_analyzed": "handled_by_semgrep",
+      "files_processed": 10,
+      "files_skipped": 0,
+      "processing_errors": 0,
+      "total_findings": 12,
+      "severity_breakdown": {
+        "critical": 5,
+        "high": 2,
+        "medium": 5,
+        "low": 0,
+        "info": 0
+      },
+      "analyzer_config": {
+        "max_files": null,
+        "max_file_size_mb": 5,
+        "extensions_count": 26,
+        "skip_patterns_count": 23
+      },
+      "name": "Semgrep Security Analyzer",
+      "version": "2.0.0",
+      "description": "Semantic security analysis using Semgrep (replacing bespoke regex patterns)",
+      "category": "security",
+      "priority": "critical",
+      "capabilities": [
+        "OWASP Top 10 vulnerability detection",
+        "SQL injection analysis",
+        "XSS vulnerability detection",
+        "Authentication/authorization analysis",
+        "Hardcoded secrets detection",
+        "Input validation analysis",
+        "Cryptographic weakness detection",
+        "Multi-language semantic analysis",
+        "Real-time security rule updates"
+      ],
+      "supported_languages": [
+        "Python",
+        "JavaScript",
+        "TypeScript",
+        "Java",
+        "C#",
+        "PHP",
+        "Ruby",
+        "Go",
+        "Rust",
+        "C/C++",
+        "Swift",
+        "Kotlin",
+        "Scala",
+        "Dart",
+        "HTML",
+        "SQL",
+        "Shell",
+        "YAML",
+        "Terraform"
+      ],
+      "tool": "semgrep",
+      "replaces": [
+        "previous regex-based security checks"
+      ],
+      "total_findings_unfiltered": 12,
+      "severity_breakdown_unfiltered": {
+        "critical": 5,
+        "high": 2,
+        "medium": 5,
+        "low": 0,
+        "info": 0
+      }
+    },
+    "min_severity_filter": "medium",
+    "total_findings_before_filter": 12,
+    "total_findings_after_filter": 12,
+    "summary_unfiltered": {
+      "critical": 5,
+      "high": 2,
+      "medium": 5,
+      "low": 0,
+      "info": 0
+    }
+  }
+}

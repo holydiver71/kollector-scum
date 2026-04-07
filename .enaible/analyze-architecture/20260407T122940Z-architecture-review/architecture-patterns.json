@@ -1,0 +1,885 @@
+{
+  "tool": "architecture:patterns",
+  "analyzer_type": "architecture",
+  "success": true,
+  "exit_code": 0,
+  "started_at": "2026-04-07T12:31:24.557898+00:00",
+  "completed_at": "2026-04-07T12:31:34.945776+00:00",
+  "duration_ms": 10387,
+  "target": "/Users/andy.shutt/dotnetProjects/kollector-scum",
+  "findings": [
+    {
+      "id": "ARCHITECTURE001",
+      "title": "Complex Function: (anonymous)",
+      "description": "Function '(anonymous)' has cyclomatic complexity of 25 (recommended: <15)",
+      "severity": "high",
+      "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/app/page.tsx",
+      "line_number": 1,
+      "evidence": {
+        "complexity_type": "high_ccn",
+        "function_name": "(anonymous)",
+        "ccn": 25,
+        "nloc": 77,
+        "language": "typescript",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "ARCHITECTURE004",
+      "title": "Complex Function: (anonymous)",
+      "description": "Function '(anonymous)' has cyclomatic complexity of 37 (recommended: <15)",
+      "severity": "high",
+      "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/app/collection/page.tsx",
+      "line_number": 1,
+      "evidence": {
+        "complexity_type": "high_ccn",
+        "function_name": "(anonymous)",
+        "ccn": 37,
+        "nloc": 32,
+        "language": "typescript",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "ARCHITECTURE010",
+      "title": "Complex Function: (anonymous)",
+      "description": "Function '(anonymous)' has cyclomatic complexity of 31 (recommended: <15)",
+      "severity": "high",
+      "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/app/components/TrackListEditor.tsx",
+      "line_number": 1,
+      "evidence": {
+        "complexity_type": "high_ccn",
+        "function_name": "(anonymous)",
+        "ccn": 31,
+        "nloc": 169,
+        "language": "typescript",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "ARCHITECTURE013",
+      "title": "Complex Function: (anonymous)",
+      "description": "Function '(anonymous)' has cyclomatic complexity of 31 (recommended: <15)",
+      "severity": "high",
+      "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/app/components/DiscogsSearchResults.tsx",
+      "line_number": 1,
+      "evidence": {
+        "complexity_type": "high_ccn",
+        "function_name": "(anonymous)",
+        "ccn": 31,
+        "nloc": 165,
+        "language": "typescript",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "ARCHITECTURE016",
+      "title": "Complex Function: fetchReleases",
+      "description": "Function 'fetchReleases' has cyclomatic complexity of 89 (recommended: <15)",
+      "severity": "high",
+      "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/app/components/MusicReleaseList.tsx",
+      "line_number": 1,
+      "evidence": {
+        "complexity_type": "high_ccn",
+        "function_name": "fetchReleases",
+        "ccn": 89,
+        "nloc": 95,
+        "language": "typescript",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "ARCHITECTURE020",
+      "title": "Complex Function: clearLookupCache",
+      "description": "Function 'clearLookupCache' has cyclomatic complexity of 25 (recommended: <15)",
+      "severity": "high",
+      "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/app/components/LookupComponents.tsx",
+      "line_number": 1,
+      "evidence": {
+        "complexity_type": "high_ccn",
+        "function_name": "clearLookupCache",
+        "ccn": 25,
+        "nloc": 212,
+        "language": "typescript",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "ARCHITECTURE022",
+      "title": "Complex Function: (anonymous)",
+      "description": "Function '(anonymous)' has cyclomatic complexity of 25 (recommended: <15)",
+      "severity": "high",
+      "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/app/components/TrackList.tsx",
+      "line_number": 1,
+      "evidence": {
+        "complexity_type": "high_ccn",
+        "function_name": "(anonymous)",
+        "ccn": 25,
+        "nloc": 67,
+        "language": "typescript",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "ARCHITECTURE030",
+      "title": "Complex Function: (anonymous)",
+      "description": "Function '(anonymous)' has cyclomatic complexity of 33 (recommended: <15)",
+      "severity": "high",
+      "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/app/components/Header.tsx",
+      "line_number": 1,
+      "evidence": {
+        "complexity_type": "high_ccn",
+        "function_name": "(anonymous)",
+        "ccn": 33,
+        "nloc": 44,
+        "language": "typescript",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "ARCHITECTURE032",
+      "title": "Complex Function: buildProgressSteps",
+      "description": "Function 'buildProgressSteps' has cyclomatic complexity of 92 (recommended: <15)",
+      "severity": "high",
+      "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/app/components/DiscogsImportDialog.tsx",
+      "line_number": 1,
+      "evidence": {
+        "complexity_type": "high_ccn",
+        "function_name": "buildProgressSteps",
+        "ccn": 92,
+        "nloc": 270,
+        "language": "typescript",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "ARCHITECTURE034",
+      "title": "Complex Function: Sidebar",
+      "description": "Function 'Sidebar' has cyclomatic complexity of 41 (recommended: <15)",
+      "severity": "high",
+      "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/app/components/Sidebar.tsx",
+      "line_number": 1,
+      "evidence": {
+        "complexity_type": "high_ccn",
+        "function_name": "Sidebar",
+        "ccn": 41,
+        "nloc": 220,
+        "language": "typescript",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "ARCHITECTURE037",
+      "title": "Complex Function: FormatIcon",
+      "description": "Function 'FormatIcon' has cyclomatic complexity of 41 (recommended: <15)",
+      "severity": "high",
+      "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/app/components/FormatIcon.tsx",
+      "line_number": 1,
+      "evidence": {
+        "complexity_type": "high_ccn",
+        "function_name": "FormatIcon",
+        "ccn": 41,
+        "nloc": 181,
+        "language": "typescript",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "ARCHITECTURE040",
+      "title": "Complex Function: ReleaseLinks",
+      "description": "Function 'ReleaseLinks' has cyclomatic complexity of 37 (recommended: <15)",
+      "severity": "high",
+      "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/app/components/ReleaseLinks.tsx",
+      "line_number": 1,
+      "evidence": {
+        "complexity_type": "high_ccn",
+        "function_name": "ReleaseLinks",
+        "ccn": 37,
+        "nloc": 75,
+        "language": "typescript",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "ARCHITECTURE100",
+      "title": "Complex Function: MockComboBox",
+      "description": "Function 'MockComboBox' has cyclomatic complexity of 28 (recommended: <15)",
+      "severity": "high",
+      "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/app/components/__tests__/AddReleaseForm.test.tsx",
+      "line_number": 1,
+      "evidence": {
+        "complexity_type": "high_ccn",
+        "function_name": "MockComboBox",
+        "ccn": 28,
+        "nloc": 68,
+        "language": "typescript",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "ARCHITECTURE115",
+      "title": "Complex Function: \"match\"",
+      "description": "Function '\"match\"' has cyclomatic complexity of 55 (recommended: <15)",
+      "severity": "high",
+      "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/app/components/wizard/discogs/DiscogsResultsStep.tsx",
+      "line_number": 1,
+      "evidence": {
+        "complexity_type": "high_ccn",
+        "function_name": "\"match\"",
+        "ccn": 55,
+        "nloc": 219,
+        "language": "typescript",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "ARCHITECTURE118",
+      "title": "Complex Function: DiscogsAddReleaseWizard",
+      "description": "Function 'DiscogsAddReleaseWizard' has cyclomatic complexity of 34 (recommended: <15)",
+      "severity": "high",
+      "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/app/components/wizard/discogs/DiscogsAddReleaseWizard.tsx",
+      "line_number": 1,
+      "evidence": {
+        "complexity_type": "high_ccn",
+        "function_name": "DiscogsAddReleaseWizard",
+        "ccn": 34,
+        "nloc": 122,
+        "language": "typescript",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "ARCHITECTURE169",
+      "title": "Complex Function: MusicReleaseQueryService::BuildFilterExpression",
+      "description": "Function 'MusicReleaseQueryService::BuildFilterExpression' has cyclomatic complexity of 29 (recommended: <15)",
+      "severity": "high",
+      "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/backend/KollectorScum.Api/Services/MusicReleaseQueryService.cs",
+      "line_number": 1,
+      "evidence": {
+        "complexity_type": "high_ccn",
+        "function_name": "MusicReleaseQueryService::BuildFilterExpression",
+        "ccn": 29,
+        "nloc": 135,
+        "language": "csharp",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "ARCHITECTURE176",
+      "title": "Complex Function: NoopStorageService::MapToSummaryDtosAsync",
+      "description": "Function 'NoopStorageService::MapToSummaryDtosAsync' has cyclomatic complexity of 27 (recommended: <15)",
+      "severity": "high",
+      "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/backend/KollectorScum.Api/Services/MusicReleaseMapperService.cs",
+      "line_number": 1,
+      "evidence": {
+        "complexity_type": "high_ccn",
+        "function_name": "NoopStorageService::MapToSummaryDtosAsync",
+        "ccn": 27,
+        "nloc": 96,
+        "language": "csharp",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "ARCHITECTURE202",
+      "title": "Complex Function: MusicReleaseCommandService::UpdateMusicReleaseAsync",
+      "description": "Function 'MusicReleaseCommandService::UpdateMusicReleaseAsync' has cyclomatic complexity of 25 (recommended: <15)",
+      "severity": "high",
+      "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/backend/KollectorScum.Api/Services/MusicReleaseCommandService.cs",
+      "line_number": 1,
+      "evidence": {
+        "complexity_type": "high_ccn",
+        "function_name": "MusicReleaseCommandService::UpdateMusicReleaseAsync",
+        "ccn": 25,
+        "nloc": 108,
+        "language": "csharp",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "ARCHITECTURE221",
+      "title": "Complex Function: DataSeedingOrchestrator::SeedFromDiscogsAsync",
+      "description": "Function 'DataSeedingOrchestrator::SeedFromDiscogsAsync' has cyclomatic complexity of 33 (recommended: <15)",
+      "severity": "high",
+      "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/backend/KollectorScum.Api/Services/DataSeedingOrchestrator.cs",
+      "line_number": 1,
+      "evidence": {
+        "complexity_type": "high_ccn",
+        "function_name": "DataSeedingOrchestrator::SeedFromDiscogsAsync",
+        "ccn": 33,
+        "nloc": 100,
+        "language": "csharp",
+        "confidence": "high"
+      }
+    },
+    {
+      "id": "ARCHITECTURE228",
+      "title": "Complex Function: MusicReleaseService::GetMusicReleasesAsync",
+      "description": "Function 'MusicReleaseService::GetMusicReleasesAsync' has cyclomatic complexity of 46 (recommended: <15)",
+      "severity": "high",
+      "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/backend/KollectorScum.Api/Services/MusicReleaseService.cs",
+      "line_number": 1,
+      "evidence": {
+        "complexity_type": "high_ccn",
+        "function_name": "MusicReleaseService::GetMusicReleasesAsync",
+        "ccn": 46,
+        "nloc": 73,
+        "language": "csharp",
+        "confidence": "high"
+      }
+    }
+  ],
+  "summary": {
+    "critical": 0,
+    "high": 20,
+    "medium": 0,
+    "low": 0,
+    "info": 0
+  },
+  "metadata": {
+    "analyzer_type": "architecture",
+    "target_path": "/Users/andy.shutt/dotnetProjects/kollector-scum",
+    "files_analyzed": 464,
+    "files_processed": 464,
+    "files_skipped": 0,
+    "processing_errors": 0,
+    "total_findings": 20,
+    "severity_breakdown": {
+      "critical": 0,
+      "high": 20,
+      "medium": 0,
+      "low": 0,
+      "info": 0
+    },
+    "analyzer_config": {
+      "max_files": null,
+      "max_file_size_mb": 5,
+      "extensions_count": 26,
+      "skip_patterns_count": 23
+    },
+    "name": "Pattern Evaluation Analyzer",
+    "version": "2.0.0",
+    "description": "Analyzes design patterns and architectural decisions in codebases",
+    "category": "architecture",
+    "priority": "high",
+    "capabilities": [
+      "Design pattern detection (Singleton, Factory, Observer, etc.)",
+      "Anti-pattern identification (God Class, Feature Envy, etc.)",
+      "Architectural pattern analysis (MVC, Repository, Service)",
+      "Code complexity analysis (method length, parameters)",
+      "Pattern density metrics",
+      "Multi-language pattern recognition",
+      "Pattern-specific recommendations"
+    ],
+    "supported_formats": [
+      ".sql",
+      ".vue",
+      ".tsx",
+      ".js",
+      ".prisma",
+      ".java",
+      ".ts",
+      ".go",
+      ".xml",
+      ".php",
+      ".h",
+      ".hpp",
+      ".c",
+      ".scala",
+      ".cpp",
+      ".rs",
+      ".jsx",
+      ".swift",
+      ".py",
+      ".cs",
+      ".rb",
+      ".json",
+      ".yml",
+      ".dart",
+      ".kt",
+      ".yaml"
+    ],
+    "pattern_types": {
+      "design_patterns": 5,
+      "anti_patterns": 4,
+      "architectural_patterns": 4
+    },
+    "total_findings_unfiltered": 268,
+    "severity_breakdown_unfiltered": {
+      "critical": 0,
+      "high": 20,
+      "medium": 127,
+      "low": 121,
+      "info": 0
+    }
+  },
+  "stats": {
+    "execution_time_seconds": 10.387744903564453
+  },
+  "errors": [],
+  "raw": {
+    "analysis_type": "architecture",
+    "script_name": "architecture_analyzer.py",
+    "target_path": "/Users/andy.shutt/dotnetProjects/kollector-scum",
+    "timestamp": "2026-04-07T13:31:24.557915",
+    "execution_time": 10.388,
+    "success": true,
+    "error_message": null,
+    "summary": {
+      "critical": 0,
+      "high": 20,
+      "medium": 0,
+      "low": 0,
+      "info": 0
+    },
+    "findings": [
+      {
+        "id": "ARCHITECTURE001",
+        "title": "Complex Function: (anonymous)",
+        "description": "Function '(anonymous)' has cyclomatic complexity of 25 (recommended: <15)",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/app/page.tsx",
+        "line_number": 1,
+        "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+        "evidence": {
+          "complexity_type": "high_ccn",
+          "function_name": "(anonymous)",
+          "ccn": 25,
+          "nloc": 77,
+          "language": "typescript",
+          "confidence": "high"
+        }
+      },
+      {
+        "id": "ARCHITECTURE004",
+        "title": "Complex Function: (anonymous)",
+        "description": "Function '(anonymous)' has cyclomatic complexity of 37 (recommended: <15)",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/app/collection/page.tsx",
+        "line_number": 1,
+        "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+        "evidence": {
+          "complexity_type": "high_ccn",
+          "function_name": "(anonymous)",
+          "ccn": 37,
+          "nloc": 32,
+          "language": "typescript",
+          "confidence": "high"
+        }
+      },
+      {
+        "id": "ARCHITECTURE010",
+        "title": "Complex Function: (anonymous)",
+        "description": "Function '(anonymous)' has cyclomatic complexity of 31 (recommended: <15)",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/app/components/TrackListEditor.tsx",
+        "line_number": 1,
+        "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+        "evidence": {
+          "complexity_type": "high_ccn",
+          "function_name": "(anonymous)",
+          "ccn": 31,
+          "nloc": 169,
+          "language": "typescript",
+          "confidence": "high"
+        }
+      },
+      {
+        "id": "ARCHITECTURE013",
+        "title": "Complex Function: (anonymous)",
+        "description": "Function '(anonymous)' has cyclomatic complexity of 31 (recommended: <15)",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/app/components/DiscogsSearchResults.tsx",
+        "line_number": 1,
+        "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+        "evidence": {
+          "complexity_type": "high_ccn",
+          "function_name": "(anonymous)",
+          "ccn": 31,
+          "nloc": 165,
+          "language": "typescript",
+          "confidence": "high"
+        }
+      },
+      {
+        "id": "ARCHITECTURE016",
+        "title": "Complex Function: fetchReleases",
+        "description": "Function 'fetchReleases' has cyclomatic complexity of 89 (recommended: <15)",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/app/components/MusicReleaseList.tsx",
+        "line_number": 1,
+        "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+        "evidence": {
+          "complexity_type": "high_ccn",
+          "function_name": "fetchReleases",
+          "ccn": 89,
+          "nloc": 95,
+          "language": "typescript",
+          "confidence": "high"
+        }
+      },
+      {
+        "id": "ARCHITECTURE020",
+        "title": "Complex Function: clearLookupCache",
+        "description": "Function 'clearLookupCache' has cyclomatic complexity of 25 (recommended: <15)",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/app/components/LookupComponents.tsx",
+        "line_number": 1,
+        "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+        "evidence": {
+          "complexity_type": "high_ccn",
+          "function_name": "clearLookupCache",
+          "ccn": 25,
+          "nloc": 212,
+          "language": "typescript",
+          "confidence": "high"
+        }
+      },
+      {
+        "id": "ARCHITECTURE022",
+        "title": "Complex Function: (anonymous)",
+        "description": "Function '(anonymous)' has cyclomatic complexity of 25 (recommended: <15)",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/app/components/TrackList.tsx",
+        "line_number": 1,
+        "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+        "evidence": {
+          "complexity_type": "high_ccn",
+          "function_name": "(anonymous)",
+          "ccn": 25,
+          "nloc": 67,
+          "language": "typescript",
+          "confidence": "high"
+        }
+      },
+      {
+        "id": "ARCHITECTURE030",
+        "title": "Complex Function: (anonymous)",
+        "description": "Function '(anonymous)' has cyclomatic complexity of 33 (recommended: <15)",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/app/components/Header.tsx",
+        "line_number": 1,
+        "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+        "evidence": {
+          "complexity_type": "high_ccn",
+          "function_name": "(anonymous)",
+          "ccn": 33,
+          "nloc": 44,
+          "language": "typescript",
+          "confidence": "high"
+        }
+      },
+      {
+        "id": "ARCHITECTURE032",
+        "title": "Complex Function: buildProgressSteps",
+        "description": "Function 'buildProgressSteps' has cyclomatic complexity of 92 (recommended: <15)",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/app/components/DiscogsImportDialog.tsx",
+        "line_number": 1,
+        "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+        "evidence": {
+          "complexity_type": "high_ccn",
+          "function_name": "buildProgressSteps",
+          "ccn": 92,
+          "nloc": 270,
+          "language": "typescript",
+          "confidence": "high"
+        }
+      },
+      {
+        "id": "ARCHITECTURE034",
+        "title": "Complex Function: Sidebar",
+        "description": "Function 'Sidebar' has cyclomatic complexity of 41 (recommended: <15)",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/app/components/Sidebar.tsx",
+        "line_number": 1,
+        "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+        "evidence": {
+          "complexity_type": "high_ccn",
+          "function_name": "Sidebar",
+          "ccn": 41,
+          "nloc": 220,
+          "language": "typescript",
+          "confidence": "high"
+        }
+      },
+      {
+        "id": "ARCHITECTURE037",
+        "title": "Complex Function: FormatIcon",
+        "description": "Function 'FormatIcon' has cyclomatic complexity of 41 (recommended: <15)",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/app/components/FormatIcon.tsx",
+        "line_number": 1,
+        "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+        "evidence": {
+          "complexity_type": "high_ccn",
+          "function_name": "FormatIcon",
+          "ccn": 41,
+          "nloc": 181,
+          "language": "typescript",
+          "confidence": "high"
+        }
+      },
+      {
+        "id": "ARCHITECTURE040",
+        "title": "Complex Function: ReleaseLinks",
+        "description": "Function 'ReleaseLinks' has cyclomatic complexity of 37 (recommended: <15)",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/app/components/ReleaseLinks.tsx",
+        "line_number": 1,
+        "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+        "evidence": {
+          "complexity_type": "high_ccn",
+          "function_name": "ReleaseLinks",
+          "ccn": 37,
+          "nloc": 75,
+          "language": "typescript",
+          "confidence": "high"
+        }
+      },
+      {
+        "id": "ARCHITECTURE100",
+        "title": "Complex Function: MockComboBox",
+        "description": "Function 'MockComboBox' has cyclomatic complexity of 28 (recommended: <15)",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/app/components/__tests__/AddReleaseForm.test.tsx",
+        "line_number": 1,
+        "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+        "evidence": {
+          "complexity_type": "high_ccn",
+          "function_name": "MockComboBox",
+          "ccn": 28,
+          "nloc": 68,
+          "language": "typescript",
+          "confidence": "high"
+        }
+      },
+      {
+        "id": "ARCHITECTURE115",
+        "title": "Complex Function: \"match\"",
+        "description": "Function '\"match\"' has cyclomatic complexity of 55 (recommended: <15)",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/app/components/wizard/discogs/DiscogsResultsStep.tsx",
+        "line_number": 1,
+        "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+        "evidence": {
+          "complexity_type": "high_ccn",
+          "function_name": "\"match\"",
+          "ccn": 55,
+          "nloc": 219,
+          "language": "typescript",
+          "confidence": "high"
+        }
+      },
+      {
+        "id": "ARCHITECTURE118",
+        "title": "Complex Function: DiscogsAddReleaseWizard",
+        "description": "Function 'DiscogsAddReleaseWizard' has cyclomatic complexity of 34 (recommended: <15)",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/app/components/wizard/discogs/DiscogsAddReleaseWizard.tsx",
+        "line_number": 1,
+        "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+        "evidence": {
+          "complexity_type": "high_ccn",
+          "function_name": "DiscogsAddReleaseWizard",
+          "ccn": 34,
+          "nloc": 122,
+          "language": "typescript",
+          "confidence": "high"
+        }
+      },
+      {
+        "id": "ARCHITECTURE169",
+        "title": "Complex Function: MusicReleaseQueryService::BuildFilterExpression",
+        "description": "Function 'MusicReleaseQueryService::BuildFilterExpression' has cyclomatic complexity of 29 (recommended: <15)",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/backend/KollectorScum.Api/Services/MusicReleaseQueryService.cs",
+        "line_number": 1,
+        "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+        "evidence": {
+          "complexity_type": "high_ccn",
+          "function_name": "MusicReleaseQueryService::BuildFilterExpression",
+          "ccn": 29,
+          "nloc": 135,
+          "language": "csharp",
+          "confidence": "high"
+        }
+      },
+      {
+        "id": "ARCHITECTURE176",
+        "title": "Complex Function: NoopStorageService::MapToSummaryDtosAsync",
+        "description": "Function 'NoopStorageService::MapToSummaryDtosAsync' has cyclomatic complexity of 27 (recommended: <15)",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/backend/KollectorScum.Api/Services/MusicReleaseMapperService.cs",
+        "line_number": 1,
+        "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+        "evidence": {
+          "complexity_type": "high_ccn",
+          "function_name": "NoopStorageService::MapToSummaryDtosAsync",
+          "ccn": 27,
+          "nloc": 96,
+          "language": "csharp",
+          "confidence": "high"
+        }
+      },
+      {
+        "id": "ARCHITECTURE202",
+        "title": "Complex Function: MusicReleaseCommandService::UpdateMusicReleaseAsync",
+        "description": "Function 'MusicReleaseCommandService::UpdateMusicReleaseAsync' has cyclomatic complexity of 25 (recommended: <15)",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/backend/KollectorScum.Api/Services/MusicReleaseCommandService.cs",
+        "line_number": 1,
+        "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+        "evidence": {
+          "complexity_type": "high_ccn",
+          "function_name": "MusicReleaseCommandService::UpdateMusicReleaseAsync",
+          "ccn": 25,
+          "nloc": 108,
+          "language": "csharp",
+          "confidence": "high"
+        }
+      },
+      {
+        "id": "ARCHITECTURE221",
+        "title": "Complex Function: DataSeedingOrchestrator::SeedFromDiscogsAsync",
+        "description": "Function 'DataSeedingOrchestrator::SeedFromDiscogsAsync' has cyclomatic complexity of 33 (recommended: <15)",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/backend/KollectorScum.Api/Services/DataSeedingOrchestrator.cs",
+        "line_number": 1,
+        "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+        "evidence": {
+          "complexity_type": "high_ccn",
+          "function_name": "DataSeedingOrchestrator::SeedFromDiscogsAsync",
+          "ccn": 33,
+          "nloc": 100,
+          "language": "csharp",
+          "confidence": "high"
+        }
+      },
+      {
+        "id": "ARCHITECTURE228",
+        "title": "Complex Function: MusicReleaseService::GetMusicReleasesAsync",
+        "description": "Function 'MusicReleaseService::GetMusicReleasesAsync' has cyclomatic complexity of 46 (recommended: <15)",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/backend/KollectorScum.Api/Services/MusicReleaseService.cs",
+        "line_number": 1,
+        "recommendation": "Break function into smaller, focused functions with single responsibilities.",
+        "evidence": {
+          "complexity_type": "high_ccn",
+          "function_name": "MusicReleaseService::GetMusicReleasesAsync",
+          "ccn": 46,
+          "nloc": 73,
+          "language": "csharp",
+          "confidence": "high"
+        }
+      }
+    ],
+    "metadata": {
+      "analyzer_type": "architecture",
+      "target_path": "/Users/andy.shutt/dotnetProjects/kollector-scum",
+      "files_analyzed": 464,
+      "files_processed": 464,
+      "files_skipped": 0,
+      "processing_errors": 0,
+      "total_findings": 20,
+      "severity_breakdown": {
+        "critical": 0,
+        "high": 20,
+        "medium": 0,
+        "low": 0,
+        "info": 0
+      },
+      "analyzer_config": {
+        "max_files": null,
+        "max_file_size_mb": 5,
+        "extensions_count": 26,
+        "skip_patterns_count": 23
+      },
+      "name": "Pattern Evaluation Analyzer",
+      "version": "2.0.0",
+      "description": "Analyzes design patterns and architectural decisions in codebases",
+      "category": "architecture",
+      "priority": "high",
+      "capabilities": [
+        "Design pattern detection (Singleton, Factory, Observer, etc.)",
+        "Anti-pattern identification (God Class, Feature Envy, etc.)",
+        "Architectural pattern analysis (MVC, Repository, Service)",
+        "Code complexity analysis (method length, parameters)",
+        "Pattern density metrics",
+        "Multi-language pattern recognition",
+        "Pattern-specific recommendations"
+      ],
+      "supported_formats": [
+        ".sql",
+        ".vue",
+        ".tsx",
+        ".js",
+        ".prisma",
+        ".java",
+        ".ts",
+        ".go",
+        ".xml",
+        ".php",
+        ".h",
+        ".hpp",
+        ".c",
+        ".scala",
+        ".cpp",
+        ".rs",
+        ".jsx",
+        ".swift",
+        ".py",
+        ".cs",
+        ".rb",
+        ".json",
+        ".yml",
+        ".dart",
+        ".kt",
+        ".yaml"
+      ],
+      "pattern_types": {
+        "design_patterns": 5,
+        "anti_patterns": 4,
+        "architectural_patterns": 4
+      },
+      "total_findings_unfiltered": 268,
+      "severity_breakdown_unfiltered": {
+        "critical": 0,
+        "high": 20,
+        "medium": 127,
+        "low": 121,
+        "info": 0
+      }
+    },
+    "min_severity_filter": "high",
+    "total_findings_before_filter": 268,
+    "total_findings_after_filter": 20,
+    "summary_unfiltered": {
+      "critical": 0,
+      "high": 20,
+      "medium": 127,
+      "low": 121,
+      "info": 0
+    }
+  }
+}

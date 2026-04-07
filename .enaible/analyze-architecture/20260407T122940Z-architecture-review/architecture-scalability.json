@@ -1,0 +1,431 @@
+{
+  "tool": "architecture:scalability",
+  "analyzer_type": "architecture",
+  "success": true,
+  "exit_code": 0,
+  "started_at": "2026-04-07T12:32:01.645311+00:00",
+  "completed_at": "2026-04-07T12:32:14.081029+00:00",
+  "duration_ms": 12435,
+  "target": "/Users/andy.shutt/dotnetProjects/kollector-scum",
+  "findings": [
+    {
+      "id": "ARCHITECTURE001",
+      "title": "Scalability Issue: Thread Safety",
+      "description": "Potential thread safety issue (thread_safety)",
+      "severity": "high",
+      "recommendation": "Use thread-safe data structures and proper synchronization",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/app/components/Sidebar.tsx",
+      "line_number": 82,
+      "evidence": {
+        "scalability_category": "concurrency",
+        "pattern_name": "thread_safety",
+        "context": "// Keep a global CSS variable so Header (a sibling) can read the sidebar offset",
+        "confidence": "high",
+        "lizard_ccn": 41
+      }
+    },
+    {
+      "id": "ARCHITECTURE002",
+      "title": "Scalability Issue: N Plus One",
+      "description": "Potential N+1 query problem (n_plus_one)",
+      "severity": "high",
+      "recommendation": "Use eager loading, batch queries, or caching",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/app/components/wizard/panels/ClassificationPanel.tsx",
+      "line_number": 177,
+      "evidence": {
+        "scalability_category": "database",
+        "pattern_name": "n_plus_one",
+        "context": ".map((id) => allGenres.find((g) => g.id === id))",
+        "confidence": "medium",
+        "lizard_ccn": 11
+      }
+    },
+    {
+      "id": "ARCHITECTURE003",
+      "title": "Scalability Issue: N Plus One",
+      "description": "Potential N+1 query problem (n_plus_one)",
+      "severity": "high",
+      "recommendation": "Use eager loading, batch queries, or caching",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/app/components/wizard/panels/BasicInformationPanel.tsx",
+      "line_number": 38,
+      "evidence": {
+        "scalability_category": "database",
+        "pattern_name": "n_plus_one",
+        "context": ".map((id) => allArtists.find((a) => a.id === id))",
+        "confidence": "medium",
+        "lizard_ccn": 11
+      }
+    },
+    {
+      "id": "ARCHITECTURE004",
+      "title": "Scalability Issue: Thread Safety",
+      "description": "Potential thread safety issue (thread_safety)",
+      "severity": "high",
+      "recommendation": "Use thread-safe data structures and proper synchronization",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/backend/KollectorScum.Api/Program.cs",
+      "line_number": 127,
+      "evidence": {
+        "scalability_category": "concurrency",
+        "pattern_name": "thread_safety",
+        "context": "// Global policy: 100 requests per minute per IP (applied to all endpoints automatically)",
+        "confidence": "medium",
+        "lizard_ccn": 9
+      }
+    },
+    {
+      "id": "ARCHITECTURE005",
+      "title": "Scalability Issue: Thread Safety",
+      "description": "Potential thread safety issue (thread_safety)",
+      "severity": "high",
+      "recommendation": "Use thread-safe data structures and proper synchronization",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/backend/KollectorScum.Api/Program.cs",
+      "line_number": 133,
+      "evidence": {
+        "scalability_category": "concurrency",
+        "pattern_name": "thread_safety",
+        "context": "// Global limiter applied to every request before named policies.",
+        "confidence": "medium",
+        "lizard_ccn": 9
+      }
+    },
+    {
+      "id": "ARCHITECTURE006",
+      "title": "Scalability Issue: Thread Safety",
+      "description": "Potential thread safety issue (thread_safety)",
+      "severity": "high",
+      "recommendation": "Use thread-safe data structures and proper synchronization",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/backend/KollectorScum.Api/Program.cs",
+      "line_number": 457,
+      "evidence": {
+        "scalability_category": "concurrency",
+        "pattern_name": "thread_safety",
+        "context": "// Add global error handling middleware",
+        "confidence": "medium",
+        "lizard_ccn": 9
+      }
+    },
+    {
+      "id": "ARCHITECTURE007",
+      "title": "Scalability Issue: Thread Safety",
+      "description": "Potential thread safety issue (thread_safety)",
+      "severity": "high",
+      "recommendation": "Use thread-safe data structures and proper synchronization",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/backend/KollectorScum.Api/Controllers/AuthController.cs",
+      "line_number": 122,
+      "evidence": {
+        "scalability_category": "concurrency",
+        "pattern_name": "thread_safety",
+        "context": "/// and is not a brute-force target. The global policy (100 req/min) still applies.",
+        "confidence": "medium",
+        "lizard_ccn": 11
+      }
+    }
+  ],
+  "summary": {
+    "critical": 0,
+    "high": 7,
+    "medium": 0,
+    "low": 0,
+    "info": 0
+  },
+  "metadata": {
+    "analyzer_type": "architecture",
+    "target_path": "/Users/andy.shutt/dotnetProjects/kollector-scum",
+    "files_analyzed": 464,
+    "files_processed": 464,
+    "files_skipped": 0,
+    "processing_errors": 0,
+    "total_findings": 7,
+    "severity_breakdown": {
+      "critical": 0,
+      "high": 7,
+      "medium": 0,
+      "low": 0,
+      "info": 0
+    },
+    "analyzer_config": {
+      "max_files": null,
+      "max_file_size_mb": 5,
+      "extensions_count": 26,
+      "skip_patterns_count": 23
+    },
+    "name": "Scalability Analysis Analyzer",
+    "version": "2.0.0",
+    "description": "Analyzes code for potential scalability bottlenecks and architectural constraints",
+    "category": "architecture",
+    "priority": "high",
+    "capabilities": [
+      "Database scalability patterns (N+1 queries, missing indexes)",
+      "Performance bottleneck detection (synchronous I/O, nested loops)",
+      "Concurrency issue identification (thread safety, resource contention)",
+      "Architecture scalability analysis (coupling, configuration)",
+      "Python AST analysis for algorithmic complexity",
+      "Multi-language scalability pattern recognition",
+      "Scalability scoring and prioritized recommendations"
+    ],
+    "supported_formats": [
+      ".cpp",
+      ".jsx",
+      ".scala",
+      ".cs",
+      ".hpp",
+      ".php",
+      ".c",
+      ".xml",
+      ".js",
+      ".yaml",
+      ".rb",
+      ".py",
+      ".h",
+      ".json",
+      ".dart",
+      ".go",
+      ".java",
+      ".yml",
+      ".tsx",
+      ".ts",
+      ".kt",
+      ".sql",
+      ".swift",
+      ".prisma",
+      ".rs",
+      ".vue"
+    ],
+    "pattern_categories": {
+      "database_patterns": 4,
+      "performance_patterns": 4,
+      "concurrency_patterns": 3,
+      "architecture_patterns": 3
+    },
+    "total_findings_unfiltered": 53,
+    "severity_breakdown_unfiltered": {
+      "critical": 0,
+      "high": 7,
+      "medium": 46,
+      "low": 0,
+      "info": 0
+    }
+  },
+  "stats": {
+    "execution_time_seconds": 12.435556173324585
+  },
+  "errors": [],
+  "raw": {
+    "analysis_type": "architecture",
+    "script_name": "architecture_analyzer.py",
+    "target_path": "/Users/andy.shutt/dotnetProjects/kollector-scum",
+    "timestamp": "2026-04-07T13:32:01.645325",
+    "execution_time": 12.436,
+    "success": true,
+    "error_message": null,
+    "summary": {
+      "critical": 0,
+      "high": 7,
+      "medium": 0,
+      "low": 0,
+      "info": 0
+    },
+    "findings": [
+      {
+        "id": "ARCHITECTURE001",
+        "title": "Scalability Issue: Thread Safety",
+        "description": "Potential thread safety issue (thread_safety)",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/app/components/Sidebar.tsx",
+        "line_number": 82,
+        "recommendation": "Use thread-safe data structures and proper synchronization",
+        "evidence": {
+          "scalability_category": "concurrency",
+          "pattern_name": "thread_safety",
+          "context": "// Keep a global CSS variable so Header (a sibling) can read the sidebar offset",
+          "confidence": "high",
+          "lizard_ccn": 41
+        }
+      },
+      {
+        "id": "ARCHITECTURE002",
+        "title": "Scalability Issue: N Plus One",
+        "description": "Potential N+1 query problem (n_plus_one)",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/app/components/wizard/panels/ClassificationPanel.tsx",
+        "line_number": 177,
+        "recommendation": "Use eager loading, batch queries, or caching",
+        "evidence": {
+          "scalability_category": "database",
+          "pattern_name": "n_plus_one",
+          "context": ".map((id) => allGenres.find((g) => g.id === id))",
+          "confidence": "medium",
+          "lizard_ccn": 11
+        }
+      },
+      {
+        "id": "ARCHITECTURE003",
+        "title": "Scalability Issue: N Plus One",
+        "description": "Potential N+1 query problem (n_plus_one)",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/app/components/wizard/panels/BasicInformationPanel.tsx",
+        "line_number": 38,
+        "recommendation": "Use eager loading, batch queries, or caching",
+        "evidence": {
+          "scalability_category": "database",
+          "pattern_name": "n_plus_one",
+          "context": ".map((id) => allArtists.find((a) => a.id === id))",
+          "confidence": "medium",
+          "lizard_ccn": 11
+        }
+      },
+      {
+        "id": "ARCHITECTURE004",
+        "title": "Scalability Issue: Thread Safety",
+        "description": "Potential thread safety issue (thread_safety)",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/backend/KollectorScum.Api/Program.cs",
+        "line_number": 127,
+        "recommendation": "Use thread-safe data structures and proper synchronization",
+        "evidence": {
+          "scalability_category": "concurrency",
+          "pattern_name": "thread_safety",
+          "context": "// Global policy: 100 requests per minute per IP (applied to all endpoints automatically)",
+          "confidence": "medium",
+          "lizard_ccn": 9
+        }
+      },
+      {
+        "id": "ARCHITECTURE005",
+        "title": "Scalability Issue: Thread Safety",
+        "description": "Potential thread safety issue (thread_safety)",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/backend/KollectorScum.Api/Program.cs",
+        "line_number": 133,
+        "recommendation": "Use thread-safe data structures and proper synchronization",
+        "evidence": {
+          "scalability_category": "concurrency",
+          "pattern_name": "thread_safety",
+          "context": "// Global limiter applied to every request before named policies.",
+          "confidence": "medium",
+          "lizard_ccn": 9
+        }
+      },
+      {
+        "id": "ARCHITECTURE006",
+        "title": "Scalability Issue: Thread Safety",
+        "description": "Potential thread safety issue (thread_safety)",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/backend/KollectorScum.Api/Program.cs",
+        "line_number": 457,
+        "recommendation": "Use thread-safe data structures and proper synchronization",
+        "evidence": {
+          "scalability_category": "concurrency",
+          "pattern_name": "thread_safety",
+          "context": "// Add global error handling middleware",
+          "confidence": "medium",
+          "lizard_ccn": 9
+        }
+      },
+      {
+        "id": "ARCHITECTURE007",
+        "title": "Scalability Issue: Thread Safety",
+        "description": "Potential thread safety issue (thread_safety)",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/backend/KollectorScum.Api/Controllers/AuthController.cs",
+        "line_number": 122,
+        "recommendation": "Use thread-safe data structures and proper synchronization",
+        "evidence": {
+          "scalability_category": "concurrency",
+          "pattern_name": "thread_safety",
+          "context": "/// and is not a brute-force target. The global policy (100 req/min) still applies.",
+          "confidence": "medium",
+          "lizard_ccn": 11
+        }
+      }
+    ],
+    "metadata": {
+      "analyzer_type": "architecture",
+      "target_path": "/Users/andy.shutt/dotnetProjects/kollector-scum",
+      "files_analyzed": 464,
+      "files_processed": 464,
+      "files_skipped": 0,
+      "processing_errors": 0,
+      "total_findings": 7,
+      "severity_breakdown": {
+        "critical": 0,
+        "high": 7,
+        "medium": 0,
+        "low": 0,
+        "info": 0
+      },
+      "analyzer_config": {
+        "max_files": null,
+        "max_file_size_mb": 5,
+        "extensions_count": 26,
+        "skip_patterns_count": 23
+      },
+      "name": "Scalability Analysis Analyzer",
+      "version": "2.0.0",
+      "description": "Analyzes code for potential scalability bottlenecks and architectural constraints",
+      "category": "architecture",
+      "priority": "high",
+      "capabilities": [
+        "Database scalability patterns (N+1 queries, missing indexes)",
+        "Performance bottleneck detection (synchronous I/O, nested loops)",
+        "Concurrency issue identification (thread safety, resource contention)",
+        "Architecture scalability analysis (coupling, configuration)",
+        "Python AST analysis for algorithmic complexity",
+        "Multi-language scalability pattern recognition",
+        "Scalability scoring and prioritized recommendations"
+      ],
+      "supported_formats": [
+        ".cpp",
+        ".jsx",
+        ".scala",
+        ".cs",
+        ".hpp",
+        ".php",
+        ".c",
+        ".xml",
+        ".js",
+        ".yaml",
+        ".rb",
+        ".py",
+        ".h",
+        ".json",
+        ".dart",
+        ".go",
+        ".java",
+        ".yml",
+        ".tsx",
+        ".ts",
+        ".kt",
+        ".sql",
+        ".swift",
+        ".prisma",
+        ".rs",
+        ".vue"
+      ],
+      "pattern_categories": {
+        "database_patterns": 4,
+        "performance_patterns": 4,
+        "concurrency_patterns": 3,
+        "architecture_patterns": 3
+      },
+      "total_findings_unfiltered": 53,
+      "severity_breakdown_unfiltered": {
+        "critical": 0,
+        "high": 7,
+        "medium": 46,
+        "low": 0,
+        "info": 0
+      }
+    },
+    "min_severity_filter": "high",
+    "total_findings_before_filter": 53,
+    "total_findings_after_filter": 7,
+    "summary_unfiltered": {
+      "critical": 0,
+      "high": 7,
+      "medium": 46,
+      "low": 0,
+      "info": 0
+    }
+  }
+}
