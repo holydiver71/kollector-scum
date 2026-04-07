@@ -42,8 +42,10 @@ jobs:
           } > .env
 
       - name: Run migrations
+        env:
+          TARGET_ENV: ${{ github.event.inputs.environment }}
         run: |
-          if [ "${{ github.event.inputs.environment }}" = "production" ]; then
+          if [ "$TARGET_ENV" = "production" ]; then
             ./backend/scripts/apply-ef-migrations.sh --production
           else
             ./backend/scripts/apply-ef-migrations.sh --staging

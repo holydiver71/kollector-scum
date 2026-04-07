@@ -9,12 +9,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check PR base branch
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
-          base_ref="${{ github.event.pull_request.base.ref }}"
-          head_ref="${{ github.event.pull_request.head.ref }}"
-          echo "PR base branch: $base_ref"
-          echo "PR head branch: $head_ref"
-          if [ "$base_ref" = "main" ] && [ "$head_ref" != "dev" ]; then
+          echo "PR base branch: $BASE_REF"
+          echo "PR head branch: $HEAD_REF"
+          if [ "$BASE_REF" = "main" ] && [ "$HEAD_REF" != "dev" ]; then
             echo "PRs to 'main' must come from 'dev'. Blocking this PR."
             exit 1
           fi
