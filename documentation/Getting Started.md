@@ -12,18 +12,22 @@ Initial setup
 2. Create your local development settings file from the example template:
 
 ```bash
+# Option A (manual): copy the example and edit it
 cp backend/KollectorScum.Api/appsettings.Development.json.example \
-   backend/KollectorScum.Api/appsettings.Development.json
+	backend/KollectorScum.Api/appsettings.Development.json
+
+# Option B (recommended): run the helper script which prompts for secrets
+backend/scripts/setup-dev-secrets.sh
 ```
 
-   Then edit `appsettings.Development.json` and replace every `REPLACE_WITH_*` placeholder with your real values:
-   - **Discogs.Token** — generate a personal access token at https://www.discogs.com/settings/developers
-   - **Jwt.Key** — any random string ≥ 32 characters (e.g. `openssl rand -base64 32`)
-   - **Google.ClientId** — your OAuth 2.0 client ID from the Google Cloud Console
-   - **Features.BootstrapSecret** — any local secret string
+Then edit `appsettings.Development.json` (or run the script) and replace every `REPLACE_WITH_*` placeholder with your real values:
+- **Discogs.Token** — generate a personal access token at https://www.discogs.com/settings/developers
+- **Jwt.Key** — any random string ≥ 32 characters (e.g. `openssl rand -base64 32`)
+- **Google.ClientId** — your OAuth 2.0 client ID from the Google Cloud Console
+- **Features.BootstrapSecret** — any local secret string
 
-   > ⚠️ `appsettings.Development.json` is gitignored and must **never** be committed.
-   > Real credentials must not appear in git history.
+> ⚠️ `appsettings.Development.json` is gitignored and must **never** be committed.
+> Real credentials must not appear in git history.
 
 3. Create a local `.env` file:
 
