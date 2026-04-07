@@ -1,0 +1,591 @@
+{
+  "schema_version": 3,
+  "generated_at": "2026-04-07T12:49:00.006174Z",
+  "project_root": "/Users/andy.shutt/dotnetProjects/kollector-scum",
+  "deterministic": {
+    "status": "ok",
+    "reason_codes": [],
+    "stacks": [
+      "node_js",
+      "dotnet"
+    ],
+    "stack_signals": [
+      {
+        "stack": "react_native_expo",
+        "profile": "react_native_expo",
+        "detected": false,
+        "required_signals": [
+          "config",
+          "dependency",
+          "source"
+        ],
+        "failed_signals": [
+          "config",
+          "dependency"
+        ],
+        "signals": {
+          "config": {
+            "matched": false,
+            "criteria": [
+              "app.config.js",
+              "app.config.ts",
+              "app.json",
+              "expo.json",
+              "metro.config.js"
+            ],
+            "evidence": []
+          },
+          "dependency": {
+            "matched": false,
+            "criteria": {
+              "all_of": [
+                [
+                  "expo",
+                  "react-native"
+                ],
+                [
+                  "react",
+                  "react-dom",
+                  "react-native"
+                ]
+              ]
+            },
+            "evidence": [
+              {
+                "path": "frontend/package.json",
+                "detail": "dependencies.react"
+              }
+            ]
+          },
+          "source": {
+            "matched": true,
+            "criteria": [
+              ".cjs",
+              ".cts",
+              ".js",
+              ".jsx",
+              ".mjs",
+              ".mts",
+              ".ts",
+              ".tsx"
+            ],
+            "evidence": [
+              {
+                "path": "backend/scripts/resize-cover-images.js"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "stack": "node_js",
+        "profile": "config_plus_js_ts_source",
+        "detected": true,
+        "required_signals": [
+          "config",
+          "source"
+        ],
+        "failed_signals": [],
+        "signals": {
+          "config": {
+            "matched": true,
+            "criteria": [
+              "package.json",
+              "tsconfig.json",
+              "webpack.config.js"
+            ],
+            "evidence": [
+              {
+                "path": "package.json"
+              },
+              {
+                "path": "frontend/package.json"
+              },
+              {
+                "path": "frontend/tsconfig.json"
+              },
+              {
+                "path": "backend/scripts/package.json"
+              },
+              {
+                "path": "frontend/.next/package.json"
+              }
+            ]
+          },
+          "source": {
+            "matched": true,
+            "criteria": [
+              ".cjs",
+              ".cts",
+              ".js",
+              ".jsx",
+              ".mjs",
+              ".mts",
+              ".ts",
+              ".tsx"
+            ],
+            "evidence": [
+              {
+                "path": "backend/scripts/resize-cover-images.js"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "stack": "python",
+        "profile": "config_plus_python_source",
+        "detected": false,
+        "required_signals": [
+          "config",
+          "source"
+        ],
+        "failed_signals": [
+          "config",
+          "source"
+        ],
+        "signals": {
+          "config": {
+            "matched": false,
+            "criteria": [
+              "Pipfile",
+              "pyproject.toml",
+              "requirements.txt",
+              "setup.py"
+            ],
+            "evidence": []
+          },
+          "source": {
+            "matched": false,
+            "criteria": [
+              ".py"
+            ],
+            "evidence": []
+          }
+        }
+      },
+      {
+        "stack": "java_maven",
+        "profile": "config_only",
+        "detected": false,
+        "required_signals": [
+          "config"
+        ],
+        "failed_signals": [
+          "config"
+        ],
+        "signals": {
+          "config": {
+            "matched": false,
+            "criteria": [
+              "maven-wrapper.properties",
+              "pom.xml"
+            ],
+            "evidence": []
+          }
+        }
+      },
+      {
+        "stack": "java_gradle",
+        "profile": "config_plus_java_or_kotlin_source",
+        "detected": false,
+        "required_signals": [
+          "config",
+          "source"
+        ],
+        "failed_signals": [
+          "config",
+          "source"
+        ],
+        "signals": {
+          "config": {
+            "matched": false,
+            "criteria": [
+              "build.gradle",
+              "gradle.properties",
+              "settings.gradle"
+            ],
+            "evidence": []
+          },
+          "source": {
+            "matched": false,
+            "criteria": [
+              ".java",
+              ".kt"
+            ],
+            "evidence": []
+          }
+        }
+      },
+      {
+        "stack": "dotnet",
+        "profile": "config_plus_csharp_source",
+        "detected": true,
+        "required_signals": [
+          "config",
+          "source"
+        ],
+        "failed_signals": [],
+        "signals": {
+          "config": {
+            "matched": true,
+            "criteria": [
+              "*.csproj",
+              "*.sln",
+              "packages.config",
+              "project.json"
+            ],
+            "evidence": [
+              {
+                "path": "kollector-scum.sln"
+              },
+              {
+                "path": "backend/KollectorScum.Api/KollectorScum.Api.csproj"
+              },
+              {
+                "path": "backend/KollectorScum.DataSeeder/KollectorScum.DataSeeder.csproj"
+              },
+              {
+                "path": "backend/KollectorScum.Tests/KollectorScum.Tests.csproj"
+              },
+              {
+                "path": "backend/tools/R2Lister/R2Lister.csproj"
+              },
+              {
+                "path": "backend/tools/R2Uploader/R2Uploader.csproj"
+              }
+            ]
+          },
+          "source": {
+            "matched": true,
+            "criteria": [
+              ".cs"
+            ],
+            "evidence": [
+              {
+                "path": "backend/KollectorScum.Api/Program.cs"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "stack": "go",
+        "profile": "config_only",
+        "detected": false,
+        "required_signals": [
+          "config"
+        ],
+        "failed_signals": [
+          "config"
+        ],
+        "signals": {
+          "config": {
+            "matched": false,
+            "criteria": [
+              "go.mod",
+              "go.sum"
+            ],
+            "evidence": []
+          }
+        }
+      },
+      {
+        "stack": "rust",
+        "profile": "config_only",
+        "detected": false,
+        "required_signals": [
+          "config"
+        ],
+        "failed_signals": [
+          "config"
+        ],
+        "signals": {
+          "config": {
+            "matched": false,
+            "criteria": [
+              "Cargo.toml"
+            ],
+            "evidence": []
+          }
+        }
+      },
+      {
+        "stack": "php",
+        "profile": "config_only",
+        "detected": false,
+        "required_signals": [
+          "config"
+        ],
+        "failed_signals": [
+          "config"
+        ],
+        "signals": {
+          "config": {
+            "matched": false,
+            "criteria": [
+              "composer.json",
+              "composer.lock"
+            ],
+            "evidence": []
+          }
+        }
+      },
+      {
+        "stack": "ruby",
+        "profile": "config_only",
+        "detected": false,
+        "required_signals": [
+          "config"
+        ],
+        "failed_signals": [
+          "config"
+        ],
+        "signals": {
+          "config": {
+            "matched": false,
+            "criteria": [
+              "Gemfile",
+              "Gemfile.lock"
+            ],
+            "evidence": []
+          }
+        }
+      },
+      {
+        "stack": "cpp",
+        "profile": "config_plus_cpp_source",
+        "detected": false,
+        "required_signals": [
+          "config",
+          "source"
+        ],
+        "failed_signals": [
+          "config",
+          "source"
+        ],
+        "signals": {
+          "config": {
+            "matched": false,
+            "criteria": [
+              "*.vcxproj",
+              "CMakeLists.txt",
+              "Makefile"
+            ],
+            "evidence": []
+          },
+          "source": {
+            "matched": false,
+            "criteria": [
+              ".c",
+              ".cc",
+              ".cpp",
+              ".cxx",
+              ".h",
+              ".hh",
+              ".hpp",
+              ".hxx"
+            ],
+            "evidence": []
+          }
+        }
+      },
+      {
+        "stack": "swift",
+        "profile": "config_plus_swift_source",
+        "detected": false,
+        "required_signals": [
+          "config",
+          "source"
+        ],
+        "failed_signals": [
+          "config",
+          "source"
+        ],
+        "signals": {
+          "config": {
+            "matched": false,
+            "criteria": [
+              "*.xcodeproj",
+              "*.xcworkspace",
+              "Package.swift"
+            ],
+            "evidence": []
+          },
+          "source": {
+            "matched": false,
+            "criteria": [
+              ".swift"
+            ],
+            "evidence": []
+          }
+        }
+      },
+      {
+        "stack": "kotlin",
+        "profile": "config_plus_kotlin_source",
+        "detected": false,
+        "required_signals": [
+          "config",
+          "source"
+        ],
+        "failed_signals": [
+          "config",
+          "source"
+        ],
+        "signals": {
+          "config": {
+            "matched": false,
+            "criteria": [
+              "build.gradle.kts",
+              "settings.gradle.kts"
+            ],
+            "evidence": []
+          },
+          "source": {
+            "matched": false,
+            "criteria": [
+              ".kt"
+            ],
+            "evidence": []
+          }
+        }
+      }
+    ],
+    "languages": [
+      "csharp",
+      "javascript",
+      "typescript"
+    ],
+    "package_managers": [
+      {
+        "ecosystem": "dotnet",
+        "name": "nuget",
+        "version": null,
+        "evidence": [
+          {
+            "path": "kollector-scum.sln"
+          },
+          {
+            "path": "backend/KollectorScum.Api/KollectorScum.Api.csproj"
+          },
+          {
+            "path": "backend/KollectorScum.DataSeeder/KollectorScum.DataSeeder.csproj"
+          },
+          {
+            "path": "backend/KollectorScum.Tests/KollectorScum.Tests.csproj"
+          },
+          {
+            "path": "backend/tools/R2Lister/R2Lister.csproj"
+          },
+          {
+            "path": "backend/tools/R2Uploader/R2Uploader.csproj"
+          }
+        ]
+      },
+      {
+        "ecosystem": "node",
+        "name": "npm",
+        "version": "3",
+        "evidence": [
+          {
+            "path": "package-lock.json"
+          },
+          {
+            "path": "frontend/package-lock.json"
+          },
+          {
+            "path": "backend/scripts/package-lock.json"
+          },
+          {
+            "path": "frontend/frontend/package-lock.json"
+          }
+        ]
+      }
+    ],
+    "topology": {
+      "type": "multi_package",
+      "workspaces": {
+        "present": false,
+        "tools": [],
+        "evidence": []
+      },
+      "subpackages": [
+        {
+          "path": ".",
+          "markers": [
+            ".sln",
+            "package.json"
+          ]
+        },
+        {
+          "path": "frontend",
+          "markers": [
+            "package.json"
+          ]
+        },
+        {
+          "path": "backend/KollectorScum.Api",
+          "markers": [
+            ".csproj"
+          ]
+        },
+        {
+          "path": "backend/KollectorScum.DataSeeder",
+          "markers": [
+            ".csproj"
+          ]
+        },
+        {
+          "path": "backend/KollectorScum.Tests",
+          "markers": [
+            ".csproj"
+          ]
+        },
+        {
+          "path": "backend/scripts",
+          "markers": [
+            "package.json"
+          ]
+        },
+        {
+          "path": "frontend/.next",
+          "markers": [
+            "package.json"
+          ]
+        },
+        {
+          "path": "backend/tools/R2Lister",
+          "markers": [
+            ".csproj"
+          ]
+        },
+        {
+          "path": "backend/tools/R2Uploader",
+          "markers": [
+            ".csproj"
+          ]
+        }
+      ]
+    }
+  },
+  "red_flags": [
+    "@ts-ignore",
+    "any type",
+    "as any",
+    "dangerouslysetinnerhtml",
+    "fixme: security",
+    "hardcoded api key",
+    "hardcoded password",
+    "hardcoded secret",
+    "key={index}",
+    "missing key prop",
+    "sql injection",
+    "todo: security"
+  ],
+  "defaults": {
+    "default_days_back": null,
+    "default_min_occurrences": null,
+    "default_min_comment_length": null
+  }
+}
