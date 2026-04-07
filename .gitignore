@@ -25,6 +25,11 @@ backend/KollectorScum.Api/wwwroot/cover-art-staging/
 # Node modules
 node_modules/
 
+# Enaible analysis tool - ignore binary caches and logs, keep final reports
+.enaible/tree-sitter-language-pack-cache/
+.enaible/**/*.log
+.enaible/**/stack-analyze.log
+
 # Build outputs
 dist/
 build/
