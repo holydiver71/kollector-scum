@@ -130,6 +130,19 @@ namespace KollectorScum.Api.Controllers
             await connection.OpenAsync();
 
             using var command = connection.CreateCommand();
+            // nosemgrep: csharp.lang.security.sqli.csharp-sqli
+            // Justification: this is an LLM-to-SQL pipeline where the SQL structure is inherently
+            // dynamic and cannot be replaced with EF Core parameterised queries. The following
+            // compensating controls make this safe:
+            //   1. [Authorize] on the controller — unauthenticated callers never reach this path.
+            //   2. SqlValidationService.Validate() enforces: SELECT-only, no DDL/DML, no UNION,
+            //      no pg_ system functions, no INFORMATION_SCHEMA, no multiple statements,
+            //      no SQL comments, table allowlist (9 allowed tables only), LIMIT required.
+            //   3. SqlValidationService.Sanitize() strips comments, truncates length, clamps LIMIT.
+            //   4. ApplyTenantScoping() wraps the validated SQL in tenant-scoped CTEs — all
+            //      allowed tables are shadowed with WHERE "UserId" = @userId, enforced via
+            //      a parameterised ADO.NET parameter (not string interpolation).
+            //   5. CommandTimeout = 30s limits resource abuse.
             command.CommandText = scopedSql;
             command.CommandTimeout = 30; // 30 second timeout
 
