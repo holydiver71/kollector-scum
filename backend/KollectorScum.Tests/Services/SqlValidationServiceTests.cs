@@ -235,5 +235,55 @@ namespace KollectorScum.Tests.Services
             // Assert
             Assert.Equal(string.Empty, result);
         }
+
+        // ---------- UNION injection (SEC-01 hardening) ----------
+
+        [Fact]
+        public void Validate_UnionSelect_ReturnsFailure()
+        {
+            // A UNION without ALL can call fromless functions such as pg_read_file()
+            var sql = @"SELECT ""Title"" FROM ""MusicReleases"" UNION SELECT pg_read_file('/etc/passwd') LIMIT 1";
+
+            var result = _service.Validate(sql);
+
+            Assert.False(result.IsValid);
+            Assert.Contains("prohibited", result.ErrorMessage ?? "");
+        }
+
+        [Fact]
+        public void Validate_UnionAllSelect_ReturnsFailure()
+        {
+            var sql = @"SELECT ""Title"" FROM ""MusicReleases"" UNION ALL SELECT 'injected' LIMIT 1";
+
+            var result = _service.Validate(sql);
+
+            Assert.False(result.IsValid);
+        }
+
+        // ---------- PostgreSQL system function injection (SEC-01 hardening) ----------
+
+        [Theory]
+        [InlineData(@"SELECT pg_read_file('/etc/passwd') LIMIT 1")]
+        [InlineData(@"SELECT pg_ls_dir('.') LIMIT 1")]
+        [InlineData(@"SELECT * FROM pg_catalog.pg_tables LIMIT 1")]
+        [InlineData(@"SELECT current_setting('data_directory') LIMIT 1")]
+        public void Validate_PostgresSystemFunction_ReturnsFailure(string sql)
+        {
+            var result = _service.Validate(sql);
+
+            Assert.False(result.IsValid);
+        }
+
+        // ---------- Schema enumeration (SEC-01 hardening) ----------
+
+        [Fact]
+        public void Validate_InformationSchemaAccess_ReturnsFailure()
+        {
+            var sql = @"SELECT table_name FROM information_schema.tables LIMIT 10";
+
+            var result = _service.Validate(sql);
+
+            Assert.False(result.IsValid);
+        }
     }
 }
