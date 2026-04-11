@@ -199,7 +199,7 @@ public class DiscogsCollectionImportIntegrationTests : IDisposable
         public Task<DiscogsReleaseDto?> GetReleaseDetailsAsync(string releaseId)
             => Task.FromResult<DiscogsReleaseDto?>(null);
 
-        public Task<DiscogsCollectionResponseDto?> GetUserCollectionAsync(string username, int page = 1, int perPage = 100)
+        public Task<DiscogsCollectionResponseDto?> GetUserCollectionAsync(string username, int page = 1, int perPage = 100, string? personalToken = null)
         {
             var pages = (int)Math.Ceiling(_totalItems / (double)_perPage);
             var skip = (page - 1) * _perPage;

@@ -246,7 +246,7 @@ export function useLookupData<T extends LookupItem>(endpoint: string) {
       
       lookupCache[endpoint] = { data: allItems, timestamp: Date.now() };
       setData(allItems);
-      
+
     } catch (err) {
       // Template literal contains only the hardcoded endpoint name (not user input); err passed as separate arg.
       console.error(`Error fetching ${endpoint}:`, err);

@@ -146,13 +146,13 @@ namespace KollectorScum.Api.Services
         /// <summary>
         /// Get user's collection with pagination
         /// </summary>
-        public async Task<DiscogsCollectionResponseDto?> GetUserCollectionAsync(string username, int page = 1, int perPage = 100)
+        public async Task<DiscogsCollectionResponseDto?> GetUserCollectionAsync(string username, int page = 1, int perPage = 100, string? personalToken = null)
         {
             try
             {
                 _logger.LogInformation("Getting collection for user: {Username}, page: {Page}", username, page);
 
-                var jsonResponse = await _httpClient.GetUserCollectionAsync(username, page, perPage);
+                var jsonResponse = await _httpClient.GetUserCollectionAsync(username, page, perPage, personalToken);
                 var collectionDto = _mapper.MapCollectionResponse(jsonResponse);
 
                 if (collectionDto != null)

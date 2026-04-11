@@ -123,7 +123,7 @@ namespace KollectorScum.Api.Services
 
                 _logger.LogInformation("Starting Discogs import job {JobId} for user {UserId}", job.JobId, job.UserId);
 
-                var result = await importService.ImportCollectionAsync(job.Username, job.UserId, cancellationToken);
+                var result = await importService.ImportCollectionAsync(job.Username, job.UserId, job.PersonalToken, cancellationToken);
 
                 job.TotalReleases = result.TotalReleases;
                 job.EffectiveTotal = result.TotalReleases;

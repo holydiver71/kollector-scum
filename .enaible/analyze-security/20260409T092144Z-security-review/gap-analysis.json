@@ -1,0 +1,222 @@
+{
+  "generated_at": "2026-04-09T09:29:01.100587+00:00",
+  "project_structure_artifact": "/Users/andy.shutt/dotnetProjects/kollector-scum/.enaible/analyze-security/20260409T092144Z-security-review/project-structure.json",
+  "deterministic_artifacts": [
+    "semgrep.json",
+    "detect-secrets.json",
+    "osv.json"
+  ],
+  "inspection_categories": [
+    "Business logic authorization",
+    "Implicit trust boundaries",
+    "Data flow assumptions"
+  ],
+  "areas": [
+    "backend/KollectorScum.Api/Controllers",
+    ".github",
+    "backend",
+    ".",
+    "backend/scripts",
+    "frontend",
+    "frontend/app/components",
+    "backend/KollectorScum.Api/Services"
+  ],
+  "rows": [
+    {
+      "id": "gap-001",
+      "area_id": "backend/KollectorScum.Api/Controllers",
+      "category": "Business logic authorization",
+      "status": "flagged",
+      "severity": "high",
+      "finding": "QueryController now has [Authorize] and ApplyTenantScoping with parameterised @userId. However semgrep still flags command.CommandText = scopedSql (csharp-sqli). The LLM-generated SQL reaches a raw ADO.NET ExecuteReader after CTE wrapping \u2014 SqlValidationService allowlist + CTE scoping are compensating controls, but the raw dynamic SQL execution pattern remains. Risk is now medium-high (not critical) since auth gates the endpoint.",
+      "confidence": "High",
+      "inspected_files": [
+        "backend/KollectorScum.Api/Controllers/QueryController.cs"
+      ],
+      "flagged_files": [
+        "backend/KollectorScum.Api/Controllers/QueryController.cs"
+      ],
+      "source_kind": "direct-inspection",
+      "evidence_artifact": "semgrep.json"
+    },
+    {
+      "id": "gap-002",
+      "area_id": "backend/KollectorScum.Api",
+      "category": "Data flow assumptions",
+      "status": "covered",
+      "finding": "appsettings.Development.json is no longer tracked in git. Only appsettings.Development.json.example remains (redacted). detect-secrets no longer surfaces any findings from that file. FIXED \u2014 credentials rotated and file removed from git tracking.",
+      "confidence": "High",
+      "inspected_files": [
+        "backend/KollectorScum.Api/appsettings.Development.json.example"
+      ],
+      "flagged_files": [],
+      "source_kind": "direct-inspection + detect-secrets artifact",
+      "evidence_artifact": "detect-secrets.json"
+    },
+    {
+      "id": "gap-003",
+      "area_id": ".github",
+      "category": "Implicit trust boundaries",
+      "status": "covered",
+      "finding": "All 3 workflows (apply-migrations.yml, ci.yml, prevent-pr-to-master.yml) now assign GitHub context expressions to env vars before referencing them in run: shells. Semgrep no longer flags any of the 3 previously identified shell injection vectors. FIXED.",
+      "confidence": "High",
+      "inspected_files": [
+        ".github/workflows/apply-migrations.yml",
+        ".github/workflows/ci.yml",
+        ".github/workflows/prevent-pr-to-master.yml"
+      ],
+      "flagged_files": [],
+      "source_kind": "direct-inspection",
+      "evidence_artifact": "semgrep.json"
+    },
+    {
+      "id": "gap-004",
+      "area_id": "backend",
+      "category": "Implicit trust boundaries",
+      "status": "covered",
+      "finding": "Dockerfile now creates appuser system group/user, chown -R /app, and sets USER appuser before ENTRYPOINT. Semgrep missing-user-entrypoint finding is no longer present. FIXED.",
+      "confidence": "High",
+      "inspected_files": [
+        "backend/Dockerfile"
+      ],
+      "flagged_files": [],
+      "source_kind": "direct-inspection",
+      "evidence_artifact": "semgrep.json"
+    },
+    {
+      "id": "gap-005",
+      "area_id": ".",
+      "category": "Data flow assumptions",
+      "status": "flagged",
+      "severity": "high",
+      "finding": "minimst@^0.0.1-security remains an explicit dependency in root package.json (line 17). OSV still flags MAL-2025-26438 (malicious code). This package should not be a production dependency. NOT FIXED.",
+      "confidence": "High",
+      "inspected_files": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "flagged_files": [
+        "package.json"
+      ],
+      "source_kind": "direct-inspection + artifact-backed",
+      "evidence_artifact": "osv.json"
+    },
+    {
+      "id": "gap-006",
+      "area_id": "backend/scripts",
+      "category": "Business logic authorization",
+      "status": "flagged",
+      "severity": "high",
+      "finding": "backend/scripts/resize-cover-images.js:95 still flagged with path-join-resolve-traversal (2 findings, both HIGH). No path sanitisation or base-directory validation added. NOT FIXED.",
+      "confidence": "High",
+      "inspected_files": [
+        "backend/scripts/resize-cover-images.js"
+      ],
+      "flagged_files": [
+        "backend/scripts/resize-cover-images.js"
+      ],
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "semgrep.json"
+    },
+    {
+      "id": "gap-007",
+      "area_id": "frontend",
+      "category": "Data flow assumptions",
+      "status": "flagged",
+      "severity": "high",
+      "finding": "OSV flags 25 findings across flatted (prototype pollution + DoS), minimatch (ReDoS x3), picomatch (ReDoS + method injection), axios (DoS), next (HTTP smuggling + PPR memory + disk cache), ajv (ReDoS), brace-expansion (process hang). No npm audit fix run. NOT FIXED.",
+      "confidence": "High",
+      "inspected_files": [
+        "frontend/package-lock.json",
+        "package-lock.json"
+      ],
+      "flagged_files": [
+        "frontend/package-lock.json",
+        "package-lock.json"
+      ],
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "osv.json"
+    },
+    {
+      "id": "gap-008",
+      "area_id": "frontend/app/components",
+      "category": "Data flow assumptions",
+      "status": "flagged",
+      "severity": "medium",
+      "finding": "5 unsafe-formatstring findings remain in AddReleaseForm.tsx:426, LookupComponents.tsx:232,253, MusicReleaseList.tsx:322, wizard/useReleaseLookups.ts:57. No remediation applied. NOT FIXED.",
+      "confidence": "High",
+      "inspected_files": [
+        "frontend/app/components/AddReleaseForm.tsx",
+        "frontend/app/components/LookupComponents.tsx",
+        "frontend/app/components/MusicReleaseList.tsx",
+        "frontend/app/components/wizard/useReleaseLookups.ts"
+      ],
+      "flagged_files": [
+        "frontend/app/components/AddReleaseForm.tsx",
+        "frontend/app/components/LookupComponents.tsx",
+        "frontend/app/components/MusicReleaseList.tsx",
+        "frontend/app/components/wizard/useReleaseLookups.ts"
+      ],
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "semgrep.json"
+    },
+    {
+      "id": "gap-009",
+      "area_id": ".github",
+      "category": "Data flow assumptions",
+      "status": "requires_manual_verification",
+      "severity": "medium",
+      "finding": "detect-secrets still flags ci.yml:31 as secret_keyword. Inspection shows this is a reference to ${{ secrets.* }} GitHub Actions secret expressions (not a hardcoded secret). Likely false positive but requires manual verification to confirm no literal secret value is embedded.",
+      "confidence": "Medium",
+      "inspected_files": [
+        ".github/workflows/ci.yml"
+      ],
+      "flagged_files": [
+        ".github/workflows/ci.yml"
+      ],
+      "source_kind": "direct-inspection",
+      "evidence_artifact": "detect-secrets.json"
+    },
+    {
+      "id": "gap-010",
+      "area_id": "backend/KollectorScum.Api/Services",
+      "category": "Business logic authorization",
+      "status": "covered",
+      "finding": "MagicLinkService: single-use tokens, 15-min expiry, UsedAt timestamp. No changes, still well-implemented.",
+      "confidence": "High",
+      "inspected_files": [
+        "backend/KollectorScum.Api/Services/MagicLinkService.cs"
+      ],
+      "flagged_files": [],
+      "source_kind": "direct-inspection",
+      "evidence_artifact": "project-structure.json"
+    },
+    {
+      "id": "gap-011",
+      "area_id": "backend/KollectorScum.Api/Controllers",
+      "category": "Business logic authorization",
+      "status": "covered",
+      "finding": "AdminController has [Authorize] class-level. UserImpersonationService prevents admin-to-admin impersonation. Logged. No changes.",
+      "confidence": "High",
+      "inspected_files": [
+        "backend/KollectorScum.Api/Controllers/AdminController.cs"
+      ],
+      "flagged_files": [],
+      "source_kind": "direct-inspection",
+      "evidence_artifact": "project-structure.json"
+    }
+  ],
+  "summary": {
+    "total_rows": 11,
+    "attention_rows": 6,
+    "by_status": {
+      "flagged": 5,
+      "covered": 5,
+      "requires_manual_verification": 1
+    },
+    "by_severity_attention": {
+      "high": 4,
+      "medium": 2
+    }
+  }
+}
