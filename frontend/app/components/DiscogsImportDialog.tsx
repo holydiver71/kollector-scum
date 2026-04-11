@@ -36,81 +36,82 @@ interface ProgressStep {
   isActive: boolean;
 }
 
+// ── buildProgressSteps helpers ────────────────────────────────────────────────
+
+/**
+ * Compute the ratio-based current count for phases 2 and 3 (enrich / cover).
+ * Returns `total` when `isCompleted`, 0 before the phase activates, otherwise
+ * a value proportional to how far `pct` has advanced through [minPct, maxPct].
+ */
+export function computeRatioCurrent(
+  pct: number,
+  total: number,
+  isCompleted: boolean,
+  minPct: number,
+  maxPct: number
+): number {
+  if (isCompleted) return total;
+  const ratio =
+    pct <= minPct
+      ? 0
+      : Math.min(1, (Math.min(pct, maxPct) - minPct) / (maxPct - minPct));
+  return Math.min(total, Math.round(ratio * total));
+}
+
+/**
+ * Select the display prompt for a phase.
+ * Returns `completedMsg` when the phase is done, `waitingMsg` before it
+ * activates (pct < activePct), or a cycling entry from `prompts` otherwise.
+ */
+export function selectPhasePrompt(
+  isComplete: boolean,
+  pct: number,
+  activePct: number,
+  completedItems: number,
+  prompts: readonly string[],
+  completedMsg: string,
+  waitingMsg: string
+): string {
+  if (isComplete) return completedMsg;
+  if (pct < activePct) return waitingMsg;
+  return prompts[completedItems % prompts.length];
+}
+
 function buildProgressSteps(progress: ImportProgress, completedItems: number): ProgressStep[] {
   const pct = Math.max(0, Math.min(100, progress.percentage ?? 0));
+
   const importTotal = Math.max(1, progress.effectiveTotal || 0);
-  const importCurrent = progress.completed
-    ? importTotal
-    : Math.min(importTotal, completedItems);
+  const importCurrent = progress.completed ? importTotal : Math.min(importTotal, completedItems);
+  const importComplete = progress.completed || pct >= IMPORT_PHASE_MAX_PERCENTAGE;
+  const importPrompt = selectPhasePrompt(
+    importComplete, pct, 0, completedItems,
+    IMPORT_PHASE_MUSIC_PROMPTS, "Grooves indexed and ready.", ""
+  );
 
   const enrichTotal = Math.max(1, progress.imported || importTotal);
-  const enrichRatio = pct <= IMPORT_PHASE_MAX_PERCENTAGE
-    ? 0
-    : Math.min(1, (Math.min(pct, TRACKLIST_PHASE_MAX_PERCENTAGE) - IMPORT_PHASE_MAX_PERCENTAGE) / (TRACKLIST_PHASE_MAX_PERCENTAGE - IMPORT_PHASE_MAX_PERCENTAGE));
-  const enrichCurrent = progress.completed
-    ? enrichTotal
-    : Math.min(enrichTotal, Math.round(enrichRatio * enrichTotal));
+  const enrichCurrent = computeRatioCurrent(pct, enrichTotal, progress.completed, IMPORT_PHASE_MAX_PERCENTAGE, TRACKLIST_PHASE_MAX_PERCENTAGE);
+  const enrichComplete = progress.completed || pct >= TRACKLIST_PHASE_MAX_PERCENTAGE;
+  const enrichPrompt = selectPhasePrompt(
+    enrichComplete, pct, IMPORT_PHASE_MAX_PERCENTAGE, completedItems,
+    TRACKLIST_PHASE_MUSIC_PROMPTS, "Tracklists locked in the crate.", "Waiting for the first stack to land..."
+  );
 
   const coverTotal = enrichTotal;
-  const coverRatio = pct <= TRACKLIST_PHASE_MAX_PERCENTAGE
-    ? 0
-    : Math.min(1, (Math.min(pct, COVER_PHASE_VISIBLE_MAX_PERCENTAGE) - TRACKLIST_PHASE_MAX_PERCENTAGE) / (COVER_PHASE_VISIBLE_MAX_PERCENTAGE - TRACKLIST_PHASE_MAX_PERCENTAGE));
-  const coverCurrent = progress.completed
-    ? coverTotal
-    : Math.min(coverTotal, Math.round(coverRatio * coverTotal));
-
-  const importComplete = progress.completed || pct >= IMPORT_PHASE_MAX_PERCENTAGE;
-  const enrichComplete = progress.completed || pct >= TRACKLIST_PHASE_MAX_PERCENTAGE;
+  const coverCurrent = computeRatioCurrent(pct, coverTotal, progress.completed, TRACKLIST_PHASE_MAX_PERCENTAGE, COVER_PHASE_VISIBLE_MAX_PERCENTAGE);
   const coverComplete = progress.completed || pct >= COVER_PHASE_VISIBLE_MAX_PERCENTAGE;
-
-  const importPrompt = importComplete
-    ? "Grooves indexed and ready."
-    : IMPORT_PHASE_MUSIC_PROMPTS[completedItems % IMPORT_PHASE_MUSIC_PROMPTS.length];
-  const enrichPrompt = enrichComplete
-    ? "Tracklists locked in the crate."
-    : (pct < IMPORT_PHASE_MAX_PERCENTAGE
-      ? "Waiting for the first stack to land..."
-      : TRACKLIST_PHASE_MUSIC_PROMPTS[completedItems % TRACKLIST_PHASE_MUSIC_PROMPTS.length]);
-  const coverPrompt = coverComplete
-    ? "Artwork sleeves shelved."
-    : (pct < TRACKLIST_PHASE_MAX_PERCENTAGE
-      ? "Queued for the final polishing pass..."
-      : COVER_PHASE_MUSIC_PROMPTS[completedItems % COVER_PHASE_MUSIC_PROMPTS.length]);
+  const coverPrompt = selectPhasePrompt(
+    coverComplete, pct, TRACKLIST_PHASE_MAX_PERCENTAGE, completedItems,
+    COVER_PHASE_MUSIC_PROMPTS, "Artwork sleeves shelved.", "Queued for the final polishing pass..."
+  );
 
   const steps: ProgressStep[] = [
-    {
-      id: 1,
-      title: "Step 1/3: Importing releases",
-      prompt: importPrompt,
-      current: importCurrent,
-      total: importTotal,
-      isComplete: importComplete,
-      isActive: false,
-    },
-    {
-      id: 2,
-      title: "Step 2/3: Enriching tracklists",
-      prompt: enrichPrompt,
-      current: enrichCurrent,
-      total: enrichTotal,
-      isComplete: enrichComplete,
-      isActive: false,
-    },
-    {
-      id: 3,
-      title: "Step 3/3: Mirroring cover art",
-      prompt: coverPrompt,
-      current: coverCurrent,
-      total: coverTotal,
-      isComplete: coverComplete,
-      isActive: false,
-    },
+    { id: 1, title: "Step 1/3: Importing releases",  prompt: importPrompt, current: importCurrent, total: importTotal,  isComplete: importComplete, isActive: false },
+    { id: 2, title: "Step 2/3: Enriching tracklists", prompt: enrichPrompt, current: enrichCurrent, total: enrichTotal,  isComplete: enrichComplete, isActive: false },
+    { id: 3, title: "Step 3/3: Mirroring cover art",  prompt: coverPrompt,  current: coverCurrent,  total: coverTotal,   isComplete: coverComplete,  isActive: false },
   ];
 
   const firstPendingIndex = steps.findIndex((step) => !step.isComplete);
-  if (firstPendingIndex >= 0) {
-    steps[firstPendingIndex].isActive = true;
-  }
+  if (firstPendingIndex >= 0) steps[firstPendingIndex].isActive = true;
 
   return steps;
 }

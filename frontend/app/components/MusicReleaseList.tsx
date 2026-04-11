@@ -3,53 +3,19 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { fetchJson, createNowPlaying, ApiError } from "../lib/api";
-import { clearAuthToken } from "../lib/auth";
- 
+import { createNowPlaying } from "../lib/api";
+
 import { VinylSpinner } from "./VinylSpinner";
 import { Play, Check, Disc3, Eye, List } from "lucide-react";
 
 import { AddToListDialog } from "./AddToListDialog";
 import { SearchAndFilter } from "./SearchAndFilter";
 import { FormatIcon } from "./FormatIcon";
-
-// Type definitions for music releases
-interface MusicRelease {
-  id: number;
-  title: string;
-  releaseYear: string; // Backend returns DateTime as string
-  origReleaseYear?: string; // Backend returns DateTime as string
-  artistNames?: string[]; // Backend DTO field name
-  genreNames?: string[];  // Backend DTO field name
-  labelName?: string;
-  countryName?: string;
-  formatName?: string;
-  coverImageUrl?: string; // Backend DTO field name
-  dateAdded: string;
-}
-
-interface PagedResult<T> {
-  items: T[];
-  page: number;
-  pageSize: number;
-  totalCount: number;
-  totalPages: number;
-}
-
-interface MusicReleaseFilters {
-  search?: string;
-  artistId?: number;
-  genreId?: number;
-  labelId?: number;
-  countryId?: number;
-  formatId?: number;
-  live?: boolean;
-  yearFrom?: number;
-  yearTo?: number;
-  sortBy?: string;
-  sortOrder?: string;
-  kollectionId?: number;
-}
+import {
+  useMusicReleases,
+  type MusicRelease,
+  type MusicReleaseFilters,
+} from "./useMusicReleases";
 
 interface MusicReleaseListProps {
   filters?: MusicReleaseFilters;
@@ -85,9 +51,9 @@ export const MusicReleaseCard = React.memo(function MusicReleaseCard({ release }
   const handleNowPlaying = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (isLoading) return;
-    
+
     setIsLoading(true);
     try {
       await createNowPlaying(release.id);
@@ -133,19 +99,19 @@ export const MusicReleaseCard = React.memo(function MusicReleaseCard({ release }
 
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100 p-2">
           <div className="flex gap-2 flex-wrap justify-center">
-            <Link 
+            <Link
               href={`/releases/${release.id}`}
               className="bg-[#8B5CF6] text-white rounded-full w-9 h-9 flex items-center justify-center hover:scale-110 transition-transform shadow-lg"
             >
               <Eye className="w-4 h-4" />
             </Link>
-            
+
             <button
               onClick={handleNowPlaying}
               disabled={isLoading}
               className={`rounded-full w-9 h-9 flex items-center justify-center hover:scale-110 transition-transform shadow-lg ${
-                isPlaying 
-                  ? 'bg-emerald-500 text-white' 
+                isPlaying
+                  ? 'bg-emerald-500 text-white'
                   : 'bg-white/90 text-[#8B5CF6]'
               }`}
               title={isPlaying ? 'Playing now' : 'Mark as now playing'}
@@ -167,14 +133,14 @@ export const MusicReleaseCard = React.memo(function MusicReleaseCard({ release }
           </div>
         </div>
       </div>
-      
+
       <AddToListDialog
         releaseId={release.id}
         releaseTitle={release.title}
         isOpen={showAddToList}
         onClose={() => setShowAddToList(false)}
       />
-      
+
       <div className="text-xs font-semibold text-white truncate" title={release.title}>
         <Link href={`/releases/${release.id}`} className="hover:text-[#A78BFA] transition-colors">
           {release.title}
@@ -191,14 +157,6 @@ export const MusicReleaseCard = React.memo(function MusicReleaseCard({ release }
 });
 
 export const MusicReleaseList = React.memo(function MusicReleaseList({ filters = {}, pageSize = 60, onSortChange, activeFiltersRender }: MusicReleaseListProps & { onSortChange?: (f: MusicReleaseFilters) => void }) {
-  const [releases, setReleases] = useState<MusicRelease[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(0);
-  const [totalCount, setTotalCount] = useState(0);
-  
-
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -233,14 +191,6 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
     // run when search params / path / router or default values change
   }, [searchParams, pathname, router, effectiveFilters.sortBy, effectiveFilters.sortOrder]);
 
-  // Keep a small local state for the open state so the middle button updates visually
-  // immediately when clicked (router.replace updates searchParams asynchronously).
-  // (showSort state intentionally omitted — URL param is read directly where needed)
-
-  // order matches the SortPanel button order (left-to-right)
-
-  // getSortLabel and renderSortIcon removed — kept codebase simpler until these UI pieces are reintroduced
-
   const applySortChange = (newSort: { sortBy?: string; sortOrder?: string }) => {
     // If a parent handler exists, defer to it
     if (typeof onSortChange === 'function') {
@@ -268,147 +218,23 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
   const currentSortBy = rawSortBy.toLowerCase() === 'origreleaseyear' ? 'year' : rawSortBy.toLowerCase();
   const currentSortOrder = rawSortOrder.toLowerCase();
 
-  // cycleSort removed: prev/next sort controls no longer present; sort panel toggles visibility instead
-
-  const fetchReleases = async (page: number = 1) => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      console.log('MusicReleaseList filters:', filters);
-
-      const params = new URLSearchParams({
-        'Pagination.PageNumber': page.toString(),
-        'Pagination.PageSize': pageSize.toString(),
-        ...(filters.search && { Search: filters.search }),
-        ...(filters.artistId && { ArtistId: filters.artistId.toString() }),
-        ...(filters.genreId && { GenreId: filters.genreId.toString() }),
-        ...(filters.labelId && { LabelId: filters.labelId.toString() }),
-        ...(filters.countryId && { CountryId: filters.countryId.toString() }),
-        ...(filters.formatId && { FormatId: filters.formatId.toString() }),
-        ...(filters.live !== undefined && { Live: filters.live.toString() }),
-        ...(filters.yearFrom && { YearFrom: filters.yearFrom.toString() }),
-        ...(filters.yearTo && { YearTo: filters.yearTo.toString() }),
-        ...(filters.kollectionId && { KollectionId: filters.kollectionId.toString() }),
-          ...(effectiveFilters.sortBy && { SortBy: effectiveFilters.sortBy }),
-          ...(effectiveFilters.sortOrder && { SortOrder: effectiveFilters.sortOrder })
-      });
-
-      console.log('API URL:', `/api/musicreleases?${params}`);
-
-      // Retry on transient failures (network errors, 429 rate-limit, 5xx server errors).
-      // Non-retryable 4xx errors (401, 403, 404, 422…) are thrown immediately.
-      let attempts = 0;
-      const maxAttempts = 3;
-      let lastErr: unknown = null;
-      let response: PagedResult<MusicRelease> | MusicRelease[] | null = null;
-
-      while (attempts < maxAttempts) {
-        attempts += 1;
-        try {
-          response = await fetchJson<PagedResult<MusicRelease> | MusicRelease[]>(`/api/musicreleases?${params}`);
-          lastErr = null;
-          break;
-        } catch (err) {
-          lastErr = err;
-          const status = (err as ApiError)?.status;
-          // Only retry on rate-limiting, server errors, or network failures (no status)
-          const isRetryable = !status || status === 429 || status >= 500;
-          if (!isRetryable || attempts >= maxAttempts) break;
-          // Respect Retry-After on 429, otherwise use exponential backoff
-          const retryAfterMs = status === 429 && (err as ApiError).retryAfter
-            ? (err as ApiError).retryAfter! * 1000
-            : 1000 * Math.pow(2, attempts - 1);
-      // Template literal contains only numbers (attempts, status, retryAfterMs); err passed as separate arg.
-          console.warn(`fetchReleases attempt ${attempts} failed (${status ?? 'network'}), retrying in ${retryAfterMs}ms`, err);
-          await new Promise(r => setTimeout(r, retryAfterMs));
-        }
-      }
-
-      if (!response && lastErr) throw lastErr;
-
-      if (Array.isArray(response)) {
-        setReleases(response);
-        setCurrentPage(1);
-        setTotalPages(1);
-        setTotalCount(response.length);
-      } else if (response && typeof response === 'object') {
-        const resp = response as PagedResult<MusicRelease>;
-        setReleases(resp.items || []);
-        setCurrentPage(resp.page || 1);
-        setTotalPages(resp.totalPages || 0);
-        setTotalCount(resp.totalCount || 0);
-      } else {
-        setReleases([]);
-        setCurrentPage(1);
-        setTotalPages(0);
-        setTotalCount(0);
-      }
-    } catch (err) {
-      console.error('Error fetching releases:', err);
-      
-      // Handle 401 Unauthorized
-      const apiError = err as ApiError;
-      if (apiError?.status === 401) {
-        clearAuthToken();
-        window.location.href = '/';
-        return;
-      }
-
-      // Try to surface server status/details if available (ApiError shape from fetchJson)
-      let message = 'Failed to load releases';
-      try {
-        const anyErr = err as unknown;
-        if (anyErr && typeof anyErr === 'object') {
-          const errObj = anyErr as Record<string, unknown>;
-          if (typeof errObj.message === 'string') message = errObj.message;
-          if (typeof errObj.status === 'number') message += ` (status: ${errObj.status})`;
-          if (errObj.details) {
-            try {
-              const d = typeof errObj.details === 'string' ? errObj.details : JSON.stringify(errObj.details);
-              message += ` - ${d}`;
-            } catch { /* ignore stringify errors */ }
-          }
-          if (typeof errObj.url === 'string') message += ` [url: ${errObj.url}]`;
-        } else if (err instanceof Error) {
-          message = err.message;
-        }
-      } catch {
-        // fallback
-        message = (err instanceof Error) ? err.message : 'Failed to load releases';
-      }
-
-      setError(message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    console.log('MusicReleaseList filters changed, resetting to page 1:', filters);
-    setCurrentPage(1);
-    fetchReleases(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters, pageSize]);
-
-  // trigger a tiny animation when the selected sort changes
-  // icon animation intentionally removed (no-op) to avoid unused state
-
-  const handlePageChange = (page: number) => {
-    if (page < 1 || page > totalPages) {
-      return;
-    }
-    setCurrentPage(page);
-    fetchReleases(page);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  const {
+    releases,
+    loading,
+    error,
+    currentPage,
+    totalPages,
+    totalCount,
+    handlePageChange,
+    refetch,
+  } = useMusicReleases(effectiveFilters, pageSize);
 
   if (loading && releases.length === 0) {
     return (
       <div className="min-h-screen flex items-start justify-center pt-8">
-        <VinylSpinner 
-          size="large" 
-          message="Loading your collection..." 
+        <VinylSpinner
+          size="large"
+          message="Loading your collection..."
         />
       </div>
     );
@@ -425,7 +251,7 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
         <h3 className="text-lg font-medium text-white mb-2">Error Loading Releases</h3>
         <p className="text-gray-400 mb-4">{error}</p>
         <button
-          onClick={() => fetchReleases(currentPage)}
+          onClick={refetch}
           className="px-4 py-2 bg-[#8B5CF6] hover:bg-[#7C3AED] text-white rounded-xl transition-colors"
         >
           Try Again
@@ -455,9 +281,9 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
         <div className="space-y-6 mb-6">
           <div className="flex gap-3 flex-wrap items-center">
             <div className="flex-1 min-w-[200px] relative">
-              <input 
-                type="text" 
-                placeholder="Search releases, artists, albums..." 
+              <input
+                type="text"
+                placeholder="Search releases, artists, albums..."
                 className="w-full bg-[#13131F] border border-[#1C1C28] rounded-xl px-4 py-3 text-white placeholder-gray-600 text-sm focus:outline-none focus:border-[#8B5CF6]"
                 value={searchParams?.get('search') || ''}
                 onChange={(e) => {
@@ -471,8 +297,8 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
                 }}
               />
             </div>
-            
-            <select 
+
+            <select
               className="bg-[#13131F] border border-[#1C1C28] rounded-xl px-4 py-3 text-gray-300 text-sm focus:outline-none focus:border-[#8B5CF6] cursor-pointer"
               value={`${currentSortBy}_${currentSortOrder}`}
               onChange={(e) => {
@@ -518,7 +344,7 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
               <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" className={`transition-transform duration-200 ${searchParams?.get('showAdvanced') === 'true' ? "rotate-180" : ""}`}><path d="M2.5 4.5l3.5 3.5 3.5-3.5" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </button>
           </div>
-          
+
           <div className="flex items-center gap-3 text-xs text-gray-500 flex-wrap mt-2 mb-4">
             <span>{totalCount} release{totalCount !== 1 ? 's' : ''}</span>
             {activeFiltersRender}
@@ -580,20 +406,20 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
               const maxPagesToShow = 5;
               let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
               const endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
-              
+
               // Adjust startPage if we're near the end
               if (endPage - startPage < maxPagesToShow - 1) {
                 startPage = Math.max(1, endPage - maxPagesToShow + 1);
               }
-              
+
               const pages = [];
               for (let pageNum = startPage; pageNum <= endPage; pageNum++) {
                 pages.push(pageNum);
               }
-              
+
               return pages.map((pageNum) => {
                 const isCurrentPage = pageNum === currentPage;
-                
+
                 return (
                   <button
                     key={`page-${pageNum}`}
