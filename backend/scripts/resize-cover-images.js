@@ -18,6 +18,8 @@ const sharp = require('sharp');
 
 const DEFAULT_IMAGES_PATH = '/home/andy/music-images/covers';
 const imagesPath = argv.path || DEFAULT_IMAGES_PATH;
+// Resolve to an absolute, canonical path to use as the security boundary.
+const baseDir = path.resolve(imagesPath);
 const maxDim = parseInt(argv.max || '1600', 10);
 const dryRun = !!argv.dry || !!argv['dry-run'];
 const simulate = !!argv.simulate || !!argv.s;
@@ -27,6 +29,17 @@ function human(bytes) {
   const units = ['B','KB','MB','GB','TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
   return (bytes / Math.pow(1024, i)).toFixed(2) + ' ' + units[i];
+}
+
+/**
+ * Returns true if the given resolved path is safely contained within baseDir.
+ * Prevents path traversal via symlinks or crafted entry names.
+ * @param {string} resolvedPath - The fully resolved path to validate.
+ * @returns {boolean}
+ */
+function isWithinBaseDir(resolvedPath) {
+  const relative = path.relative(baseDir, resolvedPath);
+  return relative.length > 0 && !relative.startsWith('..') && !path.isAbsolute(relative);
 }
 
 async function processFile(filePath) {
@@ -92,7 +105,12 @@ async function walkDir(dir) {
   const results = [];
   const entries = await fs.promises.readdir(dir, { withFileTypes: true });
   for (const ent of entries) {
-    const full = path.join(dir, ent.name);
+    const full = path.resolve(dir, ent.name);
+    // Guard against traversal: skip any entry that resolves outside baseDir.
+    if (!isWithinBaseDir(full)) {
+      console.warn(`Skipping out-of-bounds path (possible traversal): ${full}`);
+      continue;
+    }
     if (ent.isDirectory()) {
       results.push(...await walkDir(full));
     } else if (ent.isFile()) {
@@ -104,16 +122,16 @@ async function walkDir(dir) {
 
 (async function main(){
   try {
-    console.log(`Images folder: ${imagesPath}`);
+    console.log(`Images folder: ${baseDir}`);
     console.log(`Max dimension: ${maxDim}px` + (dryRun ? ' (dry run)' : ''));
 
-    const exists = fs.existsSync(imagesPath);
+    const exists = fs.existsSync(baseDir);
     if (!exists) {
-      console.error('Images path does not exist:', imagesPath);
+      console.error('Images path does not exist:', baseDir);
       process.exit(2);
     }
 
-    const files = await walkDir(imagesPath);
+    const files = await walkDir(baseDir);
     let totalOriginal = 0;
     let totalNew = 0;
     let processedCount = 0;
