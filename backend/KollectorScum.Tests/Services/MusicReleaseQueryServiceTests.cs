@@ -18,7 +18,7 @@ namespace KollectorScum.Tests.Services
 {
     public class MusicReleaseQueryServiceTests
     {
-        private readonly Mock<IRepository<MusicRelease>> _mockMusicReleaseRepo;
+        private readonly Mock<IMusicReleaseRepository> _mockMusicReleaseRepo;
         private readonly Mock<IRepository<Artist>> _mockArtistRepo;
         private readonly Mock<IRepository<Label>> _mockLabelRepo;
         private readonly Mock<IMusicReleaseMapperService> _mockMapper;
@@ -31,7 +31,7 @@ namespace KollectorScum.Tests.Services
 
         public MusicReleaseQueryServiceTests()
         {
-            _mockMusicReleaseRepo = new Mock<IRepository<MusicRelease>>();
+            _mockMusicReleaseRepo = new Mock<IMusicReleaseRepository>();
             _mockArtistRepo = new Mock<IRepository<Artist>>();
             _mockLabelRepo = new Mock<IRepository<Label>>();
             _mockMapper = new Mock<IMusicReleaseMapperService>();

@@ -16,7 +16,7 @@ import { useState } from "react";
 import Image from "next/image";
 import type { DiscogsSearchResult, DiscogsRelease } from "../../../lib/discogs-types";
 import { toDiscogsProxyUrl, getDiscogsRelease } from "../../../lib/api";
-import ConfirmDialog from "../ConfirmDialog";
+import { ConfirmDialog } from "../../ConfirmDialog";
 
 export interface DiscogsResultsStepProps {
   /** Results from the previous search step. */
@@ -401,8 +401,11 @@ export default function DiscogsResultsStep({
     </div>
     <ConfirmDialog
       isOpen={showCancelConfirm}
+      title="Discard changes?"
+      message="Any data you've entered will be lost. This action cannot be undone."
       onConfirm={() => { setShowCancelConfirm(false); onCancel(); }}
-      onDismiss={() => setShowCancelConfirm(false)}
+      onCancel={() => setShowCancelConfirm(false)}
+      isDangerous
     />
     </>
   );

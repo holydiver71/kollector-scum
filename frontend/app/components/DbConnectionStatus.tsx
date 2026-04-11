@@ -1,17 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-type DatabaseTarget = "local" | "staging" | "production" | "unknown";
-
-type RuntimeInfoResponse = {
-  environment?: string;
-  databaseTarget?: DatabaseTarget;
-};
-
-type HealthResponse = {
-  dbStatus?: string;
-};
+import { useDbHealth } from "./useDbHealth";
+import type { DatabaseTarget } from "./useDbHealth";
 
 function formatTarget(target: DatabaseTarget): string {
   switch (target) {
@@ -31,48 +21,7 @@ function formatTarget(target: DatabaseTarget): string {
  * health indicator dot sourced from the API health endpoint.
  */
 export default function DbConnectionStatus() {
-  const [target, setTarget] = useState<DatabaseTarget>("unknown");
-  const [dbHealthy, setDbHealthy] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-    if (!baseUrl) {
-      setTarget("unknown");
-      return;
-    }
-
-    const controller = new AbortController();
-    const api = baseUrl.replace(/\/$/, "");
-
-    const load = async () => {
-      try {
-        // Fetch target environment and DB health in parallel
-        const [infoRes, healthRes] = await Promise.all([
-          fetch(`${api}/runtime-info`, { signal: controller.signal, cache: "no-store" }),
-          fetch(`${api}/api/health`,   { signal: controller.signal, cache: "no-store" }),
-        ]);
-
-        if (infoRes.ok) {
-          const data = (await infoRes.json()) as RuntimeInfoResponse;
-          setTarget(data.databaseTarget ?? "unknown");
-        }
-
-        if (healthRes.ok) {
-          const health = (await healthRes.json()) as HealthResponse;
-          setDbHealthy(health.dbStatus === "Healthy");
-        } else {
-          setDbHealthy(false);
-        }
-      } catch {
-        setTarget("unknown");
-        setDbHealthy(false);
-      }
-    };
-
-    load();
-
-    return () => controller.abort();
-  }, []);
+  const { target, dbHealthy } = useDbHealth();
 
   const dotClass =
     dbHealthy === null

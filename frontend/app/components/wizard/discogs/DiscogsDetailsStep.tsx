@@ -15,7 +15,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { getDiscogsRelease } from "../../../lib/api";
-import ConfirmDialog from "../ConfirmDialog";
+import { ConfirmDialog } from "../../ConfirmDialog";
 import type { DiscogsRelease, DiscogsSearchResult } from "../../../lib/discogs-types";
 import { mapDiscogsRelease } from "./mapDiscogsRelease";
 import { fromCreateDto } from "../types";
@@ -209,8 +209,11 @@ export default function DiscogsDetailsStep({
       />
       <ConfirmDialog
         isOpen={showCancelConfirm}
+        title="Discard changes?"
+        message="Any data you've entered will be lost. This action cannot be undone."
         onConfirm={() => { setShowCancelConfirm(false); onCancel(); }}
-        onDismiss={() => setShowCancelConfirm(false)}
+        onCancel={() => setShowCancelConfirm(false)}
+        isDangerous
       />
     </>
   );

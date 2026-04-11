@@ -151,23 +151,26 @@ public class CreateMusicReleaseDtoValidator : AbstractValidator<CreateMusicRelea
                 });
         });
 
-        // Images filename validation - should be just filenames, not full URLs
+        // Images validation - allow either a local filename or a full HTTP(S) URL.
+        // Historically we required filenames only, but Discogs imports may
+        // temporarily store external image URLs until the background downloader
+        // persists a local copy. Accept both formats.
         When(x => x.Images != null, () =>
         {
             RuleFor(x => x.Images!.CoverFront)
-                .Must(BeAValidFilename!)
+                .Must((dto, val) => BeAValidFilename(val) || BeAValidUrl(val))
                 .When(x => !string.IsNullOrWhiteSpace(x.Images!.CoverFront))
-                .WithMessage("Cover front must be a valid filename");
+                .WithMessage("Cover front must be a valid filename or HTTP(S) URL");
 
             RuleFor(x => x.Images!.CoverBack)
-                .Must(BeAValidFilename!)
+                .Must((dto, val) => BeAValidFilename(val) || BeAValidUrl(val))
                 .When(x => !string.IsNullOrWhiteSpace(x.Images!.CoverBack))
-                .WithMessage("Cover back must be a valid filename");
+                .WithMessage("Cover back must be a valid filename or HTTP(S) URL");
 
             RuleFor(x => x.Images!.Thumbnail)
-                .Must(BeAValidFilename!)
+                .Must((dto, val) => BeAValidFilename(val) || BeAValidUrl(val))
                 .When(x => !string.IsNullOrWhiteSpace(x.Images!.Thumbnail))
-                .WithMessage("Thumbnail must be a valid filename");
+                .WithMessage("Thumbnail must be a valid filename or HTTP(S) URL");
         });
     }
 

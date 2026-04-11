@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { fetchJson } from "../lib/api";
+import { useDiscogsImportStatus } from "./useDiscogsImportStatus";
+import type { ImportProgress } from "./useDiscogsImportStatus";
 
 const IMPORT_PHASE_MUSIC_PROMPTS = [
   "Crate-digging through Discogs shelves...",
@@ -246,42 +247,6 @@ export interface DiscogsImportDialogProps {
   onSuccess: () => void;
 }
 
-interface ImportJobSubmission {
-  jobId: string;
-  status: string;
-}
-
-interface ImportResult {
-  success: boolean;
-  totalReleases: number;
-  importedReleases: number;
-  skippedReleases: number;
-  failedReleases: number;
-  errors: string[];
-  errorMessage?: string | null;
-  duration: string;
-}
-
-interface ImportProgress {
-  totalReleases: number;
-  effectiveTotal: number;
-  imported: number;
-  skipped: number;
-  failed: number;
-  percentage?: number;
-  completed: boolean;
-  cooldownUntilUtc?: string | null;
-}
-
-interface ImportJobStatus extends ImportProgress {
-  jobId: string;
-  status: string;
-  success: boolean;
-  errors: string[];
-  errorMessage?: string | null;
-  duration?: string;
-}
-
 /**
  * Dialog for importing collection from Discogs
  */
@@ -292,11 +257,8 @@ export function DiscogsImportDialog({
 }: DiscogsImportDialogProps) {
   const [username, setUsername] = useState("");
   const [personalToken, setPersonalToken] = useState("");
-  const [isImporting, setIsImporting] = useState(false);
-  const [result, setResult] = useState<ImportResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [progress, setProgress] = useState<ImportProgress | null>(null);
-  const [cooldownSecondsLeft, setCooldownSecondsLeft] = useState<number | null>(null);
+  const { isImporting, progress, result, error, cooldownSecondsLeft, startImport, reset } =
+    useDiscogsImportStatus();
   const dialogRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -309,13 +271,10 @@ export function DiscogsImportDialog({
       }
       setUsername("");
       setPersonalToken("");
-      setResult(null);
-      setProgress(null);
-      setError(null);
-      setCooldownSecondsLeft(null);
+      reset();
       onClose();
     }
-  }, [isImporting, result, onSuccess, onClose]);
+  }, [isImporting, result, onSuccess, onClose, reset]);
 
   // Focus username input when dialog opens
   useEffect(() => {
@@ -344,162 +303,14 @@ export function DiscogsImportDialog({
     };
   }, [isOpen, isImporting, handleClose]);
 
-  // Tick down the cooldown countdown every second.
-  useEffect(() => {
-    if (!progress?.cooldownUntilUtc) {
-      setCooldownSecondsLeft(null);
-      return;
-    }
-    const cooldownEnd = new Date(progress.cooldownUntilUtc).getTime();
-    const computeSecsLeft = (): number | null => {
-      const secsLeft = Math.max(0, Math.round((cooldownEnd - Date.now()) / 1000));
-      return secsLeft > 0 ? secsLeft : null;
-    };
-    setCooldownSecondsLeft(computeSecsLeft());
-    const id = window.setInterval(() => setCooldownSecondsLeft(computeSecsLeft()), 1000);
-    return () => window.clearInterval(id);
-  }, [progress?.cooldownUntilUtc]);
-
-  const handleImport = async () => {
-    if (!username.trim()) {
-      setError("Please enter a Discogs username");
-      return;
-    }
-
-    setIsImporting(true);
-    setError(null);
-    setResult(null);
-    setProgress(null);
-
-    let pollId: number | undefined;
-
-    const normalizeStatus = (p: any): ImportJobStatus | null => {
-      if (!p) return null;
-      const jobId = p.jobId ?? p.JobId ?? "";
-      const status = p.status ?? p.Status ?? "Queued";
-      const totalReleases = p.totalReleases ?? p.TotalReleases ?? 0;
-      const effectiveTotal = p.effectiveTotal ?? p.EffectiveTotal ?? totalReleases;
-      const imported = p.imported ?? p.Imported ?? 0;
-      const skipped = p.skipped ?? p.Skipped ?? 0;
-      const failed = p.failed ?? p.Failed ?? 0;
-      const percentage = p.percentage ?? p.Percentage;
-      const completed = p.completed ?? p.Completed ?? false;
-      const success = p.success ?? p.Success ?? false;
-      const errorMessage = p.errorMessage ?? p.ErrorMessage ?? null;
-      const errors = p.errors ?? p.Errors ?? [];
-      const duration = p.duration ?? (p.Duration ? String(p.Duration) : "");
-      const cooldownUntilUtc = p.cooldownUntilUtc ?? p.CooldownUntilUtc ?? null;
-
-      return {
-        jobId,
-        status,
-        totalReleases,
-        effectiveTotal,
-        imported,
-        skipped,
-        failed,
-        percentage,
-        completed,
-        success,
-        errorMessage,
-        errors,
-        duration,
-        cooldownUntilUtc,
-      };
-    };
-
-    const setResultFromStatus = (status: ImportJobStatus) => {
-      setProgress(status);
-      setResult({
-        success: status.success,
-        totalReleases: status.totalReleases,
-        importedReleases: status.imported,
-        skippedReleases: status.skipped,
-        failedReleases: status.failed,
-        errors: status.errors,
-        errorMessage: status.errorMessage,
-        duration: status.duration ?? "",
-      });
-
-      if (!status.success) {
-        setError(status.errorMessage ?? status.errors[0] ?? "Failed to import from Discogs. Please try again.");
-      }
-    };
-
-    try {
-      const submission = await fetchJson<ImportJobSubmission>("/api/import/discogs", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username: username.trim(), personalToken: personalToken.trim() || undefined }),
-        timeoutMs: 30000,
-      });
-
-      await new Promise<void>((resolve) => {
-        const poll = async () => {
-          try {
-            const statusResponse = await fetchJson<any>(`/api/import/discogs/status?jobId=${encodeURIComponent(submission.jobId)}`, {
-              method: "GET",
-              swallowErrors: true,
-              timeoutMs: 5000,
-            });
-
-            const status = normalizeStatus(statusResponse);
-            if (!status) {
-              return;
-            }
-
-            setProgress(status);
-
-            if (status.completed) {
-              setResultFromStatus(status);
-              if (pollId) {
-                window.clearInterval(pollId);
-                pollId = undefined;
-              }
-              resolve();
-            }
-          } catch {
-            // Ignore transient polling failures and keep waiting for the next interval.
-          }
-        };
-
-        pollId = window.setInterval(() => {
-          void poll();
-        }, 1000);
-
-        void poll();
-      });
-    } catch (err) {
-      console.error("Error importing from Discogs:", err);
-      const e = err as unknown;
-      if (err instanceof Error && err.name === 'AbortError') {
-        setError('Import timed out. Please try again or contact support.');
-      } else if (e && typeof e === 'object') {
-        const errObj = e as Record<string, unknown>;
-        const details = errObj.details;
-        if (details && typeof details === 'object' && typeof (details as Record<string, unknown>).error === 'string') {
-          setError((details as Record<string, string>).error);
-        } else if (typeof errObj.message === 'string') {
-          setError(errObj.message);
-        } else {
-          setError('Failed to import from Discogs. Please try again.');
-        }
-      } else if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError('Failed to import from Discogs. Please try again.');
-      }
-    } finally {
-      if (pollId) window.clearInterval(pollId);
-      setIsImporting(false);
-    }
-  };
+  const handleImport = useCallback(async () => {
+    if (!username.trim()) return;
+    await startImport(username.trim(), personalToken.trim() || undefined);
+  }, [username, personalToken, startImport]);
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !isImporting && !result) {
-      handleImport();
+      void handleImport();
     }
   };
 

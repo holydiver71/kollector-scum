@@ -19,7 +19,7 @@ namespace KollectorScum.Tests.Services
     public class MusicReleaseBatchProcessorTests
     {
         private readonly Mock<IUnitOfWork> _mockUnitOfWork;
-        private readonly Mock<IRepository<MusicRelease>> _mockMusicReleaseRepository;
+        private readonly Mock<IMusicReleaseRepository> _mockMusicReleaseRepository;
         private readonly Mock<IRepository<Country>> _mockCountryRepository;
         private readonly Mock<IRepository<Format>> _mockFormatRepository;
         private readonly Mock<IRepository<Label>> _mockLabelRepository;
@@ -33,7 +33,7 @@ namespace KollectorScum.Tests.Services
         public MusicReleaseBatchProcessorTests()
         {
             _mockUnitOfWork = new Mock<IUnitOfWork>();
-            _mockMusicReleaseRepository = new Mock<IRepository<MusicRelease>>();
+            _mockMusicReleaseRepository = new Mock<IMusicReleaseRepository>();
             _mockCountryRepository = new Mock<IRepository<Country>>();
             _mockFormatRepository = new Mock<IRepository<Format>>();
             _mockLabelRepository = new Mock<IRepository<Label>>();
