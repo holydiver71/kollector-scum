@@ -12,8 +12,9 @@ namespace KollectorScum.Api.Interfaces
         /// </summary>
         /// <param name="username">Discogs username.</param>
         /// <param name="userId">Authenticated user identifier.</param>
+        /// <param name="personalToken">Optional Discogs personal access token for private collections.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
-        Task<DiscogsImportJobStatusDto> EnqueueImportAsync(string username, Guid userId, CancellationToken cancellationToken = default);
+        Task<DiscogsImportJobStatusDto> EnqueueImportAsync(string username, Guid userId, string? personalToken = null, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Gets the current status for a specific Discogs import job.
