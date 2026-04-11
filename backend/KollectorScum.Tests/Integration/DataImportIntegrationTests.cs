@@ -25,7 +25,8 @@ namespace KollectorScum.Tests.Integration
                 .Options;
 
             using var context = new KollectorScumDbContext(options);
-            using var unitOfWork = new UnitOfWork(context);
+            var mockUserContext = new Mock<IUserContext>();
+            using var unitOfWork = new UnitOfWork(context, mockUserContext.Object);
 
             var mockLogger = new Mock<ILogger<DataSeedingService>>();
             var mockMusicReleaseLogger = new Mock<ILogger<MusicReleaseImportService>>();

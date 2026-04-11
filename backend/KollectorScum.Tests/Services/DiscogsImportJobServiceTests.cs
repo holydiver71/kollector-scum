@@ -25,7 +25,7 @@ namespace KollectorScum.Tests.Services
         {
             using var context = CreateContext();
             var repository = new Repository<DiscogsImportJob>(context);
-            using var unitOfWork = new UnitOfWork(context);
+            using var unitOfWork = new UnitOfWork(context, new Mock<IUserContext>().Object);
             var queue = new Mock<IDiscogsImportJobQueue>();
             var importService = new Mock<IDiscogsCollectionImportService>();
             var logger = new Mock<ILogger<DiscogsImportJobService>>();
@@ -44,7 +44,7 @@ namespace KollectorScum.Tests.Services
         {
             using var context = CreateContext();
             var repository = new Repository<DiscogsImportJob>(context);
-            using var unitOfWork = new UnitOfWork(context);
+            using var unitOfWork = new UnitOfWork(context, new Mock<IUserContext>().Object);
             var queue = new Mock<IDiscogsImportJobQueue>();
             var importService = new Mock<IDiscogsCollectionImportService>();
             var logger = new Mock<ILogger<DiscogsImportJobService>>();
@@ -91,7 +91,7 @@ namespace KollectorScum.Tests.Services
         {
             using var context = CreateContext();
             var repository = new Repository<DiscogsImportJob>(context);
-            using var unitOfWork = new UnitOfWork(context);
+            using var unitOfWork = new UnitOfWork(context, new Mock<IUserContext>().Object);
             var queue = new Mock<IDiscogsImportJobQueue>();
             var importService = new Mock<IDiscogsCollectionImportService>();
             var logger = new Mock<ILogger<DiscogsImportJobService>>();

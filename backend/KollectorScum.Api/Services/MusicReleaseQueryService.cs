@@ -16,7 +16,7 @@ namespace KollectorScum.Api.Services
     /// </summary>
     public class MusicReleaseQueryService : IMusicReleaseQueryService
     {
-        private readonly IRepository<MusicRelease> _musicReleaseRepository;
+        private readonly IMusicReleaseRepository _musicReleaseRepository;
         private readonly IRepository<Artist> _artistRepository;
         private readonly IRepository<Label> _labelRepository;
         private readonly IMusicReleaseMapperService _mapper;
@@ -32,7 +32,7 @@ namespace KollectorScum.Api.Services
         };
 
         public MusicReleaseQueryService(
-            IRepository<MusicRelease> musicReleaseRepository,
+            IMusicReleaseRepository musicReleaseRepository,
             IRepository<Artist> artistRepository,
             IRepository<Label> labelRepository,
             IMusicReleaseMapperService mapper,
