@@ -222,10 +222,24 @@ export default function DiscogsAddReleaseWizard({
    */
   const handleEditRelease = (release: DiscogsRelease) => {
     const { formData, sourceImages } = mapDiscogsRelease(release);
+    // When handing off to the manual wizard for editing, prefer the original
+    // Discogs image URLs for the initial preview. The manual wizard expects
+    // `initialData.images` to be displayable (full URL or public path). We
+    // merge the source URLs over the generated filenames so the ImagesPanel
+    // can show the cover immediately even before the image is downloaded.
+    const prefill = {
+      ...formData,
+      images: {
+        ...(formData.images ?? {}),
+        coverFront: sourceImages.cover ?? formData.images?.coverFront,
+        thumbnail: sourceImages.thumbnail ?? formData.images?.thumbnail,
+      },
+    };
+
     setState((prev) => ({
       ...prev,
       selectedRelease: release,
-      mappedDraft: formData,
+      mappedDraft: prefill,
       sourceImages,
     }));
     setEditMode(true);
