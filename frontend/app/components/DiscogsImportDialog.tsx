@@ -291,6 +291,7 @@ export function DiscogsImportDialog({
   onSuccess,
 }: DiscogsImportDialogProps) {
   const [username, setUsername] = useState("");
+  const [personalToken, setPersonalToken] = useState("");
   const [isImporting, setIsImporting] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -307,6 +308,7 @@ export function DiscogsImportDialog({
         onSuccess();
       }
       setUsername("");
+      setPersonalToken("");
       setResult(null);
       setProgress(null);
       setError(null);
@@ -430,7 +432,7 @@ export function DiscogsImportDialog({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username: username.trim() }),
+        body: JSON.stringify({ username: username.trim(), personalToken: personalToken.trim() || undefined }),
         timeoutMs: 30000,
       });
 
@@ -551,6 +553,24 @@ export function DiscogsImportDialog({
                 className="w-full px-3 py-2 bg-[var(--theme-body-bg-start)] border border-[var(--theme-card-border)] rounded-md text-[var(--theme-card-text)] placeholder:text-[var(--theme-card-text)]/45 focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)] focus:border-transparent"
                 placeholder="your_username"
                 disabled={isImporting}
+              />
+              <label
+                htmlFor="discogs-personal-token"
+                className="block text-sm font-medium text-[var(--theme-card-text)] mt-4 mb-1"
+              >
+                Personal Access Token
+                <span className="ml-1 text-xs font-normal text-[var(--theme-card-text)]/50">(required for private collections)</span>
+              </label>
+              <input
+                id="discogs-personal-token"
+                type="password"
+                value={personalToken}
+                onChange={(e) => setPersonalToken(e.target.value)}
+                onKeyPress={handleKeyPress}
+                className="w-full px-3 py-2 bg-[var(--theme-body-bg-start)] border border-[var(--theme-card-border)] rounded-md text-[var(--theme-card-text)] placeholder:text-[var(--theme-card-text)]/45 focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)] focus:border-transparent"
+                placeholder="Generate at discogs.com/settings/developers"
+                disabled={isImporting}
+                autoComplete="off"
               />
               {error && (
                 <p className="text-red-400 text-sm mt-2" role="alert">

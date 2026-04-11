@@ -83,6 +83,13 @@ builder.Services
 
 var app = builder.Build();
 
+// Startup diagnostic: confirm Discogs token is loaded
+var discogsToken = app.Configuration["Discogs:Token"] ?? app.Configuration["Discogs__Token"];
+if (string.IsNullOrEmpty(discogsToken))
+    app.Logger.LogWarning("STARTUP: Discogs:Token is EMPTY — collection import will return 403.");
+else
+    app.Logger.LogInformation("STARTUP: Discogs:Token loaded (length={Len}).", discogsToken.Length);
+
 app.UseKollectorApiPipeline();
 
 // ── Endpoints ─────────────────────────────────────────────────────────────────

@@ -53,7 +53,7 @@ namespace KollectorScum.Api.Services
         /// <summary>
         /// Import user's collection from Discogs
         /// </summary>
-        public async Task<DiscogsImportResult> ImportCollectionAsync(string username, Guid userId, CancellationToken cancellationToken = default)
+        public async Task<DiscogsImportResult> ImportCollectionAsync(string username, Guid userId, string? personalToken = null, CancellationToken cancellationToken = default)
         {
             // Clear caches at the start of each import
             _artistCache.Clear();
@@ -80,7 +80,7 @@ namespace KollectorScum.Api.Services
                 _logger.LogInformation("Starting Discogs import for user {Username}", username);
 
                 // Fetch first page to get total count
-                var firstPage = await _discogsService.GetUserCollectionAsync(username, 1, 100);
+                var firstPage = await _discogsService.GetUserCollectionAsync(username, 1, 100, personalToken);
                 if (firstPage?.Pagination == null)
                 {
                     result.Success = false;
@@ -149,7 +149,7 @@ namespace KollectorScum.Api.Services
 
                     _logger.LogInformation("Processing page {Page} of {TotalPages}", page, totalPages);
                     
-                    var pageData = await _discogsService.GetUserCollectionAsync(username, page, 100);
+                    var pageData = await _discogsService.GetUserCollectionAsync(username, page, 100, personalToken);
                     if (pageData?.Releases != null)
                     {
                         await ProcessReleasesAsync(pageData.Releases, userId, result, importedDiscogsIds, remainingToProcess, cancellationToken);

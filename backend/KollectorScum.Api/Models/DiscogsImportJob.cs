@@ -31,6 +31,14 @@ namespace KollectorScum.Api.Models
         public string Username { get; set; } = string.Empty;
 
         /// <summary>
+        /// Gets or sets the user's personal Discogs OAuth/personal-access token,
+        /// used to authenticate collection requests on behalf of the owner.
+        /// Stored encrypted at rest; <c>null</c> means fall back to the global app token.
+        /// </summary>
+        [StringLength(200)]
+        public string? PersonalToken { get; set; }
+
+        /// <summary>
         /// Gets or sets the current job status.
         /// </summary>
         public DiscogsImportJobStatus Status { get; set; } = DiscogsImportJobStatus.Queued;

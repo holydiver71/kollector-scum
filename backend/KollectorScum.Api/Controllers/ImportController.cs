@@ -65,7 +65,7 @@ namespace KollectorScum.Api.Controllers
                 _logger.LogInformation("Starting Discogs import for user {UserId} from Discogs user {DiscogsUsername}", 
                     userId.Value, request.Username);
 
-                var job = await _jobService.EnqueueImportAsync(request.Username, userId.Value, HttpContext.RequestAborted);
+                var job = await _jobService.EnqueueImportAsync(request.Username, userId.Value, request.PersonalToken, HttpContext.RequestAborted);
                 return Accepted(job);
             }
             catch (InvalidOperationException ex)
@@ -108,5 +108,11 @@ namespace KollectorScum.Api.Controllers
         /// Discogs username
         /// </summary>
         public string Username { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Optional personal Discogs access token. Required when the collection is private.
+        /// Obtain from https://www.discogs.com/settings/developers
+        /// </summary>
+        public string? PersonalToken { get; set; }
     }
 }
