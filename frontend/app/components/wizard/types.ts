@@ -204,9 +204,19 @@ export function toCreateDto(data: WizardFormData): CreateMusicReleaseDto {
     // Images
     images: (data.images.coverFront || data.images.coverBack || data.images.thumbnail)
       ? {
-          coverFront: toImageFilename(data.images.coverFront),
-          coverBack: toImageFilename(data.images.coverBack),
-          thumbnail: toImageFilename(data.images.thumbnail),
+          // Preserve full HTTP(S) URLs so the detail page can render external
+          // images immediately (useful while background download to local
+          // storage is in progress). For other values (bare filenames or
+          // relative paths) send only the filename component.
+          coverFront: data.images.coverFront && (data.images.coverFront.startsWith('http://') || data.images.coverFront.startsWith('https://'))
+            ? data.images.coverFront
+            : toImageFilename(data.images.coverFront),
+          coverBack: data.images.coverBack && (data.images.coverBack.startsWith('http://') || data.images.coverBack.startsWith('https://'))
+            ? data.images.coverBack
+            : toImageFilename(data.images.coverBack),
+          thumbnail: data.images.thumbnail && (data.images.thumbnail.startsWith('http://') || data.images.thumbnail.startsWith('https://'))
+            ? data.images.thumbnail
+            : toImageFilename(data.images.thumbnail),
         }
       : undefined,
     // Media

@@ -5,19 +5,7 @@ import type { WizardFormData, ValidationErrors } from "../types";
 import ImageSearchModal from "../ImageSearchModal";
 import { fetchJson, API_BASE_URL } from "../../../lib/api";
 import { generateImageFilename } from "../discogs/mapDiscogsRelease";
-
-// ─── Max upload size (5 MB) ───────────────────────────────────────────────────
-const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
-
-const ALLOWED_IMAGE_TYPES = new Set([
-  "image/jpeg",
-  "image/jpg",
-  "image/png",
-  "image/gif",
-  "image/webp",
-  "image/bmp",
-  "image/tiff",
-]);
+import { useImageUpload } from "../useImageUpload";
 
 interface Props {
   /** Current form data */
@@ -59,8 +47,9 @@ function CoverFrontField({
   suggestedFilename,
 }: CoverFrontFieldProps) {
   const [searchOpen, setSearchOpen] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [searchUploading, setSearchUploading] = useState(false);
+  const { uploading: fileUploading, uploadError, upload, clearError: clearUploadError } = useImageUpload();
+  const uploading = fileUploading || searchUploading;
   // Holds a fully-resolved URL for the preview image.
   // Separate from `value` (which stores the bare filename for the DB) so that
   // local-dev storage paths (/cover-art/{userId}/{uuid}.jpg) show correctly.
@@ -83,10 +72,10 @@ function CoverFrontField({
   /** Called when the user picks a result from the search modal. */
   const handleSearchSelect = async (imageUrl: string, thumbnailUrl: string) => {
     setSearchOpen(false);
-    setUploadError(null);
+    clearUploadError();
     // Show the CAA image immediately while the backend saves it.
     setPreviewUrl(imageUrl);
-    setUploading(true);
+    setSearchUploading(true);
     try {
       // Download the full-resolution image and auto-generate a thumbnail server-side.
       const data = await fetchJson<{
@@ -117,7 +106,7 @@ function CoverFrontField({
       console.warn("Image download endpoint unavailable, falling back to direct URLs", err);
       onChange(imageUrl, thumbnailUrl);
     } finally {
-      setUploading(false);
+      setSearchUploading(false);
     }
   };
 
@@ -130,49 +119,19 @@ function CoverFrontField({
 
     if (!file) return;
 
-    setUploadError(null);
+    clearUploadError();
+    const data = await upload(file);
+    if (!data) return;
 
-    if (file.size > MAX_UPLOAD_BYTES) {
-      setUploadError(`File is too large. Maximum allowed size is ${MAX_UPLOAD_BYTES / 1024 / 1024} MB.`);
-      return;
-    }
-    if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
-      setUploadError("Only image files (JPEG, PNG, GIF, WebP, BMP, TIFF) are accepted.");
-      return;
-    }
-
-    setUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      // We use a raw fetch here because fetchJson doesn't handle multipart easily.
-      const token =
-        typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
-      const res = await fetch(
-        `${API_BASE_URL}/api/images/upload?generateThumbnail=true`,
-        {
-          method: "POST",
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-          body: formData,
-        },
+    if (data.publicUrl) {
+      setPreviewUrl(
+        data.publicUrl.startsWith("http")
+          ? data.publicUrl
+          : `${API_BASE_URL}/api/images/${data.publicUrl.replace(/^\/+/, "")}`,
       );
-      if (!res.ok) {
-        const msg = await res.text().catch(() => "Upload failed.");
-        throw new Error(msg);
-      }
-      const data: { filename: string; thumbnailFilename?: string; publicUrl?: string } = await res.json();
-      if (data.publicUrl) {
-        setPreviewUrl(
-          data.publicUrl.startsWith("http") ? data.publicUrl : `${API_BASE_URL}/api/images/${data.publicUrl.replace(/^\/+/, '')}`,
-        );
-      }
-      // Store publicUrl so the value is displayable on the Draft Preview step.
-      onChange(data.publicUrl ?? data.filename, data.thumbnailFilename ?? "");
-    } catch (err: unknown) {
-      setUploadError((err as Error).message ?? "Upload failed. Please try again.");
-    } finally {
-      setUploading(false);
     }
+    // Store publicUrl so the value is displayable on the Draft Preview step.
+    onChange(data.publicUrl ?? data.filename, data.thumbnailFilename ?? "");
   };
 
   return (

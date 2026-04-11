@@ -20,7 +20,7 @@ import ImagesPanel from "./panels/ImagesPanel";
 import TrackListingPanel from "./panels/TrackListingPanel";
 import ExternalLinksPanel from "./panels/ExternalLinksPanel";
 import DraftPreviewPanel from "./panels/DraftPreviewPanel";
-import ConfirmDialog from "./ConfirmDialog";
+import { ConfirmDialog } from "../ConfirmDialog";
 import { fetchJson, updateRelease } from "../../lib/api";
 
 // ─── Validation ────────────────────────────────────────────────────────────────
@@ -492,8 +492,11 @@ export default function AddReleaseWizard({
     </div>
     <ConfirmDialog
       isOpen={showCancelConfirm}
+      title="Discard changes?"
+      message="Any data you've entered will be lost. This action cannot be undone."
       onConfirm={() => { setShowCancelConfirm(false); onCancel?.(); }}
-      onDismiss={() => setShowCancelConfirm(false)}
+      onCancel={() => setShowCancelConfirm(false)}
+      isDangerous
     />
     </>
   );

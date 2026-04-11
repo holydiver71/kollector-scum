@@ -46,7 +46,7 @@ namespace KollectorScum.Api.Interfaces
         /// <summary>
         /// Repository for MusicRelease entities
         /// </summary>
-        IRepository<MusicRelease> MusicReleases { get; }
+        IMusicReleaseRepository MusicReleases { get; }
 
         /// <summary>
         /// Saves all changes to the database

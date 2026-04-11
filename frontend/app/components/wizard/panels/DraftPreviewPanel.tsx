@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { WizardFormData } from "../types";
 import { FormatIcon } from "../../FormatIcon";
 import { API_BASE_URL } from "../../../lib/api";
-import ConfirmDialog from "../ConfirmDialog";
+import { ConfirmDialog } from "../../ConfirmDialog";
 
 interface Props {
   /** Current wizard form data to preview */
@@ -592,8 +592,11 @@ export default function DraftPreviewPanel({
     </div>
     <ConfirmDialog
       isOpen={showCancelConfirm}
+      title="Discard changes?"
+      message="Any data you've entered will be lost. This action cannot be undone."
       onConfirm={() => { setShowCancelConfirm(false); onCancel?.(); }}
-      onDismiss={() => setShowCancelConfirm(false)}
+      onCancel={() => setShowCancelConfirm(false)}
+      isDangerous
     />
     </>
   );
