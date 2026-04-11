@@ -229,7 +229,6 @@ export function useLookupData<T extends LookupItem>(endpoint: string) {
       // Fetch all pages
       while (hasMore) {
         const response = await api.fetchJson<PaginatedResponse<T> | T[]>(`/api/${endpoint}?pageSize=1000&page=${currentPage}`);
-        console.log(`Fetched ${endpoint} page ${currentPage}:`, response);
         
         // Handle both paginated response and direct array response
         let items: T[] = [];
@@ -247,9 +246,9 @@ export function useLookupData<T extends LookupItem>(endpoint: string) {
       
       lookupCache[endpoint] = { data: allItems, timestamp: Date.now() };
       setData(allItems);
-      console.log(`Loaded ${allItems.length} total ${endpoint}, first: ${allItems[0]?.name}, last: ${allItems[allItems.length - 1]?.name}`);
       
     } catch (err) {
+      // Template literal contains only the hardcoded endpoint name (not user input); err passed as separate arg.
       console.error(`Error fetching ${endpoint}:`, err);
       setError(err instanceof Error ? err.message : "Failed to load data");
     } finally {

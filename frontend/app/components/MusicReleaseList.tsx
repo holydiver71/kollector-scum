@@ -319,6 +319,7 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
           const retryAfterMs = status === 429 && (err as ApiError).retryAfter
             ? (err as ApiError).retryAfter! * 1000
             : 1000 * Math.pow(2, attempts - 1);
+      // Template literal contains only numbers (attempts, status, retryAfterMs); err passed as separate arg.
           console.warn(`fetchReleases attempt ${attempts} failed (${status ?? 'network'}), retrying in ${retryAfterMs}ms`, err);
           await new Promise(r => setTimeout(r, retryAfterMs));
         }
