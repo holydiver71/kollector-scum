@@ -16,6 +16,7 @@ namespace KollectorScum.Api.Repositories
     public class UnitOfWork : IUnitOfWork
     {
         private readonly KollectorScumDbContext _context;
+        private readonly IUserContext _userContext;
         private IDbContextTransaction? _currentTransaction;
         private readonly Dictionary<Type, object> _repositories = new();
 
@@ -27,15 +28,17 @@ namespace KollectorScum.Api.Repositories
         private IRepository<Label>? _labels;
         private IRepository<Artist>? _artists;
         private IRepository<Packaging>? _packagings;
-        private IRepository<MusicRelease>? _musicReleases;
+        private IMusicReleaseRepository? _musicReleases;
 
         /// <summary>
         /// Initializes a new instance of the UnitOfWork class
         /// </summary>
         /// <param name="context">Database context</param>
-        public UnitOfWork(KollectorScumDbContext context)
+        /// <param name="userContext">User context for multi-tenant repository scoping</param>
+        public UnitOfWork(KollectorScumDbContext context, IUserContext userContext)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
+            _userContext = userContext ?? throw new ArgumentNullException(nameof(userContext));
         }
 
         /// <summary>
@@ -97,9 +100,9 @@ namespace KollectorScum.Api.Repositories
         /// <summary>
         /// Repository for MusicRelease entities
         /// </summary>
-        public IRepository<MusicRelease> MusicReleases
+        public IMusicReleaseRepository MusicReleases
         {
-            get { return _musicReleases ??= new Repository<MusicRelease>(_context); }
+            get { return _musicReleases ??= new MusicReleaseRepository(_context, _userContext); }
         }
 
         /// <summary>

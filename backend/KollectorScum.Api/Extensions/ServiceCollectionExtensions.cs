@@ -273,6 +273,7 @@ public static class ServiceCollectionExtensions
             typeof(KollectorScum.Api.Repositories.Repository<>));
         services.AddScoped<IUnitOfWork, KollectorScum.Api.Repositories.UnitOfWork>();
 
+        services.AddScoped<IMusicReleaseRepository, KollectorScum.Api.Repositories.MusicReleaseRepository>();
         services.AddScoped<IUserRepository, KollectorScum.Api.Repositories.UserRepository>();
         services.AddScoped<IUserProfileRepository, KollectorScum.Api.Repositories.UserProfileRepository>();
         services.AddScoped<IUserInvitationRepository, KollectorScum.Api.Repositories.UserInvitationRepository>();

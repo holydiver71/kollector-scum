@@ -99,7 +99,7 @@ public class DiscogsCollectionImportIntegrationTests : IDisposable
         public IRepository<Label> Labels { get; }
         public IRepository<Artist> Artists { get; }
         public IRepository<Packaging> Packagings { get; }
-        public IRepository<MusicRelease> MusicReleases => _musicReleases;
+        public IMusicReleaseRepository MusicReleases => _musicReleases;
 
         public Task<int> SaveChangesAsync() => _context.SaveChangesAsync();
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken) => _context.SaveChangesAsync(cancellationToken);
@@ -164,7 +164,7 @@ public class DiscogsCollectionImportIntegrationTests : IDisposable
         }
     }
 
-    private sealed class CountingMusicReleaseRepository : Repository<MusicRelease>
+    private sealed class CountingMusicReleaseRepository : Repository<MusicRelease>, IMusicReleaseRepository
     {
         public int AddRangeCallCount { get; private set; }
 
@@ -177,6 +177,21 @@ public class DiscogsCollectionImportIntegrationTests : IDisposable
             AddRangeCallCount++;
             await base.AddRangeAsync(entities);
         }
+
+        public Task<IEnumerable<MusicRelease>> GetPaginatedAsync(int page, int pageSize,
+            string? search = null, int? artistId = null, int? genreId = null,
+            int? formatId = null, int? countryId = null, int? labelId = null)
+            => Task.FromResult(Enumerable.Empty<MusicRelease>());
+
+        public Task<int> GetTotalCountAsync(string? search = null, int? artistId = null,
+            int? genreId = null, int? formatId = null, int? countryId = null, int? labelId = null)
+            => Task.FromResult(0);
+
+        public Task<MusicRelease?> GetWithDetailsAsync(int id)
+            => Task.FromResult<MusicRelease?>(null);
+
+        public Task<IEnumerable<MusicRelease>> SearchAsync(string searchTerm)
+            => Task.FromResult(Enumerable.Empty<MusicRelease>());
     }
 
     private sealed class FakeDiscogsService : IDiscogsService

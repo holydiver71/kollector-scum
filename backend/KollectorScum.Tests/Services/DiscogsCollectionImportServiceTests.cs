@@ -19,7 +19,7 @@ namespace KollectorScum.Tests.Services
     {
         private readonly Mock<IDiscogsService> _mockDiscogsService;
         private readonly Mock<IUnitOfWork> _mockUnitOfWork;
-        private readonly Mock<IRepository<MusicRelease>> _mockMusicRepo;
+        private readonly Mock<IMusicReleaseRepository> _mockMusicRepo;
         private readonly Mock<IRepository<Label>> _mockLabelRepo;
         private readonly Mock<IDiscogsImageService> _mockImageService;
         private readonly Mock<ILogger<DiscogsCollectionImportService>> _mockLogger;
@@ -29,7 +29,7 @@ namespace KollectorScum.Tests.Services
         {
             _mockDiscogsService = new Mock<IDiscogsService>();
             _mockUnitOfWork = new Mock<IUnitOfWork>();
-            _mockMusicRepo = new Mock<IRepository<MusicRelease>>();
+            _mockMusicRepo = new Mock<IMusicReleaseRepository>();
             _mockLabelRepo = new Mock<IRepository<Label>>();
             _mockImageService = new Mock<IDiscogsImageService>();
             _mockLogger = new Mock<ILogger<DiscogsCollectionImportService>>();

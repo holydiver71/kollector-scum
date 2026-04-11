@@ -21,7 +21,7 @@ namespace KollectorScum.Tests.Services
         private readonly Mock<IJsonFileReader> _mockFileReader;
         private readonly Mock<IMusicReleaseBatchProcessor> _mockBatchProcessor;
         private readonly Mock<IUnitOfWork> _mockUnitOfWork;
-        private readonly Mock<IRepository<MusicRelease>> _mockMusicReleaseRepository;
+        private readonly Mock<IMusicReleaseRepository> _mockMusicReleaseRepository;
         private readonly Mock<ILogger<MusicReleaseImportOrchestrator>> _mockLogger;
         private readonly MusicReleaseImportOrchestrator _service;
         private readonly string _testDataPath = "/test/data/path";
@@ -31,7 +31,7 @@ namespace KollectorScum.Tests.Services
             _mockFileReader = new Mock<IJsonFileReader>();
             _mockBatchProcessor = new Mock<IMusicReleaseBatchProcessor>();
             _mockUnitOfWork = new Mock<IUnitOfWork>();
-            _mockMusicReleaseRepository = new Mock<IRepository<MusicRelease>>();
+            _mockMusicReleaseRepository = new Mock<IMusicReleaseRepository>();
             _mockLogger = new Mock<ILogger<MusicReleaseImportOrchestrator>>();
 
             _mockUnitOfWork.Setup(u => u.MusicReleases).Returns(_mockMusicReleaseRepository.Object);
