@@ -423,6 +423,7 @@ export default function AddReleaseForm({ onSuccess, onCancel, initialData, relea
       }
     } catch (err) {
       const error = err as { message?: string; status?: number; details?: string | unknown };
+      // Template literal contains only static strings (ternary between literals); error passed as separate arg.
       console.error(`Error ${releaseId ? 'updating' : 'creating'} release:`, error);
       // Show validation details if available
       let errorMessage = error.message || `Failed to ${releaseId ? 'update' : 'create'} release. Please try again.`;

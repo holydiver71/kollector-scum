@@ -54,6 +54,7 @@ async function fetchLookup(path: string): Promise<LookupItem[] | null> {
       // Only retry on known HTTP status codes — plain errors (no status) are not retried
       const isRetryable = apiErr?.status === 429 || (!!apiErr?.status && apiErr.status >= 500);
       if (!isRetryable || attempt >= maxAttempts) {
+        // Template literal contains only the internal API path and attempt count (no user PII); err passed as separate arg.
         console.warn(`useReleaseLookups: giving up on ${path} after ${attempt} attempt(s):`, err);
         return null;
       }
