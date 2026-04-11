@@ -162,7 +162,11 @@ namespace KollectorScum.Api.Repositories
         }
 
         /// <summary>
-        /// Updates an existing entity
+        /// Updates an existing entity.
+        /// If another instance with the same primary key is already tracked by the DbContext
+        /// (e.g. because the entity was previously imported in the same scope and loaded
+        /// again via AsNoTracking), the tracked instance's values are updated in place
+        /// instead of attaching a second copy, which would throw an identity-conflict exception.
         /// </summary>
         /// <param name="entity">Entity to update</param>
         public virtual void Update(T entity)
@@ -170,7 +174,21 @@ namespace KollectorScum.Api.Repositories
             if (entity == null)
                 throw new ArgumentNullException(nameof(entity));
 
-            _dbSet.Update(entity);
+            var entityType = _context.Model.FindEntityType(typeof(T))!;
+            var primaryKeyProperties = entityType.FindPrimaryKey()!.Properties;
+
+            var existingEntry = _context.ChangeTracker.Entries<T>()
+                .FirstOrDefault(e => primaryKeyProperties.All(p =>
+                    Equals(p.PropertyInfo!.GetValue(e.Entity), p.PropertyInfo!.GetValue(entity))));
+
+            if (existingEntry != null)
+            {
+                existingEntry.CurrentValues.SetValues(entity);
+            }
+            else
+            {
+                _dbSet.Update(entity);
+            }
         }
 
         /// <summary>

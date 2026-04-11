@@ -124,12 +124,12 @@ namespace KollectorScum.Tests.Services
             _mockEnv.SetupGet(e => e.EnvironmentName).Returns("Development");
 
             // Simulate 3 pages of 100 => total 300
-            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100))
+            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100, null))
                 .ReturnsAsync(MakePage(1, 100, 3, 300));
             // Page 2/3 should not be called when limit applies, but set them up defensively
-            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 2, 100))
+            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 2, 100, null))
                 .ReturnsAsync(MakePage(2, 100, 3, 300));
-            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 3, 100))
+            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 3, 100, null))
                 .ReturnsAsync(MakePage(3, 100, 3, 300));
 
             var service = CreateService();
@@ -142,8 +142,8 @@ namespace KollectorScum.Tests.Services
             Assert.Equal(300, result.TotalReleases);
             Assert.Equal(100, result.ImportedReleases);
             // Only first page should be requested when limit applies
-            _mockDiscogsService.Verify(s => s.GetUserCollectionAsync(username, 1, 100), Times.Once);
-            _mockDiscogsService.Verify(s => s.GetUserCollectionAsync(username, 2, 100), Times.Never);
+            _mockDiscogsService.Verify(s => s.GetUserCollectionAsync(username, 1, 100, null), Times.Once);
+            _mockDiscogsService.Verify(s => s.GetUserCollectionAsync(username, 2, 100, null), Times.Never);
         }
 
         [Fact]
@@ -155,9 +155,9 @@ namespace KollectorScum.Tests.Services
             _mockEnv.SetupGet(e => e.EnvironmentName).Returns("Production");
 
             // Simulate 2 pages of 50 => total 100 to keep test fast
-            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100))
+            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100, null))
                 .ReturnsAsync(MakePage(1, 50, 2, 100));
-            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 2, 100))
+            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 2, 100, null))
                 .ReturnsAsync(MakePage(2, 50, 2, 100));
 
             var service = CreateService();
@@ -169,8 +169,8 @@ namespace KollectorScum.Tests.Services
             Assert.NotNull(result);
             Assert.Equal(100, result.TotalReleases);
             Assert.Equal(100, result.ImportedReleases);
-            _mockDiscogsService.Verify(s => s.GetUserCollectionAsync(username, 1, 100), Times.Once);
-            _mockDiscogsService.Verify(s => s.GetUserCollectionAsync(username, 2, 100), Times.Once);
+            _mockDiscogsService.Verify(s => s.GetUserCollectionAsync(username, 1, 100, null), Times.Once);
+            _mockDiscogsService.Verify(s => s.GetUserCollectionAsync(username, 2, 100, null), Times.Once);
         }
 
         [Fact]
@@ -204,7 +204,7 @@ namespace KollectorScum.Tests.Services
                 }
             };
 
-            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100))
+            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100, null))
                 .ReturnsAsync(MakePage(2, firstRelease, secondRelease));
 
             _mockUnitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
@@ -275,7 +275,7 @@ namespace KollectorScum.Tests.Services
                 }
             };
 
-            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100))
+            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100, null))
                 .ReturnsAsync(MakePage(3, firstCopy, secondCopy, distinctRelease));
 
             List<MusicRelease>? inserted = null;
@@ -364,7 +364,7 @@ namespace KollectorScum.Tests.Services
                     userId))
                 .ReturnsAsync("mirrored.jpg");
 
-            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100))
+            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100, null))
                 .ReturnsAsync(MakePage(1, release));
 
             var service = CreateService();
@@ -427,7 +427,7 @@ namespace KollectorScum.Tests.Services
                 }
             };
 
-            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100))
+            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100, null))
                 .ReturnsAsync(MakePage(1, release));
 
             _mockDiscogsService.Setup(s => s.GetReleaseDetailsAsync("314"))
@@ -498,7 +498,7 @@ namespace KollectorScum.Tests.Services
                 }
             };
 
-            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100))
+            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100, null))
                 .ReturnsAsync(MakePage(1, collectionRelease));
             _mockDiscogsService.Setup(s => s.GetReleaseDetailsAsync("8895299"))
                 .ReturnsAsync(new DiscogsReleaseDto
@@ -555,7 +555,7 @@ namespace KollectorScum.Tests.Services
                 }
             };
 
-            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100))
+            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100, null))
                 .ReturnsAsync(MakePage(1, release));
             _mockDiscogsService.Setup(s => s.GetReleaseDetailsAsync("77"))
                 .ReturnsAsync((DiscogsReleaseDto?)null);
@@ -609,7 +609,7 @@ namespace KollectorScum.Tests.Services
                 }
             };
 
-            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100))
+            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100, null))
                 .ReturnsAsync(MakePage(1, release));
 
             var service = CreateService();
@@ -650,7 +650,7 @@ namespace KollectorScum.Tests.Services
                 BasicInformation = new DiscogsBasicInfoDto { Id = 777, Title = "UPC Test" }
             };
 
-            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100))
+            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100, null))
                 .ReturnsAsync(MakePage(1, release));
             _mockDiscogsService.Setup(s => s.GetReleaseDetailsAsync("777"))
                 .ReturnsAsync(new DiscogsReleaseDto
@@ -696,7 +696,7 @@ namespace KollectorScum.Tests.Services
                 BasicInformation = new DiscogsBasicInfoDto { Id = 99999, Title = "Link Test" }
             };
 
-            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100))
+            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100, null))
                 .ReturnsAsync(MakePage(1, release));
 
             var service = CreateService();
@@ -746,7 +746,7 @@ namespace KollectorScum.Tests.Services
                 BasicInformation = new DiscogsBasicInfoDto { Id = 555, Title = "Country Test" }
             };
 
-            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100))
+            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100, null))
                 .ReturnsAsync(MakePage(1, release));
             _mockDiscogsService.Setup(s => s.GetReleaseDetailsAsync("555"))
                 .ReturnsAsync(new DiscogsReleaseDto
@@ -813,7 +813,7 @@ namespace KollectorScum.Tests.Services
                 BasicInformation = new DiscogsBasicInfoDto { Id = 4326, Title = "Another Return" }
             };
 
-            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100))
+            _mockDiscogsService.Setup(s => s.GetUserCollectionAsync(username, 1, 100, null))
                 .ReturnsAsync(MakePage(1, release));
             _mockDiscogsService.Setup(s => s.GetReleaseDetailsAsync("4326"))
                 .ReturnsAsync(new DiscogsReleaseDto { Country = "UK", Tracklist = new List<DiscogsTrackDto>() });

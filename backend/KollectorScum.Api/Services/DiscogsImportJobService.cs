@@ -35,7 +35,7 @@ namespace KollectorScum.Api.Services
         }
 
         /// <inheritdoc />
-        public async Task<DiscogsImportJobStatusDto> EnqueueImportAsync(string username, Guid userId, CancellationToken cancellationToken = default)
+        public async Task<DiscogsImportJobStatusDto> EnqueueImportAsync(string username, Guid userId, string? personalToken = null, CancellationToken cancellationToken = default)
         {
             var normalizedUsername = username.Trim();
 
@@ -53,6 +53,7 @@ namespace KollectorScum.Api.Services
                 JobId = Guid.NewGuid(),
                 UserId = userId,
                 Username = normalizedUsername,
+                PersonalToken = personalToken,
                 Status = DiscogsImportJobStatus.Queued,
                 CreatedAtUtc = DateTime.UtcNow,
                 LastUpdatedUtc = DateTime.UtcNow,

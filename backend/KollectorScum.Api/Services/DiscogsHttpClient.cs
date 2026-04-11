@@ -49,8 +49,13 @@ namespace KollectorScum.Api.Services
             // Add authorization token if provided
             if (!string.IsNullOrEmpty(_settings.Token))
             {
+                _logger.LogInformation("Discogs: configuring Authorization header (token length={Len})", _settings.Token.Length);
                 _httpClient.DefaultRequestHeaders.Authorization =
                     new AuthenticationHeaderValue("Discogs", $"token={_settings.Token}");
+            }
+            else
+            {
+                _logger.LogWarning("Discogs: no token configured — unauthenticated requests will be rate-limited and private collections will return 403.");
             }
         }
 
@@ -60,8 +65,9 @@ namespace KollectorScum.Api.Services
         /// </summary>
         /// <param name="requestUri">Relative URI to request.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
+        /// <param name="personalToken">Optional per-request Discogs personal token that overrides the global app token.</param>
         /// <returns>Response body string, or <c>null</c> when the request fails non-transiently.</returns>
-        private async Task<string?> ExecuteGetAsync(string requestUri, CancellationToken cancellationToken = default)
+        private async Task<string?> ExecuteGetAsync(string requestUri, CancellationToken cancellationToken = default, string? personalToken = null)
         {
             for (int attempt = 0; attempt <= MaxRetryAttempts; attempt++)
             {
@@ -77,7 +83,27 @@ namespace KollectorScum.Api.Services
                     _rateLimitRemaining = _rateLimitTotal;
                 }
 
-                var response = await _httpClient.GetAsync(requestUri, cancellationToken);
+                using var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
+
+                // Always set the Authorization header explicitly on the request message.
+                // Use the per-request personal token when provided, otherwise use the global app token.
+                var tokenToUse = !string.IsNullOrEmpty(personalToken) ? personalToken : _settings.Token;
+                _logger.LogInformation("Discogs token debug: personalToken={HasPersonal}, settingsToken={HasSettings}, tokenToUse.len={Len}, tokenToUse.prefix={Prefix}",
+                    !string.IsNullOrEmpty(personalToken), !string.IsNullOrEmpty(_settings.Token), tokenToUse?.Length ?? 0,
+                    tokenToUse?[..Math.Min(8, tokenToUse.Length)] ?? "null");
+                if (!string.IsNullOrEmpty(tokenToUse))
+                {
+                    request.Headers.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Discogs", $"token={tokenToUse}");
+                    _logger.LogInformation("Discogs request auth: token source={Source}, length={Len}",
+                        !string.IsNullOrEmpty(personalToken) ? "personal" : "global", tokenToUse.Length);
+                }
+                else
+                {
+                    _logger.LogWarning("Discogs request auth: no token available — request will be unauthenticated");
+                }
+
+                var response = await _httpClient.SendAsync(request, cancellationToken);
 
                 // Update observed rate-limit state from response headers.
                 UpdateRateLimitFromResponse(response);
@@ -104,7 +130,8 @@ namespace KollectorScum.Api.Services
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    _logger.LogWarning("Discogs API returned {StatusCode} for {Uri}.", response.StatusCode, requestUri);
+                    var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
+                    _logger.LogWarning("Discogs API returned {StatusCode} for {Uri}. Body: {Body}", response.StatusCode, requestUri, errorBody);
                     return null;
                 }
 
@@ -278,14 +305,14 @@ namespace KollectorScum.Api.Services
         /// <summary>
         /// Get user's collection
         /// </summary>
-        public async Task<string?> GetUserCollectionAsync(string username, int page = 1, int perPage = 100)
+        public async Task<string?> GetUserCollectionAsync(string username, int page = 1, int perPage = 100, string? personalToken = null)
         {
             try
             {
                 _logger.LogInformation("Fetching collection for user: {Username}, page: {Page}", username, page);
                 perPage = Math.Clamp(perPage, 1, 100);
                 var requestUri = $"/users/{Uri.EscapeDataString(username)}/collection/folders/0/releases?page={page}&per_page={perPage}";
-                var content = await ExecuteGetAsync(requestUri);
+                var content = await ExecuteGetAsync(requestUri, personalToken: personalToken);
                 if (content != null)
                     _logger.LogInformation("Successfully fetched collection page {Page} for user: {Username}", page, username);
                 return content;

@@ -1,0 +1,3 @@
+semgrep=0
+detect_secrets=0
+osv=0

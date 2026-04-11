@@ -55,7 +55,7 @@ namespace KollectorScum.Api.Interfaces
         /// <param name="page">Page number (default: 1)</param>
         /// <param name="perPage">Items per page (default: 100, max: 100)</param>
         /// <returns>Collection response with releases and pagination info</returns>
-        Task<DiscogsCollectionResponseDto?> GetUserCollectionAsync(string username, int page = 1, int perPage = 100);
+        Task<DiscogsCollectionResponseDto?> GetUserCollectionAsync(string username, int page = 1, int perPage = 100, string? personalToken = null);
 
         /// <summary>
         /// Registers a callback that is invoked when the underlying HTTP client enters or

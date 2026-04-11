@@ -1,0 +1,871 @@
+{
+  "tool": "security:osv",
+  "analyzer_type": "security",
+  "success": true,
+  "exit_code": 0,
+  "started_at": "2026-04-09T09:23:25.557012+00:00",
+  "completed_at": "2026-04-09T09:23:29.109900+00:00",
+  "duration_ms": 3552,
+  "target": "/Users/andy.shutt/dotnetProjects/kollector-scum",
+  "findings": [
+    {
+      "id": "SECURITY001",
+      "title": "OSV: GHSA-2g4f-4pwh-qvx6",
+      "description": "ajv has ReDoS when using `$data` option",
+      "severity": "medium",
+      "recommendation": "Upgrade to a fixed version of the dependency.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/package-lock.json",
+      "line_number": 1,
+      "evidence": {
+        "package": "ajv",
+        "version": "6.12.6",
+        "vulnerability_id": "GHSA-2g4f-4pwh-qvx6",
+        "source": "osv-scanner"
+      }
+    },
+    {
+      "id": "SECURITY002",
+      "title": "OSV: GHSA-f886-m6hf-6m8v",
+      "description": "brace-expansion: Zero-step sequence causes process hang and memory exhaustion",
+      "severity": "medium",
+      "recommendation": "Upgrade to a fixed version of the dependency.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/package-lock.json",
+      "line_number": 1,
+      "evidence": {
+        "package": "brace-expansion",
+        "version": "1.1.12",
+        "vulnerability_id": "GHSA-f886-m6hf-6m8v",
+        "source": "osv-scanner"
+      }
+    },
+    {
+      "id": "SECURITY003",
+      "title": "OSV: GHSA-f886-m6hf-6m8v",
+      "description": "brace-expansion: Zero-step sequence causes process hang and memory exhaustion",
+      "severity": "medium",
+      "recommendation": "Upgrade to a fixed version of the dependency.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/package-lock.json",
+      "line_number": 1,
+      "evidence": {
+        "package": "brace-expansion",
+        "version": "2.0.2",
+        "vulnerability_id": "GHSA-f886-m6hf-6m8v",
+        "source": "osv-scanner"
+      }
+    },
+    {
+      "id": "SECURITY004",
+      "title": "OSV: GHSA-rf6f-7fwh-wjgh",
+      "description": "Prototype Pollution via parse() in NodeJS flatted",
+      "severity": "high",
+      "recommendation": "Upgrade to a fixed version of the dependency.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/package-lock.json",
+      "line_number": 1,
+      "evidence": {
+        "package": "flatted",
+        "version": "3.4.0",
+        "vulnerability_id": "GHSA-rf6f-7fwh-wjgh",
+        "source": "osv-scanner"
+      }
+    },
+    {
+      "id": "SECURITY005",
+      "title": "OSV: GHSA-23c5-xmqv-rm74",
+      "description": "minimatch ReDoS: nested *() extglobs generate catastrophically backtracking regular expressions",
+      "severity": "high",
+      "recommendation": "Upgrade to a fixed version of the dependency.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/package-lock.json",
+      "line_number": 1,
+      "evidence": {
+        "package": "minimatch",
+        "version": "3.1.2",
+        "vulnerability_id": "GHSA-23c5-xmqv-rm74",
+        "source": "osv-scanner"
+      }
+    },
+    {
+      "id": "SECURITY006",
+      "title": "OSV: GHSA-3ppc-4f35-3m26",
+      "description": "minimatch has a ReDoS via repeated wildcards with non-matching literal in pattern",
+      "severity": "high",
+      "recommendation": "Upgrade to a fixed version of the dependency.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/package-lock.json",
+      "line_number": 1,
+      "evidence": {
+        "package": "minimatch",
+        "version": "3.1.2",
+        "vulnerability_id": "GHSA-3ppc-4f35-3m26",
+        "source": "osv-scanner"
+      }
+    },
+    {
+      "id": "SECURITY007",
+      "title": "OSV: GHSA-7r86-cg39-jmmj",
+      "description": "minimatch has ReDoS: matchOne() combinatorial backtracking via multiple non-adjacent GLOBSTAR segments",
+      "severity": "high",
+      "recommendation": "Upgrade to a fixed version of the dependency.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/package-lock.json",
+      "line_number": 1,
+      "evidence": {
+        "package": "minimatch",
+        "version": "3.1.2",
+        "vulnerability_id": "GHSA-7r86-cg39-jmmj",
+        "source": "osv-scanner"
+      }
+    },
+    {
+      "id": "SECURITY008",
+      "title": "OSV: GHSA-23c5-xmqv-rm74",
+      "description": "minimatch ReDoS: nested *() extglobs generate catastrophically backtracking regular expressions",
+      "severity": "high",
+      "recommendation": "Upgrade to a fixed version of the dependency.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/package-lock.json",
+      "line_number": 1,
+      "evidence": {
+        "package": "minimatch",
+        "version": "9.0.5",
+        "vulnerability_id": "GHSA-23c5-xmqv-rm74",
+        "source": "osv-scanner"
+      }
+    },
+    {
+      "id": "SECURITY009",
+      "title": "OSV: GHSA-3ppc-4f35-3m26",
+      "description": "minimatch has a ReDoS via repeated wildcards with non-matching literal in pattern",
+      "severity": "high",
+      "recommendation": "Upgrade to a fixed version of the dependency.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/package-lock.json",
+      "line_number": 1,
+      "evidence": {
+        "package": "minimatch",
+        "version": "9.0.5",
+        "vulnerability_id": "GHSA-3ppc-4f35-3m26",
+        "source": "osv-scanner"
+      }
+    },
+    {
+      "id": "SECURITY010",
+      "title": "OSV: GHSA-7r86-cg39-jmmj",
+      "description": "minimatch has ReDoS: matchOne() combinatorial backtracking via multiple non-adjacent GLOBSTAR segments",
+      "severity": "high",
+      "recommendation": "Upgrade to a fixed version of the dependency.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/package-lock.json",
+      "line_number": 1,
+      "evidence": {
+        "package": "minimatch",
+        "version": "9.0.5",
+        "vulnerability_id": "GHSA-7r86-cg39-jmmj",
+        "source": "osv-scanner"
+      }
+    },
+    {
+      "id": "SECURITY011",
+      "title": "OSV: GHSA-3x4c-7xq6-9pq8",
+      "description": "Next.js: Unbounded next/image disk cache growth can exhaust storage",
+      "severity": "medium",
+      "recommendation": "Upgrade to a fixed version of the dependency.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/package-lock.json",
+      "line_number": 1,
+      "evidence": {
+        "package": "next",
+        "version": "15.5.12",
+        "vulnerability_id": "GHSA-3x4c-7xq6-9pq8",
+        "source": "osv-scanner"
+      }
+    },
+    {
+      "id": "SECURITY012",
+      "title": "OSV: GHSA-ggv3-7p47-pfv8",
+      "description": "Next.js: HTTP request smuggling in rewrites",
+      "severity": "medium",
+      "recommendation": "Upgrade to a fixed version of the dependency.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/package-lock.json",
+      "line_number": 1,
+      "evidence": {
+        "package": "next",
+        "version": "15.5.12",
+        "vulnerability_id": "GHSA-ggv3-7p47-pfv8",
+        "source": "osv-scanner"
+      }
+    },
+    {
+      "id": "SECURITY013",
+      "title": "OSV: GHSA-3v7f-55p6-f55p",
+      "description": "Picomatch: Method Injection in POSIX Character Classes causes incorrect Glob Matching",
+      "severity": "medium",
+      "recommendation": "Upgrade to a fixed version of the dependency.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/package-lock.json",
+      "line_number": 1,
+      "evidence": {
+        "package": "picomatch",
+        "version": "2.3.1",
+        "vulnerability_id": "GHSA-3v7f-55p6-f55p",
+        "source": "osv-scanner"
+      }
+    },
+    {
+      "id": "SECURITY014",
+      "title": "OSV: GHSA-c2c7-rcm5-vvqj",
+      "description": "Picomatch has a ReDoS vulnerability via extglob quantifiers",
+      "severity": "high",
+      "recommendation": "Upgrade to a fixed version of the dependency.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/package-lock.json",
+      "line_number": 1,
+      "evidence": {
+        "package": "picomatch",
+        "version": "2.3.1",
+        "vulnerability_id": "GHSA-c2c7-rcm5-vvqj",
+        "source": "osv-scanner"
+      }
+    },
+    {
+      "id": "SECURITY015",
+      "title": "OSV: GHSA-3v7f-55p6-f55p",
+      "description": "Picomatch: Method Injection in POSIX Character Classes causes incorrect Glob Matching",
+      "severity": "medium",
+      "recommendation": "Upgrade to a fixed version of the dependency.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/package-lock.json",
+      "line_number": 1,
+      "evidence": {
+        "package": "picomatch",
+        "version": "4.0.3",
+        "vulnerability_id": "GHSA-3v7f-55p6-f55p",
+        "source": "osv-scanner"
+      }
+    },
+    {
+      "id": "SECURITY016",
+      "title": "OSV: GHSA-c2c7-rcm5-vvqj",
+      "description": "Picomatch has a ReDoS vulnerability via extglob quantifiers",
+      "severity": "high",
+      "recommendation": "Upgrade to a fixed version of the dependency.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/package-lock.json",
+      "line_number": 1,
+      "evidence": {
+        "package": "picomatch",
+        "version": "4.0.3",
+        "vulnerability_id": "GHSA-c2c7-rcm5-vvqj",
+        "source": "osv-scanner"
+      }
+    },
+    {
+      "id": "SECURITY017",
+      "title": "OSV: GHSA-2g4f-4pwh-qvx6",
+      "description": "ajv has ReDoS when using `$data` option",
+      "severity": "medium",
+      "recommendation": "Upgrade to a fixed version of the dependency.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/package-lock.json",
+      "line_number": 1,
+      "evidence": {
+        "package": "ajv",
+        "version": "6.12.6",
+        "vulnerability_id": "GHSA-2g4f-4pwh-qvx6",
+        "source": "osv-scanner"
+      }
+    },
+    {
+      "id": "SECURITY018",
+      "title": "OSV: GHSA-43fc-jf86-j433",
+      "description": "Axios is Vulnerable to Denial of Service via __proto__ Key in mergeConfig",
+      "severity": "high",
+      "recommendation": "Upgrade to a fixed version of the dependency.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/package-lock.json",
+      "line_number": 1,
+      "evidence": {
+        "package": "axios",
+        "version": "1.13.2",
+        "vulnerability_id": "GHSA-43fc-jf86-j433",
+        "source": "osv-scanner"
+      }
+    },
+    {
+      "id": "SECURITY019",
+      "title": "OSV: GHSA-f886-m6hf-6m8v",
+      "description": "brace-expansion: Zero-step sequence causes process hang and memory exhaustion",
+      "severity": "medium",
+      "recommendation": "Upgrade to a fixed version of the dependency.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/package-lock.json",
+      "line_number": 1,
+      "evidence": {
+        "package": "brace-expansion",
+        "version": "1.1.12",
+        "vulnerability_id": "GHSA-f886-m6hf-6m8v",
+        "source": "osv-scanner"
+      }
+    },
+    {
+      "id": "SECURITY020",
+      "title": "OSV: GHSA-25h7-pfq9-p65f",
+      "description": "flatted vulnerable to unbounded recursion DoS in parse() revive phase",
+      "severity": "high",
+      "recommendation": "Upgrade to a fixed version of the dependency.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/package-lock.json",
+      "line_number": 1,
+      "evidence": {
+        "package": "flatted",
+        "version": "3.3.3",
+        "vulnerability_id": "GHSA-25h7-pfq9-p65f",
+        "source": "osv-scanner"
+      }
+    },
+    {
+      "id": "SECURITY021",
+      "title": "OSV: GHSA-rf6f-7fwh-wjgh",
+      "description": "Prototype Pollution via parse() in NodeJS flatted",
+      "severity": "high",
+      "recommendation": "Upgrade to a fixed version of the dependency.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/package-lock.json",
+      "line_number": 1,
+      "evidence": {
+        "package": "flatted",
+        "version": "3.3.3",
+        "vulnerability_id": "GHSA-rf6f-7fwh-wjgh",
+        "source": "osv-scanner"
+      }
+    },
+    {
+      "id": "SECURITY022",
+      "title": "OSV: GHSA-23c5-xmqv-rm74",
+      "description": "minimatch ReDoS: nested *() extglobs generate catastrophically backtracking regular expressions",
+      "severity": "high",
+      "recommendation": "Upgrade to a fixed version of the dependency.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/package-lock.json",
+      "line_number": 1,
+      "evidence": {
+        "package": "minimatch",
+        "version": "3.1.2",
+        "vulnerability_id": "GHSA-23c5-xmqv-rm74",
+        "source": "osv-scanner"
+      }
+    },
+    {
+      "id": "SECURITY023",
+      "title": "OSV: GHSA-3ppc-4f35-3m26",
+      "description": "minimatch has a ReDoS via repeated wildcards with non-matching literal in pattern",
+      "severity": "high",
+      "recommendation": "Upgrade to a fixed version of the dependency.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/package-lock.json",
+      "line_number": 1,
+      "evidence": {
+        "package": "minimatch",
+        "version": "3.1.2",
+        "vulnerability_id": "GHSA-3ppc-4f35-3m26",
+        "source": "osv-scanner"
+      }
+    },
+    {
+      "id": "SECURITY024",
+      "title": "OSV: GHSA-7r86-cg39-jmmj",
+      "description": "minimatch has ReDoS: matchOne() combinatorial backtracking via multiple non-adjacent GLOBSTAR segments",
+      "severity": "high",
+      "recommendation": "Upgrade to a fixed version of the dependency.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/package-lock.json",
+      "line_number": 1,
+      "evidence": {
+        "package": "minimatch",
+        "version": "3.1.2",
+        "vulnerability_id": "GHSA-7r86-cg39-jmmj",
+        "source": "osv-scanner"
+      }
+    },
+    {
+      "id": "SECURITY025",
+      "title": "OSV: MAL-2025-26438",
+      "description": "Malicious code in minimst (npm)",
+      "severity": "medium",
+      "recommendation": "Upgrade to a fixed version of the dependency.",
+      "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/package-lock.json",
+      "line_number": 1,
+      "evidence": {
+        "package": "minimst",
+        "version": "0.0.1-security",
+        "vulnerability_id": "MAL-2025-26438",
+        "source": "osv-scanner"
+      }
+    }
+  ],
+  "summary": {
+    "critical": 0,
+    "high": 15,
+    "medium": 10,
+    "low": 0,
+    "info": 0
+  },
+  "metadata": {
+    "analyzer_type": "security",
+    "target_path": "/Users/andy.shutt/dotnetProjects/kollector-scum",
+    "files_analyzed": "handled_by_tool",
+    "files_processed": 2,
+    "files_skipped": 0,
+    "processing_errors": 0,
+    "total_findings": 25,
+    "severity_breakdown": {
+      "critical": 0,
+      "high": 15,
+      "medium": 10,
+      "low": 0,
+      "info": 0
+    },
+    "analyzer_config": {
+      "max_files": null,
+      "max_file_size_mb": 5,
+      "extensions_count": 26,
+      "skip_patterns_count": 23
+    },
+    "name": "OSV Scanner Analyzer",
+    "version": "1.0.0",
+    "description": "Supply chain vulnerability scanning via osv-scanner",
+    "category": "security",
+    "priority": "high",
+    "total_findings_unfiltered": 25,
+    "severity_breakdown_unfiltered": {
+      "critical": 0,
+      "high": 15,
+      "medium": 10,
+      "low": 0,
+      "info": 0
+    }
+  },
+  "stats": {
+    "execution_time_seconds": 3.552852153778076
+  },
+  "errors": [],
+  "raw": {
+    "analysis_type": "security",
+    "script_name": "security_analyzer.py",
+    "target_path": "/Users/andy.shutt/dotnetProjects/kollector-scum",
+    "timestamp": "2026-04-09T10:23:25.557028",
+    "execution_time": 3.553,
+    "success": true,
+    "error_message": null,
+    "summary": {
+      "critical": 0,
+      "high": 15,
+      "medium": 10,
+      "low": 0,
+      "info": 0
+    },
+    "findings": [
+      {
+        "id": "SECURITY001",
+        "title": "OSV: GHSA-2g4f-4pwh-qvx6",
+        "description": "ajv has ReDoS when using `$data` option",
+        "severity": "medium",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/package-lock.json",
+        "line_number": 1,
+        "recommendation": "Upgrade to a fixed version of the dependency.",
+        "evidence": {
+          "package": "ajv",
+          "version": "6.12.6",
+          "vulnerability_id": "GHSA-2g4f-4pwh-qvx6",
+          "source": "osv-scanner"
+        }
+      },
+      {
+        "id": "SECURITY002",
+        "title": "OSV: GHSA-f886-m6hf-6m8v",
+        "description": "brace-expansion: Zero-step sequence causes process hang and memory exhaustion",
+        "severity": "medium",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/package-lock.json",
+        "line_number": 1,
+        "recommendation": "Upgrade to a fixed version of the dependency.",
+        "evidence": {
+          "package": "brace-expansion",
+          "version": "1.1.12",
+          "vulnerability_id": "GHSA-f886-m6hf-6m8v",
+          "source": "osv-scanner"
+        }
+      },
+      {
+        "id": "SECURITY003",
+        "title": "OSV: GHSA-f886-m6hf-6m8v",
+        "description": "brace-expansion: Zero-step sequence causes process hang and memory exhaustion",
+        "severity": "medium",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/package-lock.json",
+        "line_number": 1,
+        "recommendation": "Upgrade to a fixed version of the dependency.",
+        "evidence": {
+          "package": "brace-expansion",
+          "version": "2.0.2",
+          "vulnerability_id": "GHSA-f886-m6hf-6m8v",
+          "source": "osv-scanner"
+        }
+      },
+      {
+        "id": "SECURITY004",
+        "title": "OSV: GHSA-rf6f-7fwh-wjgh",
+        "description": "Prototype Pollution via parse() in NodeJS flatted",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/package-lock.json",
+        "line_number": 1,
+        "recommendation": "Upgrade to a fixed version of the dependency.",
+        "evidence": {
+          "package": "flatted",
+          "version": "3.4.0",
+          "vulnerability_id": "GHSA-rf6f-7fwh-wjgh",
+          "source": "osv-scanner"
+        }
+      },
+      {
+        "id": "SECURITY005",
+        "title": "OSV: GHSA-23c5-xmqv-rm74",
+        "description": "minimatch ReDoS: nested *() extglobs generate catastrophically backtracking regular expressions",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/package-lock.json",
+        "line_number": 1,
+        "recommendation": "Upgrade to a fixed version of the dependency.",
+        "evidence": {
+          "package": "minimatch",
+          "version": "3.1.2",
+          "vulnerability_id": "GHSA-23c5-xmqv-rm74",
+          "source": "osv-scanner"
+        }
+      },
+      {
+        "id": "SECURITY006",
+        "title": "OSV: GHSA-3ppc-4f35-3m26",
+        "description": "minimatch has a ReDoS via repeated wildcards with non-matching literal in pattern",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/package-lock.json",
+        "line_number": 1,
+        "recommendation": "Upgrade to a fixed version of the dependency.",
+        "evidence": {
+          "package": "minimatch",
+          "version": "3.1.2",
+          "vulnerability_id": "GHSA-3ppc-4f35-3m26",
+          "source": "osv-scanner"
+        }
+      },
+      {
+        "id": "SECURITY007",
+        "title": "OSV: GHSA-7r86-cg39-jmmj",
+        "description": "minimatch has ReDoS: matchOne() combinatorial backtracking via multiple non-adjacent GLOBSTAR segments",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/package-lock.json",
+        "line_number": 1,
+        "recommendation": "Upgrade to a fixed version of the dependency.",
+        "evidence": {
+          "package": "minimatch",
+          "version": "3.1.2",
+          "vulnerability_id": "GHSA-7r86-cg39-jmmj",
+          "source": "osv-scanner"
+        }
+      },
+      {
+        "id": "SECURITY008",
+        "title": "OSV: GHSA-23c5-xmqv-rm74",
+        "description": "minimatch ReDoS: nested *() extglobs generate catastrophically backtracking regular expressions",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/package-lock.json",
+        "line_number": 1,
+        "recommendation": "Upgrade to a fixed version of the dependency.",
+        "evidence": {
+          "package": "minimatch",
+          "version": "9.0.5",
+          "vulnerability_id": "GHSA-23c5-xmqv-rm74",
+          "source": "osv-scanner"
+        }
+      },
+      {
+        "id": "SECURITY009",
+        "title": "OSV: GHSA-3ppc-4f35-3m26",
+        "description": "minimatch has a ReDoS via repeated wildcards with non-matching literal in pattern",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/package-lock.json",
+        "line_number": 1,
+        "recommendation": "Upgrade to a fixed version of the dependency.",
+        "evidence": {
+          "package": "minimatch",
+          "version": "9.0.5",
+          "vulnerability_id": "GHSA-3ppc-4f35-3m26",
+          "source": "osv-scanner"
+        }
+      },
+      {
+        "id": "SECURITY010",
+        "title": "OSV: GHSA-7r86-cg39-jmmj",
+        "description": "minimatch has ReDoS: matchOne() combinatorial backtracking via multiple non-adjacent GLOBSTAR segments",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/package-lock.json",
+        "line_number": 1,
+        "recommendation": "Upgrade to a fixed version of the dependency.",
+        "evidence": {
+          "package": "minimatch",
+          "version": "9.0.5",
+          "vulnerability_id": "GHSA-7r86-cg39-jmmj",
+          "source": "osv-scanner"
+        }
+      },
+      {
+        "id": "SECURITY011",
+        "title": "OSV: GHSA-3x4c-7xq6-9pq8",
+        "description": "Next.js: Unbounded next/image disk cache growth can exhaust storage",
+        "severity": "medium",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/package-lock.json",
+        "line_number": 1,
+        "recommendation": "Upgrade to a fixed version of the dependency.",
+        "evidence": {
+          "package": "next",
+          "version": "15.5.12",
+          "vulnerability_id": "GHSA-3x4c-7xq6-9pq8",
+          "source": "osv-scanner"
+        }
+      },
+      {
+        "id": "SECURITY012",
+        "title": "OSV: GHSA-ggv3-7p47-pfv8",
+        "description": "Next.js: HTTP request smuggling in rewrites",
+        "severity": "medium",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/package-lock.json",
+        "line_number": 1,
+        "recommendation": "Upgrade to a fixed version of the dependency.",
+        "evidence": {
+          "package": "next",
+          "version": "15.5.12",
+          "vulnerability_id": "GHSA-ggv3-7p47-pfv8",
+          "source": "osv-scanner"
+        }
+      },
+      {
+        "id": "SECURITY013",
+        "title": "OSV: GHSA-3v7f-55p6-f55p",
+        "description": "Picomatch: Method Injection in POSIX Character Classes causes incorrect Glob Matching",
+        "severity": "medium",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/package-lock.json",
+        "line_number": 1,
+        "recommendation": "Upgrade to a fixed version of the dependency.",
+        "evidence": {
+          "package": "picomatch",
+          "version": "2.3.1",
+          "vulnerability_id": "GHSA-3v7f-55p6-f55p",
+          "source": "osv-scanner"
+        }
+      },
+      {
+        "id": "SECURITY014",
+        "title": "OSV: GHSA-c2c7-rcm5-vvqj",
+        "description": "Picomatch has a ReDoS vulnerability via extglob quantifiers",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/package-lock.json",
+        "line_number": 1,
+        "recommendation": "Upgrade to a fixed version of the dependency.",
+        "evidence": {
+          "package": "picomatch",
+          "version": "2.3.1",
+          "vulnerability_id": "GHSA-c2c7-rcm5-vvqj",
+          "source": "osv-scanner"
+        }
+      },
+      {
+        "id": "SECURITY015",
+        "title": "OSV: GHSA-3v7f-55p6-f55p",
+        "description": "Picomatch: Method Injection in POSIX Character Classes causes incorrect Glob Matching",
+        "severity": "medium",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/package-lock.json",
+        "line_number": 1,
+        "recommendation": "Upgrade to a fixed version of the dependency.",
+        "evidence": {
+          "package": "picomatch",
+          "version": "4.0.3",
+          "vulnerability_id": "GHSA-3v7f-55p6-f55p",
+          "source": "osv-scanner"
+        }
+      },
+      {
+        "id": "SECURITY016",
+        "title": "OSV: GHSA-c2c7-rcm5-vvqj",
+        "description": "Picomatch has a ReDoS vulnerability via extglob quantifiers",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/frontend/package-lock.json",
+        "line_number": 1,
+        "recommendation": "Upgrade to a fixed version of the dependency.",
+        "evidence": {
+          "package": "picomatch",
+          "version": "4.0.3",
+          "vulnerability_id": "GHSA-c2c7-rcm5-vvqj",
+          "source": "osv-scanner"
+        }
+      },
+      {
+        "id": "SECURITY017",
+        "title": "OSV: GHSA-2g4f-4pwh-qvx6",
+        "description": "ajv has ReDoS when using `$data` option",
+        "severity": "medium",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/package-lock.json",
+        "line_number": 1,
+        "recommendation": "Upgrade to a fixed version of the dependency.",
+        "evidence": {
+          "package": "ajv",
+          "version": "6.12.6",
+          "vulnerability_id": "GHSA-2g4f-4pwh-qvx6",
+          "source": "osv-scanner"
+        }
+      },
+      {
+        "id": "SECURITY018",
+        "title": "OSV: GHSA-43fc-jf86-j433",
+        "description": "Axios is Vulnerable to Denial of Service via __proto__ Key in mergeConfig",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/package-lock.json",
+        "line_number": 1,
+        "recommendation": "Upgrade to a fixed version of the dependency.",
+        "evidence": {
+          "package": "axios",
+          "version": "1.13.2",
+          "vulnerability_id": "GHSA-43fc-jf86-j433",
+          "source": "osv-scanner"
+        }
+      },
+      {
+        "id": "SECURITY019",
+        "title": "OSV: GHSA-f886-m6hf-6m8v",
+        "description": "brace-expansion: Zero-step sequence causes process hang and memory exhaustion",
+        "severity": "medium",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/package-lock.json",
+        "line_number": 1,
+        "recommendation": "Upgrade to a fixed version of the dependency.",
+        "evidence": {
+          "package": "brace-expansion",
+          "version": "1.1.12",
+          "vulnerability_id": "GHSA-f886-m6hf-6m8v",
+          "source": "osv-scanner"
+        }
+      },
+      {
+        "id": "SECURITY020",
+        "title": "OSV: GHSA-25h7-pfq9-p65f",
+        "description": "flatted vulnerable to unbounded recursion DoS in parse() revive phase",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/package-lock.json",
+        "line_number": 1,
+        "recommendation": "Upgrade to a fixed version of the dependency.",
+        "evidence": {
+          "package": "flatted",
+          "version": "3.3.3",
+          "vulnerability_id": "GHSA-25h7-pfq9-p65f",
+          "source": "osv-scanner"
+        }
+      },
+      {
+        "id": "SECURITY021",
+        "title": "OSV: GHSA-rf6f-7fwh-wjgh",
+        "description": "Prototype Pollution via parse() in NodeJS flatted",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/package-lock.json",
+        "line_number": 1,
+        "recommendation": "Upgrade to a fixed version of the dependency.",
+        "evidence": {
+          "package": "flatted",
+          "version": "3.3.3",
+          "vulnerability_id": "GHSA-rf6f-7fwh-wjgh",
+          "source": "osv-scanner"
+        }
+      },
+      {
+        "id": "SECURITY022",
+        "title": "OSV: GHSA-23c5-xmqv-rm74",
+        "description": "minimatch ReDoS: nested *() extglobs generate catastrophically backtracking regular expressions",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/package-lock.json",
+        "line_number": 1,
+        "recommendation": "Upgrade to a fixed version of the dependency.",
+        "evidence": {
+          "package": "minimatch",
+          "version": "3.1.2",
+          "vulnerability_id": "GHSA-23c5-xmqv-rm74",
+          "source": "osv-scanner"
+        }
+      },
+      {
+        "id": "SECURITY023",
+        "title": "OSV: GHSA-3ppc-4f35-3m26",
+        "description": "minimatch has a ReDoS via repeated wildcards with non-matching literal in pattern",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/package-lock.json",
+        "line_number": 1,
+        "recommendation": "Upgrade to a fixed version of the dependency.",
+        "evidence": {
+          "package": "minimatch",
+          "version": "3.1.2",
+          "vulnerability_id": "GHSA-3ppc-4f35-3m26",
+          "source": "osv-scanner"
+        }
+      },
+      {
+        "id": "SECURITY024",
+        "title": "OSV: GHSA-7r86-cg39-jmmj",
+        "description": "minimatch has ReDoS: matchOne() combinatorial backtracking via multiple non-adjacent GLOBSTAR segments",
+        "severity": "high",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/package-lock.json",
+        "line_number": 1,
+        "recommendation": "Upgrade to a fixed version of the dependency.",
+        "evidence": {
+          "package": "minimatch",
+          "version": "3.1.2",
+          "vulnerability_id": "GHSA-7r86-cg39-jmmj",
+          "source": "osv-scanner"
+        }
+      },
+      {
+        "id": "SECURITY025",
+        "title": "OSV: MAL-2025-26438",
+        "description": "Malicious code in minimst (npm)",
+        "severity": "medium",
+        "file_path": "/Users/andy.shutt/dotnetProjects/kollector-scum/package-lock.json",
+        "line_number": 1,
+        "recommendation": "Upgrade to a fixed version of the dependency.",
+        "evidence": {
+          "package": "minimst",
+          "version": "0.0.1-security",
+          "vulnerability_id": "MAL-2025-26438",
+          "source": "osv-scanner"
+        }
+      }
+    ],
+    "metadata": {
+      "analyzer_type": "security",
+      "target_path": "/Users/andy.shutt/dotnetProjects/kollector-scum",
+      "files_analyzed": "handled_by_tool",
+      "files_processed": 2,
+      "files_skipped": 0,
+      "processing_errors": 0,
+      "total_findings": 25,
+      "severity_breakdown": {
+        "critical": 0,
+        "high": 15,
+        "medium": 10,
+        "low": 0,
+        "info": 0
+      },
+      "analyzer_config": {
+        "max_files": null,
+        "max_file_size_mb": 5,
+        "extensions_count": 26,
+        "skip_patterns_count": 23
+      },
+      "name": "OSV Scanner Analyzer",
+      "version": "1.0.0",
+      "description": "Supply chain vulnerability scanning via osv-scanner",
+      "category": "security",
+      "priority": "high",
+      "total_findings_unfiltered": 25,
+      "severity_breakdown_unfiltered": {
+        "critical": 0,
+        "high": 15,
+        "medium": 10,
+        "low": 0,
+        "info": 0
+      }
+    },
+    "min_severity_filter": "medium",
+    "total_findings_before_filter": 25,
+    "total_findings_after_filter": 25,
+    "summary_unfiltered": {
+      "critical": 0,
+      "high": 15,
+      "medium": 10,
+      "low": 0,
+      "info": 0
+    }
+  }
+}

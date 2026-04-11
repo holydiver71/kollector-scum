@@ -22,13 +22,16 @@ namespace KollectorScum.Api.Services
             @"\bREVOKE\b",
             @"\bEXEC\b",
             @"\bEXECUTE\b",
-            @"\bxp_\w+",
-            @"\bsp_\w+",
-            @";\s*--",  // SQL injection pattern
+            @"\bxp_\w+",         // SQL Server extended stored procedures
+            @"\bsp_\w+",         // SQL Server system stored procedures
+            @"\bpg_\w+",         // PostgreSQL system functions (e.g. pg_read_file, pg_catalog)
+            @"\bcurrent_setting\b", // PostgreSQL configuration read — server path/setting disclosure
+            @";\s*--",           // SQL injection comment terminator
             @";\s*(DROP|DELETE|UPDATE|INSERT|ALTER|CREATE)", // Chained dangerous commands
             @"\bINTO\s+OUTFILE\b",
             @"\bLOAD_FILE\b",
-            @"\bUNION\s+ALL\s+SELECT\b",  // Potential SQL injection
+            @"\bUNION\b",        // All UNION variants (UNION SELECT, UNION ALL SELECT) — enables fromless injection
+            @"\bINFORMATION_SCHEMA\b", // Schema enumeration
         };
 
         // Allowed table names for security

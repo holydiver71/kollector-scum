@@ -1,0 +1,373 @@
+{
+  "generated_at": "2026-04-09T09:24:09.657782Z",
+  "source_artifacts": [
+    "semgrep.json",
+    "detect-secrets.json",
+    "osv.json"
+  ],
+  "summary": {
+    "critical": 1,
+    "high": 17,
+    "medium": 17,
+    "low": 0,
+    "info": 0,
+    "total": 35,
+    "by_analyzer": {
+      "semgrep": 8,
+      "osv": 25,
+      "detect-secrets": 2
+    }
+  },
+  "findings": [
+    {
+      "severity": "critical",
+      "owasp_category": "TBD",
+      "location": "backend/KollectorScum.Api/Controllers/QueryController.cs#L133",
+      "finding": "Security issue detected (csharp.lang.security.sqli.csharp-sqli.csharp-sqli)",
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "semgrep.json",
+      "primary_metric": 1,
+      "analyzer": "semgrep"
+    },
+    {
+      "severity": "high",
+      "owasp_category": "TBD",
+      "location": "backend/scripts/resize-cover-images.js#L95",
+      "finding": "Security issue detected (javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal)",
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "semgrep.json",
+      "primary_metric": 1,
+      "analyzer": "semgrep"
+    },
+    {
+      "severity": "high",
+      "owasp_category": "TBD",
+      "location": "backend/scripts/resize-cover-images.js#L95",
+      "finding": "Security issue detected (javascript.lang.security.audit.path-traversal.path-join-resolve-traversal.path-join-resolve-traversal)",
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "semgrep.json",
+      "primary_metric": 1,
+      "analyzer": "semgrep"
+    },
+    {
+      "severity": "high",
+      "owasp_category": "TBD",
+      "location": "frontend/package-lock.json#L1",
+      "finding": "OSV: GHSA-rf6f-7fwh-wjgh",
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "osv.json",
+      "primary_metric": 1,
+      "analyzer": "osv"
+    },
+    {
+      "severity": "high",
+      "owasp_category": "TBD",
+      "location": "frontend/package-lock.json#L1",
+      "finding": "OSV: GHSA-23c5-xmqv-rm74",
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "osv.json",
+      "primary_metric": 1,
+      "analyzer": "osv"
+    },
+    {
+      "severity": "high",
+      "owasp_category": "TBD",
+      "location": "frontend/package-lock.json#L1",
+      "finding": "OSV: GHSA-3ppc-4f35-3m26",
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "osv.json",
+      "primary_metric": 1,
+      "analyzer": "osv"
+    },
+    {
+      "severity": "high",
+      "owasp_category": "TBD",
+      "location": "frontend/package-lock.json#L1",
+      "finding": "OSV: GHSA-7r86-cg39-jmmj",
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "osv.json",
+      "primary_metric": 1,
+      "analyzer": "osv"
+    },
+    {
+      "severity": "high",
+      "owasp_category": "TBD",
+      "location": "frontend/package-lock.json#L1",
+      "finding": "OSV: GHSA-23c5-xmqv-rm74",
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "osv.json",
+      "primary_metric": 1,
+      "analyzer": "osv"
+    },
+    {
+      "severity": "high",
+      "owasp_category": "TBD",
+      "location": "frontend/package-lock.json#L1",
+      "finding": "OSV: GHSA-3ppc-4f35-3m26",
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "osv.json",
+      "primary_metric": 1,
+      "analyzer": "osv"
+    },
+    {
+      "severity": "high",
+      "owasp_category": "TBD",
+      "location": "frontend/package-lock.json#L1",
+      "finding": "OSV: GHSA-7r86-cg39-jmmj",
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "osv.json",
+      "primary_metric": 1,
+      "analyzer": "osv"
+    },
+    {
+      "severity": "high",
+      "owasp_category": "TBD",
+      "location": "frontend/package-lock.json#L1",
+      "finding": "OSV: GHSA-c2c7-rcm5-vvqj",
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "osv.json",
+      "primary_metric": 1,
+      "analyzer": "osv"
+    },
+    {
+      "severity": "high",
+      "owasp_category": "TBD",
+      "location": "frontend/package-lock.json#L1",
+      "finding": "OSV: GHSA-c2c7-rcm5-vvqj",
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "osv.json",
+      "primary_metric": 1,
+      "analyzer": "osv"
+    },
+    {
+      "severity": "high",
+      "owasp_category": "TBD",
+      "location": "package-lock.json#L1",
+      "finding": "OSV: GHSA-43fc-jf86-j433",
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "osv.json",
+      "primary_metric": 1,
+      "analyzer": "osv"
+    },
+    {
+      "severity": "high",
+      "owasp_category": "TBD",
+      "location": "package-lock.json#L1",
+      "finding": "OSV: GHSA-25h7-pfq9-p65f",
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "osv.json",
+      "primary_metric": 1,
+      "analyzer": "osv"
+    },
+    {
+      "severity": "high",
+      "owasp_category": "TBD",
+      "location": "package-lock.json#L1",
+      "finding": "OSV: GHSA-rf6f-7fwh-wjgh",
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "osv.json",
+      "primary_metric": 1,
+      "analyzer": "osv"
+    },
+    {
+      "severity": "high",
+      "owasp_category": "TBD",
+      "location": "package-lock.json#L1",
+      "finding": "OSV: GHSA-23c5-xmqv-rm74",
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "osv.json",
+      "primary_metric": 1,
+      "analyzer": "osv"
+    },
+    {
+      "severity": "high",
+      "owasp_category": "TBD",
+      "location": "package-lock.json#L1",
+      "finding": "OSV: GHSA-3ppc-4f35-3m26",
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "osv.json",
+      "primary_metric": 1,
+      "analyzer": "osv"
+    },
+    {
+      "severity": "high",
+      "owasp_category": "TBD",
+      "location": "package-lock.json#L1",
+      "finding": "OSV: GHSA-7r86-cg39-jmmj",
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "osv.json",
+      "primary_metric": 1,
+      "analyzer": "osv"
+    },
+    {
+      "severity": "medium",
+      "owasp_category": "TBD",
+      "location": ".github/workflows/ci.yml#L31",
+      "finding": "Hardcoded secret keyword detected (secret_keyword)",
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "detect-secrets.json",
+      "primary_metric": 1,
+      "analyzer": "detect-secrets"
+    },
+    {
+      "severity": "medium",
+      "owasp_category": "TBD",
+      "location": "frontend/app/components/AddReleaseForm.tsx#L426",
+      "finding": "Security issue detected (javascript.lang.security.audit.unsafe-formatstring.unsafe-formatstring)",
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "semgrep.json",
+      "primary_metric": 1,
+      "analyzer": "semgrep"
+    },
+    {
+      "severity": "medium",
+      "owasp_category": "TBD",
+      "location": "frontend/app/components/LookupComponents.tsx#L232",
+      "finding": "Security issue detected (javascript.lang.security.audit.unsafe-formatstring.unsafe-formatstring)",
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "semgrep.json",
+      "primary_metric": 1,
+      "analyzer": "semgrep"
+    },
+    {
+      "severity": "medium",
+      "owasp_category": "TBD",
+      "location": "frontend/app/components/LookupComponents.tsx#L253",
+      "finding": "Security issue detected (javascript.lang.security.audit.unsafe-formatstring.unsafe-formatstring)",
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "semgrep.json",
+      "primary_metric": 1,
+      "analyzer": "semgrep"
+    },
+    {
+      "severity": "medium",
+      "owasp_category": "TBD",
+      "location": "frontend/app/components/MusicReleaseList.tsx#L322",
+      "finding": "Security issue detected (javascript.lang.security.audit.unsafe-formatstring.unsafe-formatstring)",
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "semgrep.json",
+      "primary_metric": 1,
+      "analyzer": "semgrep"
+    },
+    {
+      "severity": "medium",
+      "owasp_category": "TBD",
+      "location": "frontend/app/components/wizard/discogs/__tests__/mapDiscogsRelease.test.ts#L64",
+      "finding": "Hardcoded hex high entropy string detected (hex_high_entropy_string)",
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "detect-secrets.json",
+      "primary_metric": 1,
+      "analyzer": "detect-secrets"
+    },
+    {
+      "severity": "medium",
+      "owasp_category": "TBD",
+      "location": "frontend/app/components/wizard/useReleaseLookups.ts#L57",
+      "finding": "Security issue detected (javascript.lang.security.audit.unsafe-formatstring.unsafe-formatstring)",
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "semgrep.json",
+      "primary_metric": 1,
+      "analyzer": "semgrep"
+    },
+    {
+      "severity": "medium",
+      "owasp_category": "TBD",
+      "location": "frontend/package-lock.json#L1",
+      "finding": "OSV: GHSA-2g4f-4pwh-qvx6",
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "osv.json",
+      "primary_metric": 1,
+      "analyzer": "osv"
+    },
+    {
+      "severity": "medium",
+      "owasp_category": "TBD",
+      "location": "frontend/package-lock.json#L1",
+      "finding": "OSV: GHSA-f886-m6hf-6m8v",
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "osv.json",
+      "primary_metric": 1,
+      "analyzer": "osv"
+    },
+    {
+      "severity": "medium",
+      "owasp_category": "TBD",
+      "location": "frontend/package-lock.json#L1",
+      "finding": "OSV: GHSA-f886-m6hf-6m8v",
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "osv.json",
+      "primary_metric": 1,
+      "analyzer": "osv"
+    },
+    {
+      "severity": "medium",
+      "owasp_category": "TBD",
+      "location": "frontend/package-lock.json#L1",
+      "finding": "OSV: GHSA-3x4c-7xq6-9pq8",
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "osv.json",
+      "primary_metric": 1,
+      "analyzer": "osv"
+    },
+    {
+      "severity": "medium",
+      "owasp_category": "TBD",
+      "location": "frontend/package-lock.json#L1",
+      "finding": "OSV: GHSA-ggv3-7p47-pfv8",
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "osv.json",
+      "primary_metric": 1,
+      "analyzer": "osv"
+    },
+    {
+      "severity": "medium",
+      "owasp_category": "TBD",
+      "location": "frontend/package-lock.json#L1",
+      "finding": "OSV: GHSA-3v7f-55p6-f55p",
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "osv.json",
+      "primary_metric": 1,
+      "analyzer": "osv"
+    },
+    {
+      "severity": "medium",
+      "owasp_category": "TBD",
+      "location": "frontend/package-lock.json#L1",
+      "finding": "OSV: GHSA-3v7f-55p6-f55p",
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "osv.json",
+      "primary_metric": 1,
+      "analyzer": "osv"
+    },
+    {
+      "severity": "medium",
+      "owasp_category": "TBD",
+      "location": "package-lock.json#L1",
+      "finding": "OSV: GHSA-2g4f-4pwh-qvx6",
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "osv.json",
+      "primary_metric": 1,
+      "analyzer": "osv"
+    },
+    {
+      "severity": "medium",
+      "owasp_category": "TBD",
+      "location": "package-lock.json#L1",
+      "finding": "OSV: GHSA-f886-m6hf-6m8v",
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "osv.json",
+      "primary_metric": 1,
+      "analyzer": "osv"
+    },
+    {
+      "severity": "medium",
+      "owasp_category": "TBD",
+      "location": "package-lock.json#L1",
+      "finding": "OSV: MAL-2025-26438",
+      "source_kind": "artifact-backed",
+      "evidence_artifact": "osv.json",
+      "primary_metric": 1,
+      "analyzer": "osv"
+    }
+  ]
+}
