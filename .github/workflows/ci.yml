@@ -168,7 +168,6 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        env:
           BRANCH_NAME: ${{ github.ref_name }}
         run: |
           npx wrangler pages project create kollector-scum-frontend --production-branch=main 2>/dev/null || true
