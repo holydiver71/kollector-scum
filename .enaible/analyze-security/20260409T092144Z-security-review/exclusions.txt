@@ -1,0 +1,10 @@
+.enaible/
+dist/
+build/
+node_modules/
+__pycache__/
+.next/
+vendor/
+bin/
+obj/
+coverage/
