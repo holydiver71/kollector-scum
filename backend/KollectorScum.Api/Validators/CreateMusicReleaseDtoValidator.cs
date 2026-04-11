@@ -179,13 +179,13 @@ public class CreateMusicReleaseDtoValidator : AbstractValidator<CreateMusicRelea
         if (string.IsNullOrWhiteSpace(filename))
             return true;
 
-        // Allow filenames with alphanumeric, dash, underscore, dot
-        // Reject if it looks like a full URL
-        if (filename.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-            filename.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        // Reject any URL-like string (any scheme://).
+        // HTTP(S) URLs are validated separately via BeAValidUrl; other schemes
+        // (ftp://, javascript://, etc.) must not be accepted.
+        if (filename.Contains("://", StringComparison.OrdinalIgnoreCase))
             return false;
 
-        return !string.IsNullOrWhiteSpace(filename) && filename.Length < 255;
+        return filename.Length < 255;
     }
 
     private bool BeAValidUrl(string? url)

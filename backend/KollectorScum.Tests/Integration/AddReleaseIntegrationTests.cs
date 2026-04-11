@@ -382,8 +382,9 @@ namespace KollectorScum.Tests.Integration
                 Live = false,
                 Images = new MusicReleaseImageDto
                 {
-                    // Validator rejects full URLs, expects filenames
-                    CoverFront = "http://example.com/image.jpg"
+                    // Validator only accepts http/https URLs or bare filenames;
+                    // a ftp:// scheme is invalid and must be rejected.
+                    CoverFront = "ftp://example.com/image.jpg"
                 }
             };
 
