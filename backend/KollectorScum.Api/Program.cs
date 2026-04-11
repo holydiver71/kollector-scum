@@ -1,47 +1,23 @@
 /// <summary>
-/// Entry point for the Kollector Scrum API application.
+/// Entry point for the Kollector Scum API application.
 /// </summary>
 
+using KollectorScum.Api.Extensions;
 
-using System.Text;
-using System.Threading.RateLimiting;
-using KollectorScum.Api.Controllers;
-using KollectorScum.Api.Middleware;
-using KollectorScum.Api.Data;
-using KollectorScum.Api.DTOs;
-using KollectorScum.Api.Interfaces;
-using KollectorScum.Api.Models;
-using KollectorScum.Api.Services;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Diagnostics;
-using FluentValidation;
-using FluentValidation.AspNetCore;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.AspNetCore.ResponseCompression;
-using Microsoft.IdentityModel.Tokens;
+// ── Environment setup ─────────────────────────────────────────────────────────
 
-
-// Load .env file from the root of the repo (one level up from backend/Api -> backend -> root)
-// Assuming PWD is where the .sln or project usually is, or we find it relative to current dir.
 var root = Directory.GetCurrentDirectory();
-// Determine runtime environment (ASPNETCORE_ENVIRONMENT or DOTNET_ENVIRONMENT)
 var runtimeEnv = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ??
                  Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ??
                  "Production";
 
-// Only load local .env files when NOT running in Production or Staging. This
-// avoids accidentally overwriting platform-provided secrets (e.g., Render
-// environment variables) with repository .env placeholders.
+// Only load local .env files outside Production/Staging to avoid overwriting
+// platform-provided secrets (e.g. Render environment variables).
 if (!string.Equals(runtimeEnv, "Production", StringComparison.OrdinalIgnoreCase) &&
     !string.Equals(runtimeEnv, "Staging", StringComparison.OrdinalIgnoreCase))
 {
     var dotenv = Path.Combine(root, "../../.env");
-    if (!File.Exists(dotenv))
-    {
-        // Try one level up if we are in backend/
-        dotenv = Path.Combine(root, "../.env");
-    }
+    if (!File.Exists(dotenv)) dotenv = Path.Combine(root, "../.env");
 
     if (File.Exists(dotenv))
     {
@@ -50,7 +26,6 @@ if (!string.Equals(runtimeEnv, "Production", StringComparison.OrdinalIgnoreCase)
     }
     else
     {
-        // try default loading which looks in current dir
         DotNetEnv.Env.Load();
     }
 }
@@ -59,498 +34,106 @@ else
     Console.WriteLine($"Skipping .env load in {runtimeEnv} environment to preserve platform secrets.");
 }
 
+// ── Host & Kestrel ────────────────────────────────────────────────────────────
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Many hosting platforms (e.g., Render) set a PORT environment variable that the app must bind to.
-// Ensure Kestrel listens on 0.0.0.0:$PORT when provided.
+// Many hosting platforms (e.g. Render) set PORT; bind to it when present.
 var port = Environment.GetEnvironmentVariable("PORT");
 if (!string.IsNullOrWhiteSpace(port) && int.TryParse(port, out var parsedPort) && parsedPort > 0)
-{
     builder.WebHost.UseUrls($"http://0.0.0.0:{parsedPort}");
-}
 
-// Configure Kestrel for long-running operations (e.g., Discogs import)
+// Increase timeouts for long-running operations (e.g. Discogs import).
 builder.WebHost.ConfigureKestrel(options =>
 {
-    // Increase request body read timeout for large imports
     options.Limits.RequestHeadersTimeout = TimeSpan.FromMinutes(30);
-    // Keep connection alive during long operations
     options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(30);
 });
 
-// Add services to the container.
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        // Use camelCase for JSON serialization to match frontend convention
-        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
-    });
+// ── Logging ───────────────────────────────────────────────────────────────────
 
-// Add FluentValidation
-builder.Services.AddFluentValidationAutoValidation();
-builder.Services.AddValidatorsFromAssemblyContaining<Program>();
-
-// Add response caching for improved performance
-builder.Services.AddResponseCaching(options =>
-{
-    options.MaximumBodySize = 1024 * 1024 * 10; // 10MB cache size
-    options.UseCaseSensitivePaths = false;
-});
-
-// Add response compression (Phase 2.8) for API JSON responses.
-builder.Services.AddResponseCompression(options =>
-{
-    options.EnableForHttps = true;
-    options.Providers.Add<BrotliCompressionProvider>();
-    options.Providers.Add<GzipCompressionProvider>();
-    options.MimeTypes = ResponseCompressionDefaults.MimeTypes
-        .Concat(new[] { "application/json" })
-        .Distinct(StringComparer.OrdinalIgnoreCase);
-});
-
-builder.Services.Configure<BrotliCompressionProviderOptions>(options =>
-{
-    options.Level = System.IO.Compression.CompressionLevel.Fastest;
-});
-
-builder.Services.Configure<GzipCompressionProviderOptions>(options =>
-{
-    options.Level = System.IO.Compression.CompressionLevel.Fastest;
-});
-
-// Add in-memory cache for lookup data (artists, genres, labels, etc.)
-builder.Services.AddMemoryCache();
-builder.Services.AddSingleton<ICacheService, MemoryCacheService>();
-
-// ── Phase 1.2: Rate Limiting (OWASP A04 – Insecure Design) ──────────────────
-// Global policy: 100 requests per minute per IP (applied to all endpoints automatically)
-// Auth policy  : 10 requests per minute per IP (brute-force / enumeration protection)
-builder.Services.AddRateLimiter(options =>
-{
-    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-
-    // Global limiter applied to every request before named policies.
-    // Keyed per remote IP address using a fixed-window algorithm.
-    // Image-serving requests are given a higher budget because a single
-    // collection grid page can legitimately generate 40+ concurrent image requests.
-    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
-    {
-        var remoteIp = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-        var path = context.Request.Path.Value ?? string.Empty;
-        var isImageRequest = path.StartsWith("/api/images", StringComparison.OrdinalIgnoreCase)
-                          || path.StartsWith("/cover-art", StringComparison.OrdinalIgnoreCase);
-        return RateLimitPartition.GetFixedWindowLimiter(remoteIp, _ => new FixedWindowRateLimiterOptions
-        {
-            Window = TimeSpan.FromMinutes(1),
-            PermitLimit = isImageRequest ? 500 : 300,
-            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-            QueueLimit = 0,
-        });
-    });
-
-    // Stricter named policy for authentication endpoints (login, magic link, Google OAuth)
-    options.AddFixedWindowLimiter("auth", limiterOptions =>
-    {
-        limiterOptions.Window = TimeSpan.FromMinutes(1);
-        limiterOptions.PermitLimit = 10;
-        limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-        limiterOptions.QueueLimit = 0;
-    });
-
-    // Return Retry-After header so clients know when to retry
-    options.OnRejected = async (context, cancellationToken) =>
-    {
-        context.HttpContext.Response.Headers["Retry-After"] = "60";
-        await Task.CompletedTask;
-    };
-});
-
-builder.Services.AddHealthChecks()
-    .AddDbContextCheck<KollectorScumDbContext>("database");
-
-// Configure CORS for frontend integration
-// - Development: allow all origins if no explicit origins are configured
-// - Staging/Production: require explicit allowed origins
-var frontendOriginsRaw =
-    builder.Configuration["Frontend:Origins"] ??
-    builder.Configuration["Frontend:Origin"] ??
-    builder.Configuration["FRONTEND_ORIGINS"] ??
-    builder.Configuration["FRONTEND_ORIGIN"];
-
-static string[] ParseCorsOrigins(string? raw)
-{
-    if (string.IsNullOrWhiteSpace(raw))
-    {
-        return Array.Empty<string>();
-    }
-
-    return raw
-        .Split(new[] { ',', ';', ' ' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-        .Distinct(StringComparer.OrdinalIgnoreCase)
-        .ToArray();
-}
-
-var allowedFrontendOrigins = ParseCorsOrigins(frontendOriginsRaw);
-
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("FrontendCorsPolicy", policy =>
-    {
-        if (allowedFrontendOrigins.Length == 0)
-        {
-            if (!builder.Environment.IsProduction() && !builder.Environment.IsStaging())
-            {
-                policy.AllowAnyOrigin()
-                      .AllowAnyMethod()
-                      .AllowAnyHeader();
-                return;
-            }
-
-            throw new InvalidOperationException(
-                "CORS is not configured. Set Frontend:Origin(s) (e.g. env var Frontend__Origin or Frontend__Origins) " +
-                "to your frontend URL(s) for staging/production.");
-        }
-
-        policy.WithOrigins(allowedFrontendOrigins)
-              .AllowAnyMethod()
-              .AllowAnyHeader();
-    });
-});
-
-// Configure JWT Authentication
-var jwtSettings = builder.Configuration.GetSection("Jwt");
-var jwtKey = jwtSettings["Key"];
-if (!string.IsNullOrEmpty(jwtKey))
-{
-    // Warn if using placeholder key in production
-    if ((builder.Environment.IsProduction() || builder.Environment.IsStaging()) &&
-        (jwtKey.Contains("YourSecureKeyHere") || jwtKey.Contains("ChangeInProduction")))
-    {
-        throw new InvalidOperationException(
-            "JWT Key must be changed from default value in production. " +
-            "Set the Jwt:Key configuration to a secure random string of at least 32 characters.");
-    }
-
-    builder.Services.AddAuthentication(options =>
-    {
-        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    })
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtSettings["Issuer"],
-            ValidAudience = jwtSettings["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
-        };
-    });
-    
-    builder.Services.AddAuthorization();
-}
-
-// Register IHttpClientFactory for outbound HTTP calls (e.g. Google token exchange)
-builder.Services.AddHttpClient();
-
-// Register HTTP context accessor for user context
-builder.Services.AddHttpContextAccessor();
-
-// Register user context service
-builder.Services.AddScoped<IUserContext, UserContext>();
-
-// Register storage service
-var r2EndpointConfig = builder.Configuration["R2:Endpoint"] ?? builder.Configuration["R2__Endpoint"];
-if (!string.IsNullOrWhiteSpace(r2EndpointConfig))
-{
-    // Use Cloudflare R2 (S3-compatible) when configured for staging/production
-    builder.Services.AddScoped<IStorageService, CloudflareR2StorageService>();
-}
-else
-{
-    // Fallback to local filesystem for development and tests
-    builder.Services.AddScoped<IStorageService, LocalFileSystemStorageService>();
-}
-
-// Register KollectorScumDbContext with PostgreSQL
-// NOTE: Do not suppress EF warnings or apply migrations automatically in production.
-// Migrations should be applied as part of deployment (CI/CD) using `dotnet ef database update`
-if (!builder.Environment.IsEnvironment("Test"))
-{
-    builder.Services.AddDbContext<KollectorScumDbContext>(options =>
-        options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-}
-
-// Register split seeding services (Phase 1.4 refactoring)
-builder.Services.AddScoped<ILookupSeeder<Country, CountryJsonDto>, CountrySeeder>();
-builder.Services.AddScoped<ILookupSeeder<Store, StoreJsonDto>, StoreSeeder>();
-builder.Services.AddScoped<ILookupSeeder<Format, FormatJsonDto>, FormatSeeder>();
-builder.Services.AddScoped<ILookupSeeder<Genre, GenreJsonDto>, GenreSeeder>();
-builder.Services.AddScoped<ILookupSeeder<Label, LabelJsonDto>, LabelSeeder>();
-builder.Services.AddScoped<ILookupSeeder<Artist, ArtistJsonDto>, ArtistSeeder>();
-builder.Services.AddScoped<ILookupSeeder<Packaging, PackagingJsonDto>, PackagingSeeder>();
-builder.Services.AddScoped<IDataSeedingOrchestrator, DataSeedingOrchestrator>();
-
-// Keep old service temporarily for backward compatibility (will be removed after testing)
-builder.Services.AddScoped<IDataSeedingService>(serviceProvider =>
-{
-    var context = serviceProvider.GetRequiredService<KollectorScumDbContext>();
-    var logger = serviceProvider.GetRequiredService<ILogger<DataSeedingService>>();
-    var configuration = serviceProvider.GetRequiredService<IConfiguration>();
-    return new DataSeedingService(context, logger, configuration);
-});
-
-// Register split import services (Phase 1.3 refactoring)
-builder.Services.AddScoped<IJsonFileReader, JsonFileReader>();
-builder.Services.AddScoped<IMusicReleaseBatchProcessor, MusicReleaseBatchProcessor>();
-builder.Services.AddScoped<IMusicReleaseImportOrchestrator>(serviceProvider =>
-{
-    var fileReader = serviceProvider.GetRequiredService<IJsonFileReader>();
-    var batchProcessor = serviceProvider.GetRequiredService<IMusicReleaseBatchProcessor>();
-    var unitOfWork = serviceProvider.GetRequiredService<IUnitOfWork>();
-    var logger = serviceProvider.GetRequiredService<ILogger<MusicReleaseImportOrchestrator>>();
-    var configuration = serviceProvider.GetRequiredService<IConfiguration>();
-    return new MusicReleaseImportOrchestrator(fileReader, batchProcessor, unitOfWork, logger, configuration);
-});
-
-// Keep old service temporarily for compatibility (will be removed after testing)
-builder.Services.AddScoped<IMusicReleaseImportService>(serviceProvider =>
-{
-    var unitOfWork = serviceProvider.GetRequiredService<IUnitOfWork>();
-    var logger = serviceProvider.GetRequiredService<ILogger<MusicReleaseImportService>>();
-    var configuration = serviceProvider.GetRequiredService<IConfiguration>();
-    return new MusicReleaseImportService(unitOfWork, logger, configuration);
-});
-
-// Register repository layer
-builder.Services.AddScoped(typeof(IRepository<>), typeof(KollectorScum.Api.Repositories.Repository<>));
-builder.Services.AddScoped<IUnitOfWork, KollectorScum.Api.Repositories.UnitOfWork>();
-
-// Register authentication repositories and services
-builder.Services.AddScoped<IUserRepository, KollectorScum.Api.Repositories.UserRepository>();
-builder.Services.AddScoped<IUserProfileRepository, KollectorScum.Api.Repositories.UserProfileRepository>();
-builder.Services.AddScoped<IUserInvitationRepository, KollectorScum.Api.Repositories.UserInvitationRepository>();
-builder.Services.AddScoped<IMagicLinkTokenRepository, KollectorScum.Api.Repositories.MagicLinkTokenRepository>();
-builder.Services.AddScoped<ITokenService, TokenService>();
-builder.Services.AddScoped<IGoogleTokenValidator, GoogleTokenValidator>();
-builder.Services.AddScoped<IEmailService, SmtpEmailService>();
-builder.Services.AddScoped<IMagicLinkService, MagicLinkService>();
-
-// Register generic CRUD services
-builder.Services.AddScoped<IGenericCrudService<KollectorScum.Api.Models.Artist, KollectorScum.Api.DTOs.ArtistDto>, ArtistService>();
-builder.Services.AddScoped<IGenericCrudService<KollectorScum.Api.Models.Genre, KollectorScum.Api.DTOs.GenreDto>, GenreService>();
-builder.Services.AddScoped<IGenericCrudService<KollectorScum.Api.Models.Label, KollectorScum.Api.DTOs.LabelDto>, LabelService>();
-builder.Services.AddScoped<IGenericCrudService<KollectorScum.Api.Models.Country, KollectorScum.Api.DTOs.CountryDto>, CountryService>();
-builder.Services.AddScoped<IGenericCrudService<KollectorScum.Api.Models.Format, KollectorScum.Api.DTOs.FormatDto>, FormatService>();
-builder.Services.AddScoped<IGenericCrudService<KollectorScum.Api.Models.Packaging, KollectorScum.Api.DTOs.PackagingDto>, PackagingService>();
-builder.Services.AddScoped<IGenericCrudService<KollectorScum.Api.Models.Store, KollectorScum.Api.DTOs.StoreDto>, StoreService>();
-builder.Services.AddScoped<IKollectionService, KollectionService>();
-builder.Services.AddScoped<IListService, ListService>();
-
-// Register business logic services
-builder.Services.AddScoped<IEntityResolverService, EntityResolverService>();
-builder.Services.AddScoped<IMusicReleaseMapperService, MusicReleaseMapperService>();
-builder.Services.AddScoped<ICollectionStatisticsService, CollectionStatisticsService>();
-builder.Services.AddScoped<IMusicReleaseSearchService, MusicReleaseSearchService>();
-builder.Services.AddScoped<IMusicReleaseDuplicateService, MusicReleaseDuplicateService>();
-
-// Register split music release services (Phase 1.2 refactoring)
-builder.Services.AddScoped<IMusicReleaseDuplicateDetector, MusicReleaseDuplicateDetector>();
-builder.Services.AddScoped<IMusicReleaseValidator, MusicReleaseValidator>();
-builder.Services.AddScoped<IMusicReleaseQueryService, MusicReleaseQueryService>();
-builder.Services.AddScoped<IMusicReleaseCommandService, MusicReleaseCommandService>();
-
-// Keep old service temporarily for compatibility (will be removed after test migration)
-builder.Services.AddScoped<IMusicReleaseService, MusicReleaseService>();
-
-// Register Discogs services (Phase 1.5 refactoring)
-builder.Services.Configure<DiscogsSettings>(builder.Configuration.GetSection("Discogs"));
-builder.Services.AddHttpClient<IDiscogsHttpClient, DiscogsHttpClient>();
-builder.Services.AddScoped<IDiscogsResponseMapper, DiscogsResponseMapper>();
-builder.Services.AddScoped<IDiscogsService, DiscogsService>();
-builder.Services.AddHttpClient<DiscogsImageService>();
-builder.Services.AddScoped<IDiscogsImageService, DiscogsImageService>();
-builder.Services.AddSingleton<IDiscogsImportJobQueue, DiscogsImportJobQueue>();
-builder.Services.AddHostedService<DiscogsImportBackgroundService>();
-builder.Services.AddScoped<IDiscogsImportJobService, DiscogsImportJobService>();
-builder.Services.AddScoped<IDiscogsCollectionImportService, DiscogsCollectionImportService>();
-builder.Services.AddScoped<IStorageMigrationService, StorageMigrationService>();
-builder.Services.AddScoped<IUserImpersonationService, UserImpersonationService>();
-builder.Services.AddScoped<IUserAuthenticationService, UserAuthenticationService>();
-
-// Register Natural Language Query services
-builder.Services.AddSingleton<IDatabaseSchemaService, DatabaseSchemaService>();
-builder.Services.AddScoped<ISqlValidationService, SqlValidationService>();
-builder.Services.AddScoped<IQueryLLMService, NaturalLanguageQueryService>();
-
-// Register image services (Wizard Step 5)
-builder.Services.AddScoped<IImageResizerService, ImageResizerService>();
-builder.Services.AddScoped<ICoverArtSearchService, CoverArtSearchService>();
-
-// Named HTTP clients for MusicBrainz and Cover Art Archive (used by CoverArtSearchService)
-builder.Services.AddHttpClient(CoverArtSearchService.MusicBrainzClientName, client =>
-{
-    client.BaseAddress = new Uri("https://musicbrainz.org/ws/2/");
-    client.DefaultRequestHeaders.Add(
-        "User-Agent",
-        "KollectorScum/1.0 (https://github.com/holydiver71/kollector-scum; support@kollector.app)");
-    client.DefaultRequestHeaders.Add("Accept", "application/json");
-    client.Timeout = TimeSpan.FromSeconds(10);
-});
-
-builder.Services.AddHttpClient(CoverArtSearchService.CoverArtArchiveClientName, client =>
-{
-    client.BaseAddress = new Uri("https://coverartarchive.org/");
-    client.DefaultRequestHeaders.Add(
-        "User-Agent",
-        "KollectorScum/1.0 (https://github.com/holydiver71/kollector-scum; support@kollector.app)");
-    client.Timeout = TimeSpan.FromSeconds(10);
-});
-
-// Named HTTP client for downloading external images in ImagesController
-builder.Services.AddHttpClient(ImagesController.ImageDownloadClientName, client =>
-{
-    client.DefaultRequestHeaders.Add("User-Agent", "KollectorScum/1.0");
-    client.Timeout = TimeSpan.FromSeconds(30);
-});
-
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new()
-    {
-        Title = "Kollector Scum API",
-        Version = "v1",
-        Description = "API for managing music collection data"
-    });
-});
-
-// Configure logging
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
+builder.Logging.AddFilter(
+    "Microsoft.EntityFrameworkCore.Database.Command",
+    Microsoft.Extensions.Logging.LogLevel.Warning);
 
-// Reduce noisy EF Core SQL command logs (they run at Information level by default)
-// Keep warnings/errors visible but suppress routine executed command output.
-builder.Logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", Microsoft.Extensions.Logging.LogLevel.Warning);
+// ── Service registration ──────────────────────────────────────────────────────
+
+builder.Services
+    .AddCorePipeline()
+    .AddCachingServices()
+    .AddRateLimiting()
+    .AddCorsPolicy(builder.Configuration, builder.Environment)
+    .AddJwtAuthentication(builder.Configuration, builder.Environment)
+    .AddDatabaseServices(builder.Configuration, builder.Environment)
+    .AddRepositories()
+    .AddAuthServices()
+    .AddLookupCrudServices()
+    .AddMusicReleaseServices()
+    .AddDiscogsServices(builder.Configuration)
+    .AddImageServices()
+    .AddNaturalLanguageQueryServices()
+    .AddDataSeedingServices()
+    .AddImportServices()
+    .AddInfrastructureServices(builder.Configuration);
+
+// ── Middleware pipeline ───────────────────────────────────────────────────────
 
 var app = builder.Build();
 
-// ── Phase 1.1: Security Headers (OWASP A05) ─────────────────────────────────
-// Must be early in the pipeline so all responses receive the headers.
-app.UseSecurityHeaders();
+app.UseKollectorApiPipeline();
 
-// ── Phase 1.4: HTTPS Enforcement (OWASP A05) ────────────────────────────────
-// HSTS and HTTPS redirection are only meaningful on non-Development environments
-// where TLS is terminated at the server or a reverse proxy.
-if (!app.Environment.IsDevelopment())
-{
-    app.UseHsts();
-    app.UseHttpsRedirection();
-}
+// ── Endpoints ─────────────────────────────────────────────────────────────────
 
-// Add global error handling middleware
-app.UseMiddleware<ErrorHandlingMiddleware>();
-
-// IMPORTANT: Do not apply migrations automatically at startup in production.
-// Applying migrations at runtime can lead to unexpected schema changes and
-// startup failures. Apply migrations explicitly during deployment using
-// `dotnet ef database update` or equivalent migration scripts.
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Kollector Scum API v1");
-    });
-}
-
-// Add CORS for frontend integration
-app.UseCors("FrontendCorsPolicy");
-
-// ── Phase 1.2: Rate Limiting (OWASP A04) ────────────────────────────────────
-app.UseRateLimiter();
-
-// Enable response compression for API responses.
-app.UseResponseCompression();
-
-// Enable response caching
-app.UseResponseCaching();
-
-// Enable static files for serving cover art
-app.UseStaticFiles();
-
-// Add authentication and authorization middleware
-app.UseAuthentication();
-app.UseAuthorization();
-
-// Add middleware to validate users still exist (after authentication, before authorization)
-app.UseValidateUser();
-
-// Map controllers
 app.MapControllers();
 
-// Runtime info (used by frontend footer indicator)
 app.MapGet("/runtime-info", (IConfiguration configuration, IHostEnvironment environment) =>
 {
-    var configuredTarget = configuration["Database:Target"] ?? configuration["Database__Target"]; // allow both forms
-    var normalizedTarget = NormalizeDatabaseTarget(configuredTarget);
-    if (normalizedTarget is null)
-    {
-        normalizedTarget = InferDatabaseTarget(configuration, environment);
-    }
+    var configuredTarget =
+        configuration["Database:Target"] ?? configuration["Database__Target"];
+    var normalizedTarget = NormalizeDatabaseTarget(configuredTarget)
+        ?? InferDatabaseTarget(configuration, environment);
 
     return Results.Ok(new
     {
         environment = environment.EnvironmentName,
-        databaseTarget = normalizedTarget
+        databaseTarget = normalizedTarget,
     });
 });
 
+app.MapHealthChecks("/health");
+
+app.Run();
+
+// ── Local helpers (minimal surface; keep Program.cs thin) ─────────────────────
+
 static string? NormalizeDatabaseTarget(string? raw)
 {
-    if (string.IsNullOrWhiteSpace(raw))
+    if (string.IsNullOrWhiteSpace(raw)) return null;
+    return raw.Trim().ToLowerInvariant() switch
     {
-        return null;
-    }
-
-    raw = raw.Trim();
-    return raw.ToLowerInvariant() switch
-    {
-        "local" => "local",
-        "dev" => "local",
-        "development" => "local",
-        "staging" => "staging",
-        "stage" => "staging",
-        "prod" => "production",
-        "production" => "production",
-        _ => null
+        "local" or "dev" or "development" => "local",
+        "staging" or "stage"              => "staging",
+        "prod" or "production"            => "production",
+        _                                 => null,
     };
 }
 
 static string InferDatabaseTarget(IConfiguration configuration, IHostEnvironment environment)
 {
     var connectionString = configuration.GetConnectionString("DefaultConnection");
-
     if (!string.IsNullOrWhiteSpace(connectionString))
     {
         try
         {
-            var builder = new Npgsql.NpgsqlConnectionStringBuilder(connectionString);
-            var host = builder.Host?.Trim();
+            var csb = new Npgsql.NpgsqlConnectionStringBuilder(connectionString);
+            var host = csb.Host?.Trim();
             if (string.Equals(host, "localhost", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(host, "127.0.0.1", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(host, "::1", StringComparison.OrdinalIgnoreCase))
-            {
                 return "local";
-            }
         }
         catch
         {
@@ -558,23 +141,10 @@ static string InferDatabaseTarget(IConfiguration configuration, IHostEnvironment
         }
     }
 
-    if (environment.IsStaging())
-    {
-        return "staging";
-    }
-
-    if (environment.IsProduction())
-    {
-        return "production";
-    }
-
+    if (environment.IsStaging())   return "staging";
+    if (environment.IsProduction()) return "production";
     return "unknown";
 }
 
-// Map health checks
-app.MapHealthChecks("/health");
-
-app.Run();
-
-// Make Program class accessible for integration testing
+// Make Program class accessible for integration testing.
 public partial class Program { }

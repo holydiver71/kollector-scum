@@ -34,8 +34,9 @@ function buildInitialArtists(
   artistNames: string[],
   allArtists: LookupItem[]
 ): SelectedArtist[] {
+  const artistsById = new Map(allArtists.map((a) => [a.id, a]));
   const byId = artistIds
-    .map((id) => allArtists.find((a) => a.id === id))
+    .map((id) => artistsById.get(id))
     .filter((a): a is LookupItem => a !== undefined)
     .map((a) => ({ id: a.id, name: a.name }));
   const byName = artistNames.map((name) => ({ name }));

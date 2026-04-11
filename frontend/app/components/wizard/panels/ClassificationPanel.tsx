@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import type { WizardFormData, ValidationErrors, LookupItem } from "../types";
 import type { ReleaseLookups } from "../useReleaseLookups";
 
@@ -173,8 +173,9 @@ function buildInitialGenres(
   genreNames: string[],
   allGenres: LookupItem[]
 ): SelectedGenre[] {
+  const genresById = new Map(allGenres.map((g) => [g.id, g]));
   const byId = genreIds
-    .map((id) => allGenres.find((g) => g.id === id))
+    .map((id) => genresById.get(id))
     .filter((g): g is LookupItem => g !== undefined)
     .map((g) => ({ id: g.id, name: g.name }));
   const byName = genreNames.map((name) => ({ name }));
@@ -183,16 +184,16 @@ function buildInitialGenres(
 
 /**
  * Resolve the display name for a lookup selection.
- * Prefers looking up by ID (reliable) when items are loaded; falls back to the
- * stored name string for free-text / custom entries.
+ * Prefers looking up by ID (reliable) when the map is populated; falls back to
+ * the stored name string for free-text / custom entries.
  */
 function resolveDisplayName(
   id: number | undefined,
   storedName: string,
-  items: LookupItem[]
+  itemsById: Map<number, LookupItem>
 ): string {
-  if (id !== undefined && items.length > 0) {
-    const match = items.find((i) => i.id === id);
+  if (id !== undefined && itemsById.size > 0) {
+    const match = itemsById.get(id);
     if (match) return match.name;
   }
   return storedName;
@@ -211,11 +212,26 @@ export default function ClassificationPanel({ data, onChange, errors, lookups }:
     buildInitialGenres(data.genreIds, data.genreNames, lookups.genres)
   );
 
+  // Build O(1) lookup Maps once per lookup list change instead of scanning
+  // arrays on every render (resolveDisplayName previously called .find() 3×).
+  const formatsById = useMemo(
+    () => new Map(lookups.formats.map((f) => [f.id, f])),
+    [lookups.formats]
+  );
+  const packagingsById = useMemo(
+    () => new Map(lookups.packagings.map((p) => [p.id, p])),
+    [lookups.packagings]
+  );
+  const countriesById = useMemo(
+    () => new Map(lookups.countries.map((c) => [c.id, c])),
+    [lookups.countries]
+  );
+
   // Resolve display values from lookup IDs so pre-populated edits show
   // correctly even if the stored name string diverges from the lookup list.
-  const displayFormatName = resolveDisplayName(data.formatId, data.formatName, lookups.formats);
-  const displayPackagingName = resolveDisplayName(data.packagingId, data.packagingName, lookups.packagings);
-  const displayCountryName = resolveDisplayName(data.countryId, data.countryName, lookups.countries);
+  const displayFormatName = resolveDisplayName(data.formatId, data.formatName, formatsById);
+  const displayPackagingName = resolveDisplayName(data.packagingId, data.packagingName, packagingsById);
+  const displayCountryName = resolveDisplayName(data.countryId, data.countryName, countriesById);
 
   const filteredGenres = genreInput.trim()
     ? lookups.genres

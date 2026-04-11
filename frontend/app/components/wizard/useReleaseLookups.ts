@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { fetchJson } from "../../lib/api";
-import type { ApiError } from "../../lib/api";
 import type { LookupItem } from "./types";
+import { withRetry, httpOnlyIsRetryable } from "../../lib/withRetry";
 
 /** All lookup lists needed by the wizard panels */
 export interface ReleaseLookups {
@@ -38,33 +38,22 @@ const EMPTY: ReleaseLookups = {
 
 /**
  * Fetches a single lookup endpoint with exponential back-off on 429 / 5xx.
- * Returns an empty array on success, or null on unrecoverable failure so the
+ * Returns the items array on success, or null on unrecoverable failure so the
  * caller can surface an error while still leaving the list empty.
+ * Network errors (no HTTP status) are NOT retried — only HTTP 429 and 5xx.
  */
 async function fetchLookup(path: string): Promise<LookupItem[] | null> {
-  const maxAttempts = 3;
-  let attempt = 0;
-  while (attempt < maxAttempts) {
-    attempt += 1;
-    try {
-      const res = await fetchJson<PagedResponse>(path);
-      return res?.items ?? [];
-    } catch (err) {
-      const apiErr = err as ApiError;
-      // Only retry on known HTTP status codes — plain errors (no status) are not retried
-      const isRetryable = apiErr?.status === 429 || (!!apiErr?.status && apiErr.status >= 500);
-      if (!isRetryable || attempt >= maxAttempts) {
-        // Template literal contains only the internal API path and attempt count (no user PII); err passed as separate arg.
-        console.warn(`useReleaseLookups: giving up on ${path} after ${attempt} attempt(s):`, err);
-        return null;
-      }
-      const delayMs = apiErr.status === 429 && apiErr.retryAfter
-        ? apiErr.retryAfter * 1000
-        : 1000 * Math.pow(2, attempt - 1);
-      await new Promise(r => setTimeout(r, delayMs));
-    }
+  try {
+    const res = await withRetry<PagedResponse>(
+      () => fetchJson<PagedResponse>(path),
+      { isRetryable: httpOnlyIsRetryable }
+    );
+    return res?.items ?? [];
+  } catch (err) {
+    // Template literal contains only the internal API path (no user PII); err passed as separate arg.
+    console.warn(`useReleaseLookups: giving up on ${path}:`, err);
+    return null;
   }
-  return null;
 }
 
 /**
