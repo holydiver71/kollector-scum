@@ -734,6 +734,16 @@ namespace KollectorScum.Api.DTOs
         public string? Currency { get; set; }
         public DateTime? PurchaseDate { get; set; }
         public string? Notes { get; set; }
+
+        /// <summary>
+        /// Sleeve (cover) condition using Goldmine Grading Guide codes (M, NM, VG+, VG, G+, G, F, P).
+        /// </summary>
+        public string? SleeveCondition { get; set; }
+
+        /// <summary>
+        /// Media (disc/tape) condition using Goldmine Grading Guide codes (M, NM, VG+, VG, G+, G, F, P).
+        /// </summary>
+        public string? MediaCondition { get; set; }
     }
 
     /// <summary>

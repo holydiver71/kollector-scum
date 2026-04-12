@@ -393,6 +393,16 @@ namespace KollectorScum.Api.DTOs
         /// Date added to collection
         /// </summary>
         public string? DateAdded { get; set; }
+
+        /// <summary>
+        /// Sleeve (cover) condition as a Goldmine grade code (e.g. "VG+").
+        /// </summary>
+        public string? SleeveCondition { get; set; }
+
+        /// <summary>
+        /// Media (disc/tape) condition as a Goldmine grade code (e.g. "VG+").
+        /// </summary>
+        public string? MediaCondition { get; set; }
     }
 
     /// <summary>

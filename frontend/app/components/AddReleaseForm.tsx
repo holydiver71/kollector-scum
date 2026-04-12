@@ -38,6 +38,8 @@ export interface CreateMusicReleaseDto {
     currency?: string;
     purchaseDate?: string;
     notes?: string;
+    sleeveCondition?: string;
+    mediaCondition?: string;
   };
   images?: {
     coverFront?: string;

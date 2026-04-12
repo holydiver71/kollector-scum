@@ -306,6 +306,19 @@ namespace KollectorScum.Api.Services
             var images = await SafeDeserializeImageAsync(musicRelease.Images);
             images = ResolveImageUrls(images, musicRelease.UserId);
 
+            var purchaseInfo = await ResolvePurchaseInfoAsync(musicRelease.PurchaseInfo);
+
+            // Conditions are stored as dedicated columns; attach them to the purchase info DTO
+            // (or create a minimal DTO if no purchase info JSON exists)
+            if (musicRelease.SleeveCondition != null || musicRelease.MediaCondition != null)
+            {
+                if (purchaseInfo == null)
+                    purchaseInfo = new MusicReleasePurchaseInfoDto();
+
+                purchaseInfo.SleeveCondition = musicRelease.SleeveCondition;
+                purchaseInfo.MediaCondition = musicRelease.MediaCondition;
+            }
+
             return new MusicReleaseDto
             {
                 Id = musicRelease.Id,
@@ -322,7 +335,7 @@ namespace KollectorScum.Api.Services
                 Format = musicRelease.Format != null ? new FormatDto { Id = musicRelease.Format.Id, Name = musicRelease.Format.Name } : null,
                 Packaging = musicRelease.Packaging != null ? new PackagingDto { Id = musicRelease.Packaging.Id, Name = musicRelease.Packaging.Name } : null,
                 Upc = musicRelease.Upc,
-                PurchaseInfo = await ResolvePurchaseInfoAsync(musicRelease.PurchaseInfo),
+                PurchaseInfo = purchaseInfo,
                 Images = images,
                 Links = await SafeDeserializeLinksAsync(musicRelease.Links),
                 Media = await ResolveMediaArtistsAsync(musicRelease.Media),
