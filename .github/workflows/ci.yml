@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [dev, main]
+    branches: [dev, main, master]
   pull_request:
-    branches: [dev, main]
+    branches: [dev, main, master]
   workflow_dispatch:
     inputs:
       environment:
@@ -119,7 +119,7 @@ jobs:
     name: Deploy API to Render Production
     runs-on: ubuntu-latest
     needs: [backend, frontend]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     steps:
       - name: Trigger Render deploy
         env:
@@ -139,7 +139,7 @@ jobs:
     name: Deploy Frontend to Cloudflare Pages
     runs-on: ubuntu-latest
     needs: frontend
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main')
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -159,6 +159,7 @@ jobs:
         working-directory: frontend
         env:
           NEXT_PUBLIC_API_BASE_URL: ${{ github.ref == 'refs/heads/dev' && secrets.NEXT_PUBLIC_API_BASE_URL_STAGING || secrets.NEXT_PUBLIC_API_BASE_URL_PROD }}
+          # master and main both deploy to production
           NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE__CLIENTID }}
           NEXT_PUBLIC_API_TIMEOUT_MS: "20000"
         run: npx @cloudflare/next-on-pages@1
@@ -283,7 +284,7 @@ jobs:
     name: Production Health Check
     runs-on: ubuntu-latest
     needs: deploy-render-production
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     steps:
       - name: Check production health endpoint
         run: |
