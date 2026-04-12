@@ -227,9 +227,17 @@ export default function AddReleaseWizard({
         }
       }
     } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "An unexpected error occurred.";
-      setSubmitError(`Failed to save release: ${message}`);
+      const message = err instanceof Error ? err.message : "An unexpected error occurred.";
+      // If the API returned structured details (validation errors), prefer them
+      // so the user can see why the request failed.
+      // The fetchJson helper attaches `details` to the thrown ApiError where
+      // available.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const details = (err as any)?.details;
+      const detailText = details ? (typeof details === 'string' ? details : JSON.stringify(details)) : null;
+      setSubmitError(
+        `Failed to save release: ${message}${detailText ? ` — ${detailText}` : ''}`
+      );
     } finally {
       setIsSubmitting(false);
     }
