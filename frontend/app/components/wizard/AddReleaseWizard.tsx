@@ -195,7 +195,17 @@ export default function AddReleaseWizard({
         // Edit mode – PUT to update the existing release.
         // updateRelease calls fetchJson which throws on any non-2xx response,
         // so if the call returns without throwing the update succeeded.
-        await updateRelease(releaseId, dto);
+        try {
+          await updateRelease(releaseId, dto);
+        } catch (err: unknown) {
+          // Surface server validation details to the console to help debugging
+          // without changing user-visible behaviour.
+          // eslint-disable-next-line no-console
+          console.error("UpdateMusicRelease failed - request DTO:", dto);
+          // eslint-disable-next-line no-console
+          console.error("Update error details:", err);
+          throw err;
+        }
         onSuccess?.(releaseId);
       } else {
         // Create mode – POST to add a new release
