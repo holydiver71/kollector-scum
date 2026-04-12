@@ -152,5 +152,19 @@ namespace KollectorScum.Api.Models
         /// Gets or sets user notes about this release
         /// </summary>
         public string? Notes { get; set; }
+
+        /// <summary>
+        /// Gets or sets the sleeve (cover) condition using Goldmine Grading Guide codes
+        /// (M, NM, VG+, VG, G+, G, F, P).
+        /// </summary>
+        [StringLength(20)]
+        public string? SleeveCondition { get; set; }
+
+        /// <summary>
+        /// Gets or sets the media (disc/tape) condition using Goldmine Grading Guide codes
+        /// (M, NM, VG+, VG, G+, G, F, P).
+        /// </summary>
+        [StringLength(20)]
+        public string? MediaCondition { get; set; }
     }
 }

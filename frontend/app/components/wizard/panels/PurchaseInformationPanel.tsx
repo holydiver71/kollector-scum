@@ -24,6 +24,19 @@ const CURRENCIES = [
   { value: "CZK", label: "CZK – Czech Koruna" },
 ];
 
+/** Goldmine Grading Guide options */
+const GOLDMINE_GRADES = [
+  { value: "",    label: "— Not set —" },
+  { value: "M",   label: "M – Mint" },
+  { value: "NM",  label: "NM – Near Mint" },
+  { value: "VG+", label: "VG+ – Very Good Plus" },
+  { value: "VG",  label: "VG – Very Good" },
+  { value: "G+",  label: "G+ – Good Plus" },
+  { value: "G",   label: "G – Good" },
+  { value: "F",   label: "F – Fair" },
+  { value: "P",   label: "P – Poor" },
+];
+
 interface Props {
   /** Current form data */
   data: WizardFormData;
@@ -299,6 +312,56 @@ export default function PurchaseInformationPanel({ data, onChange, errors, looku
           placeholder="e.g. Original UK press in excellent condition"
           className="w-full bg-[#0F0F1A] border border-[#2A2A3C] rounded-lg px-4 py-3 text-white placeholder-gray-600 focus:outline-none focus:border-[#8B5CF6] focus:ring-1 focus:ring-[#8B5CF6] transition-colors resize-none"
         />
+      </div>
+
+      {/* Sleeve + Media Condition */}
+      <div className="bg-[#0A0A12] rounded-xl p-4 border border-[#1C1C28]">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label
+              htmlFor="wiz-sleeveCondition"
+              className="block text-xs font-semibold uppercase tracking-wider text-[#A78BFA]/70 mb-2"
+            >
+              Sleeve Condition
+            </label>
+            <select
+              id="wiz-sleeveCondition"
+              value={purchase.sleeveCondition ?? ""}
+              onChange={(e) => update({ sleeveCondition: e.target.value || undefined })}
+              className="w-full bg-[#0F0F1A] border border-[#2A2A3C] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#8B5CF6] focus:ring-1 focus:ring-[#8B5CF6] transition-colors appearance-none"
+            >
+              {GOLDMINE_GRADES.map((g) => (
+                <option key={g.value} value={g.value}>
+                  {g.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label
+              htmlFor="wiz-mediaCondition"
+              className="block text-xs font-semibold uppercase tracking-wider text-[#A78BFA]/70 mb-2"
+            >
+              Media Condition
+            </label>
+            <select
+              id="wiz-mediaCondition"
+              value={purchase.mediaCondition ?? ""}
+              onChange={(e) => update({ mediaCondition: e.target.value || undefined })}
+              className="w-full bg-[#0F0F1A] border border-[#2A2A3C] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#8B5CF6] focus:ring-1 focus:ring-[#8B5CF6] transition-colors appearance-none"
+            >
+              {GOLDMINE_GRADES.map((g) => (
+                <option key={g.value} value={g.value}>
+                  {g.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <p className="mt-2 text-xs text-gray-500">
+          Goldmine Grading Guide: M (Mint), NM (Near Mint), VG+, VG, G+, G, F (Fair), P (Poor).
+        </p>
       </div>
     </div>
   );

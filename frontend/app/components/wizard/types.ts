@@ -41,6 +41,10 @@ export interface WizardPurchaseInfo {
   currency: string;
   purchaseDate?: string;
   notes?: string;
+  /** Sleeve (cover) condition – Goldmine grade code e.g. "VG+" */
+  sleeveCondition?: string;
+  /** Media (disc/tape) condition – Goldmine grade code e.g. "VG+" */
+  mediaCondition?: string;
 }
 
 /**
@@ -243,7 +247,9 @@ export function toCreateDto(data: WizardFormData): CreateMusicReleaseDto {
     pi.storeName ||
     pi.price !== undefined ||
     pi.purchaseDate ||
-    pi.notes;
+    pi.notes ||
+    pi.sleeveCondition ||
+    pi.mediaCondition;
 
   if (hasPurchase) {
     dto.purchaseInfo = {
@@ -254,6 +260,8 @@ export function toCreateDto(data: WizardFormData): CreateMusicReleaseDto {
       currency: pi.currency || "GBP",
       purchaseDate: pi.purchaseDate || undefined,
       notes: pi.notes || undefined,
+      sleeveCondition: pi.sleeveCondition || undefined,
+      mediaCondition: pi.mediaCondition || undefined,
     };
   }
 
