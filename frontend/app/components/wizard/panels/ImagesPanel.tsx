@@ -149,12 +149,15 @@ function CoverFrontField({
           <div className="w-44 h-44 rounded-xl bg-[#0F0F1A] border border-[#2A2A3C] overflow-hidden relative">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
+              key={coverImageSrc}
               src={coverImageSrc}
               alt="Front cover preview"
               className="w-full h-full object-cover"
               referrerPolicy="no-referrer"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = "none";
+              onError={() => {
+                // If the external URL fails to load (hotlinking/CORS), clear the
+                // preview so the element is remounted when a new URL is set.
+                setPreviewUrl(null);
               }}
             />
           </div>
