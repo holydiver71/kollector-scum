@@ -94,23 +94,25 @@ public class UpdateMusicReleaseDtoValidator : AbstractValidator<UpdateMusicRelea
                 });
         });
 
-        // Images filename validation - should be just filenames, not full URLs
+        // Images validation - allow either a local filename or a full HTTP(S) URL.
+        // The wizard may store the R2 public URL as the value until the release is
+        // saved; the backend normalises it to a relative path in NormalizeImagePaths.
         When(x => x.Images != null, () =>
         {
             RuleFor(x => x.Images!.CoverFront)
-                .Must(BeAValidFilename!)
+                .Must((dto, val) => BeAValidFilename(val) || BeAValidUrl(val))
                 .When(x => !string.IsNullOrWhiteSpace(x.Images!.CoverFront))
-                .WithMessage("Cover front must be a valid filename");
+                .WithMessage("Cover front must be a valid filename or HTTP(S) URL");
 
             RuleFor(x => x.Images!.CoverBack)
-                .Must(BeAValidFilename!)
+                .Must((dto, val) => BeAValidFilename(val) || BeAValidUrl(val))
                 .When(x => !string.IsNullOrWhiteSpace(x.Images!.CoverBack))
-                .WithMessage("Cover back must be a valid filename");
+                .WithMessage("Cover back must be a valid filename or HTTP(S) URL");
 
             RuleFor(x => x.Images!.Thumbnail)
-                .Must(BeAValidFilename!)
+                .Must((dto, val) => BeAValidFilename(val) || BeAValidUrl(val))
                 .When(x => !string.IsNullOrWhiteSpace(x.Images!.Thumbnail))
-                .WithMessage("Thumbnail must be a valid filename");
+                .WithMessage("Thumbnail must be a valid filename or HTTP(S) URL");
         });
     }
 
@@ -119,13 +121,13 @@ public class UpdateMusicReleaseDtoValidator : AbstractValidator<UpdateMusicRelea
         if (string.IsNullOrWhiteSpace(filename))
             return true;
 
-        // Allow filenames with alphanumeric, dash, underscore, dot
-        // Reject if it looks like a full URL
-        if (filename.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-            filename.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        // Reject any URL-like string (any scheme://).
+        // HTTP(S) URLs are validated separately via BeAValidUrl; other schemes
+        // (ftp://, javascript://, etc.) must not be accepted.
+        if (filename.Contains("://", StringComparison.OrdinalIgnoreCase))
             return false;
 
-        return !string.IsNullOrWhiteSpace(filename) && filename.Length < 255;
+        return filename.Length < 255;
     }
 
     private bool BeAValidUrl(string? url)
