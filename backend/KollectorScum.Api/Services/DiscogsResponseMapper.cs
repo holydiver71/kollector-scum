@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using KollectorScum.Api.DTOs;
 using KollectorScum.Api.Interfaces;
+using KollectorScum.Api.Models.Enums;
 
 namespace KollectorScum.Api.Services
 {
@@ -294,7 +295,9 @@ namespace KollectorScum.Api.Services
                             FieldId = n.FieldId,
                             Value = n.Value
                         }).ToList(),
-                        BasicInformation = null
+                        BasicInformation = null,
+                        SleeveCondition = GoldmineGrade.ParseDiscogsCondition(r.SleeveCondition),
+                        MediaCondition = GoldmineGrade.ParseDiscogsCondition(r.MediaCondition)
                     });
                     continue;
                 }
@@ -309,6 +312,8 @@ namespace KollectorScum.Api.Services
                         FieldId = n.FieldId,
                         Value = n.Value
                     }).ToList(),
+                    SleeveCondition = GoldmineGrade.ParseDiscogsCondition(r.SleeveCondition),
+                    MediaCondition = GoldmineGrade.ParseDiscogsCondition(r.MediaCondition),
                     BasicInformation = new DiscogsBasicInfoDto
                     {
                         Id = r.BasicInformation.Id,
@@ -466,6 +471,12 @@ namespace KollectorScum.Api.Services
             
             [JsonPropertyName("date_added")]
             public string? DateAdded { get; set; }
+
+            [JsonPropertyName("sleeve_condition")]
+            public string? SleeveCondition { get; set; }
+
+            [JsonPropertyName("media_condition")]
+            public string? MediaCondition { get; set; }
         }
 
         private class DiscogsBasicInfoResponse

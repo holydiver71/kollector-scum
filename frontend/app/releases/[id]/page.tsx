@@ -53,6 +53,8 @@ interface PurchaseInfo {
   currency?: string;
   purchaseDate?: string;
   notes?: string;
+  sleeveCondition?: string;
+  mediaCondition?: string;
 }
 
 interface ReleaseImages {
@@ -471,6 +473,8 @@ export default function ReleaseDetailPage() {
                   ["Added", new Date(release.dateAdded).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })],
                   ["Modified", new Date(release.lastModified).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })],
                   release.lastPlayedAt && ["Last Played", new Date(release.lastPlayedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })],
+                  release.purchaseInfo?.sleeveCondition && ["Sleeve Condition", release.purchaseInfo.sleeveCondition],
+                  release.purchaseInfo?.mediaCondition && ["Media Condition", release.purchaseInfo.mediaCondition],
                 ].filter(Boolean) as [string, React.ReactNode][],
               },
             ].map(({ title, items }) => items.length > 0 && (

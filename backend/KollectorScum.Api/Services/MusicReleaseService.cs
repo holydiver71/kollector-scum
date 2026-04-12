@@ -220,6 +220,8 @@ namespace KollectorScum.Api.Services
                         Notes = createDto.PurchaseInfo.Notes
                     };
                     musicRelease.PurchaseInfo = JsonSerializer.Serialize(purchaseInfoValueObject);
+                    musicRelease.SleeveCondition = createDto.PurchaseInfo.SleeveCondition;
+                    musicRelease.MediaCondition = createDto.PurchaseInfo.MediaCondition;
                 }
 
                 await _musicReleaseRepository.AddAsync(musicRelease);
@@ -318,11 +320,15 @@ namespace KollectorScum.Api.Services
                     var serialized = JsonSerializer.Serialize(purchaseInfoValueObject);
                     _logger.LogInformation("[OLD SERVICE] PurchaseInfo serialized: {Json}", serialized);
                     existingMusicRelease.PurchaseInfo = serialized;
+                    existingMusicRelease.SleeveCondition = updateDto.PurchaseInfo.SleeveCondition;
+                    existingMusicRelease.MediaCondition = updateDto.PurchaseInfo.MediaCondition;
                 }
                 else
                 {
                     _logger.LogInformation("[OLD SERVICE] PurchaseInfo is null, clearing field");
                     existingMusicRelease.PurchaseInfo = null;
+                    existingMusicRelease.SleeveCondition = null;
+                    existingMusicRelease.MediaCondition = null;
                 }
                 
                 existingMusicRelease.Images = updateDto.Images != null ? JsonSerializer.Serialize(updateDto.Images) : null;
