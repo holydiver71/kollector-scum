@@ -103,7 +103,10 @@ describe("toCreateDto", () => {
     expect(dto.upc).toBe("077774681116");
   });
 
-  it("strips image filenames from full URLs", () => {
+  it("preserves full HTTP(S) image URLs as-is (Discogs import flow)", () => {
+    // HTTP(S) URLs are now passed through unchanged so the backend can store
+    // and later download the external image. Only non-URL values (bare filenames
+    // or relative paths) have their path components stripped.
     const data = {
       ...BASE_DATA,
       images: {
@@ -113,7 +116,7 @@ describe("toCreateDto", () => {
       },
     };
     const dto = toCreateDto(data);
-    expect(dto.images?.coverFront).toBe("iron-maiden-beast.jpg");
+    expect(dto.images?.coverFront).toBe("https://img.discogs.com/covers/iron-maiden-beast.jpg");
   });
 
   it("preserves image filenames that are already bare", () => {
