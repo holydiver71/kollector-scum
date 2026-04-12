@@ -39,11 +39,12 @@ function parseDisplayToIso(raw: string): string | null {
     if (!isNaN(dt.getTime())) return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
   }
 
-  // YYYY-MM-DD (already ISO)
-  const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  // YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss (ISO datetime — strip time)
+  const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (isoMatch) {
-    const dt = new Date(s);
-    if (!isNaN(dt.getTime())) return s;
+    const datePart = s.substring(0, 10);
+    const dt = new Date(datePart);
+    if (!isNaN(dt.getTime())) return datePart;
   }
 
   // MM/DD/YYYY (American) — only as fallback when day > 12 disambiguates
@@ -57,10 +58,12 @@ function parseDisplayToIso(raw: string): string | null {
   return null;
 }
 
-/** Format an ISO `YYYY-MM-DD` string to `DD/MM/YYYY` for display. */
+/** Format an ISO `YYYY-MM-DD` (or `YYYY-MM-DDTHH:mm:ss`) string to `DD/MM/YYYY` for display. */
 function isoToDisplay(iso: string): string {
   if (!iso) return "";
-  const [y, m, d] = iso.split("-");
+  // Strip any time component (e.g. "2018-04-28T00:00:00" → "2018-04-28")
+  const datePart = iso.split("T")[0];
+  const [y, m, d] = datePart.split("-");
   if (!y || !m || !d) return iso;
   return `${d}/${m}/${y}`;
 }

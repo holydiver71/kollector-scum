@@ -291,14 +291,14 @@ describe("AddReleaseWizard – navigation", () => {
     expect(onCancel).toHaveBeenCalledTimes(1);
   });
 
-  it("shows 'Cancel' on step 0 and 'Previous' on subsequent steps", async () => {
+  it("shows 'Cancel' on step 0 and both 'Previous' and 'Cancel' on subsequent steps", async () => {
     const onCancel = jest.fn();
     const user = userEvent.setup();
     render(<AddReleaseWizard onCancel={onCancel} />);
     expect(screen.getByRole("button", { name: /cancel/i })).toBeInTheDocument();
     await fillAndAdvanceFromStep0(user);
     expect(screen.getByRole("button", { name: /previous/i })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /cancel/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /cancel/i })).toBeInTheDocument();
   });
 
   it("reaches the Draft Preview panel after navigating through all 7 steps", async () => {

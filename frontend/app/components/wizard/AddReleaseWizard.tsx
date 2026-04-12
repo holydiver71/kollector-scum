@@ -447,26 +447,37 @@ export default function AddReleaseWizard({
                   Cancel
                 </button>
               ) : (
-                <button
-                  type="button"
-                  onClick={handlePrevious}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold border transition-colors border-[#1C1C28] text-gray-300 hover:text-white hover:border-[#8B5CF6]/50"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
+                <>
+                  <button
+                    type="button"
+                    onClick={handlePrevious}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold border transition-colors border-[#1C1C28] text-gray-300 hover:text-white hover:border-[#8B5CF6]/50"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M15.75 19.5L8.25 12l7.5-7.5"
-                    />
-                  </svg>
-                  Previous
-                </button>
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M15.75 19.5L8.25 12l7.5-7.5"
+                      />
+                    </svg>
+                    Previous
+                  </button>
+                  {onCancel && (
+                    <button
+                      type="button"
+                      onClick={() => setShowCancelConfirm(true)}
+                      className="px-3 py-2 text-sm text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </>
               )}
             </div>
 
