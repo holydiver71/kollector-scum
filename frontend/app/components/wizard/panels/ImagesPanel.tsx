@@ -82,6 +82,7 @@ function CoverFrontField({
         filename: string;
         thumbnailFilename?: string;
         publicUrl?: string;
+        thumbnailPublicUrl?: string;
       }>(`/api/images/download?generateThumbnail=true`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -96,9 +97,11 @@ function CoverFrontField({
       // Store publicUrl (e.g. /cover-art/{userId}/uuid.jpg) as coverFront so the
       // value persists correctly on the Draft Preview step. toImageFilename() in
       // types.ts strips it back to the bare filename when building the save DTO.
+      // Prefer the thumbnail's public URL over the bare filename so it displays
+      // correctly on the detail page without an extra API round-trip.
       onChange(
         data.publicUrl ?? data.filename,
-        data.thumbnailFilename ?? thumbnailUrl,
+        data.thumbnailPublicUrl ?? data.thumbnailFilename ?? thumbnailUrl,
       );
     } catch (err: unknown) {
       // Fall back to storing the direct CAA URLs as a best-effort measure
@@ -149,12 +152,13 @@ function CoverFrontField({
               src={coverImageSrc}
               alt="Front cover preview"
               className="w-full h-full object-cover"
+              referrerPolicy="no-referrer"
               onError={(e) => {
                 (e.target as HTMLImageElement).style.display = "none";
               }}
             />
           </div>
-          <p className="font-mono text-xs text-[#8B5CF6]/70 truncate mt-1.5 max-w-44">{value}</p>
+          <p className="font-mono text-xs text-[#8B5CF6]/70 break-all mt-1.5">{value}</p>
         </div>
       ) : null}
 
