@@ -93,7 +93,7 @@ export default function PurchaseInformationPanel({ data, onChange, errors, looku
     update({ storeId: store.id, storeName: store.name });
   };
 
-  const useTypedStoreName = () => {
+  const applyTypedStoreName = () => {
     const nextValue = storeInput.trim();
     setStoreInput(nextValue);
     setShowStoreSuggestions(false);
@@ -152,7 +152,7 @@ export default function PurchaseInformationPanel({ data, onChange, errors, looku
                     if (filteredStores.length > 0) {
                       selectStore(filteredStores[0]);
                     } else {
-                      useTypedStoreName();
+                      applyTypedStoreName();
                     }
                   }
                   if (e.key === "Escape") setShowStoreSuggestions(false);
@@ -203,7 +203,7 @@ export default function PurchaseInformationPanel({ data, onChange, errors, looku
                       type="button"
                       onMouseDown={(e) => {
                         e.preventDefault();
-                        useTypedStoreName();
+                        applyTypedStoreName();
                       }}
                       className="w-full text-left px-4 py-2.5 text-sm text-[#C4B5FD] border-t border-[#1C1C28] hover:bg-[#8B5CF6]/10 transition-colors"
                     >
