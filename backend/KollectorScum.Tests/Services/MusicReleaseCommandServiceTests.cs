@@ -354,6 +354,49 @@ namespace KollectorScum.Tests.Services
                 It.IsAny<List<int>?>(), It.IsAny<List<string>?>(), It.IsAny<CreatedEntitiesDto>()), Times.Once);
         }
 
+        /// <summary>
+        /// Verifies that CreateMusicReleaseAsync persists MediaCondition and SleeveCondition
+        /// to the entity's dedicated columns when PurchaseInfo is provided.
+        /// </summary>
+        [Fact]
+        public async Task CreateMusicReleaseAsync_WithConditionFields_PersistsConditionsToEntity()
+        {
+            // Arrange
+            var createDto = new CreateMusicReleaseDto
+            {
+                Title = "New Album",
+                PurchaseInfo = new MusicReleasePurchaseInfoDto
+                {
+                    MediaCondition = "Very Good (VG)",
+                    SleeveCondition = "Good Plus (G+)"
+                }
+            };
+
+            SetupDefaultEntityResolvers();
+            SetupValidCreateValidation();
+
+            MusicRelease? savedRelease = null;
+            _mockMusicReleaseRepo.Setup(r => r.AddAsync(It.IsAny<MusicRelease>()))
+                .Callback<MusicRelease>(mr => { mr.Id = 1; savedRelease = mr; })
+                .ReturnsAsync((MusicRelease mr) => mr);
+
+            _mockMapper.Setup(m => m.MapToFullDtoAsync(It.IsAny<MusicRelease>()))
+                .ReturnsAsync(new MusicReleaseDto { Id = 1, Title = "New Album" });
+
+            _mockUnitOfWork.Setup(u => u.BeginTransactionAsync()).Returns(Task.CompletedTask);
+            _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+            _mockUnitOfWork.Setup(u => u.CommitTransactionAsync()).Returns(Task.CompletedTask);
+
+            // Act
+            var result = await _service.CreateMusicReleaseAsync(createDto);
+
+            // Assert
+            Assert.True(result.IsSuccess);
+            Assert.NotNull(savedRelease);
+            Assert.Equal("Very Good (VG)", savedRelease!.MediaCondition);
+            Assert.Equal("Good Plus (G+)", savedRelease.SleeveCondition);
+        }
+
         #endregion
 
         #region UpdateMusicReleaseAsync Tests
@@ -834,6 +877,100 @@ namespace KollectorScum.Tests.Services
                 It.IsAny<Func<IQueryable<Store>, IOrderedQueryable<Store>>>(),
                 It.IsAny<string>()), Times.Never);
             _mockStoreRepo.Verify(s => s.AddAsync(It.IsAny<Store>()), Times.Never);
+        }
+
+        /// <summary>
+        /// Verifies that UpdateMusicReleaseAsync persists MediaCondition and SleeveCondition
+        /// to the entity's dedicated columns when PurchaseInfo is provided.
+        /// </summary>
+        [Fact]
+        public async Task UpdateMusicReleaseAsync_WithConditionFields_PersistsConditionsToEntity()
+        {
+            // Arrange
+            var updateDto = new UpdateMusicReleaseDto
+            {
+                Title = "Album",
+                PurchaseInfo = new MusicReleasePurchaseInfoDto
+                {
+                    MediaCondition = "Mint (M)",
+                    SleeveCondition = "Very Good Plus (VG+)"
+                }
+            };
+
+            var existingRelease = new MusicRelease
+            {
+                Id = 1,
+                Title = "Album",
+                UserId = defaultUserId,
+                DateAdded = DateTime.UtcNow,
+                LastModified = DateTime.UtcNow
+            };
+
+            MusicRelease? savedRelease = null;
+            _mockMusicReleaseRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(existingRelease);
+            _mockMusicReleaseRepo.Setup(r => r.Update(It.IsAny<MusicRelease>()))
+                .Callback<MusicRelease>(r => savedRelease = r);
+
+            SetupValidUpdateValidation();
+
+            _mockUnitOfWork.Setup(u => u.BeginTransactionAsync()).Returns(Task.CompletedTask);
+            _mockUnitOfWork.Setup(u => u.CommitTransactionAsync()).Returns(Task.CompletedTask);
+            _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+            _mockMapper.Setup(m => m.MapToFullDtoAsync(It.IsAny<MusicRelease>()))
+                .ReturnsAsync(new MusicReleaseDto { Id = 1 });
+
+            // Act
+            var result = await _service.UpdateMusicReleaseAsync(1, updateDto);
+
+            // Assert
+            Assert.True(result.IsSuccess);
+            Assert.NotNull(savedRelease);
+            Assert.Equal("Mint (M)", savedRelease!.MediaCondition);
+            Assert.Equal("Very Good Plus (VG+)", savedRelease.SleeveCondition);
+        }
+
+        /// <summary>
+        /// Verifies that UpdateMusicReleaseAsync clears MediaCondition and SleeveCondition
+        /// when PurchaseInfo is null.
+        /// </summary>
+        [Fact]
+        public async Task UpdateMusicReleaseAsync_WithNullPurchaseInfo_ClearsConditionFields()
+        {
+            // Arrange
+            var updateDto = new UpdateMusicReleaseDto { Title = "Album", PurchaseInfo = null };
+
+            var existingRelease = new MusicRelease
+            {
+                Id = 1,
+                Title = "Album",
+                UserId = defaultUserId,
+                MediaCondition = "Mint (M)",
+                SleeveCondition = "Good (G)",
+                DateAdded = DateTime.UtcNow,
+                LastModified = DateTime.UtcNow
+            };
+
+            MusicRelease? savedRelease = null;
+            _mockMusicReleaseRepo.Setup(r => r.GetByIdAsync(1)).ReturnsAsync(existingRelease);
+            _mockMusicReleaseRepo.Setup(r => r.Update(It.IsAny<MusicRelease>()))
+                .Callback<MusicRelease>(r => savedRelease = r);
+
+            SetupValidUpdateValidation();
+
+            _mockUnitOfWork.Setup(u => u.BeginTransactionAsync()).Returns(Task.CompletedTask);
+            _mockUnitOfWork.Setup(u => u.CommitTransactionAsync()).Returns(Task.CompletedTask);
+            _mockUnitOfWork.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+            _mockMapper.Setup(m => m.MapToFullDtoAsync(It.IsAny<MusicRelease>()))
+                .ReturnsAsync(new MusicReleaseDto { Id = 1 });
+
+            // Act
+            var result = await _service.UpdateMusicReleaseAsync(1, updateDto);
+
+            // Assert
+            Assert.True(result.IsSuccess);
+            Assert.NotNull(savedRelease);
+            Assert.Null(savedRelease!.MediaCondition);
+            Assert.Null(savedRelease.SleeveCondition);
         }
 
         #endregion

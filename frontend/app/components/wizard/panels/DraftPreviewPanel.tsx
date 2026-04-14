@@ -314,6 +314,17 @@ export default function DraftPreviewPanel({
                 <MetaRow label="Notes" value={data.purchaseInfo.notes || null} />
               </div>
             )}
+
+            {/* Collection Data card (conditional) */}
+            {(data.purchaseInfo.mediaCondition || data.purchaseInfo.sleeveCondition) && (
+              <div className="bg-[#13131F] rounded-xl p-4 border border-[#1C1C28] space-y-1.5">
+                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">
+                  Collection Data
+                </h3>
+                <MetaRow label="Sleeve Condition" value={data.purchaseInfo.sleeveCondition || null} />
+                <MetaRow label="Media Condition" value={data.purchaseInfo.mediaCondition || null} />
+              </div>
+            )}
           </div>
 
           {/* ── Right column (2 cols) ────────────────────────────────────── */}
