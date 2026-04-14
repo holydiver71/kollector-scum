@@ -1,0 +1,176 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e7] [cursor=pointer]:
+    - img [ref=e8]
+  - alert [ref=e11]
+  - generic [ref=e12]:
+    - complementary [ref=e13]:
+      - button [ref=e15]:
+        - img [ref=e16]
+      - navigation [ref=e17]:
+        - list [ref=e18]:
+          - listitem [ref=e19]:
+            - link [ref=e20] [cursor=pointer]:
+              - /url: /
+              - img [ref=e21]
+            - generic: Home
+          - listitem [ref=e24]:
+            - link [ref=e25] [cursor=pointer]:
+              - /url: /add
+              - img [ref=e26]
+            - generic: Add Music
+          - listitem [ref=e28]:
+            - link [ref=e29] [cursor=pointer]:
+              - /url: /collection
+              - img [ref=e30]
+            - generic: Collection
+          - listitem [ref=e34]:
+            - link [ref=e35] [cursor=pointer]:
+              - /url: /kollections
+              - img [ref=e36]
+            - generic: Kollections
+          - listitem [ref=e38]:
+            - link [ref=e39] [cursor=pointer]:
+              - /url: /lists
+              - img [ref=e40]
+            - generic: Lists
+          - listitem [ref=e41]:
+            - link [ref=e42] [cursor=pointer]:
+              - /url: /artists
+              - img [ref=e43]
+            - generic: Artists
+          - listitem [ref=e46]:
+            - link [ref=e47] [cursor=pointer]:
+              - /url: /genres
+              - img [ref=e48]
+            - generic: Genres
+          - listitem [ref=e49]:
+            - link [ref=e50] [cursor=pointer]:
+              - /url: /statistics
+              - img [ref=e51]
+            - generic: Statistics
+          - listitem [ref=e53]:
+            - button [ref=e54]:
+              - img [ref=e55]
+            - generic: Random Album
+      - list [ref=e62]:
+        - listitem [ref=e63]:
+          - link [ref=e64] [cursor=pointer]:
+            - /url: /settings
+            - img [ref=e65]
+          - generic: Settings
+        - listitem [ref=e68]:
+          - link [ref=e69] [cursor=pointer]:
+            - /url: /profile
+            - img [ref=e70]
+          - generic: Profile
+    - generic [ref=e74]:
+      - banner [ref=e75]:
+        - generic [ref=e78]:
+          - generic [ref=e79]: Playwright User
+          - button "Sign Out" [ref=e80]
+        - generic [ref=e82]:
+          - link "Home" [ref=e83] [cursor=pointer]:
+            - /url: /
+            - img "Kollector Sküm logo" [ref=e84]
+          - generic [ref=e85]:
+            - paragraph [ref=e86]: Organise and discover your music library
+            - generic [ref=e89]:
+              - generic:
+                - img
+              - textbox "Search releases, artists, albums..." [ref=e90]
+      - main [ref=e91]:
+        - generic [ref=e94]:
+          - generic [ref=e95]:
+            - generic [ref=e96]:
+              - textbox "Search releases, artists, albums..." [ref=e98]
+              - combobox [ref=e99] [cursor=pointer]:
+                - 'option "Sort: Date Added"'
+                - option "Title (A-Z)" [selected]
+                - option "Title (Z-A)"
+                - option "Artist (A-Z)"
+                - option "Artist (Z-A)"
+                - option "Year (Newest)"
+                - option "Year (Oldest)"
+              - button "Filters" [active] [ref=e100]:
+                - img [ref=e101]
+                - text: Filters
+                - img [ref=e103]
+            - generic [ref=e106]: 1 release
+            - generic [ref=e110]:
+              - generic [ref=e111]:
+                - heading "Advanced Filters" [level=3] [ref=e112]:
+                  - img [ref=e113]
+                  - text: Advanced Filters
+                - button "Close filters" [ref=e115]: Close
+              - generic [ref=e116]:
+                - generic [ref=e117]:
+                  - generic [ref=e118]:
+                    - img [ref=e119]
+                    - text: Artist
+                  - button "Select artist..." [ref=e122]:
+                    - text: Select artist...
+                    - img [ref=e124]
+                - generic [ref=e126]:
+                  - generic [ref=e127]:
+                    - img [ref=e128]
+                    - text: Genre
+                  - button "Select genre..." [ref=e131]:
+                    - text: Select genre...
+                    - img [ref=e133]
+                - generic [ref=e135]:
+                  - text: Label
+                  - button "Select label..." [ref=e137]:
+                    - text: Select label...
+                    - img [ref=e139]
+                - generic [ref=e141]:
+                  - text: Country
+                  - button "Select country..." [ref=e143]:
+                    - text: Select country...
+                    - img [ref=e145]
+                - generic [ref=e147]:
+                  - text: Format
+                  - button "Select format..." [ref=e149]:
+                    - text: Select format...
+                    - img [ref=e151]
+                - generic [ref=e153]:
+                  - text: Recording Type
+                  - button "All recordings" [ref=e155]:
+                    - text: All recordings
+                    - img [ref=e157]
+                - generic [ref=e159]:
+                  - text: From Year
+                  - spinbutton [ref=e160]
+                - generic [ref=e161]:
+                  - text: To Year
+                  - spinbutton [ref=e162]
+          - generic [ref=e164] [cursor=pointer]:
+            - generic [ref=e165]:
+              - img [ref=e167]
+              - generic "Vinyl" [ref=e172]:
+                - img [ref=e173]
+              - generic [ref=e181]:
+                - link [ref=e182]:
+                  - /url: /releases/1
+                  - img [ref=e183]
+                - button "Mark as now playing" [ref=e186]:
+                  - img [ref=e187]
+                - button "Add to list" [ref=e189]:
+                  - img [ref=e190]
+            - generic "Playwright Test Release" [ref=e191]:
+              - link "Playwright Test Release" [ref=e192]:
+                - /url: /releases/1
+            - generic "Playwright Artist" [ref=e193]
+            - generic [ref=e194]: 2020 · Test Label
+      - contentinfo [ref=e195]:
+        - generic [ref=e197]:
+          - generic [ref=e198]: © 2026 Kollector-Sküm. Music Collection Manager.
+          - generic [ref=e199]:
+            - link "About" [ref=e200] [cursor=pointer]:
+              - /url: /about
+            - generic "API Online" [ref=e201]: API
+            - generic "DB Offline" [ref=e203]: "DB: Unknown"
+            - generic [ref=e205]: "Last Deploy: 4/13/2026, 8:02:50 PM"
+```

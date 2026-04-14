@@ -773,6 +773,8 @@ namespace KollectorScum.Api.Services
                     Artists = artistIds.Count > 0 ? JsonSerializer.Serialize(artistIds) : null,
                     Genres = genreIds.Count > 0 ? JsonSerializer.Serialize(genreIds) : null,
                     Notes = notes,
+                    SleeveCondition = release.SleeveCondition,
+                    MediaCondition = release.MediaCondition,
                     DateAdded = DateTime.UtcNow,
                     LastModified = DateTime.UtcNow
                 };

@@ -2,6 +2,7 @@ using System.Text;
 using System.Threading.RateLimiting;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using KollectorScum.Api.Application.Queries;
 using KollectorScum.Api.Controllers;
 using KollectorScum.Api.Data;
 using KollectorScum.Api.DTOs;
@@ -319,7 +320,6 @@ public static class ServiceCollectionExtensions
 
     /// <summary>
     /// Registers music-release business logic and query/command services.
-    /// Includes legacy compatibility registrations pending test migration.
     /// </summary>
     public static IServiceCollection AddMusicReleaseServices(this IServiceCollection services)
     {
@@ -331,11 +331,9 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<IMusicReleaseDuplicateDetector, MusicReleaseDuplicateDetector>();
         services.AddScoped<IMusicReleaseValidator, MusicReleaseValidator>();
+        services.AddScoped<IGetMusicReleasesQueryHandler, GetMusicReleasesQueryHandler>();
         services.AddScoped<IMusicReleaseQueryService, MusicReleaseQueryService>();
         services.AddScoped<IMusicReleaseCommandService, MusicReleaseCommandService>();
-
-        // Keep for backward compatibility until test migration is complete.
-        services.AddScoped<IMusicReleaseService, MusicReleaseService>();
 
         return services;
     }
