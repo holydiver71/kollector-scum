@@ -88,12 +88,36 @@ namespace KollectorScum.Tests.Services
         [Fact]
         public async Task FindOrCreateUserFromGoogleAsync_DeactivatedAccount_ThrowsUnauthorizedAccessException()
         {
+            // User found by email but soft-deactivated (IsActive = false)
+            var inactiveUser = new ApplicationUser
+            {
+                Id = Guid.NewGuid(),
+                Email = "user@example.com",
+                GoogleSub = "sub123",
+                IsActive = false
+            };
             _mockUserRepository.Setup(r => r.FindByGoogleSubAsync(It.IsAny<string>()))
                 .ReturnsAsync((ApplicationUser?)null);
             _mockUserRepository.Setup(r => r.FindByEmailAsync(It.IsAny<string>()))
-                .ReturnsAsync((ApplicationUser?)null);
-            _mockInvitationRepository.Setup(r => r.FindByEmailAsync(It.IsAny<string>()))
-                .ReturnsAsync(new UserInvitation { Email = "user@example.com", IsUsed = true });
+                .ReturnsAsync(inactiveUser);
+
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+                _service.FindOrCreateUserFromGoogleAsync("sub123", "user@example.com", "User"));
+        }
+
+        [Fact]
+        public async Task FindOrCreateUserFromGoogleAsync_DeactivatedByGoogleSub_ThrowsUnauthorizedAccessException()
+        {
+            // User found directly by googleSub but soft-deactivated
+            var inactiveUser = new ApplicationUser
+            {
+                Id = Guid.NewGuid(),
+                Email = "user@example.com",
+                GoogleSub = "sub123",
+                IsActive = false
+            };
+            _mockUserRepository.Setup(r => r.FindByGoogleSubAsync("sub123"))
+                .ReturnsAsync(inactiveUser);
 
             await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
                 _service.FindOrCreateUserFromGoogleAsync("sub123", "user@example.com", "User"));
@@ -176,6 +200,22 @@ namespace KollectorScum.Tests.Services
             Assert.Equal(createdUser.Id, result.Id);
             _mockUserProfileRepository.Verify(r => r.CreateAsync(It.IsAny<UserProfile>()), Times.Once);
             _mockInvitationRepository.Verify(r => r.UpdateAsync(It.Is<UserInvitation>(i => i.IsUsed)), Times.Once);
+        }
+
+        [Fact]
+        public async Task FindOrCreateUserFromEmailAsync_DeactivatedAccount_ThrowsUnauthorizedAccessException()
+        {
+            var inactiveUser = new ApplicationUser
+            {
+                Id = Guid.NewGuid(),
+                Email = "user@example.com",
+                IsActive = false
+            };
+            _mockUserRepository.Setup(r => r.FindByEmailAsync("user@example.com"))
+                .ReturnsAsync(inactiveUser);
+
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+                _service.FindOrCreateUserFromEmailAsync("user@example.com"));
         }
 
         #endregion

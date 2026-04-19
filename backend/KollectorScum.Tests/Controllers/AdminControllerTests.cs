@@ -21,6 +21,7 @@ namespace KollectorScum.Tests.Controllers
         private readonly Mock<ILogger<AdminController>> _mockLogger;
         private readonly Mock<IStorageMigrationService> _mockStorageMigrationService;
         private readonly Mock<IUserImpersonationService> _mockUserImpersonationService;
+        private readonly Mock<IUserProfileRepository> _mockUserProfileRepository;
         private readonly AdminController _controller;
         private readonly Guid _adminUserId = Guid.NewGuid();
 
@@ -31,13 +32,15 @@ namespace KollectorScum.Tests.Controllers
             _mockLogger = new Mock<ILogger<AdminController>>();
             _mockStorageMigrationService = new Mock<IStorageMigrationService>();
             _mockUserImpersonationService = new Mock<IUserImpersonationService>();
+            _mockUserProfileRepository = new Mock<IUserProfileRepository>();
 
             _controller = new AdminController(
                 _mockUserRepository.Object,
                 _mockInvitationRepository.Object,
                 _mockLogger.Object,
                 _mockStorageMigrationService.Object,
-                _mockUserImpersonationService.Object
+                _mockUserImpersonationService.Object,
+                _mockUserProfileRepository.Object
             );
 
             // Set up authenticated admin user
@@ -306,7 +309,7 @@ namespace KollectorScum.Tests.Controllers
         }
 
         [Fact]
-        public async Task ActivateInvitation_AsAdmin_WhenDeactivated_ResetsInvitationToPending()
+        public async Task ActivateInvitation_AsAdmin_WhenDeactivated_ReactivatesExistingUser()
         {
             // Arrange
             var adminUser = new ApplicationUser
@@ -332,13 +335,19 @@ namespace KollectorScum.Tests.Controllers
                 .Setup(x => x.FindByIdAsync(10))
                 .ReturnsAsync(deactivatedInvitation);
 
+            var deactivatedUser = new ApplicationUser
+            {
+                Id = Guid.NewGuid(),
+                Email = "cloudymilder@gmail.com",
+                IsActive = false
+            };
             _mockUserRepository
                 .Setup(x => x.FindByEmailAsync("cloudymilder@gmail.com"))
-                .ReturnsAsync((ApplicationUser?)null);
+                .ReturnsAsync(deactivatedUser);
 
-            _mockInvitationRepository
-                .Setup(x => x.UpdateAsync(It.IsAny<UserInvitation>()))
-                .ReturnsAsync((UserInvitation inv) => inv);
+            _mockUserRepository
+                .Setup(x => x.SetActiveAsync(deactivatedUser.Id, true))
+                .ReturnsAsync(true);
 
             // Act
             var result = await _controller.ActivateInvitation(10);
@@ -346,8 +355,86 @@ namespace KollectorScum.Tests.Controllers
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result.Result);
             var dto = Assert.IsType<UserInvitationDto>(okResult.Value);
-            Assert.False(dto.IsUsed);
-            Assert.Null(dto.UsedAt);
+            // Invitation stays 'used' — the user's IsActive flag is what changed
+            Assert.True(dto.IsUsed);
+            _mockUserRepository.Verify(x => x.SetActiveAsync(deactivatedUser.Id, true), Times.Once);
+        }
+
+        [Fact]
+        public async Task ActivateInvitation_AsAdmin_WhenUserNotFound_ReturnsBadRequest()
+        {
+            // Arrange
+            var adminUser = new ApplicationUser
+            {
+                Id = _adminUserId,
+                Email = "admin@example.com",
+                IsAdmin = true
+            };
+            _mockUserRepository
+                .Setup(x => x.FindByIdAsync(_adminUserId))
+                .ReturnsAsync(adminUser);
+
+            var invitation = new UserInvitation
+            {
+                Id = 10,
+                Email = "ghost@example.com",
+                CreatedAt = DateTime.UtcNow,
+                IsUsed = true,
+                UsedAt = DateTime.UtcNow.AddHours(-1)
+            };
+            _mockInvitationRepository
+                .Setup(x => x.FindByIdAsync(10))
+                .ReturnsAsync(invitation);
+
+            _mockUserRepository
+                .Setup(x => x.FindByEmailAsync("ghost@example.com"))
+                .ReturnsAsync((ApplicationUser?)null);
+
+            // Act
+            var result = await _controller.ActivateInvitation(10);
+
+            // Assert
+            Assert.IsType<BadRequestObjectResult>(result.Result);
+        }
+
+        [Fact]
+        public async Task RevokeUserAccess_AsAdmin_SoftDeletesUser_PreservesCollection()
+        {
+            // Arrange
+            var adminUser = new ApplicationUser
+            {
+                Id = _adminUserId,
+                Email = "admin@example.com",
+                IsAdmin = true
+            };
+            _mockUserRepository
+                .Setup(x => x.FindByIdAsync(_adminUserId))
+                .ReturnsAsync(adminUser);
+
+            var targetUserId = Guid.NewGuid();
+            var targetUser = new ApplicationUser
+            {
+                Id = targetUserId,
+                Email = "regular@example.com",
+                IsAdmin = false,
+                IsActive = true
+            };
+            _mockUserRepository
+                .Setup(x => x.FindByIdAsync(targetUserId))
+                .ReturnsAsync(targetUser);
+
+            _mockUserRepository
+                .Setup(x => x.SetActiveAsync(targetUserId, false))
+                .ReturnsAsync(true);
+
+            // Act
+            var result = await _controller.RevokeUserAccess(targetUserId);
+
+            // Assert
+            Assert.IsType<NoContentResult>(result);
+            // Verify soft delete (SetActiveAsync) was used, NOT hard delete
+            _mockUserRepository.Verify(x => x.SetActiveAsync(targetUserId, false), Times.Once);
+            _mockUserRepository.Verify(x => x.DeleteAsync(It.IsAny<Guid>()), Times.Never);
         }
 
         [Fact]
@@ -560,6 +647,247 @@ namespace KollectorScum.Tests.Controllers
 
             // Assert
             Assert.IsType<ForbidResult>(result.Result);
+        }
+
+        // ─── DeleteUserCollection ────────────────────────────────────────────────────
+
+        [Fact]
+        public async Task DeleteUserCollection_AsAdmin_WithDeactivatedUser_DeletesCollectionAndReturnsCount()
+        {
+            // Arrange
+            SetupAdminUser();
+
+            var targetUserId = Guid.NewGuid();
+            var deactivatedUser = new ApplicationUser
+            {
+                Id = targetUserId,
+                Email = "deactivated@example.com",
+                IsAdmin = false,
+                IsActive = false
+            };
+            _mockUserRepository
+                .Setup(x => x.FindByIdAsync(targetUserId))
+                .ReturnsAsync(deactivatedUser);
+
+            _mockUserProfileRepository
+                .Setup(x => x.DeleteAllUserMusicReleasesAsync(targetUserId))
+                .ReturnsAsync(42);
+
+            // Act
+            var result = await _controller.DeleteUserCollection(targetUserId);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result.Result);
+            var response = Assert.IsType<DeleteCollectionResponse>(okResult.Value);
+            Assert.Equal(42, response.AlbumsDeleted);
+            Assert.True(response.Success);
+            _mockUserProfileRepository.Verify(x => x.DeleteAllUserMusicReleasesAsync(targetUserId), Times.Once);
+        }
+
+        [Fact]
+        public async Task DeleteUserCollection_AsAdmin_WithActiveUser_ReturnsBadRequest()
+        {
+            // Arrange
+            SetupAdminUser();
+
+            var activeUserId = Guid.NewGuid();
+            var activeUser = new ApplicationUser
+            {
+                Id = activeUserId,
+                Email = "active@example.com",
+                IsAdmin = false,
+                IsActive = true
+            };
+            _mockUserRepository
+                .Setup(x => x.FindByIdAsync(activeUserId))
+                .ReturnsAsync(activeUser);
+
+            // Act
+            var result = await _controller.DeleteUserCollection(activeUserId);
+
+            // Assert
+            Assert.IsType<BadRequestObjectResult>(result.Result);
+            _mockUserProfileRepository.Verify(x => x.DeleteAllUserMusicReleasesAsync(It.IsAny<Guid>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task DeleteUserCollection_AsAdmin_WithUnknownUser_ReturnsNotFound()
+        {
+            // Arrange
+            SetupAdminUser();
+
+            var missingUserId = Guid.NewGuid();
+            _mockUserRepository
+                .Setup(x => x.FindByIdAsync(missingUserId))
+                .ReturnsAsync((ApplicationUser?)null);
+
+            // Act
+            var result = await _controller.DeleteUserCollection(missingUserId);
+
+            // Assert
+            Assert.IsType<NotFoundObjectResult>(result.Result);
+            _mockUserProfileRepository.Verify(x => x.DeleteAllUserMusicReleasesAsync(It.IsAny<Guid>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task DeleteUserCollection_AsNonAdmin_ReturnsForbidden()
+        {
+            // Arrange — non-admin user
+            var regularUser = new ApplicationUser
+            {
+                Id = _adminUserId,
+                Email = "user@example.com",
+                IsAdmin = false
+            };
+            _mockUserRepository
+                .Setup(x => x.FindByIdAsync(_adminUserId))
+                .ReturnsAsync(regularUser);
+
+            // Act
+            var result = await _controller.DeleteUserCollection(Guid.NewGuid());
+
+            // Assert
+            Assert.IsType<ForbidResult>(result.Result);
+            _mockUserProfileRepository.Verify(x => x.DeleteAllUserMusicReleasesAsync(It.IsAny<Guid>()), Times.Never);
+        }
+
+        // ─── GetUserCollectionCount ──────────────────────────────────────────────────
+
+        [Fact]
+        public async Task GetUserCollectionCount_AsAdmin_ReturnsCountAndEmail()
+        {
+            // Arrange
+            SetupAdminUser();
+
+            var targetUserId = Guid.NewGuid();
+            var targetUser = new ApplicationUser
+            {
+                Id = targetUserId,
+                Email = "collector@example.com",
+                IsAdmin = false,
+                IsActive = false
+            };
+            _mockUserRepository
+                .Setup(x => x.FindByIdAsync(targetUserId))
+                .ReturnsAsync(targetUser);
+
+            _mockUserProfileRepository
+                .Setup(x => x.GetUserMusicReleaseCountAsync(targetUserId))
+                .ReturnsAsync(77);
+
+            // Act
+            var result = await _controller.GetUserCollectionCount(targetUserId);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            // Verify the anonymous object contains the expected values via reflection
+            var value = okResult.Value!;
+            var countProp = value.GetType().GetProperty("count")?.GetValue(value);
+            var emailProp = value.GetType().GetProperty("email")?.GetValue(value);
+            Assert.Equal(77, countProp);
+            Assert.Equal("collector@example.com", emailProp);
+        }
+
+        [Fact]
+        public async Task GetUserCollectionCount_AsAdmin_WithUnknownUser_ReturnsNotFound()
+        {
+            // Arrange
+            SetupAdminUser();
+
+            var missingId = Guid.NewGuid();
+            _mockUserRepository
+                .Setup(x => x.FindByIdAsync(missingId))
+                .ReturnsAsync((ApplicationUser?)null);
+
+            // Act
+            var result = await _controller.GetUserCollectionCount(missingId);
+
+            // Assert
+            Assert.IsType<NotFoundObjectResult>(result);
+            _mockUserProfileRepository.Verify(x => x.GetUserMusicReleaseCountAsync(It.IsAny<Guid>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task GetUserCollectionCount_AsNonAdmin_ReturnsForbidden()
+        {
+            // Arrange — non-admin user
+            var regularUser = new ApplicationUser
+            {
+                Id = _adminUserId,
+                Email = "user@example.com",
+                IsAdmin = false
+            };
+            _mockUserRepository
+                .Setup(x => x.FindByIdAsync(_adminUserId))
+                .ReturnsAsync(regularUser);
+
+            // Act
+            var result = await _controller.GetUserCollectionCount(Guid.NewGuid());
+
+            // Assert
+            Assert.IsType<ForbidResult>(result);
+        }
+
+        // ─── GetAllUserCollectionCounts ──────────────────────────────────────────────
+
+        [Fact]
+        public async Task GetAllUserCollectionCounts_AsAdmin_ReturnsCountsForAllUsers()
+        {
+            // Arrange
+            SetupAdminUser();
+
+            var userId1 = Guid.NewGuid();
+            var userId2 = Guid.NewGuid();
+            var allUsers = new List<ApplicationUser>
+            {
+                new ApplicationUser { Id = userId1, Email = "user1@example.com", IsAdmin = false },
+                new ApplicationUser { Id = userId2, Email = "user2@example.com", IsAdmin = false }
+            };
+            _mockUserRepository
+                .Setup(x => x.GetAllAsync())
+                .ReturnsAsync(allUsers);
+
+            var countsMap = new Dictionary<Guid, int>
+            {
+                { userId1, 12 },
+                // userId2 has no releases — absent from the map
+            };
+            _mockUserProfileRepository
+                .Setup(x => x.GetMusicReleaseCountsAsync(It.IsAny<IEnumerable<Guid>>()))
+                .ReturnsAsync(countsMap);
+
+            // Act
+            var result = await _controller.GetAllUserCollectionCounts();
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            Assert.NotNull(okResult.Value);
+
+            // Verify the repository method was called with all user IDs
+            _mockUserProfileRepository.Verify(
+                x => x.GetMusicReleaseCountsAsync(It.IsAny<IEnumerable<Guid>>()),
+                Times.Once);
+        }
+
+        [Fact]
+        public async Task GetAllUserCollectionCounts_AsNonAdmin_ReturnsForbidden()
+        {
+            // Arrange — non-admin user
+            var regularUser = new ApplicationUser
+            {
+                Id = _adminUserId,
+                Email = "user@example.com",
+                IsAdmin = false
+            };
+            _mockUserRepository
+                .Setup(x => x.FindByIdAsync(_adminUserId))
+                .ReturnsAsync(regularUser);
+
+            // Act
+            var result = await _controller.GetAllUserCollectionCounts();
+
+            // Assert
+            Assert.IsType<ForbidResult>(result);
         }
     }
 }

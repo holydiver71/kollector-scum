@@ -5,6 +5,7 @@ import {
   getInvitations,
   getUsers,
   impersonateUser,
+  getAllUserCollectionCounts,
 } from '../lib/admin';
 import { useImpersonation } from '../contexts/ImpersonationContext';
 
@@ -16,6 +17,7 @@ jest.mock('../lib/admin', () => ({
   getUsers: jest.fn(),
   revokeUserAccess: jest.fn(),
   impersonateUser: jest.fn(),
+  getAllUserCollectionCounts: jest.fn(),
 }));
 
 jest.mock('../contexts/ImpersonationContext', () => ({
@@ -26,6 +28,7 @@ const mockUseImpersonation = useImpersonation as jest.Mock;
 const mockGetInvitations = getInvitations as jest.Mock;
 const mockGetUsers = getUsers as jest.Mock;
 const mockImpersonateUser = impersonateUser as jest.Mock;
+const mockGetAllUserCollectionCounts = getAllUserCollectionCounts as jest.Mock;
 
 const defaultNonAdminUser = {
   userId: 'user-1',
@@ -33,6 +36,7 @@ const defaultNonAdminUser = {
   displayName: 'Regular User',
   createdAt: '2024-01-01T00:00:00Z',
   isAdmin: false,
+  isActive: true,
 };
 
 const defaultAdminUser = {
@@ -41,6 +45,7 @@ const defaultAdminUser = {
   displayName: 'Admin User',
   createdAt: '2024-01-01T00:00:00Z',
   isAdmin: true,
+  isActive: true,
 };
 
 describe('AdminDashboard — impersonation', () => {
@@ -52,6 +57,7 @@ describe('AdminDashboard — impersonation', () => {
     mockUseImpersonation.mockReturnValue({ startImpersonation: mockStartImpersonation });
     mockGetInvitations.mockResolvedValue([]);
     mockGetUsers.mockResolvedValue([defaultNonAdminUser]);
+    mockGetAllUserCollectionCounts.mockResolvedValue([]);
     window.confirm = jest.fn(() => true);
   });
 
@@ -82,6 +88,7 @@ describe('AdminDashboard — impersonation', () => {
     // Never-resolving promises keep the component in the loading state
     mockGetInvitations.mockImplementation(() => new Promise(() => {}));
     mockGetUsers.mockImplementation(() => new Promise(() => {}));
+    mockGetAllUserCollectionCounts.mockImplementation(() => new Promise(() => {}));
 
     render(<AdminDashboard />);
 

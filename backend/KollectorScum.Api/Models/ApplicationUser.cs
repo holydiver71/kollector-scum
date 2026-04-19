@@ -48,6 +48,12 @@ namespace KollectorScum.Api.Models
         public bool IsAdmin { get; set; } = false;
 
         /// <summary>
+        /// Gets or sets whether the user's account is active.
+        /// When false, the user cannot log in but all their data is preserved.
+        /// </summary>
+        public bool IsActive { get; set; } = true;
+
+        /// <summary>
         /// Navigation property for the user's profile
         /// </summary>
         public UserProfile? UserProfile { get; set; }

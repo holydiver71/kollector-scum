@@ -6,7 +6,7 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { createNowPlaying } from "../lib/api";
 
 import { VinylSpinner } from "./VinylSpinner";
-import { Play, Check, Disc3, Eye, List } from "lucide-react";
+import { Play, Check, Disc3, Eye, List, Search } from "lucide-react";
 
 import { AddToListDialog } from "./AddToListDialog";
 import { SearchAndFilter } from "./SearchAndFilter";
@@ -161,6 +161,24 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
   const searchParams = useSearchParams();
   const pathname = usePathname();
 
+  // Local state for search input — only commits to the URL on Enter or button click
+  const [localSearch, setLocalSearch] = useState<string>(searchParams?.get('search') || '');
+
+  // Sync local state when the URL search param changes (e.g. cleared via filter chip)
+  useEffect(() => {
+    setLocalSearch(searchParams?.get('search') || '');
+  }, [searchParams?.get('search')]);
+
+  const commitSearch = (value: string) => {
+    try {
+      const params = new URLSearchParams(searchParams ? searchParams.toString() : '');
+      if (value) params.set('search', value);
+      else params.delete('search');
+      const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+      router.replace(newUrl, { scroll: false });
+    } catch {}
+  };
+
   // Apply default sort when none provided: Title A→Z
   const effectiveFilters: MusicReleaseFilters = {
     ...filters,
@@ -284,18 +302,21 @@ export const MusicReleaseList = React.memo(function MusicReleaseList({ filters =
               <input
                 type="text"
                 placeholder="Search releases, artists, albums..."
-                className="w-full bg-[#13131F] border border-[#1C1C28] rounded-xl px-4 py-3 text-white placeholder-gray-600 text-sm focus:outline-none focus:border-[#8B5CF6]"
-                value={searchParams?.get('search') || ''}
-                onChange={(e) => {
-                  try {
-                    const params = new URLSearchParams(searchParams ? searchParams.toString() : '');
-                    if (e.target.value) params.set('search', e.target.value);
-                    else params.delete('search');
-                    const newUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
-                    router.replace(newUrl, { scroll: false });
-                  } catch {}
+                className="w-full bg-[#13131F] border border-[#1C1C28] rounded-xl px-4 py-3 pr-12 text-white placeholder-gray-600 text-sm focus:outline-none focus:border-[#8B5CF6]"
+                value={localSearch}
+                onChange={(e) => setLocalSearch(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') commitSearch(localSearch);
                 }}
               />
+              <button
+                type="button"
+                onClick={() => commitSearch(localSearch)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#8B5CF6] transition-colors"
+                aria-label="Search"
+              >
+                <Search className="h-4 w-4" />
+              </button>
             </div>
 
             <select

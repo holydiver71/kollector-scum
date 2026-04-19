@@ -9,10 +9,12 @@ import {
   getUsers,
   revokeUserAccess,
   impersonateUser,
+  getAllUserCollectionCounts,
   type UserInvitation,
   type UserAccess,
 } from '../lib/admin';
 import { useImpersonation } from '../contexts/ImpersonationContext';
+import { DeleteUserCollectionDialog } from './DeleteUserCollectionDialog';
 
 export default function AdminDashboard() {
   const [invitations, setInvitations] = useState<UserInvitation[]>([]);
@@ -21,6 +23,8 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [deleteCollectionTarget, setDeleteCollectionTarget] = useState<{ userId: string; email: string } | null>(null);
+  const [collectionCounts, setCollectionCounts] = useState<Map<string, number>>(new Map());
   const { startImpersonation } = useImpersonation();
 
   useEffect(() => {
@@ -31,12 +35,14 @@ export default function AdminDashboard() {
     try {
       setLoading(true);
       setError(null);
-      const [invitationsData, usersData] = await Promise.all([
+      const [invitationsData, usersData, countsData] = await Promise.all([
         getInvitations(),
         getUsers(),
+        getAllUserCollectionCounts(),
       ]);
       setInvitations(invitationsData);
       setUsers(usersData);
+      setCollectionCounts(new Map(countsData.map(c => [c.userId, c.count])));
     } catch (err) {
       setError('Failed to load data. Please try again.');
       console.error('Error loading admin data:', err);
@@ -81,7 +87,7 @@ export default function AdminDashboard() {
   };
 
   const handleRevokeAccess = async (userId: string, email: string) => {
-    if (!confirm(`Are you sure you want to deactivate ${email}? This will delete all their data.`)) {
+    if (!confirm(`Are you sure you want to deactivate ${email}? Their collection will be preserved and can be restored by reactivating their account.`)) {
       return;
     }
 
@@ -114,6 +120,10 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleDeleteUserCollection = (userId: string, email: string) => {
+    setDeleteCollectionTarget({ userId, email });
+  };
+
   const handleImpersonate = async (userId: string) => {
     try {
       setError(null);
@@ -133,7 +143,7 @@ export default function AdminDashboard() {
     );
   }
 
-  const activeUserEmails = new Set(users.map(u => u.email.toLowerCase()));
+  const activeUserEmails = new Set(users.filter(u => u.isActive).map(u => u.email.toLowerCase()));
 
   return (
     <div className="max-w-6xl mx-auto p-6">
@@ -184,20 +194,24 @@ export default function AdminDashboard() {
                 <th className="text-left py-3 px-4 text-gray-300 font-medium">Email</th>
                 <th className="text-left py-3 px-4 text-gray-300 font-medium">Created</th>
                 <th className="text-left py-3 px-4 text-gray-300 font-medium">Status</th>
+                <th className="text-left py-3 px-4 text-gray-300 font-medium">Releases</th>
                 <th className="text-right py-3 px-4 text-gray-300 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
               {invitations.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="text-center py-8 text-gray-500">
+                  <td colSpan={5} className="text-center py-8 text-gray-500">
                     No registrations found
                   </td>
                 </tr>
               ) : (
                 invitations.map((invitation) => {
                   const userExists = activeUserEmails.has(invitation.email.toLowerCase());
-                  const isDeactivated = invitation.isUsed && !userExists;
+                  const inactiveUser = users.find(u => u.email.toLowerCase() === invitation.email.toLowerCase() && !u.isActive);
+                  const isDeactivated = invitation.isUsed && (!!inactiveUser || !userExists);
+                  const invitedUser = users.find(u => u.email.toLowerCase() === invitation.email.toLowerCase());
+                  const invitedUserCount = invitedUser ? (collectionCounts.get(invitedUser.userId) ?? 0) : null;
 
                   return (
                   <tr key={invitation.id} className="border-b border-gray-700/50 hover:bg-gray-700/30">
@@ -220,6 +234,9 @@ export default function AdminDashboard() {
                         </span>
                       )}
                     </td>
+                    <td className="py-3 px-4 text-gray-300 tabular-nums">
+                      {invitedUserCount !== null ? invitedUserCount : <span className="text-gray-600">—</span>}
+                    </td>
                     <td className="py-3 px-4 text-right">
                       {isDeactivated ? (
                         <div className="flex justify-end gap-4">
@@ -229,6 +246,15 @@ export default function AdminDashboard() {
                           >
                             Activate
                           </button>
+                          {inactiveUser && (collectionCounts.get(inactiveUser.userId) ?? 0) > 0 && (
+                            <button
+                              onClick={() => handleDeleteUserCollection(inactiveUser.userId, inactiveUser.email)}
+                              className="text-orange-400 hover:text-orange-300 text-sm"
+                              title="Permanently delete all releases and images for this user"
+                            >
+                              Delete Collection
+                            </button>
+                          )}
                           <button
                             onClick={() => handleDeleteInvitation(invitation.id, invitation.email)}
                             className="text-red-400 hover:text-red-300 text-sm"
@@ -257,7 +283,7 @@ export default function AdminDashboard() {
       {/* Active Users */}
       <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
         <h2 className="text-xl font-semibold mb-4 text-white">
-          Active Users ({users.length})
+          Active Users ({users.filter(u => u.isActive).length})
         </h2>
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -267,18 +293,19 @@ export default function AdminDashboard() {
                 <th className="text-left py-3 px-4 text-gray-300 font-medium">Display Name</th>
                 <th className="text-left py-3 px-4 text-gray-300 font-medium">Joined</th>
                 <th className="text-left py-3 px-4 text-gray-300 font-medium">Role</th>
+                <th className="text-left py-3 px-4 text-gray-300 font-medium">Releases</th>
                 <th className="text-right py-3 px-4 text-gray-300 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {users.length === 0 ? (
+              {users.filter(u => u.isActive).length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-8 text-gray-500">
+                  <td colSpan={6} className="text-center py-8 text-gray-500">
                     No users found
                   </td>
                 </tr>
               ) : (
-                users.map((user) => (
+                users.filter(u => u.isActive).map((user) => (
                   <tr key={user.userId} className="border-b border-gray-700/50 hover:bg-gray-700/30">
                     <td className="py-3 px-4 text-white">{user.email}</td>
                     <td className="py-3 px-4 text-gray-400">{user.displayName || '-'}</td>
@@ -295,6 +322,9 @@ export default function AdminDashboard() {
                           User
                         </span>
                       )}
+                    </td>
+                    <td className="py-3 px-4 text-gray-300 tabular-nums">
+                      {collectionCounts.get(user.userId) ?? 0}
                     </td>
                     <td className="py-3 px-4 text-right">
                       {!user.isAdmin && (
@@ -322,6 +352,21 @@ export default function AdminDashboard() {
           </table>
         </div>
       </div>
+
+      {/* Delete User Collection confirmation dialog */}
+      {deleteCollectionTarget && (
+        <DeleteUserCollectionDialog
+          isOpen={true}
+          userId={deleteCollectionTarget.userId}
+          userEmail={deleteCollectionTarget.email}
+          onDeleted={async (deletedCount) => {
+            setDeleteCollectionTarget(null);
+            setSuccessMessage(`Deleted ${deletedCount} release(s) from ${deleteCollectionTarget.email}'s collection.`);
+            await loadData();
+          }}
+          onCancel={() => setDeleteCollectionTarget(null)}
+        />
+      )}
     </div>
   );
 }

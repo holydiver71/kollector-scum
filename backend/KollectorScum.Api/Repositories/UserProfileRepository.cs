@@ -71,6 +71,17 @@ namespace KollectorScum.Api.Repositories
         }
 
         /// <inheritdoc />
+        public async Task<Dictionary<Guid, int>> GetMusicReleaseCountsAsync(IEnumerable<Guid> userIds)
+        {
+            var ids = userIds.ToList();
+            return await _context.MusicReleases
+                .Where(mr => ids.Contains(mr.UserId))
+                .GroupBy(mr => mr.UserId)
+                .Select(g => new { UserId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.UserId, x => x.Count);
+        }
+
+        /// <inheritdoc />
         public async Task<int> DeleteAllUserMusicReleasesAsync(Guid userId)
         {
             var releases = await _context.MusicReleases

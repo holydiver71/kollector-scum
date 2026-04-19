@@ -36,20 +36,28 @@ namespace KollectorScum.Api.Services
         {
             var existingUser = await _userRepository.FindByGoogleSubAsync(googleSub);
 
+            // If found by Google sub but deactivated, deny access
+            if (existingUser != null && !existingUser.IsActive)
+            {
+                _logger.LogWarning("Access denied for deactivated user: {Email}", email);
+                throw new UnauthorizedAccessException("Your access has been deactivated. Please contact the administrator.");
+            }
+
             if (existingUser == null)
             {
+                // Check if a deactivated account exists for this email (e.g. linked via email, not yet by googleSub)
+                var userByEmail = await _userRepository.FindByEmailAsync(email);
+                if (userByEmail != null && !userByEmail.IsActive)
+                {
+                    _logger.LogWarning("Access denied for deactivated user: {Email}", email);
+                    throw new UnauthorizedAccessException("Your access has been deactivated. Please contact the administrator.");
+                }
+
                 var invitation = await _userInvitationRepository.FindByEmailAsync(email);
                 if (invitation == null)
                 {
                     _logger.LogWarning("Access denied for uninvited user: {Email}", email);
                     throw new UnauthorizedAccessException("Access is by invitation only. Please contact the administrator for access.");
-                }
-
-                var userByEmail = await _userRepository.FindByEmailAsync(email);
-                if (userByEmail == null && invitation.IsUsed)
-                {
-                    _logger.LogWarning("Access denied for deactivated user: {Email}", email);
-                    throw new UnauthorizedAccessException("Your access has been deactivated. Please contact the administrator.");
                 }
 
                 _logger.LogInformation("Creating new user for invited email {Email}", email);
@@ -58,7 +66,8 @@ namespace KollectorScum.Api.Services
                     Id = Guid.NewGuid(),
                     GoogleSub = googleSub,
                     Email = email,
-                    DisplayName = displayName
+                    DisplayName = displayName,
+                    IsActive = true
                 };
                 newUser = await _userRepository.CreateAsync(newUser);
 
@@ -92,6 +101,11 @@ namespace KollectorScum.Api.Services
             var existingUser = await _userRepository.FindByEmailAsync(email);
             if (existingUser != null)
             {
+                if (!existingUser.IsActive)
+                {
+                    _logger.LogWarning("Magic link verification denied for deactivated user: {Email}", email);
+                    throw new UnauthorizedAccessException("Your access has been deactivated. Please contact the administrator.");
+                }
                 return existingUser;
             }
 
@@ -108,7 +122,8 @@ namespace KollectorScum.Api.Services
                 Id = Guid.NewGuid(),
                 GoogleSub = null,
                 Email = email,
-                DisplayName = email
+                DisplayName = email,
+                IsActive = true
             };
             newUser = await _userRepository.CreateAsync(newUser);
 

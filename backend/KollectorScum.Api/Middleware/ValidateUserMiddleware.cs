@@ -49,8 +49,7 @@ namespace KollectorScum.Api.Middleware
                             message = "Your access has been deactivated. Please sign in again or contact the administrator." 
                         });
                         return;
-                    }
-                }
+                    }                }
             }
 
             await _next(context);
@@ -65,7 +64,7 @@ namespace KollectorScum.Api.Middleware
             }
 
             var user = await userRepository.FindByIdAsync(userId);
-            var exists = user != null;
+            var exists = user != null && user.IsActive;
             _memoryCache.Set(cacheKey, exists, new MemoryCacheEntryOptions
             {
                 AbsoluteExpirationRelativeToNow = UserExistsCacheTtl

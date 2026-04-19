@@ -54,5 +54,14 @@ namespace KollectorScum.Api.Interfaces
         /// <param name="userId">The user ID to delete</param>
         /// <returns>True if deleted, false if not found</returns>
         Task<bool> DeleteAsync(Guid userId);
+
+        /// <summary>
+        /// Sets a user's active status (soft deactivate/reactivate).
+        /// The user row and all owned data are preserved when deactivated.
+        /// </summary>
+        /// <param name="userId">The user ID</param>
+        /// <param name="isActive">True to activate, false to deactivate</param>
+        /// <returns>True if updated, false if not found</returns>
+        Task<bool> SetActiveAsync(Guid userId, bool isActive);
     }
 }

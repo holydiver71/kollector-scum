@@ -21,6 +21,7 @@ namespace KollectorScum.Tests.Controllers
         private readonly Mock<ILogger<AdminController>> _mockLogger;
         private readonly Mock<IStorageMigrationService> _mockStorageMigrationService;
         private readonly Mock<IUserImpersonationService> _mockUserImpersonationService;
+        private readonly Mock<IUserProfileRepository> _mockUserProfileRepository;
         private readonly AdminController _controller;
         private readonly Guid _adminUserId = Guid.NewGuid();
         private readonly Guid _testUserId = Guid.NewGuid();
@@ -32,6 +33,7 @@ namespace KollectorScum.Tests.Controllers
             _mockLogger = new Mock<ILogger<AdminController>>();
             _mockStorageMigrationService = new Mock<IStorageMigrationService>();
             _mockUserImpersonationService = new Mock<IUserImpersonationService>();
+            _mockUserProfileRepository = new Mock<IUserProfileRepository>();
 
             var adminUser = new ApplicationUser
             {
@@ -46,7 +48,8 @@ namespace KollectorScum.Tests.Controllers
                 _mockInvitationRepository.Object,
                 _mockLogger.Object,
                 _mockStorageMigrationService.Object,
-                _mockUserImpersonationService.Object
+                _mockUserImpersonationService.Object,
+                _mockUserProfileRepository.Object
             );
 
             SetupAdminUser();

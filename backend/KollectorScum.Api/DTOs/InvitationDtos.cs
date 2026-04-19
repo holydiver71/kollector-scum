@@ -30,5 +30,6 @@ namespace KollectorScum.Api.DTOs
         public string? DisplayName { get; set; }
         public DateTime CreatedAt { get; set; }
         public bool IsAdmin { get; set; }
+        public bool IsActive { get; set; }
     }
 }

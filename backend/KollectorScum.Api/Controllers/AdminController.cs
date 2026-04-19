@@ -20,19 +20,22 @@ namespace KollectorScum.Api.Controllers
         private readonly ILogger<AdminController> _logger;
         private readonly IStorageMigrationService _storageMigrationService;
         private readonly IUserImpersonationService _userImpersonationService;
+        private readonly IUserProfileRepository _userProfileRepository;
 
         public AdminController(
             IUserRepository userRepository,
             IUserInvitationRepository userInvitationRepository,
             ILogger<AdminController> logger,
             IStorageMigrationService storageMigrationService,
-            IUserImpersonationService userImpersonationService)
+            IUserImpersonationService userImpersonationService,
+            IUserProfileRepository userProfileRepository)
         {
             _userRepository = userRepository;
             _userInvitationRepository = userInvitationRepository;
             _logger = logger;
             _storageMigrationService = storageMigrationService;
             _userImpersonationService = userImpersonationService;
+            _userProfileRepository = userProfileRepository;
         }
 
         /// <summary>
@@ -180,19 +183,22 @@ namespace KollectorScum.Api.Controllers
                 return BadRequest(new { message = "Registration is already active" });
             }
 
-            // Only allow activation if the user no longer exists (revoked)
+            // Find the deactivated user and re-enable them so their existing collection is preserved
             var existingUser = await _userRepository.FindByEmailAsync(invitation.Email);
-            if (existingUser != null)
+            if (existingUser == null)
+            {
+                return BadRequest(new { message = "User account not found. Cannot reactivate." });
+            }
+
+            if (existingUser.IsActive)
             {
                 return BadRequest(new { message = "User is already active" });
             }
 
-            invitation.IsUsed = false;
-            invitation.UsedAt = null;
-            invitation = await _userInvitationRepository.UpdateAsync(invitation);
+            await _userRepository.SetActiveAsync(existingUser.Id, true);
 
             var adminUserId = GetUserIdFromClaims();
-            _logger.LogInformation("Admin {AdminId} activated invitation {InvitationId} for {Email}", adminUserId, invitation.Id, invitation.Email);
+            _logger.LogInformation("Admin {AdminId} reactivated user {UserId} for {Email}", adminUserId, existingUser.Id, invitation.Email);
 
             var dto = new UserInvitationDto
             {
@@ -227,7 +233,8 @@ namespace KollectorScum.Api.Controllers
                 Email = u.Email,
                 DisplayName = u.DisplayName,
                 CreatedAt = u.CreatedAt,
-                IsAdmin = u.IsAdmin
+                IsAdmin = u.IsAdmin,
+                IsActive = u.IsActive
             }).ToList();
 
             return Ok(dtos);
@@ -266,11 +273,113 @@ namespace KollectorScum.Api.Controllers
                 return BadRequest(new { message = "Cannot deactivate access for admin users" });
             }
 
-            await _userRepository.DeleteAsync(userId);
+            await _userRepository.SetActiveAsync(userId, false);
 
             _logger.LogInformation("Admin {AdminId} deactivated access for user {DeactivatedUserId}", currentUserId, userId);
 
             return NoContent();
+        }
+
+        /// <summary>
+        /// Permanently deletes all music releases (and associated images) for a deactivated user (admin only).
+        /// The user account itself is preserved. This action is irreversible.
+        /// </summary>
+        /// <param name="userId">The ID of the deactivated user whose collection should be deleted</param>
+        /// <returns>Number of releases deleted</returns>
+        [HttpDelete("users/{userId}/collection")]
+        [ProducesResponseType(typeof(DeleteCollectionResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<DeleteCollectionResponse>> DeleteUserCollection(Guid userId)
+        {
+            if (!await IsUserAdminAsync())
+            {
+                return Forbid();
+            }
+
+            var user = await _userRepository.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound(new { message = "User not found" });
+            }
+
+            if (user.IsActive)
+            {
+                return BadRequest(new { message = "Cannot delete the collection of an active user. Deactivate the user first." });
+            }
+
+            var adminUserId = GetUserIdFromClaims();
+            var deletedCount = await _userProfileRepository.DeleteAllUserMusicReleasesAsync(userId);
+
+            _logger.LogWarning("Admin {AdminId} permanently deleted collection ({Count} releases) for deactivated user {TargetUserId}",
+                adminUserId, deletedCount, userId);
+
+            return Ok(new DeleteCollectionResponse
+            {
+                AlbumsDeleted = deletedCount,
+                Success = true,
+                Message = $"Permanently deleted {deletedCount} release(s) from {user.Email}'s collection."
+            });
+        }
+
+        /// <summary>
+        /// Returns the number of music releases in a user's collection (admin only).
+        /// Intended for use before presenting a collection-deletion confirmation dialog.
+        /// </summary>
+        /// <param name="userId">The ID of the user whose collection count is requested</param>
+        /// <returns>The release count for that user</returns>
+        [HttpGet("users/{userId}/collection-count")]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult> GetUserCollectionCount(Guid userId)
+        {
+            if (!await IsUserAdminAsync())
+            {
+                return Forbid();
+            }
+
+            var user = await _userRepository.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound(new { message = "User not found" });
+            }
+
+            var count = await _userProfileRepository.GetUserMusicReleaseCountAsync(userId);
+
+            return Ok(new { userId, email = user.Email, count });
+        }
+
+        /// <summary>
+        /// Returns music release counts for all registered users in a single query (admin only).
+        /// Users with no releases are included with a count of 0.
+        /// </summary>
+        /// <returns>Array of objects containing userId and release count</returns>
+        [HttpGet("users/collection-counts")]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<ActionResult> GetAllUserCollectionCounts()
+        {
+            if (!await IsUserAdminAsync())
+            {
+                return Forbid();
+            }
+
+            var users = await _userRepository.GetAllAsync();
+            var userIds = users.Select(u => u.Id).ToList();
+            var counts = await _userProfileRepository.GetMusicReleaseCountsAsync(userIds);
+
+            var result = users.Select(u => new
+            {
+                userId = u.Id,
+                count = counts.TryGetValue(u.Id, out var c) ? c : 0
+            });
+
+            return Ok(result);
         }
 
         /// <summary>

@@ -43,6 +43,14 @@ namespace KollectorScum.Api.Interfaces
         Task<int> GetUserMusicReleaseCountAsync(Guid userId);
 
         /// <summary>
+        /// Gets the music release counts for multiple users in a single query.
+        /// Users with no releases are not included in the returned dictionary.
+        /// </summary>
+        /// <param name="userIds">The user IDs to query</param>
+        /// <returns>A dictionary mapping UserId to release count</returns>
+        Task<Dictionary<Guid, int>> GetMusicReleaseCountsAsync(IEnumerable<Guid> userIds);
+
+        /// <summary>
         /// Deletes all music releases for a user, including their associated image files
         /// </summary>
         /// <param name="userId">The user ID</param>

@@ -81,5 +81,20 @@ namespace KollectorScum.Api.Repositories
             await _context.SaveChangesAsync();
             return true;
         }
+
+        /// <inheritdoc />
+        public async Task<bool> SetActiveAsync(Guid userId, bool isActive)
+        {
+            var user = await _context.ApplicationUsers.FindAsync(userId);
+            if (user == null)
+            {
+                return false;
+            }
+
+            user.IsActive = isActive;
+            user.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }
