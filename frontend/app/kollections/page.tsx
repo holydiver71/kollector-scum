@@ -12,6 +12,7 @@ import {
   type UpdateKollectionDto,
 } from "../lib/api";
 import { useLookupData } from "../components/LookupComponents";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 
 interface KollectionFormData {
   name: string;
@@ -30,6 +31,8 @@ export default function KollectionsPage() {
   });
   const [formError, setFormError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   interface Genre {
     id: number;
@@ -125,15 +128,21 @@ export default function KollectionsPage() {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this kollection?")) {
-      return;
-    }
+  const handleDelete = (id: number) => {
+    setConfirmDeleteId(id);
+  };
 
+  const handleConfirmDelete = async () => {
+    if (confirmDeleteId === null) return;
+    const id = confirmDeleteId;
+    const name = kollections.find((k) => k.id === id)?.name ?? "Kollection";
+    setConfirmDeleteId(null);
     try {
       setDeletingId(id);
       await deleteKollection(id);
       await loadKollections();
+      setSuccessMessage(`"${name}" was deleted successfully.`);
+      setTimeout(() => setSuccessMessage(null), 4000);
     } catch (err) {
       setError("Failed to delete kollection");
       console.error(err);
@@ -153,11 +162,11 @@ export default function KollectionsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-transparent text-white p-6">
+      <div className="min-h-screen bg-transparent text-[var(--theme-foreground)] p-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#D93611]"></div>
-            <p className="mt-4 text-gray-400">Loading kollections...</p>
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--theme-accent)]"></div>
+            <p className="mt-4 text-[var(--theme-muted-text)]">Loading kollections...</p>
           </div>
         </div>
       </div>
@@ -165,20 +174,20 @@ export default function KollectionsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-transparent text-white p-6">
+    <div className="min-h-screen bg-transparent text-[var(--theme-foreground)] p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-white">Kollections</h1>
-            <p className="mt-2 text-gray-400">
+            <h1 className="text-3xl font-bold text-[var(--theme-foreground)]">Kollections</h1>
+            <p className="mt-2 text-[var(--theme-muted-text)]">
               Manage your genre-based music collections
             </p>
           </div>
           {!showForm && (
             <button
               onClick={handleCreate}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[#D93611] text-white rounded-md hover:bg-[#B82D0E] transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--theme-accent)] text-white rounded-md hover:bg-[var(--theme-accent-hover)] transition-colors"
             >
               <Plus className="h-5 w-5" />
               New Kollection
@@ -187,14 +196,20 @@ export default function KollectionsPage() {
         </div>
 
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+          <div className="mb-6 bg-[var(--theme-error-bg)] border border-[var(--theme-error-border)] text-[var(--theme-error-text)] px-4 py-3 rounded-md">
             {error}
+          </div>
+        )}
+
+        {successMessage && (
+          <div className="mb-6 bg-[var(--theme-success-bg)] border border-[var(--theme-success-border)] text-[var(--theme-success-text)] px-4 py-3 rounded-md">
+            {successMessage}
           </div>
         )}
 
         {/* Form */}
         {showForm && (
-          <div className="mb-6 bg-[#13131F] border border-[#1C1C28] rounded-lg p-6 shadow-sm">
+          <div className="mb-6 bg-[var(--theme-card-bg)] border border-[var(--theme-card-border)] rounded-lg p-6 shadow-sm">
             <h2 className="text-xl font-semibold mb-4">
               {editingId !== null ? "Edit Kollection" : "Create Kollection"}
             </h2>
@@ -202,7 +217,7 @@ export default function KollectionsPage() {
               <div className="mb-4">
                 <label
                   htmlFor="name"
-                  className="block text-sm font-medium text-gray-300 mb-2"
+                  className="block text-sm font-medium text-[var(--theme-muted-text)] mb-2"
                 >
                   Name
                 </label>
@@ -213,33 +228,33 @@ export default function KollectionsPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-[#2C2C35] rounded-md focus:outline-none focus:ring-2 focus:ring-[#D93611]"
+                  className="w-full px-3 py-2 bg-[var(--theme-input-bg)] text-[var(--theme-foreground)] border border-[var(--theme-card-border)] rounded-md focus:outline-none focus:ring-2 focus:ring-[var(--theme-accent)]"
                   placeholder="e.g., My Metal Collection"
                   required
                 />
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-[var(--theme-muted-text)] mb-2">
                   Genres ({formData.genreIds.length} selected)
                 </label>
                 {genresLoading ? (
-                  <p className="text-gray-400">Loading genres...</p>
+                  <p className="text-[var(--theme-muted-text)]">Loading genres...</p>
                 ) : (
-                  <div className="max-h-64 overflow-y-auto border border-[#2C2C35] rounded-md p-3 bg-transparent text-white">
+                  <div className="max-h-64 overflow-y-auto border border-[var(--theme-card-border)] rounded-md p-3 bg-[var(--theme-input-bg)] text-[var(--theme-foreground)]">
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                       {genres.map((genre: Genre) => (
                         <label
                           key={genre.id}
-                          className="flex items-center space-x-2 cursor-pointer hover:bg-[#1C1C28] p-2 rounded"
+                          className="flex items-center space-x-2 cursor-pointer hover:bg-[var(--theme-sidebar-hover)] p-2 rounded"
                         >
                           <input
                             type="checkbox"
                             checked={formData.genreIds.includes(genre.id)}
                             onChange={() => handleGenreToggle(genre.id)}
-                            className="h-4 w-4 text-[#D93611] focus:ring-[#D93611] border-[#2C2C35] rounded"
+                            className="h-4 w-4 text-[var(--theme-accent)] focus:ring-[var(--theme-accent)] border-[var(--theme-card-border)] rounded"
                           />
-                          <span className="text-sm text-gray-300">
+                          <span className="text-sm text-[var(--theme-muted-text)]">
                             {genre.name}
                           </span>
                         </label>
@@ -250,7 +265,7 @@ export default function KollectionsPage() {
               </div>
 
               {formError && (
-                <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
+                <div className="mb-4 bg-[var(--theme-error-bg)] border border-[var(--theme-error-border)] text-[var(--theme-error-text)] px-4 py-3 rounded-md text-sm">
                   {formError}
                 </div>
               )}
@@ -258,7 +273,7 @@ export default function KollectionsPage() {
               <div className="flex gap-3">
                 <button
                   type="submit"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-[#D93611] text-white rounded-md hover:bg-[#B82D0E] transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--theme-accent)] text-white rounded-md hover:bg-[var(--theme-accent-hover)] transition-colors"
                 >
                   <Check className="h-5 w-5" />
                   Save
@@ -266,7 +281,7 @@ export default function KollectionsPage() {
                 <button
                   type="button"
                   onClick={handleCancelForm}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-[#2C2C35] text-gray-300 rounded-md hover:bg-[#3F3F4E] transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--theme-card-border)] text-[var(--theme-muted-text)] rounded-md hover:bg-[var(--theme-sidebar-hover)] transition-colors"
                 >
                   <X className="h-5 w-5" />
                   Cancel
@@ -278,15 +293,15 @@ export default function KollectionsPage() {
 
         {/* List */}
         {kollections.length === 0 ? (
-          <div className="bg-[#13131F] border border-[#1C1C28] rounded-lg p-12 text-center">
-            <p className="text-gray-400 text-lg mb-4">You haven&apos;t created any lists yet.</p>
-            <p className="text-gray-500 mb-8">
+          <div className="bg-[var(--theme-card-bg)] border border-[var(--theme-card-border)] rounded-lg p-12 text-center">
+            <p className="text-[var(--theme-muted-text)] text-lg mb-4">You haven&apos;t created any lists yet.</p>
+            <p className="text-[var(--theme-muted-text)] mb-8">
               Create Kollections to organise your music collection genre!
             </p>
             {!showForm && (
               <button
                 onClick={handleCreate}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-[#D93611] text-white rounded-md hover:bg-[#B82D0E] transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-[var(--theme-accent)] text-white rounded-md hover:bg-[var(--theme-accent-hover)] transition-colors"
               >
                 <Plus className="h-5 w-5" />
                 Create Your First Kollection
@@ -298,16 +313,16 @@ export default function KollectionsPage() {
             {kollections.map((kollection) => (
               <div
                 key={kollection.id}
-                className="bg-[#13131F] border border-[#1C1C28] rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
+                className="bg-[var(--theme-card-bg)] border border-[var(--theme-card-border)] rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
               >
                 <div className="flex justify-between items-start mb-3">
-                  <h3 className="text-lg font-semibold text-white">
+                  <h3 className="text-lg font-semibold text-[var(--theme-foreground)]">
                     {kollection.name}
                   </h3>
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleEdit(kollection)}
-                      className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                      className="p-1 text-[var(--theme-accent)] hover:bg-[var(--theme-sidebar-hover)] rounded"
                       title="Edit"
                       disabled={showForm}
                     >
@@ -315,7 +330,7 @@ export default function KollectionsPage() {
                     </button>
                     <button
                       onClick={() => handleDelete(kollection.id)}
-                      className="p-1 text-red-600 hover:bg-red-50 rounded"
+                      className="p-1 text-[var(--theme-error-text)] hover:bg-[var(--theme-error-bg)] rounded"
                       title="Delete"
                       disabled={deletingId === kollection.id || showForm}
                     >
@@ -328,7 +343,7 @@ export default function KollectionsPage() {
                   </div>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-400 mb-2">
+                  <p className="text-sm text-[var(--theme-muted-text)] mb-2">
                     {kollection.genreIds.length} genre
                     {kollection.genreIds.length !== 1 ? "s" : ""}
                   </p>
@@ -336,7 +351,7 @@ export default function KollectionsPage() {
                     {kollection.genreNames.map((genreName) => (
                       <span
                         key={genreName}
-                        className="inline-block px-2 py-1 text-xs bg-[#1C1C28] text-gray-300 rounded"
+                        className="inline-block px-2 py-1 text-xs bg-[var(--theme-card-border)] text-[var(--theme-muted-text)] rounded"
                       >
                         {genreName}
                       </span>
@@ -348,6 +363,17 @@ export default function KollectionsPage() {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={confirmDeleteId !== null}
+        title="Delete Kollection"
+        message={`Are you sure you want to delete "${kollections.find((k) => k.id === confirmDeleteId)?.name ?? ""}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        isDangerous={true}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setConfirmDeleteId(null)}
+      />
     </div>
   );
 }
