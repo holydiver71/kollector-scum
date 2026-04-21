@@ -109,11 +109,14 @@ export default function ListsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
+      <div className="min-h-screen bg-transparent p-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#D93611]"></div>
-            <p className="mt-4 text-gray-600">Loading lists...</p>
+            <div
+              className="inline-block animate-spin rounded-full h-8 w-8 border-b-2"
+              style={{ borderColor: 'var(--theme-accent)' }}
+            ></div>
+            <p className="mt-4" style={{ color: 'var(--theme-muted-text)' }}>Loading lists...</p>
           </div>
         </div>
       </div>
@@ -121,20 +124,20 @@ export default function ListsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-transparent p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">My Lists</h1>
-            <p className="mt-2 text-gray-600">
+            <h1 className="text-3xl font-bold" style={{ color: 'var(--theme-foreground)' }}>My Lists</h1>
+            <p className="mt-2" style={{ color: 'var(--theme-muted-text)' }}>
               Organise your music collection by theme or style
             </p>
           </div>
           {!showCreateForm && (
             <button
               onClick={() => setShowCreateForm(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[#D93611] text-white rounded-md hover:bg-[#B82D0E] transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-md btn-theme-accent"
             >
               <Plus className="h-5 w-5" />
               New List
@@ -142,22 +145,26 @@ export default function ListsPage() {
           )}
         </div>
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+          <div className="mb-6 bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-md">
             {error}
           </div>
         )}
 
         {/* Create List Form */}
         {showCreateForm && (
-          <div className="mb-6 bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-            <h2 className="text-xl font-semibold mb-4">
+          <div
+            className="mb-6 rounded-lg p-6 shadow-sm border"
+            style={{ background: 'var(--theme-card-bg)', borderColor: 'var(--theme-card-border)' }}
+          >
+            <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--theme-foreground)' }}>
               Create List
             </h2>
             <form onSubmit={handleCreateList}>
               <div className="mb-4">
                 <label
                   htmlFor="newListName"
-                  className="block text-sm font-medium text-gray-700 mb-2"
+                  className="block text-sm font-medium mb-2"
+                  style={{ color: 'var(--theme-foreground)' }}
                 >
                   Name
                 </label>
@@ -167,7 +174,7 @@ export default function ListsPage() {
                   value={newListName}
                   onChange={(e) => setNewListName(e.target.value)}
                   placeholder="e.g., My Top 10 Metal Records"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#D93611]"
+                  className="w-full px-3 py-2 border rounded-md focus:outline-none themed-input"
                   disabled={submitting}
                   autoFocus
                   required
@@ -178,7 +185,7 @@ export default function ListsPage() {
                 <button
                   type="submit"
                   disabled={submitting || !newListName.trim()}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-[#D93611] text-white rounded-md hover:bg-[#B82D0E] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-md btn-theme-accent"
                 >
                   <Check className="h-5 w-5" />
                   {submitting ? "Creating..." : "Save"}
@@ -190,7 +197,7 @@ export default function ListsPage() {
                     setNewListName("");
                   }}
                   disabled={submitting}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors disabled:opacity-50"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-md btn-theme-secondary"
                 >
                   <X className="h-5 w-5" />
                   Cancel
@@ -202,12 +209,15 @@ export default function ListsPage() {
 
         {/* List */}
         {lists.length === 0 ? (
-          <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
-            <p className="text-gray-500 mb-4">No lists yet</p>
+          <div
+            className="rounded-lg p-12 text-center border"
+            style={{ background: 'var(--theme-card-bg)', borderColor: 'var(--theme-card-border)' }}
+          >
+            <p className="mb-4" style={{ color: 'var(--theme-muted-text)' }}>No lists yet</p>
             {!showCreateForm && (
               <button
                 onClick={() => setShowCreateForm(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-[#D93611] text-white rounded-md hover:bg-[#B82D0E] transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-md btn-theme-accent"
               >
                 <Plus className="h-5 w-5" />
                 Create Your First List
@@ -219,7 +229,8 @@ export default function ListsPage() {
             {lists.map((list) => (
               <div
                 key={list.id}
-                className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
+                className="rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow border"
+                style={{ background: 'var(--theme-card-bg)', borderColor: 'var(--theme-card-border)' }}
               >
                 {editingId === list.id ? (
                   <div className="mb-3">
@@ -227,7 +238,7 @@ export default function ListsPage() {
                       type="text"
                       value={editingName}
                       onChange={(e) => setEditingName(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#D93611] mb-2"
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none themed-input mb-2"
                       disabled={submitting}
                       autoFocus
                     />
@@ -235,7 +246,8 @@ export default function ListsPage() {
                       <button
                         onClick={() => handleSaveEdit(list.id)}
                         disabled={submitting || !editingName.trim()}
-                        className="p-1 text-blue-600 hover:bg-blue-50 rounded disabled:opacity-50 transition-colors"
+                        className="p-1 rounded disabled:opacity-50 transition-colors hover:bg-white/10"
+                        style={{ color: 'var(--theme-accent)' }}
                         title="Save"
                       >
                         <Check className="h-4 w-4" />
@@ -243,7 +255,7 @@ export default function ListsPage() {
                       <button
                         onClick={handleCancelEdit}
                         disabled={submitting}
-                        className="p-1 text-red-600 hover:bg-red-50 rounded disabled:opacity-50 transition-colors"
+                        className="p-1 rounded disabled:opacity-50 transition-colors text-red-400 hover:bg-red-500/10"
                         title="Cancel"
                       >
                         <X className="h-4 w-4" />
@@ -253,11 +265,14 @@ export default function ListsPage() {
                 ) : (
                   <div className="mb-3">
                     <Link href={`/lists/${list.id}`}>
-                      <h3 className="text-lg font-semibold text-gray-900 hover:text-[#D93611] transition-colors mb-1">
+                      <h3
+                        className="text-lg font-semibold transition-colors mb-1 hover:opacity-75"
+                        style={{ color: 'var(--theme-foreground)' }}
+                      >
                         {list.name}
                       </h3>
                     </Link>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm" style={{ color: 'var(--theme-muted-text)' }}>
                       {list.releaseCount} {list.releaseCount === 1 ? "release" : "releases"}
                     </p>
                   </div>
@@ -267,7 +282,8 @@ export default function ListsPage() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleStartEdit(list)}
-                      className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                      className="p-1 rounded transition-colors hover:bg-white/10"
+                      style={{ color: 'var(--theme-accent)' }}
                       title="Edit"
                       disabled={showCreateForm}
                     >
@@ -275,7 +291,7 @@ export default function ListsPage() {
                     </button>
                     <button
                       onClick={() => setDeletingId(list.id)}
-                      className="p-1 text-red-600 hover:bg-red-50 rounded"
+                      className="p-1 rounded transition-colors text-red-400 hover:bg-red-500/10"
                       title="Delete"
                       disabled={showCreateForm}
                     >

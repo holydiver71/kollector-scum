@@ -536,3 +536,46 @@ body {
 .animate-spin-slow {
   animation: spin-slow 3s linear infinite;
 }
+
+/* Themed utility classes — driven by CSS custom properties so all themes are supported */
+.btn-theme-accent {
+  background-color: var(--theme-accent);
+  color: #ffffff;
+  transition: background-color 150ms;
+}
+.btn-theme-accent:hover:not(:disabled) {
+  background-color: var(--theme-accent-hover);
+}
+.btn-theme-accent:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-theme-secondary {
+  background-color: transparent;
+  color: var(--theme-muted-text);
+  border: 1px solid var(--theme-card-border);
+  transition: background-color 150ms, color 150ms;
+}
+.btn-theme-secondary:hover:not(:disabled) {
+  background-color: var(--theme-card-border);
+  color: var(--theme-foreground);
+}
+.btn-theme-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.themed-input {
+  background-color: var(--theme-input-bg);
+  border-color: var(--theme-card-border);
+  color: var(--theme-foreground);
+}
+.themed-input::placeholder {
+  color: var(--theme-muted-text);
+  opacity: 0.7;
+}
+.themed-input:focus {
+  border-color: var(--theme-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-accent) 20%, transparent);
+}

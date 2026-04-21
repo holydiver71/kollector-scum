@@ -73,7 +73,7 @@ export default function ListDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
         <LoadingSpinner />
       </div>
     );
@@ -81,14 +81,14 @@ export default function ListDetailPage() {
 
   if (error || !list) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
         <div className="text-center">
-          <div className="text-red-600 text-xl mb-4">
+          <div className="text-red-400 text-xl mb-4">
             {error || "List not found"}
           </div>
           <Link
             href="/lists"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[#D93611] text-white rounded-lg hover:bg-[#C02F0F] transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg btn-theme-accent transition-colors"
           >
             Back to Lists
           </Link>
@@ -98,21 +98,22 @@ export default function ListDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-transparent">
       {/* Header */}
-      <div className="border-b border-gray-200">
+      <div className="border-b" style={{ borderColor: 'var(--theme-card-border)' }}>
         <div className="max-w-7xl mx-auto px-8 py-6">
           <Link
             href="/lists"
-            className="inline-flex items-center gap-2 text-gray-600 hover:text-[#D93611] transition-colors mb-4"
+            className="inline-flex items-center gap-2 mb-4 transition-colors hover:opacity-75"
+            style={{ color: 'var(--theme-muted-text)' }}
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Lists
           </Link>
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{list.name}</h1>
-              <p className="text-gray-600">
+              <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--theme-foreground)' }}>{list.name}</h1>
+              <p style={{ color: 'var(--theme-muted-text)' }}>
                 {releases.length} {releases.length === 1 ? "release" : "releases"}
               </p>
             </div>
@@ -124,13 +125,13 @@ export default function ListDetailPage() {
       <div className="max-w-7xl mx-auto px-8 py-8">
         {releases.length === 0 ? (
           <div className="text-center py-16">
-            <p className="text-gray-500 text-lg mb-4">This list is empty.</p>
-            <p className="text-gray-400 mb-8">
+            <p className="text-lg mb-4" style={{ color: 'var(--theme-muted-text)' }}>This list is empty.</p>
+            <p className="mb-8" style={{ color: 'var(--theme-muted-text)', opacity: 0.7 }}>
               Add releases to this list from the collection or release detail pages.
             </p>
             <Link
               href="/collection"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-[#D93611] text-white rounded-lg hover:bg-[#C02F0F] transition-colors font-semibold"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-lg btn-theme-accent font-semibold"
             >
               Browse Collection
             </Link>
