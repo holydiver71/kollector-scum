@@ -9,7 +9,8 @@ import uuid
 import difflib
 import typer
 from pathlib import Path
-from openai import OpenAI
+from openai import OpenAI  # noqa: F401 (imported for type hints in sub-modules)
+from _llm_client import make_client
 
 
 MODIFY_SYSTEM_PROMPT = """You are a software engineer introducing a subtle, realistic bug into a .NET 8 C# codebase.
@@ -71,7 +72,7 @@ def call_llm_to_generate_bug(
     Returns:
         (modified_content, bug_description)
     """
-    client = OpenAI()
+    client = make_client()
     
     user_message = f"""Below is a C# source file from the kollector-scum multi-tenant SaaS codebase.
 Introduce ONE realistic, subtle bug using the priority list in the system prompt.

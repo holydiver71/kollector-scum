@@ -13,7 +13,8 @@ from typing import Any
 
 import typer
 import yaml
-from openai import OpenAI
+from openai import OpenAI  # noqa: F401
+from _llm_client import make_client
 
 import evaluator as evaluator_module
 from evaluator import TaskResult, evaluate_skill
@@ -128,7 +129,7 @@ def _generate_candidate_skills(
     model: str,
     n_candidates: int = 3,
 ) -> list[str]:
-    client = OpenAI()
+    client = make_client()
     failed_summaries = _build_failed_summaries(results)
     prompt = REFLECTION_PROMPT.format(
         score=score,

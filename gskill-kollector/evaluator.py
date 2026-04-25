@@ -21,7 +21,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from openai import OpenAI
+from openai import OpenAI  # noqa: F401
+from _llm_client import make_client
 
 
 _config = {
@@ -59,7 +60,7 @@ def run_agent_on_task(task: dict[str, Any], skill_text: str, model: str = "gpt-4
     Prompt the coding model with current skill + task problem statement.
     Returns raw model output (expected to be a unified diff patch).
     """
-    client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+    client = make_client()
     problem_statement = _task_problem_statement(task)
     system_prompt = (
         f"{skill_text.rstrip()}\n\n"

@@ -1,8 +1,8 @@
 """Generate initial skill files for the kollector-scum repository.
 
 This script performs a focused static analysis pass over the repository,
-packages the most important source material into a prompt, asks an OpenAI
-model to draft repository-specific agent guidance, and writes two outputs:
+packages the most important source material into a prompt, asks a model via the
+GitHub Models API (Copilot Pro) to draft repository-specific agent guidance, and writes two outputs:
 
 * ``.claude/skills/kollector-scum/SKILL.md``
 * ``.github/copilot-instructions.md``
@@ -21,7 +21,8 @@ from pathlib import Path
 from typing import Iterable
 
 import typer
-from openai import OpenAI
+from openai import OpenAI  # noqa: F401
+from _llm_client import make_client
 
 
 app = typer.Typer(
@@ -183,38 +184,25 @@ def generate_body(
     source_paths: list[Path],
     max_chars_per_file: int,
 ) -> str:
-    """Call the OpenAI API and return the generated markdown body."""
+    """Call the GitHub Models API and return the generated markdown body."""
 
-    api_key = os.environ.get("OPENAI_API_KEY")
-    if not api_key:
-        raise typer.BadParameter(
-            "OPENAI_API_KEY must be set in the environment.",
-            param_hint="OPENAI_API_KEY",
-        )
-
-    client = OpenAI(api_key=api_key)
+    client = make_client()
     user_prompt = build_user_prompt(
         repo_root=repo_root,
         source_paths=source_paths,
         max_chars_per_file=max_chars_per_file,
     )
 
-    response = client.responses.create(
+    response = client.chat.completions.create(
         model=model,
         temperature=0.2,
-        input=[
-            {
-                "role": "system",
-                "content": [{"type": "input_text", "text": SYSTEM_PROMPT}],
-            },
-            {
-                "role": "user",
-                "content": [{"type": "input_text", "text": user_prompt}],
-            },
+        messages=[
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": user_prompt},
         ],
     )
 
-    return normalize_markdown_body(response.output_text)
+    return normalize_markdown_body(response.choices[0].message.content or "")
 
 
 def render_claude_skill(body: str) -> str:

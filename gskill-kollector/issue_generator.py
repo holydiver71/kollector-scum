@@ -8,7 +8,8 @@ text that AI coding agents receive as task prompts.
 import json
 import typer
 from pathlib import Path
-from openai import OpenAI
+from openai import OpenAI  # noqa: F401
+from _llm_client import make_client
 
 ISSUE_SYSTEM_PROMPT = """You are a GitHub issue author describing a bug in a .NET 8 C# multi-tenant music catalog SaaS called kollector-scum.
 
@@ -61,7 +62,7 @@ def main(
     typer.echo(f"🤖 Using model: {model}")
     typer.echo()
     
-    client = OpenAI()
+    client = make_client()
     processed = 0
     failed = 0
     

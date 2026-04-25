@@ -12,7 +12,8 @@ import subprocess
 from pathlib import Path
 from datetime import datetime
 import typer
-from openai import OpenAI
+from openai import OpenAI  # noqa: F401
+from _llm_client import make_client
 
 REWRITE_SYSTEM_PROMPT = """You are a software engineer introducing a complex, realistic bug into a .NET 8 C# codebase.
 
@@ -168,7 +169,7 @@ Return ONLY valid JSON with no additional text."""
     typer.echo(f"🤖 Calling {model} to generate rewrite...")
     
     # Call the LLM
-    client = OpenAI()
+    client = make_client()
     response = client.chat.completions.create(
         model=model,
         messages=[
