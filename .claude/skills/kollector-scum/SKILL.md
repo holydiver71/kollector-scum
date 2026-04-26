@@ -1,8 +1,14 @@
 ---
 name: kollector-scum
-version: "0.1.0"
-description: "AI agent skill for contributing to the kollector-scum music catalog SaaS"
-tags: [dotnet, csharp, nextjs, typescript, postgresql, multitenancy]
+version: 0.2.0
+description: AI agent skill for contributing to the kollector-scum music catalog SaaS
+tags: [copilot-skill, dotnet, csharp, nextjs, typescript, postgresql, multitenancy]
+owner: @holydiver71
+stability: stable
+scope: repo-wide orientation, architecture, agent priorities
+entry_point: .claude/skills/kollector-scum/SKILL.md
+last_updated: 2026-04-26
+intent: [repo-overview, architecture-guidance, multitenancy]
 ---
 
 # Kollector Scum — Agent Skill
@@ -847,6 +853,193 @@ npm --prefix frontend run test:e2e
 
 - `frontend/app/lib/auth.ts`
 - Token storage and auth workflow utilities.
+
+## Debugging and Repair Patterns
+
+### Test-Driven Debugging Workflow
+
+When tests fail, follow this systematic approach:
+
+1. **Read the failing test** — understand what behavior is expected
+2. **Identify the assertion** — what condition is not being met?
+3. **Trace backwards** — from assertion → method call → service → repository
+4. **Check tenant scoping** — is UserId being filtered/verified?
+5. **Verify field mapping** — are all required fields being assigned?
+6. **Fix the root cause** — repair the code at the appropriate layer
+7. **Re-run tests** — verify the fix and check for regressions
+
+### Common Bug Patterns and Fixes
+
+#### Bug Pattern 1: Missing UserId Assignment
+
+**Symptom:** Cross-tenant data leakage; wrong user sees another user's data.
+
+**Example Bug:**
+```csharp
+// EntityResolverService.cs - WRONG
+return await ResolveOrCreateSingleEntityAsync(
+    labelName, userId, _labelRepository,
+    n => new Label { Name = n }, // Missing UserId!
+    entity => { /* ... */ }
+);
+```
+
+**Fix:**
+```csharp
+// EntityResolverService.cs - CORRECT
+return await ResolveOrCreateSingleEntityAsync(
+    labelName, userId, _labelRepository,
+    n => new Label { Name = n, UserId = userId }, // UserId assigned
+    entity => { /* ... */ }
+);
+```
+
+**Detection:** Check test failures mentioning "user", "tenant", "ownership", or "access denied".
+
+#### Bug Pattern 2: Inverted Ownership Check
+
+**Symptom:** Tests fail with "unauthorized access" or user cannot access their own data.
+
+**Example Bug:**
+```csharp
+// MusicReleaseQueryService.cs - WRONG
+var userId = _userContext.GetActingUserId();
+if (userId.HasValue && musicRelease.UserId == userId.Value)
+{
+    _logger.LogWarning("Access denied...");
+    return null; // Denying access to owner!
+}
+```
+
+**Fix:**
+```csharp
+// MusicReleaseQueryService.cs - CORRECT
+var userId = _userContext.GetActingUserId();
+if (userId.HasValue && musicRelease.UserId != userId.Value)
+{
+    _logger.LogWarning("Access denied...");
+    return null; // Correctly denying access to non-owner
+}
+```
+
+**Detection:** Read the log message and check if the logic matches the intent.
+
+#### Bug Pattern 3: Missing Field in Mapper
+
+**Symptom:** Entity creation fails; NullReferenceException or missing data in database.
+
+**Example Bug:**
+```csharp
+// ArtistService.cs - WRONG
+protected override Artist MapToEntity(ArtistDto dto)
+{
+    return new Artist
+    {
+        Name = dto.Name
+        // Missing: Id = dto.Id
+    };
+}
+```
+
+**Fix:**
+```csharp
+// ArtistService.cs - CORRECT
+protected override Artist MapToEntity(ArtistDto dto)
+{
+    return new Artist
+    {
+        Id = dto.Id,
+        Name = dto.Name
+    };
+}
+```
+
+**Detection:** Check if DTO has fields that aren't being mapped to the entity.
+
+#### Bug Pattern 4: Wrong Pagination Index
+
+**Symptom:** Off-by-one errors; random selection returns wrong item or null.
+
+**Example Bug:**
+```csharp
+// WRONG - pageNumber expects 1-based indexing
+var pagedResult = await _musicReleaseRepository.GetPagedAsync(
+    pageNumber: skip,  // Should be skip + 1
+    pageSize: 1,
+    filter: mr => mr.UserId == userId.Value
+);
+```
+
+**Fix:**
+```csharp
+// CORRECT - convert 0-based skip to 1-based pageNumber
+var pagedResult = await _musicReleaseRepository.GetPagedAsync(
+    pageNumber: skip + 1,
+    pageSize: 1,
+    filter: mr => mr.UserId == userId.Value
+);
+```
+
+**Detection:** Check repository/paging method signature for indexing expectations.
+
+### Debugging Multi-Tenancy Violations
+
+**When you suspect a tenant isolation bug:**
+
+1. **Find the query** — locate where the entity is being fetched
+2. **Check for UserId filter** — is `filter: e => e.UserId == userId` present?
+3. **Verify ownership after load** — does code check `entity.UserId == actingUserId`?
+4. **Check write operations** — is `UserId` being stamped on create?
+5. **Review join queries** — are related entities also filtered by UserId?
+
+**Key questions to ask:**
+
+- Does this query use `GetActingUserId()` or just `GetUserId()`?
+- Is the UserId filter in the repository call or only in memory?
+- Does this code path allow admin impersonation correctly?
+- What happens if `userId` is null?
+
+**Red flags:**
+
+- Query returns all rows without filtering
+- UserId check happens after data is returned to client
+- UserId is compared to hardcoded value
+- Foreign-key joins bypass tenant scoping
+
+### Test Failure Triage Checklist
+
+When a test fails, check these in order:
+
+1. **Authorization** — Is `[Authorize]` present? Does the test provide auth claims?
+2. **Tenant scoping** — Is UserId being filtered in the query?
+3. **Field mapping** — Are all DTO ↔ Entity fields being copied?
+4. **Null handling** — Does code handle null userId or missing entities?
+5. **Logic inversion** — Are boolean checks correct (!=, not ==)?
+6. **Index boundaries** — Are array/page indices 0-based or 1-based?
+7. **Transaction scope** — Does the operation need `IUnitOfWork`?
+
+### Repair Strategy by Layer
+
+**Controller layer:**
+- Verify `[Authorize]` attribute
+- Check that service methods are called correctly
+- Ensure proper error handling and status codes
+
+**Service layer:**
+- Verify `GetActingUserId()` is called
+- Check entity ownership before returning data
+- Ensure UserId is stamped on create operations
+- Validate all mapper method implementations
+
+**Repository layer:**
+- Verify UserId filters in queries
+- Check include/navigation property loading
+- Ensure pagination parameters are correct
+
+**Mapper/Validator layer:**
+- Verify all DTO fields are mapped to entity fields
+- Check FluentValidation rules for required fields
+- Ensure conditional rules handle null cases
 
 ## Practical Agent Rules
 
