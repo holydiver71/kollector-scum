@@ -83,7 +83,8 @@ def load_skill(skill_path: Path) -> str:
 def save_skill(skill_text: str, skill_path: Path, copilot_path: Path) -> None:
     """
     Write updated skill body to SKILL.md with bumped frontmatter version.
-    Write body-only to Copilot instructions file with standard header comment.
+    If copilot_path points to another SKILL.md, write frontmatter there as well.
+    Otherwise write body-only Copilot instructions file with standard header comment.
     """
     existing_text = skill_path.read_text(encoding="utf-8") if skill_path.exists() else ""
     frontmatter, _ = _extract_frontmatter(existing_text)
@@ -101,16 +102,36 @@ def save_skill(skill_text: str, skill_path: Path, copilot_path: Path) -> None:
     frontmatter_yaml = yaml.safe_dump(frontmatter, sort_keys=False).strip()
     normalized_body = skill_text.strip() + "\n"
     rendered_skill = f"---\n{frontmatter_yaml}\n---\n\n{normalized_body}"
-    rendered_copilot = (
-        f"{COPILOT_HEADER}"
-        "# Kollector Scum — Copilot Coding Agent Instructions\n\n"
-        f"{normalized_body}"
-    )
 
+    # Ensure parent directories exist for both targets
     skill_path.parent.mkdir(parents=True, exist_ok=True)
     copilot_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Write canonical SKILL.md for the primary skill_path
     skill_path.write_text(rendered_skill, encoding="utf-8")
-    copilot_path.write_text(rendered_copilot, encoding="utf-8")
+
+    # If the copilot_path is itself a SKILL.md, write a SKILL.md there too (add copilot-skill tag)
+    if copilot_path.name.lower() == "skill.md":
+        try:
+            copilot_front = dict(frontmatter) if isinstance(frontmatter, dict) else {}
+            tags = copilot_front.get("tags") or []
+            if isinstance(tags, list):
+                if "copilot-skill" not in tags:
+                    tags = ["copilot-skill"] + tags
+                copilot_front["tags"] = tags
+            copilot_front_yaml = yaml.safe_dump(copilot_front, sort_keys=False).strip()
+            rendered_copilot_skill = f"---\n{copilot_front_yaml}\n---\n\n{normalized_body}"
+        except Exception:
+            rendered_copilot_skill = rendered_skill
+        copilot_path.write_text(rendered_copilot_skill, encoding="utf-8")
+    else:
+        # Legacy body-only copilot instructions file
+        rendered_copilot = (
+            f"{COPILOT_HEADER}"
+            "# Kollector Scum — Copilot Coding Agent Instructions\n\n"
+            f"{normalized_body}"
+        )
+        copilot_path.write_text(rendered_copilot, encoding="utf-8")
 
 
 def _build_failed_summaries(results: list[TaskResult]) -> str:
@@ -304,7 +325,7 @@ def main(
     tasks_dir: Path = typer.Option(Path("tasks/"), "--tasks-dir"),
     model: str = typer.Option("gpt-4o", "--model"),
     skill_path: Path = typer.Option(Path("../.claude/skills/kollector-scum/SKILL.md"), "--skill-path"),
-    copilot_path: Path = typer.Option(Path("../.github/copilot-instructions.md"), "--copilot-path"),
+    copilot_path: Path = typer.Option(Path("../.github/skills/kollector-scum/SKILL.md"), "--copilot-path"),
     max_workers: int = typer.Option(4, "--max-workers"),
 ) -> None:
     """
