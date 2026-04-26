@@ -1,0 +1,7 @@
+{
+  "task_id": "kollector-scum__GenreService__5c9d860c",
+  "patch": "--- original+++ modified@@ -33,6 +33,7 @@         {\n             return new Genre\n             {\n+                Id = dto.Id, // Introduced subtle bug: missing Id mapping\n                 Name = dto.Name\n             };\n         }\n@@ -73,4 +74,4 @@             }\n         }\n     }\n-}\n+}",
+  "bug_description": "The Id field is missing in the mapping from GenreDto to Genre, which may cause issues in entity identification.",
+  "source_file": "Projects/kollector-scum/backend/KollectorScum.Api/Services/GenreService.cs",
+  "test_command": "dotnet test backend/KollectorScum.Tests --filter \"KollectorScum.Tests.Services\""
+}

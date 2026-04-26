@@ -1,0 +1,101 @@
+[
+  {
+    "task_id": "kollector-scum__ArtistService__51c7850d",
+    "task_file": "/home/shutty/Projects/kollector-scum/gskill-kollector/tasks/kollector-scum__ArtistService__51c7850d.json",
+    "status": "VALID",
+    "exit_code": 128,
+    "error": null,
+    "stdout": "=== EVAL HARNESS: kollector-scum ===\nREPO_DIR : /tmp/kollector_eval_kollector-scum__ArtistService__51c7850d_wx8psl2b/repo\nTEST_CMD : (auto-detect)\nPATCH_FILE: /tmp/kollector_eval_kollector-scum__ArtistService__51c7850d_wx8psl2b/bug.patch\n\n--- Applying patch: /tmp/kollector_eval_kollector-scum__ArtistService__51c7850d_wx8psl2b/bug.patch ---\n",
+    "stderr": "error: patch fragment without header at line 10: @@ -73,4 +74,4 @@             }\n"
+  },
+  {
+    "task_id": "kollector-scum__ArtistService__d187487b",
+    "task_file": "/home/shutty/Projects/kollector-scum/gskill-kollector/tasks/kollector-scum__ArtistService__d187487b.json",
+    "status": "VALID",
+    "exit_code": 128,
+    "error": null,
+    "stdout": "=== EVAL HARNESS: kollector-scum ===\nREPO_DIR : /tmp/kollector_eval_kollector-scum__ArtistService__d187487b_9pd_7ivk/repo\nTEST_CMD : (auto-detect)\nPATCH_FILE: /tmp/kollector_eval_kollector-scum__ArtistService__d187487b_9pd_7ivk/bug.patch\n\n--- Applying patch: /tmp/kollector_eval_kollector-scum__ArtistService__d187487b_9pd_7ivk/bug.patch ---\n",
+    "stderr": "error: patch fragment without header at line 8: @@ -73,4 +74,4 @@             }\n"
+  },
+  {
+    "task_id": "kollector-scum__ArtistsController__1763bc58",
+    "task_file": "/home/shutty/Projects/kollector-scum/gskill-kollector/tasks/kollector-scum__ArtistsController__1763bc58.json",
+    "status": "VALID",
+    "exit_code": 128,
+    "error": null,
+    "stdout": "=== EVAL HARNESS: kollector-scum ===\nREPO_DIR : /tmp/kollector_eval_kollector-scum__ArtistsController__1763bc58_uryenx60/repo\nTEST_CMD : (auto-detect)\nPATCH_FILE: /tmp/kollector_eval_kollector-scum__ArtistsController__1763bc58_uryenx60/bug.patch\n\n--- Applying patch: /tmp/kollector_eval_kollector-scum__ArtistsController__1763bc58_uryenx60/bug.patch ---\n",
+    "stderr": "error: patch fragment without header at line 10: @@ -183,4 +184,4 @@             }\n"
+  },
+  {
+    "task_id": "kollector-scum__ArtistsController__af6f3f2f",
+    "task_file": "/home/shutty/Projects/kollector-scum/gskill-kollector/tasks/kollector-scum__ArtistsController__af6f3f2f.json",
+    "status": "VALID",
+    "exit_code": 128,
+    "error": null,
+    "stdout": "=== EVAL HARNESS: kollector-scum ===\nREPO_DIR : /tmp/kollector_eval_kollector-scum__ArtistsController__af6f3f2f_d7yv7fuf/repo\nTEST_CMD : (auto-detect)\nPATCH_FILE: /tmp/kollector_eval_kollector-scum__ArtistsController__af6f3f2f_d7yv7fuf/bug.patch\n\n--- Applying patch: /tmp/kollector_eval_kollector-scum__ArtistsController__af6f3f2f_d7yv7fuf/bug.patch ---\n",
+    "stderr": "error: No valid patches in input (allow with \"--allow-empty\")\n"
+  },
+  {
+    "task_id": "kollector-scum__EntityResolverService__f5800149",
+    "task_file": "/home/shutty/Projects/kollector-scum/gskill-kollector/tasks/kollector-scum__EntityResolverService__f5800149.json",
+    "status": "VALID",
+    "exit_code": 128,
+    "error": null,
+    "stdout": "=== EVAL HARNESS: kollector-scum ===\nREPO_DIR : /tmp/kollector_eval_kollector-scum__EntityResolverService__f5800149_j99ntl3p/repo\nTEST_CMD : (auto-detect)\nPATCH_FILE: /tmp/kollector_eval_kollector-scum__EntityResolverService__f5800149_j99ntl3p/bug.patch\n\n--- Applying patch: /tmp/kollector_eval_kollector-scum__EntityResolverService__f5800149_j99ntl3p/bug.patch ---\n",
+    "stderr": "error: patch fragment without header at line 9: @@ -248,4 +248,4 @@ \n"
+  },
+  {
+    "task_id": "kollector-scum__EntityResolverService__2e57fec3",
+    "task_file": "/home/shutty/Projects/kollector-scum/gskill-kollector/tasks/kollector-scum__EntityResolverService__2e57fec3.json",
+    "status": "VALID",
+    "exit_code": 128,
+    "error": null,
+    "stdout": "=== EVAL HARNESS: kollector-scum ===\nREPO_DIR : /tmp/kollector_eval_kollector-scum__EntityResolverService__2e57fec3_vafrirao/repo\nTEST_CMD : (auto-detect)\nPATCH_FILE: /tmp/kollector_eval_kollector-scum__EntityResolverService__2e57fec3_vafrirao/bug.patch\n\n--- Applying patch: /tmp/kollector_eval_kollector-scum__EntityResolverService__2e57fec3_vafrirao/bug.patch ---\n",
+    "stderr": "error: patch fragment without header at line 9: @@ -248,4 +248,4 @@ \n"
+  },
+  {
+    "task_id": "kollector-scum__GenreService__ce53380d",
+    "task_file": "/home/shutty/Projects/kollector-scum/gskill-kollector/tasks/kollector-scum__GenreService__ce53380d.json",
+    "status": "VALID",
+    "exit_code": 128,
+    "error": null,
+    "stdout": "=== EVAL HARNESS: kollector-scum ===\nREPO_DIR : /tmp/kollector_eval_kollector-scum__GenreService__ce53380d_e_2q9xmk/repo\nTEST_CMD : (auto-detect)\nPATCH_FILE: /tmp/kollector_eval_kollector-scum__GenreService__ce53380d_e_2q9xmk/bug.patch\n\n--- Applying patch: /tmp/kollector_eval_kollector-scum__GenreService__ce53380d_e_2q9xmk/bug.patch ---\n",
+    "stderr": "error: patch fragment without header at line 10: @@ -73,4 +74,4 @@             }\n"
+  },
+  {
+    "task_id": "kollector-scum__GenreService__5c9d860c",
+    "task_file": "/home/shutty/Projects/kollector-scum/gskill-kollector/tasks/kollector-scum__GenreService__5c9d860c.json",
+    "status": "VALID",
+    "exit_code": 128,
+    "error": null,
+    "stdout": "=== EVAL HARNESS: kollector-scum ===\nREPO_DIR : /tmp/kollector_eval_kollector-scum__GenreService__5c9d860c_psrn30q1/repo\nTEST_CMD : (auto-detect)\nPATCH_FILE: /tmp/kollector_eval_kollector-scum__GenreService__5c9d860c_psrn30q1/bug.patch\n\n--- Applying patch: /tmp/kollector_eval_kollector-scum__GenreService__5c9d860c_psrn30q1/bug.patch ---\n",
+    "stderr": "error: patch fragment without header at line 8: @@ -73,4 +74,4 @@             }\n"
+  },
+  {
+    "task_id": "kollector-scum__MusicReleaseQueryService__588b51a4",
+    "task_file": "/home/shutty/Projects/kollector-scum/gskill-kollector/tasks/kollector-scum__MusicReleaseQueryService__588b51a4.json",
+    "status": "VALID",
+    "exit_code": 128,
+    "error": null,
+    "stdout": "=== EVAL HARNESS: kollector-scum ===\nREPO_DIR : /tmp/kollector_eval_kollector-scum__MusicReleaseQueryService__588b51a4_3nbij6ol/repo\nTEST_CMD : (auto-detect)\nPATCH_FILE: /tmp/kollector_eval_kollector-scum__MusicReleaseQueryService__588b51a4_3nbij6ol/bug.patch\n\n--- Applying patch: /tmp/kollector_eval_kollector-scum__MusicReleaseQueryService__588b51a4_3nbij6ol/bug.patch ---\n",
+    "stderr": "error: patch fragment without header at line 13: @@ -366,4 +366,4 @@         public async Task<int?> GetRandomReleaseIdAsync()\n"
+  },
+  {
+    "task_id": "kollector-scum__MusicReleaseQueryService__fc6f5e19",
+    "task_file": "/home/shutty/Projects/kollector-scum/gskill-kollector/tasks/kollector-scum__MusicReleaseQueryService__fc6f5e19.json",
+    "status": "VALID",
+    "exit_code": 128,
+    "error": null,
+    "stdout": "=== EVAL HARNESS: kollector-scum ===\nREPO_DIR : /tmp/kollector_eval_kollector-scum__MusicReleaseQueryService__fc6f5e19_0yst0y5j/repo\nTEST_CMD : (auto-detect)\nPATCH_FILE: /tmp/kollector_eval_kollector-scum__MusicReleaseQueryService__fc6f5e19_0yst0y5j/bug.patch\n\n--- Applying patch: /tmp/kollector_eval_kollector-scum__MusicReleaseQueryService__fc6f5e19_0yst0y5j/bug.patch ---\n",
+    "stderr": "error: patch fragment without header at line 9: @@ -352,7 +352,7 @@             // Use GetPagedAsync with skip+1 as page number and page size of 1\n"
+  },
+  {
+    "task_id": "sample_task",
+    "task_file": "/home/shutty/Projects/kollector-scum/gskill-kollector/tasks/sample_task.json",
+    "status": "VALID",
+    "exit_code": 128,
+    "error": null,
+    "stdout": "=== EVAL HARNESS: kollector-scum ===\nREPO_DIR : /tmp/kollector_eval_sample_task_3opvdo9n/repo\nTEST_CMD : (auto-detect)\nPATCH_FILE: /tmp/kollector_eval_sample_task_3opvdo9n/bug.patch\n\n--- Applying patch: /tmp/kollector_eval_sample_task_3opvdo9n/bug.patch ---\n",
+    "stderr": "error: corrupt patch at line 9\n"
+  }
+]

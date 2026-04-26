@@ -1,0 +1,289 @@
+{
+  "mode": "fallback",
+  "max_evals": 10,
+  "eval_count": 10,
+  "best_score": 0.0,
+  "history": [
+    {
+      "round": 1,
+      "current_score": 0.0,
+      "best_score": 0.0,
+      "current_failures": [
+        {
+          "task_id": "kollector-scum__ArtistService__51c7850d",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__ArtistService__abc12345",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__ArtistService__d187487b",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__ArtistsController__1763bc58",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__ArtistsController__af6f3f2f",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__EntityResolverService__2e57fec3",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__EntityResolverService__f5800149",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__GenreService__5c9d860c",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__GenreService__ce53380d",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__MusicReleaseQueryService__588b51a4",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__MusicReleaseQueryService__fc6f5e19",
+          "error": "tests failed"
+        }
+      ],
+      "candidate_scores": [
+        0.0
+      ],
+      "selected_score": 0.0,
+      "eval_count": 2
+    },
+    {
+      "round": 2,
+      "current_score": 0.0,
+      "best_score": 0.0,
+      "current_failures": [
+        {
+          "task_id": "kollector-scum__ArtistService__51c7850d",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__ArtistService__abc12345",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__ArtistService__d187487b",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__ArtistsController__1763bc58",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__ArtistsController__af6f3f2f",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__EntityResolverService__2e57fec3",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__EntityResolverService__f5800149",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__GenreService__5c9d860c",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__GenreService__ce53380d",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__MusicReleaseQueryService__588b51a4",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__MusicReleaseQueryService__fc6f5e19",
+          "error": "tests failed"
+        }
+      ],
+      "candidate_scores": [
+        0.0
+      ],
+      "selected_score": 0.0,
+      "eval_count": 4
+    },
+    {
+      "round": 3,
+      "current_score": 0.0,
+      "best_score": 0.0,
+      "current_failures": [
+        {
+          "task_id": "kollector-scum__ArtistService__51c7850d",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__ArtistService__abc12345",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__ArtistService__d187487b",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__ArtistsController__1763bc58",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__ArtistsController__af6f3f2f",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__EntityResolverService__2e57fec3",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__EntityResolverService__f5800149",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__GenreService__5c9d860c",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__GenreService__ce53380d",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__MusicReleaseQueryService__588b51a4",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__MusicReleaseQueryService__fc6f5e19",
+          "error": "tests failed"
+        }
+      ],
+      "candidate_scores": [
+        0.0
+      ],
+      "selected_score": 0.0,
+      "eval_count": 6
+    },
+    {
+      "round": 4,
+      "current_score": 0.0,
+      "best_score": 0.0,
+      "current_failures": [
+        {
+          "task_id": "kollector-scum__ArtistService__51c7850d",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__ArtistService__abc12345",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__ArtistService__d187487b",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__ArtistsController__1763bc58",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__ArtistsController__af6f3f2f",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__EntityResolverService__2e57fec3",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__EntityResolverService__f5800149",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__GenreService__5c9d860c",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__GenreService__ce53380d",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__MusicReleaseQueryService__588b51a4",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__MusicReleaseQueryService__fc6f5e19",
+          "error": "tests failed"
+        }
+      ],
+      "candidate_scores": [
+        0.0
+      ],
+      "selected_score": 0.0,
+      "eval_count": 8
+    },
+    {
+      "round": 5,
+      "current_score": 0.0,
+      "best_score": 0.0,
+      "current_failures": [
+        {
+          "task_id": "kollector-scum__ArtistService__51c7850d",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__ArtistService__abc12345",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__ArtistService__d187487b",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__ArtistsController__1763bc58",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__ArtistsController__af6f3f2f",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__EntityResolverService__2e57fec3",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__EntityResolverService__f5800149",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__GenreService__5c9d860c",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__GenreService__ce53380d",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__MusicReleaseQueryService__588b51a4",
+          "error": "tests failed"
+        },
+        {
+          "task_id": "kollector-scum__MusicReleaseQueryService__fc6f5e19",
+          "error": "tests failed"
+        }
+      ],
+      "candidate_scores": [
+        0.0
+      ],
+      "selected_score": 0.0,
+      "eval_count": 10
+    }
+  ],
+  "best_skill": "# Kollector Scum \u2014 Agent Skill\n\n## Repo Identity\n\n- Kollector Scum is a full-stack music collection catalog SaaS.\n- Users catalog vinyl, CD, and related music releases.\n- The system is invitation-only.\n- The system is fully multi-tenant.\n- Correct tenant scoping is the single most important correctness rule.\n\n### Stack\n\n- Backend: .NET 8 Web API in C#.\n- Frontend: Next.js 15 App Router with TypeScript.\n- Database: PostgreSQL via Supabase in real environments.\n- Object storage: Cloudflare R2.\n- Public image serving: Cloudflare Worker.\n- Backend tests: xUnit + Moq.\n- Frontend tests: Jest + React Testing Library.\n\n### Purpose\n\n- Store user-owned music release data.\n- Manage per-user lookup data such as artists and genres.\n- Import releases from Discogs.\n- Serve cover art from object storage.\n- Provide collection statistics and search.\n\n### Deployment shape\n\n- API talks to PostgreSQL.\n- Frontend talks to the API through `frontend/app/lib/api.ts`.\n- Images are uploaded through a storage service abstraction.\n- Images are then served publicly through the worker path.\n- Discogs imports run asynchronously via a background queue.\n\n### What an agent should optimize for\n\n- Preserve tenant isolation first.\n- Preserve layering second.\n- Keep DTO, validation, and Swagger docs aligned.\n- Prefer existing generic patterns over inventing new ones.\n- Follow the codebase\u2019s service/repository abstractions even when EF Core could do it directly.\n\n## Architecture and Layer Rules\n\n### Primary backend flow\n\n- Standard backend flow is:\n- `Controllers -> Services -> Repositories -> EF Core DbContext -> PostgreSQL`\n- Do not skip layers.\n- Controllers should not reach into repositories directly.\n- Services own business logic.\n- Repositories own persistence mechanics.\n- `IUnitOfWork` owns transaction boundaries when multiple writes are involved.\n\n### Base controller pattern\n\n- Standard CRUD controllers inherit from `BaseApiController`.\n- `BaseApiController` provides:\n- common API metadata,\n- logging helpers,\n- pagination validation,\n- centralized exception-to-response mapping.\n- Example standard CRUD controller:\n- `backend/KollectorScum.Api/Controllers/ArtistsController.cs`\n\n### Generic CRUD pattern\n\n- Lookup-style entities use `GenericCrudService<TEntity, TDto>`.\n- `GenericCrudService` is the default service base for:\n- `Artist`\n- `Genre`\n- `Label`\n- `Country`\n- `Format`\n- `Packaging`\n- `Store`\n- The registrations live in:\n- `backend/KollectorScum.Api/Extensions/ServiceCollectionExtensions.cs`\n\n### What GenericCrudService gives you\n\n- Automatic tenant scoping for `IUserOwnedEntity` queries.\n- `GetAllAsync` adds a `UserId` filter automatically.\n- `GetByIdAsync` verifies ownership after loading.\n- `CreateAsync` stamps `UserId` automatically.\n- `UpdateAsync` rejects cross-tenant updates.\n- `DeleteAsync` rejects cross-tenant deletes.\n- `GetOrCreateByNameAsync` looks up by `(UserId, Name)`.\n- Lookup/list results can be cached for 5 minutes.\n\n### What subclasses must supply\n\n- `MapToDto`\n- `MapToEntity`\n- `UpdateEntity`\n- `GetEntityId`\n- optional search filter\n- optional default ordering\n- optional DTO validation\n\n### Repository layer\n\n- Generic repository abstraction is `IRepository<T>`.\n- Implementation is `Repository<T>`.\n- It exposes composable querying, paging, includes, add/update/delete, and existence checks.\n- Repository methods are usually `AsNoTracking` for reads.\n- `Repository<T>.Update` has explicit tracked-entity conflict handling.\n- Use the repo API instead of inline `DbContext` access in normal service work.\n\n### Unit of Work\n\n- `IUnitOfWork` coordinates:\n- repository access,\n- transactions,\n- save boundaries,\n- lookup-table upserts,\n- sequence resets,\n- change tracker clearing.\n- Use it whenever a feature does more than one related write.\n\n### MusicRelease is the important exception\n\n- `MusicRelease` does not follow the plain lookup CRUD pattern.\n- It uses separate query and command services:\n- `IMusicReleaseQueryService`\n- `IMusicReleaseCommandService`\n- Controller:\n- `backend/KollectorScum.Api/Controllers/MusicReleasesController.cs`\n- Query service:\n- `backend/KollectorScum.Api/Services/MusicReleaseQueryService.cs`\n- Command service:\n- `backend/KollectorScum.Api/Services/MusicReleaseCommandService.cs`\n- This is effectively a CQRS-style split.\n\n### When to use which service pattern\n\n- Use `GenericCrudService` for simple per-user lookup entities.\n- Use a dedicated command/query split when:\n- the entity has richer write orchestration,\n- related entities may be auto-created,\n- duplicate detection exists,\n- background integration behavior exists,\n- or a richer DTO mapping flow is required.\n\n### Frontend architecture rules\n\n- The frontend uses Next.js App Router.\n- Routes live under `frontend/app/`.\n- Shared API access belongs in `frontend/app/lib/api.ts`.\n- Shared auth helpers belong in `frontend/app/lib/auth.ts`.\n- Do not create ad hoc fetch wrappers in random components.\n- There is no Redux or Zustand.\n- Auth state is propagated through events and React context/state.\n\n## Multi-Tenancy (Highest Priority)\n\n### Non-negotiable rule\n\n- Every user-owned entity must be scoped to a user.\n- If you break tenant scoping, you create a data leak.\n- Treat tenant isolation as a correctness bug, not just a style issue.\n\n### Core interface\n\n- User-owned entities implement:\n- `backend/KollectorScum.Api/Models/IUserOwnedEntity.cs`\n- The interface is simple:\n- `Guid UserId { get; set; }`\n- Named lookup entities often implement:\n- `backend/KollectorScum.Api/Models/INamedUserOwnedEntity.cs`\n- That extends `IUserOwnedEntity` with:\n- `int Id`\n- `string Name`\n\n### Entities that are explicitly per-user\n\n- `MusicRelease`\n- `Artist`\n- `Genre`\n- `Label`\n- `Country`\n- `Format`\n- `Packaging`\n- `Store`\n- `Kollection`\n- `List`\n- `DiscogsImportJob`\n- and other user-owned aggregates\n\n### Database constraints you must preserve\n\n- Lookup tables are not global shared dictionaries.\n- They are per-user lookup tables.\n- The uniqueness rule is:\n- `(UserId, Name)`\n- not:\n- `Name`\n- This is configured in `KollectorScumDbContext`.\n\n### Concrete examples of composite unique indexes\n\n- `Artists`: `(UserId, Name)`\n- `Genres`: `(UserId, Name)`\n- `Labels`: `(UserId, Name)`\n- `Countries`: `(UserId, Name)`\n- `Formats`: `(UserId, Name)`\n- `Packagings`: `(UserId, Name)`\n- `Stores`: `(UserId, Name)`\n- `Kollections`: `(UserId, Name)`\n\n### GenericCrudService tenant behavior\n\n- `GetAllAsync`:\n- injects `IUserContext`,\n- gets `GetActingUserId()`,\n- adds a `UserId == actingUserId` expression for `IUserOwnedEntity`.\n- `GetByIdAsync`:\n- loads the entity,\n- verifies ownership,\n- returns `null` for mismatched tenants.\n- `CreateAsync`:\n- sets `UserId` automatically before save.\n- `UpdateAsync`:\n- verifies the existing entity belongs to the acting user.\n- `DeleteAsync`:\n- verifies the existing entity belongs to the acting user.\n- `GetOrCreateByNameAsync`:\n- finds by both `UserId` and `Name`.\n\n### IUserContext rules\n\n- `IUserContext` lives at:\n- `backend/KollectorScum.Api/Interfaces/IUserContext.cs`\n- Implementation is:\n- `backend/KollectorScum.Api/Services/UserContext.cs`\n- It resolves the authenticated user from JWT claims.\n- `ClaimTypes.NameIdentifier` is the user ID.\n- `GetActingUserId()` supports admin impersonation.\n- Impersonation sources:\n- `X-Admin-Act-As` header\n- `impersonation_userId` cookie\n- If your service is user-scoped, use `GetActingUserId()`, not just `GetUserId()`.\n\n### Important implication for admin work\n\n- Admin features can act on behalf of another user.\n- Anything that scopes data should use the acting user.\n- If you accidentally use the raw user ID instead, impersonation can become inconsistent.\n\n### Join table / association table rule\n\n- Existing tenant safety is sometimes enforced through parent foreign-key chains.\n- The CLAUDE guidance explicitly calls out that some join tables do not store `UserId`.\n- Do not cargo-cult either choice.\n- For every new join table, decide tenant isolation deliberately.\n- If the row is only meaningful through a single user-owned parent, FK-chain scoping may be enough.\n- If the row can be queried independently, filtered directly, or reused across parents, add the scoping key you need.\n- Never leave tenancy ambiguous.\n\n### Anti-patterns that cause tenant bugs\n\n- Adding a new entity without `IUserOwnedEntity`.\n- Using a global unique index on `Name`.\n- Writing direct repository queries without a `UserId` filter.\n- Adding a custom query service and forgetting the ownership check that GenericCrudService would have given you.\n- Resolving related lookup names without scoping by acting user.\n- Creating association tables whose rows can float across users.\n\n### Safe mental model\n\n- Ask: \u201cWhat user owns this row?\u201d\n- Ask: \u201cHow is that ownership enforced in queries?\u201d\n- Ask: \u201cHow is uniqueness enforced per user?\u201d\n- Ask: \u201cIf admin impersonation is active, does this still work?\u201d\n- If you cannot answer all four, stop and fix the design.\n\n## Authentication and Authorization\n\n### Auth flow\n\n- Google OAuth is the initial identity proof.\n- The backend validates the Google token server-side.\n- The backend issues its own JWT.\n- The API uses JWT bearer auth.\n\n### Important claims\n\n- `NameIdentifier` holds the application user ID.\n- Email is also present.\n- Admin behavior is represented by `IsAdmin`.\n\n### Invitation-only behavior\n\n- Access is not open signup.\n- Users must have a `UserInvitation`.\n- The invitation must be valid and then marked used.\n\n### Controller rule\n\n- API endpoints should require `[Authorize]` unless there is a clear public exception.\n- Standard CRUD controllers all use `[Authorize]`.\n- `MusicReleasesController` uses `[Authorize]`.\n- Forgetting `[Authorize]` is a security bug.\n\n### Frontend auth behavior\n\n- Auth token key is `auth_token`.\n- It is stored in local storage by current frontend helpers.\n- `frontend/app/lib/api.ts` injects:\n- `Authorization: Bearer <token>`\n- It also sends:\n- `X-Admin-Act-As`\n- when impersonation is active.\n- On real `401` responses, the helper clears auth state and dispatches `authChanged`.\n\n### Agent guidance\n\n- Do not invent a second auth token storage mechanism.\n- Reuse `fetchJson`.\n- Reuse `frontend/app/lib/auth.ts`.\n- If you add authenticated frontend calls, let the central helper attach headers.\n\n## Data Modeling and Persistence Patterns\n\n### Model conventions\n\n- Models use C# classes under `backend/KollectorScum.Api/Models/`.\n- They use XML docs extensively.\n- They use data annotations such as:\n- `[Required]`\n- `[StringLength(...)]`\n- `[ForeignKey(...)]`\n\n### DbContext conventions\n\n- EF configuration is centralized in:\n- `backend/KollectorScum.Api/Data/KollectorScumDbContext.cs`\n- New entities should usually get:\n- `DbSet<T>`\n- indexes\n- unique constraints\n- relationship configuration\n- delete behavior rules\n\n### Important music release persistence detail\n\n- `MusicRelease` stores several complex values as JSON strings.\n- Do not assume everything is normalized into join tables.\n- Examples:\n- `Artists`\n- `Genres`\n- `PurchaseInfo`\n- `Images`\n- `Links`\n- `Media`\n\n### Consequence for contributors\n\n- If you add a field to a release DTO, verify whether it belongs:\n- as a scalar column,\n- as a related entity,\n- or as serialized JSON.\n- Keep DTO mapping, validation, and serialization in sync.\n\n### Lookup upsert pattern\n\n- `KollectorScumDbContext` contains atomic upsert helpers for several lookup tables.\n- They use SQL with:\n- `ON CONFLICT (\"UserId\",\"Name\") DO NOTHING`\n- Examples:\n- `UpsertFormatAsync`\n- `UpsertLabelAsync`\n- `UpsertCountryAsync`\n- `UpsertArtistAsync`\n- `UpsertGenreAsync`\n- `UpsertPackagingAsync`\n- When concurrency matters for lookup creation, prefer the existing upsert path over ad hoc insert-then-select logic.\n\n## DTOs, Validation, and Serialization\n\n### DTO location\n\n- DTOs live under:\n- `backend/KollectorScum.Api/DTOs/`\n\n### Validation approach\n\n- FluentValidation is registered globally.\n- Validators are discovered from the assembly.\n- Example validator:\n- `backend/KollectorScum.Api/Validators/CreateMusicReleaseDtoValidator.cs`\n\n### Validation patterns to copy\n\n- Validate required fields explicitly.\n- Validate mutually exclusive input combinations.\n- Validate collection items.\n- Validate ranges for dates and numeric fields.\n- Validate URLs carefully.\n- Use conditional rules with `When(...)` for optional fields.\n\n### Concrete CreateMusicReleaseDto validation rules\n\n- Title is required.\n- Title max length is 300.\n- At least one artist ID or artist name is required.\n- IDs in lookup lists must be positive.\n- Name lists cannot contain empty values.\n- Release years are bounded.\n- You cannot specify both lookup ID and lookup name for the same field.\n- UPC and label number have length limits.\n- Purchase info cannot specify both `StoreId` and `StoreName`.\n- Image fields may be either a local filename or an HTTP(S) URL.\n\n### Serialization conventions\n\n- JSON is camelCase in API responses.\n- Frontend and backend DTOs assume camelCase transport.\n- Serialized JSON blobs are handled through `System.Text.Json`.\n\n### Contributor checklist for new DTO fields\n\n- Add the property to the DTO.\n- Add or update FluentValidation rules.\n- Update mapper/service code.\n- Update tests.\n- Update Swagger-facing docs/comments.\n- Verify frontend types match the backend response shape.\n\n## Standard Entity Patterns\n\n### Lookup entity pattern\n\n- A lookup entity is usually:\n- user-owned,\n- name-based,\n- simple,\n- and managed via `GenericCrudService`.\n- Good examples:\n- `Artist`\n- `Genre`\n- `Label`\n- `Country`\n- `Format`\n- `Packaging`\n- `Store`\n\n### Lookup service pattern\n\n- Inherit from `GenericCrudService<TEntity, TDto>`.\n- Map only the small DTO surface.\n- Override search filter.\n- Override default ordering.\n- Override `ValidateDto` for entity-specific checks.\n\n### Lookup controller pattern\n\n- Inherit from `BaseApiController`.\n- Add `[Authorize]`.\n- Use `IGenericCrudService<TEntity, TDto>`.\n- Validate pagination parameters through the base class.\n- Use base logging helpers.\n- Convert exceptions through `HandleError`.\n\n### Rich aggregate pattern\n\n- `MusicRelease` is the reference aggregate with more orchestration.\n- It uses:\n- query service,\n- command service,\n- mapper service,\n- validator service,\n- duplicate detection,\n- entity resolution,\n- statistics support,\n- and Discogs backfill/import flows.\n\n## Adding a New Entity (Step-by-Step Checklist)\n\n### Default checklist\n\n1. Decide whether the new thing is:\n   - a simple lookup entity,\n   - a user-owned aggregate,\n   - or a richer CQRS-style aggregate.\n2. Decide tenant ownership first.\n3. If it is user-owned, implement `IUserOwnedEntity`.\n4. If it is a named per-user lookup, strongly prefer `INamedUserOwnedEntity`.\n5. Add the model class under `backend/KollectorScum.Api/Models/`.\n6. Add XML doc comments to the class and properties.\n7. Add data annotations such as `[Required]` and `[StringLength]`.\n8. Add the `DbSet<T>` to `KollectorScumDbContext`.\n9. Add indexes and constraints in `OnModelCreating`.\n10. If the entity is name-based per user, add a unique index on `(UserId, Name)`.\n11. Configure relationships and delete behavior.\n12. Create DTOs under `backend/KollectorScum.Api/DTOs/`.\n13. Add FluentValidation validators if the input shape is non-trivial.\n14. Add repository support if a custom repo is needed.\n15. Otherwise rely on `IRepository<T>`.\n16. Decide whether `GenericCrudService` is enough.\n17. If yes, create a service inheriting from `GenericCrudService`.\n18. Implement mapping methods and validation overrides.\n19. Create a controller inheriting from `BaseApiController` for standard CRUD cases.\n20. Add `[Authorize]` to the controller.\n21. Register the service in `ServiceCollectionExtensions`.\n22. Register any repository or interface additions in `ServiceCollectionExtensions`.\n23. Add an EF Core migration.\n24. Update Swagger/XML comments for any new endpoints.\n25. Add unit tests with Moq.\n26. Add integration tests if the endpoint/query behavior is important.\n27. Add frontend API wrapper functions if the UI will call it.\n28. Reuse `fetchJson` for frontend requests.\n29. Update agent-facing documentation if the pattern is important enough to teach future contributors.\n\n### If the entity is a lookup table\n\n- Use the lookup CRUD pattern.\n- Register it in `AddLookupCrudServices`.\n- Add `(UserId, Name)` uniqueness.\n- Add alphabetical default ordering.\n- Add simple name search.\n- Consider cache friendliness.\n\n### If the entity is a richer aggregate\n\n- Consider separate command and query services.\n- Decide whether create/update require a transaction.\n- Decide whether related lookup resolution is needed.\n- Decide whether duplicate detection is needed.\n- Decide whether mapping should be delegated to a mapper service.\n\n### If the entity touches imports or background work\n\n- Decide whether a job entity is required.\n- Decide how status will be persisted.\n- Decide how the frontend will poll for completion.\n- Decide what user-scoped indexes are needed for recovery/status queries.\n\n## MusicRelease-Specific Patterns You Must Know\n\n### Why MusicRelease matters\n\n- Many real features revolve around `MusicRelease`.\n- It is the best reference for non-trivial backend work.\n\n### Write path\n\n- `MusicReleaseCommandService`:\n- starts a unit-of-work transaction,\n- resolves or creates related lookup entities,\n- validates,\n- stamps the acting `UserId`,\n- serializes JSON-backed fields,\n- saves,\n- commits,\n- maps to a full DTO response.\n\n### Read path\n\n- `MusicReleaseQueryService`:\n- delegates list retrieval to `IGetMusicReleasesQueryHandler`,\n- enforces ownership on single-release fetch,\n- maps to full DTOs,\n- computes last-played information,\n- may backfill tracklists from Discogs when missing.\n\n### Duplicate handling\n\n- Duplicate detection exists on create.\n- Validation can return duplicate candidates.\n- Controllers convert the duplicate case into `409 Conflict`.\n\n### Related entity resolution\n\n- `EntityResolverService` resolves lookup IDs or names.\n- It can create lookup rows when only names are supplied.\n- It scopes everything to the acting user.\n- Reuse this pattern when adding more name-or-id resolution behavior.\n\n### JSON storage caution\n\n- Artist IDs and genre IDs are serialized JSON arrays on `MusicRelease`.\n- Do not \u201cfix\u201d this casually in a small feature.\n- If you touch this area, preserve compatibility with the rest of the mapper/query logic.\n\n## Testing\n\n### Backend test commands\n\n```bash\ndotnet test backend/KollectorScum.Tests\ndotnet test backend/KollectorScum.Tests --filter \"KollectorScum.Tests.Services.MusicReleaseCommandServiceTests\"\ndotnet test backend/KollectorScum.Tests --filter \"KollectorScum.Tests.Services.MusicReleaseCommandServiceTests.MethodName\"\n```\n\n### Frontend test commands\n\n```bash\nnpm --prefix frontend run lint\nnpm --prefix frontend test\nnpm --prefix frontend run test:coverage\nnpm --prefix frontend run test:e2e\n```\n\n### Coverage target\n\n- Backend target is 80%+ coverage.\n\n### Backend unit test pattern\n\n- Unit tests use xUnit.\n- Dependencies are mocked with Moq.\n- Services are tested in isolation.\n- Do not hit a real database in unit tests.\n- `MusicReleaseCommandServiceTests` is a good template.\n\n### Backend integration test pattern\n\n- Integration tests use `WebApplicationFactory<Program>`.\n- The test host swaps the DbContext to SQLite in-memory.\n- Authentication is replaced with `TestAuthHandler`.\n- Tests seed data directly into the test database.\n- `CollectionStatisticsIntegrationTests` is a good example.\n\n### Important integration details\n\n- Test auth uses a fixed `NameIdentifier` GUID.\n- Seed data must line up with that user.\n- Integration assertions should verify tenant isolation, not just happy-path values.\n\n### Frontend unit test pattern\n\n- Use Jest + React Testing Library.\n- Keep API helpers mockable.\n- Reuse the existing auth and fetch utilities rather than mocking arbitrary global state shapes.\n\n### What to test for every new user-owned feature\n\n- Happy path create/read/update/delete.\n- Unauthenticated behavior.\n- Cross-tenant access denial.\n- Validation failures.\n- Duplicate/uniqueness behavior where relevant.\n- Frontend request/response typing where relevant.\n\n## Discogs Integration Pattern\n\n### High-level rule\n\n- Discogs imports are asynchronous.\n- Do not model them as immediate synchronous CRUD work.\n\n### Existing architecture\n\n- Queue:\n- `IDiscogsImportJobQueue`\n- Background service:\n- `DiscogsImportBackgroundService`\n- Job entity:\n- `DiscogsImportJob`\n- Status service:\n- `IDiscogsImportJobService`\n\n### Agent guidance\n\n- If a new import step may take time, fit it into the job pattern.\n- Persist user-scoped job status.\n- Make the frontend poll for status instead of blocking.\n- Preserve Discogs rate-limit awareness.\n\n## Frontend Contribution Guidance\n\n### API access\n\n- Centralize API calls in `frontend/app/lib/api.ts`.\n- Reuse `fetchJson`.\n- Do not create component-local fetch wrappers unless there is a strong reason.\n\n### Auth-aware behavior\n\n- `fetchJson` handles bearer auth.\n- `fetchJson` handles impersonation headers.\n- `fetchJson` clears stale auth state on genuine `401`.\n\n### Auth helper file\n\n- Use `frontend/app/lib/auth.ts` for:\n- token access,\n- sign-in token exchange,\n- magic link verification,\n- sign-out,\n- profile fetch/update.\n\n### State guidance\n\n- There is no global Redux-style store.\n- Follow the existing lightweight pattern:\n- central helper utilities,\n- React context where needed,\n- component/local state otherwise.\n\n### Safe contribution rule\n\n- If a frontend change needs backend data:\n- add or update the backend DTO,\n- add/update the backend endpoint,\n- expose it through `fetchJson`,\n- then update the component.\n- Do not hardcode mismatched response shapes in the component layer.\n\n## Common Pitfalls\n\n### Security and auth pitfalls\n\n- Forgetting `[Authorize]` on a new controller.\n- Using the wrong user ID source instead of `GetActingUserId()`.\n- Returning internal exception details from controllers.\n\n### Multi-tenancy pitfalls\n\n- Forgetting to implement `IUserOwnedEntity`.\n- Forgetting `(UserId, Name)` uniqueness on per-user lookups.\n- Querying a user-owned repository without a user filter in custom service code.\n- Adding a new independently queried association table without explicit tenant scoping.\n\n### Layering pitfalls\n\n- Accessing repositories directly from controllers.\n- Reaching into `DbContext` from controllers.\n- Bypassing `IUnitOfWork` for multi-step writes.\n- Duplicating logic that already lives in `GenericCrudService` or a domain service.\n\n### DTO/validation pitfalls\n\n- Adding DTO fields without validator updates.\n- Adding model fields without mapper updates.\n- Forgetting camelCase JSON expectations.\n- Forgetting to keep frontend types aligned.\n\n### Documentation pitfalls\n\n- Not adding XML comments.\n- Not keeping Swagger docs current.\n- Not updating agent-facing conventions when a new pattern becomes standard.\n\n### MusicRelease pitfalls\n\n- Forgetting that artists/genres are stored as JSON arrays on `MusicRelease`.\n- Forgetting ownership checks in custom MusicRelease queries.\n- Ignoring duplicate detection paths on create.\n\n## Key Files Reference\n\n### Core repo guidance\n\n- `CLAUDE.md`\n- Primary high-level contributor guidance and command reference.\n\n### Multi-tenancy core\n\n- `backend/KollectorScum.Api/Models/IUserOwnedEntity.cs`\n- Base tenant-ownership contract.\n\n- `backend/KollectorScum.Api/Models/INamedUserOwnedEntity.cs`\n- Named lookup entity contract.\n\n- `backend/KollectorScum.Api/Interfaces/IUserContext.cs`\n- Service abstraction for current/acting user.\n\n- `backend/KollectorScum.Api/Services/UserContext.cs`\n- JWT and impersonation resolution.\n\n### Data model and persistence\n\n- `backend/KollectorScum.Api/Data/KollectorScumDbContext.cs`\n- DbSets, indexes, unique constraints, relationships, lookup upserts.\n\n- `backend/KollectorScum.Api/Repositories/Repository.cs`\n- Generic repository implementation.\n\n- `backend/KollectorScum.Api/Repositories/UnitOfWork.cs`\n- Transaction coordinator and repo access point.\n\n### Generic CRUD reference\n\n- `backend/KollectorScum.Api/Services/GenericCrudService.cs`\n- Canonical service base for per-user CRUD.\n\n- `backend/KollectorScum.Api/Services/ArtistService.cs`\n- Minimal lookup service example.\n\n- `backend/KollectorScum.Api/Controllers/ArtistsController.cs`\n- Standard `BaseApiController` CRUD controller example.\n\n### MusicRelease reference\n\n- `backend/KollectorScum.Api/Models/MusicRelease.cs`\n- Core aggregate model.\n\n- `backend/KollectorScum.Api/Services/MusicReleaseCommandService.cs`\n- Write orchestration and transaction flow.\n\n- `backend/KollectorScum.Api/Services/MusicReleaseQueryService.cs`\n- Read orchestration and ownership checks.\n\n- `backend/KollectorScum.Api/Controllers/MusicReleasesController.cs`\n- CQRS-style release controller.\n\n- `backend/KollectorScum.Api/Services/EntityResolverService.cs`\n- Lookup resolution/auto-create pattern.\n\n- `backend/KollectorScum.Api/Services/MusicReleaseValidator.cs`\n- Domain validation and duplicate handling.\n\n- `backend/KollectorScum.Api/Validators/CreateMusicReleaseDtoValidator.cs`\n- FluentValidation example for a rich DTO.\n\n### Service registration\n\n- `backend/KollectorScum.Api/Extensions/ServiceCollectionExtensions.cs`\n- DI registration map for repos, services, auth, caching, Discogs, and infrastructure.\n\n### Testing references\n\n- `backend/KollectorScum.Tests/Services/MusicReleaseCommandServiceTests.cs`\n- Canonical backend unit-test style with Moq.\n\n- `backend/KollectorScum.Tests/Integration/CollectionStatisticsIntegrationTests.cs`\n- Integration test style with `WebApplicationFactory` + SQLite in-memory.\n\n- `backend/KollectorScum.Tests/Integration/TestAuthHandler.cs`\n- Fake auth for integration tests.\n\n### Frontend references\n\n- `frontend/app/lib/api.ts`\n- Central fetch helper, auth header injection, impersonation header, uniform error handling.\n\n- `frontend/app/lib/auth.ts`\n- Token storage and auth workflow utilities.\n\n## Practical Agent Rules\n\n### Before editing backend code\n\n- Identify the owning layer first.\n- Check whether the entity is user-owned.\n- Check whether a generic CRUD pattern already exists.\n- Check whether there is already a validator or mapper you should extend.\n\n### Before editing frontend code\n\n- Find the existing helper in `app/lib/`.\n- Confirm the backend response shape.\n- Reuse centralized auth-aware fetch behavior.\n\n### Before adding a database field\n\n- Decide ownership and indexing.\n- Decide whether the field belongs in a DTO.\n- Decide whether it needs validation.\n- Decide whether it needs frontend type support.\n- Decide whether tests need new seeded data.\n\n### Before merging\n\n- Verify authorization.\n- Verify tenant scoping.\n- Verify unique constraints.\n- Verify docs/comments.\n- Verify tests.\n\n## Short \u201cDo / Don\u2019t\u201d Summary\n\n### Do\n\n- Do use `IUserOwnedEntity` for user-owned data.\n- Do use `(UserId, Name)` uniqueness for per-user lookups.\n- Do use `GetActingUserId()` in scoped service logic.\n- Do reuse `GenericCrudService` for simple lookups.\n- Do use dedicated services for richer aggregates.\n- Do reuse `fetchJson` on the frontend.\n- Do add tests for tenant isolation and auth.\n\n### Don\u2019t\n\n- Don\u2019t create global lookup uniqueness.\n- Don\u2019t bypass service or repository layers.\n- Don\u2019t let controllers own business logic.\n- Don\u2019t forget `[Authorize]`.\n- Don\u2019t forget XML comments and Swagger upkeep.\n- Don\u2019t assume MusicRelease fields are all normalized relational columns.\n- Don\u2019t ship a feature without thinking through multi-tenancy first.\n"
+}

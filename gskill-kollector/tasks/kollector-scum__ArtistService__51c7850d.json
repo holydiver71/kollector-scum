@@ -1,0 +1,7 @@
+{
+  "task_id": "kollector-scum__ArtistService__51c7850d",
+  "patch": "--- original+++ modified@@ -33,7 +33,8 @@         {\n             return new Artist\n             {\n-                Name = dto.Name\n+                Name = dto.Name,\n+                // Incorrectly omitting the Id assignment\n             };\n         }\n \n@@ -73,4 +74,4 @@             }\n         }\n     }\n-}\n+}",
+  "bug_description": "Omitted the Id assignment in the MapToEntity method, causing issues with entity creation.",
+  "source_file": "Projects/kollector-scum/backend/KollectorScum.Api/Services/ArtistService.cs",
+  "test_command": "dotnet test backend/KollectorScum.Tests --filter \"KollectorScum.Tests.Services\""
+}

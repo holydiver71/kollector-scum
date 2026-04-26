@@ -1,0 +1,7 @@
+{
+  "task_id": "kollector-scum__ArtistsController__1763bc58",
+  "patch": "--- original+++ modified@@ -88,7 +88,8 @@ \n                 LogOperation(\"GetArtist\", new { id });\n \n-                var artistDto = await _artistService.GetByIdAsync(id);\n+                // Bug introduced here: incorrectly scoped by UserId\n+                var artistDto = await _artistService.GetByIdAsync(id); // Bypassing UserId scope\n                 if (artistDto == null)\n                 {\n                     return NotFound($\"Artist with ID {id} not found\");\n@@ -183,4 +184,4 @@             }\n         }\n     }\n-}\n+}",
+  "bug_description": "The GetArtist method bypasses UserId scoping, potentially exposing data from other users.",
+  "source_file": "Projects/kollector-scum/backend/KollectorScum.Api/Controllers/ArtistsController.cs",
+  "test_command": "dotnet test backend/KollectorScum.Tests --filter \"KollectorScum.Tests.Controllers\""
+}
