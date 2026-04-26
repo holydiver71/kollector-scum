@@ -99,3 +99,9 @@ backend/KollectorScum.Tests/obj/Debug/net8.0/KollectorScum.Tests.csproj.Assembly
 TestResults/_andy-Latitude-E7440_2025-10-08_21_49_49.trx
 frontend/.npmrc
 .npm-cache
+
+# Python virtualenvs
+.venv/
+venv/
+__pycache__/
+*.py[cod]
