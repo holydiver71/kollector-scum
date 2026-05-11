@@ -1,0 +1,8 @@
+{
+  "task_id": "kollector-scum__ArtistService__abc12345",
+  "patch": "--- a/backend/KollectorScum.Api/Services/ArtistService.cs\n+++ b/backend/KollectorScum.Api/Services/ArtistService.cs\n@@ -20,7 +20,7 @@\n         public async Task<List<Artist>> SearchArtistByNameAsync(string userId, string search)\n         {\n-            return await _context.Artists.Where(a => a.UserId == userId && a.Name.Contains(search)).ToListAsync();\n+            return await _context.Artists.Where(a => a.Name.Contains(search)).ToListAsync();\n         }\n",
+  "bug_description": "UserId scoping removed from Artist search query, allowing cross-tenant data leakage.",
+  "source_file": "backend/KollectorScum.Api/Services/ArtistService.cs",
+  "test_command": "dotnet test backend/KollectorScum.Tests --filter KollectorScum.Tests.Services",
+  "problem_statement": ""
+}

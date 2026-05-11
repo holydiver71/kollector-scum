@@ -147,6 +147,27 @@ Migrations live in `backend/KollectorScum.Api/Migrations/`. Use the design-time 
 
 ---
 
+## Skill Files
+
+AI agent skill files are maintained at:
+- `.claude/skills/kollector-scum/SKILL.md` — for Claude Code (YAML frontmatter + body)
+- `.github/copilot-instructions.md` — for GitHub Copilot coding agent (body only)
+
+These files are evolved by the `gskill-kollector/` pipeline using the gskill recipe
+(SWE-smith task generation + GEPA `optimize_anything` evolutionary refinement).
+
+To regenerate the initial skill from source:
+```bash
+python gskill-kollector/generate_initial_skill.py
+```
+
+To run the full GEPA evolution loop (requires OPENAI_API_KEY and generated tasks):
+```bash
+python gskill-kollector/pipeline.py --max-evals 50 --tasks-dir gskill-kollector/tasks/
+```
+
+---
+
 ## Development Standards
 
 - Follow SOLID principles and Clean Architecture layering — don't skip layers (e.g., controllers should not access repos directly).

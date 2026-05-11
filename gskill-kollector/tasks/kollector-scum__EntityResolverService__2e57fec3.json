@@ -1,0 +1,7 @@
+{
+  "task_id": "kollector-scum__EntityResolverService__2e57fec3",
+  "patch": "--- original+++ modified@@ -114,7 +114,7 @@ \n             return await ResolveOrCreateSingleEntityAsync(\n                 labelName, userId, _labelRepository,\n-                n => new Label { Name = n, UserId = userId },\n+                n => new Label { Name = n }, // Removed UserId = userId\n                 entity =>\n                 {\n                     createdEntities.Labels ??= new List<LabelDto>();\n@@ -248,4 +248,4 @@ \n         #endregion\n     }\n-}\n+}",
+  "bug_description": "Removed UserId assignment when creating a Label entity, which can lead to cross-tenant data leakage.",
+  "source_file": "Projects/kollector-scum/backend/KollectorScum.Api/Services/EntityResolverService.cs",
+  "test_command": "dotnet test backend/KollectorScum.Tests --filter \"KollectorScum.Tests.Services\""
+}

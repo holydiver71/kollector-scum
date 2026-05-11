@@ -1,0 +1,7 @@
+{
+  "task_id": "kollector-scum__ArtistService__d187487b",
+  "patch": "--- original+++ modified@@ -33,6 +33,7 @@         {\n             return new Artist\n             {\n+                Id = dto.Id, // Introduced bug: Id is now mapped incorrectly\n                 Name = dto.Name\n             };\n         }\n@@ -73,4 +74,4 @@             }\n         }\n     }\n-}\n+}  \n",
+  "bug_description": "A subtle bug was introduced by incorrectly mapping the Id field in the MapToEntity method, which will cause an existing unit test to fail.",
+  "source_file": "Projects/kollector-scum/backend/KollectorScum.Api/Services/ArtistService.cs",
+  "test_command": "dotnet test backend/KollectorScum.Tests --filter \"KollectorScum.Tests.Services\""
+}
