@@ -148,9 +148,9 @@ function ImportProgressWheel({ progress, cooldownSecondsLeft }: { progress: Impo
           <div className="absolute inset-[22px] rounded-full bg-[radial-gradient(circle_at_center,color-mix(in_srgb,var(--theme-accent)_12%,transparent_88%)_0%,transparent_72%)] motion-safe:animate-pulse motion-reduce:animate-none" />
           <div className="absolute inset-[6px] rounded-full border border-[var(--theme-accent)]/20 blur-[1px]" />
 
-          <div className="absolute inset-[24px] flex items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--theme-accent)_28%,white_12%)] bg-[var(--theme-card-bg)]/95 shadow-[0_0_0_2px_color-mix(in_srgb,var(--theme-accent)_10%,transparent),0_8px_20px_rgba(0,0,0,0.18)]">
+          <div className="absolute inset-[24px] flex items-center justify-center rounded-full border border-[color-mix(in_srgb,var(--theme-accent)_10%,white_12%)] bg-[var(--theme-card-bg)]/95 shadow-[0_0_0_2px_color-mix(in_srgb,var(--theme-accent)_10%,transparent),0_8px_20px_rgba(0,0,0,0.18)]">
             <img
-              src="https://www.discogs.com/favicon.ico"
+              src="/images/discogs.svg"
               alt="Discogs"
               className="h-12 w-12 object-contain"
               data-testid="discogs-import-logo"

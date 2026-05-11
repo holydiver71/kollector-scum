@@ -13,7 +13,12 @@ intent: [backend-guidance, repo-patterns, musicrelease-rules]
 
 # Backend Patterns
 
-Repository layer
+Repository layer---
+name: kollector-scum-backend
+version: 0.1.0
+description: Backend conventions, repositories, unit-of-work, DTOs and MusicRelease patterns
+tags: [copilot, backend, dotnet]
+---
 
 - Use IRepository<T> and Repository<T> for composable querying, paging and existence checks.
 - Prefer repository API over direct DbContext access in services.
