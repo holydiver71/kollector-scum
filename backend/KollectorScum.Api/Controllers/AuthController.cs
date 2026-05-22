@@ -189,7 +189,13 @@ namespace KollectorScum.Api.Controllers
                 var jwt = _tokenService.GenerateToken(existingUser);
 
                 _logger.LogInformation("Google OAuth callback succeeded for {Email}", email);
-                return Redirect($"{frontendOrigin}/auth/callback?token={Uri.EscapeDataString(jwt)}");
+                // Use URL fragment to return the token to the frontend. Some
+                // hosting platforms or proxies may strip or reorder query
+                // parameters during redirects which prevents the client from
+                // reliably reading them. Fragments are preserved by the
+                // browser and are not sent to the server, making them a safer
+                // method for client-only tokens in an OAuth redirect flow.
+                return Redirect($"{frontendOrigin}/auth/callback#token={Uri.EscapeDataString(jwt)}");
             }
             catch (UnauthorizedAccessException ex)
             {
