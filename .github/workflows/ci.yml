@@ -270,7 +270,7 @@ jobs:
     steps:
       - name: Check staging health endpoint
         run: |
-          STAGING_URL="https://kollector-scum-staging-api.onrender.com/health"
+          STAGING_URL="https://api-staging.kollector-skum.com/health"
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 --retry 3 "$STAGING_URL")
           if [ "$STATUS" != "200" ]; then
             echo "Staging health check failed with HTTP status: $STATUS"
