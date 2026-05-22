@@ -18,7 +18,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   // Magic link page must also be public so unauthenticated users can verify their token.
   // Mockup pages are also public for local design review.
   const isMockupRoute = pathname.startsWith('/mockup/');
-  const isPublicRoute = isLandingPage || pathname === '/auth/callback' || pathname === '/auth/magic-link' || isMockupRoute;
+  const isPublicRoute = isLandingPage || pathname.startsWith('/auth/callback') || pathname.startsWith('/auth/magic-link') || isMockupRoute;
 
   useEffect(() => {
     let cancelled = false;
