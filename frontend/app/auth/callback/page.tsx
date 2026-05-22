@@ -13,7 +13,27 @@ function CallbackHandler() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = searchParams.get("token");
+    // Try multiple ways to obtain the token because some deployment
+    // environments may rewrite or strip query parameters during the
+    // redirect. Prefer `useSearchParams`, then fall back to the URL
+    // hash (fragment) and finally the raw `location.href` search.
+    let token = searchParams.get("token");
+
+    if (!token && typeof window !== 'undefined') {
+      // Check fragment: /auth/callback#token=...
+      const hash = window.location.hash || '';
+      const hashMatch = hash.match(/token=([^&]+)/);
+      if (hashMatch) token = decodeURIComponent(hashMatch[1]);
+    }
+
+    if (!token && typeof window !== 'undefined') {
+      try {
+        const fromHref = new URL(window.location.href).searchParams.get('token');
+        if (fromHref) token = fromHref;
+      } catch {
+        // ignore malformed URL
+      }
+    }
 
     if (!token) {
       setError("Authentication failed: no token received.");
