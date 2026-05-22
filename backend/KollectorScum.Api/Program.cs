@@ -83,7 +83,55 @@ builder.Services
 
 var app = builder.Build();
 
-// Startup diagnostic: confirm Discogs token is loaded
+// ── Startup diagnostics ───────────────────────────────────────────────────────
+
+app.Logger.LogInformation("STARTUP: Environment={Env}", app.Environment.EnvironmentName);
+
+// JWT — misconfig here silently disables auth (all [Authorize] endpoints → 401)
+var jwtKey      = app.Configuration["Jwt:Key"]      ?? app.Configuration["Jwt__Key"];
+var jwtIssuer   = app.Configuration["Jwt:Issuer"]   ?? app.Configuration["Jwt__Issuer"]   ?? "(appsettings default)";
+var jwtAudience = app.Configuration["Jwt:Audience"]  ?? app.Configuration["Jwt__Audience"] ?? "(appsettings default)";
+
+if (string.IsNullOrEmpty(jwtKey))
+    app.Logger.LogError("STARTUP: Jwt:Key is EMPTY — JWT auth middleware is DISABLED. Every [Authorize] endpoint will return 401.");
+else
+    app.Logger.LogInformation("STARTUP: Jwt:Key loaded (length={Len}).", jwtKey.Length);
+
+app.Logger.LogInformation("STARTUP: Jwt:Issuer={Issuer}  Jwt:Audience={Audience}", jwtIssuer, jwtAudience);
+
+// Google OAuth — misconfig here breaks the sign-in redirect flow
+var googleClientId     = app.Configuration["Google:ClientId"]     ?? app.Configuration["Google__ClientId"];
+var googleClientSecret = app.Configuration["Google:ClientSecret"] ?? app.Configuration["Google__ClientSecret"];
+var googleRedirectUri  = app.Configuration["Google:RedirectUri"]  ?? app.Configuration["Google__RedirectUri"];
+
+if (string.IsNullOrEmpty(googleClientId))
+    app.Logger.LogError("STARTUP: Google:ClientId is EMPTY — Google OAuth will not work.");
+else
+    app.Logger.LogInformation("STARTUP: Google:ClientId loaded (length={Len}).", googleClientId.Length);
+
+if (string.IsNullOrEmpty(googleClientSecret))
+    app.Logger.LogError("STARTUP: Google:ClientSecret is EMPTY — authorization code exchange will fail (error_auth_failed).");
+else
+    app.Logger.LogInformation("STARTUP: Google:ClientSecret loaded (length={Len}).", googleClientSecret.Length);
+
+if (string.IsNullOrEmpty(googleRedirectUri))
+    app.Logger.LogError("STARTUP: Google:RedirectUri is EMPTY — backend will send a blank redirect_uri to Google.");
+else
+    app.Logger.LogInformation("STARTUP: Google:RedirectUri={RedirectUri}", googleRedirectUri);
+
+// Frontend origins — misconfig here sends the post-auth JWT to the wrong URL
+var frontendOrigins =
+    app.Configuration["Frontend:Origins"] ??
+    app.Configuration["Frontend:Origin"]  ??
+    app.Configuration["FRONTEND_ORIGINS"] ??
+    app.Configuration["FRONTEND_ORIGIN"];
+
+if (string.IsNullOrEmpty(frontendOrigins))
+    app.Logger.LogError("STARTUP: Frontend origins not set — post-auth redirect will go to http://localhost:3000 (wrong host).");
+else
+    app.Logger.LogInformation("STARTUP: Frontend origins={Origins}", frontendOrigins);
+
+// Discogs
 var discogsToken = app.Configuration["Discogs:Token"] ?? app.Configuration["Discogs__Token"];
 if (string.IsNullOrEmpty(discogsToken))
     app.Logger.LogWarning("STARTUP: Discogs:Token is EMPTY — collection import will return 403.");
