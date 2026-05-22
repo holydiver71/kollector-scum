@@ -110,7 +110,7 @@ jobs:
             echo "Missing COOLIFY_API_TOKEN or COOLIFY_APP_UUID_STAGING"
             exit 1
           fi
-          curl -fsS -X POST "https://api-staging.kollector-skum.com/api/v1/deploy?uuid=${COOLIFY_APP_UUID_STAGING}&force=false" \
+          curl -fsS -X POST "https://coolify.kollector-skum.com/api/v1/deploy?uuid=${COOLIFY_APP_UUID_STAGING}&force=false" \
             -H "Authorization: Bearer ${COOLIFY_API_TOKEN}" \
             -H "Content-Type: application/json"
 
@@ -194,7 +194,7 @@ jobs:
             echo "Missing COOLIFY_API_TOKEN or COOLIFY_APP_UUID_STAGING"
             exit 1
           fi
-          curl -fsS -X POST "https://api-staging.kollector-skum.com/api/v1/deploy?uuid=${COOLIFY_APP_UUID_STAGING}&force=false" \
+          curl -fsS -X POST "https://coolify.kollector-skum.com/api/v1/deploy?uuid=${COOLIFY_APP_UUID_STAGING}&force=false" \
             -H "Authorization: Bearer ${COOLIFY_API_TOKEN}" \
             -H "Content-Type: application/json"
 
