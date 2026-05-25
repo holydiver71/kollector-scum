@@ -288,7 +288,7 @@ jobs:
     steps:
       - name: Check production health endpoint
         run: |
-          PROD_URL="https://kollector-scum-api.onrender.com/health"
+          PROD_URL="https://api.kollector-skum.com/health"
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 --retry 3 "$PROD_URL")
           if [ "$STATUS" != "200" ]; then
             echo "Production health check failed with HTTP status: $STATUS"
