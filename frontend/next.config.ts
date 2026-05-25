@@ -33,10 +33,10 @@ const nextConfig: NextConfig = {
         hostname: 'localhost',
         pathname: '/cover-art/**',
       },
-      {
-        // Allow staging API host for direct image links served by the API
+     {
+        // Allow Coolify staging host for direct image links served by the API
         protocol: 'https',
-        hostname: 'kollector-scum-staging-api.onrender.com',
+        hostname: 'api-staging.kollector-skum.com',
         pathname: '/**',
       },
       {

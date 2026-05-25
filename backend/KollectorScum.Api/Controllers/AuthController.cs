@@ -143,7 +143,7 @@ namespace KollectorScum.Api.Controllers
                 "&access_type=offline" +
                 "&prompt=select_account";
 
-            _logger.LogInformation("Redirecting to Google OAuth consent screen");
+            _logger.LogInformation("GoogleLogin: redirecting to Google. redirect_uri={RedirectUri}", redirectUri);
             return Redirect(authUrl);
         }
 
@@ -158,10 +158,12 @@ namespace KollectorScum.Api.Controllers
         public async Task<IActionResult> GoogleCallback([FromQuery] string? code, [FromQuery] string? error)
         {
             var frontendOrigin = GetFrontendOrigin();
+            _logger.LogInformation("GoogleCallback: received. code_present={HasCode} error={Error} frontendOrigin={FrontendOrigin}",
+                !string.IsNullOrEmpty(code), error ?? "(none)", frontendOrigin);
 
             if (!string.IsNullOrEmpty(error) || string.IsNullOrEmpty(code))
             {
-                _logger.LogWarning("Google OAuth callback error: {Error}", error ?? "no code");
+                _logger.LogWarning("GoogleCallback: aborted — {Error}", error ?? "no code");
                 return Redirect($"{frontendOrigin}/?error=google_auth_failed");
             }
 
@@ -188,8 +190,9 @@ namespace KollectorScum.Api.Controllers
 
                 var jwt = _tokenService.GenerateToken(existingUser);
 
-                _logger.LogInformation("Google OAuth callback succeeded for {Email}", email);
-                return Redirect($"{frontendOrigin}/auth/callback?token={Uri.EscapeDataString(jwt)}");
+                var callbackUrl = $"{frontendOrigin}/auth/callback#token={Uri.EscapeDataString(jwt)}";
+                _logger.LogInformation("GoogleCallback: success for {Email} — redirecting to {CallbackUrl}", email, callbackUrl);
+                return Redirect(callbackUrl);
             }
             catch (UnauthorizedAccessException ex)
             {

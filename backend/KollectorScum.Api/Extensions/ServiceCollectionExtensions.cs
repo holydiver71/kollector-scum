@@ -3,6 +3,7 @@ using System.Threading.RateLimiting;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using KollectorScum.Api.Application.Queries;
+using KollectorScum.Api.Middleware;
 using KollectorScum.Api.Controllers;
 using KollectorScum.Api.Data;
 using KollectorScum.Api.DTOs;
@@ -229,7 +230,7 @@ public static class ServiceCollectionExtensions
         else
             services.AddScoped<IStorageService, LocalFileSystemStorageService>();
 
-        services.AddHealthChecks().AddDbContextCheck<KollectorScumDbContext>("database");
+        services.AddHealthChecks().AddCheck<DatabaseHealthCheck>("database");
 
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen(c =>
