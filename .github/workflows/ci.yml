@@ -289,9 +289,14 @@ jobs:
       - name: Check production health endpoint
         run: |
           PROD_URL="https://api.kollector-skum.com/health"
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 --retry 3 "$PROD_URL")
-          if [ "$STATUS" != "200" ]; then
-            echo "Production health check failed with HTTP status: $STATUS"
-            exit 1
-          fi
-          echo "Production is healthy"
+          for i in 1 2 3 4 5; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 --connect-timeout 10 "$PROD_URL" 2>/dev/null || echo "000")
+            echo "Attempt $i: HTTP $STATUS"
+            if [ "$STATUS" = "200" ]; then
+              echo "Production is healthy"
+              exit 0
+            fi
+            [ $i -lt 5 ] && sleep 15
+          done
+          echo "Production health check failed after 5 attempts"
+          exit 1
