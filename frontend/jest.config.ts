@@ -10,7 +10,14 @@ const createJestConfig = nextJest({
 const config: Config.InitialOptions = {
   coverageProvider: 'v8',
   testEnvironment: 'jsdom',
-  // Add more setup options before each test is run
+  coverageThreshold: {
+    global: {
+      lines:      70,
+      functions:  70,
+      branches:   60,
+      statements: 70,
+    }},
+ // Add more setup options before each test is run
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
@@ -29,6 +36,5 @@ const config: Config.InitialOptions = {
     '!**/node_modules/**',
   ],
 }
-
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
 export default createJestConfig(config)
