@@ -1,0 +1,53 @@
+name: Claude AI Review
+
+on:
+  workflow_run:
+    workflows: ["CI"]   # must match name: in ci.yml exactly
+    types: [completed]
+    branches: [master, dev]
+
+permissions:
+  pull-requests: write
+  contents: read
+  issues: write
+
+jobs:
+  claude-review:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install anthropic requests
+
+      - name: Download coverage artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
+          path: ./coverage-report
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run Claude review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GITHUB_TOKEN:      ${{ secrets.GITHUB_TOKEN }}
+          REPO:              ${{ github.repository }}
+          PR_NUMBER:         ${{ github.event.workflow_run.pull_requests[0].number }}
+          BASE_SHA:          ${{ github.event.workflow_run.pull_requests[0].base.sha }}
+          HEAD_SHA:          ${{ github.event.workflow_run.head_sha }}
+        run: python .github/scripts/claude_review.py
+
+      - name: Run missing test detection
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python .github/scripts/missing_tests.py

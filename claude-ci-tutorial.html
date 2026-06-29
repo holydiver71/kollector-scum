@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude CI Pipeline — Kollector Scum</title>
+<style>
+:root {
+  --ground:      #12131F;
+  --surface:     #1C1D2E;
+  --surface-2:   #22243A;
+  --border:      #2D2F47;
+  --border-hi:   #3D4060;
+  --text:        #EAE0CC;
+  --text-muted:  #9B95A8;
+  --text-faint:  #4A4D6A;
+  --accent:      #C98A2A;
+  --accent-dim:  #3A2810;
+  --accent-2:    #4A8FA3;
+  --accent-2-dim:#1A3040;
+  --green:       #5BAD6A;
+  --green-dim:   #1A3522;
+  --red:         #C96060;
+  --red-dim:     #3A1818;
+  --display:     "Futura","Century Gothic","Trebuchet MS",sans-serif;
+  --sans:        -apple-system,BlinkMacSystemFont,"Segoe UI","Helvetica Neue",sans-serif;
+  --mono:        "JetBrains Mono","Fira Code","Cascadia Code","Consolas",monospace;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+
+body{
+  background:var(--ground);
+  color:var(--text);
+  font-family:var(--sans);
+  font-size:15px;
+  line-height:1.7;
+}
+
+/* ── HEADER ── */
+header{
+  display:flex;
+  align-items:center;
+  gap:48px;
+  max-width:940px;
+  margin:0 auto;
+  padding:60px 32px 48px;
+}
+
+#record{border-radius:50%;flex-shrink:0;display:block;}
+
+.hd{flex:1;}
+
+.eyebrow{
+  font-family:var(--display);
+  font-size:10px;
+  letter-spacing:.25em;
+  text-transform:uppercase;
+  color:var(--accent);
+  margin-bottom:14px;
+}
+
+h1{
+  font-family:var(--display);
+  font-size:clamp(26px,3.8vw,42px);
+  font-weight:700;
+  line-height:1.1;
+  color:#fff;
+  margin-bottom:14px;
+}
+
+.header-sub{
+  color:var(--text-muted);
+  font-size:14px;
+  line-height:1.65;
+  max-width:400px;
+  margin-bottom:20px;
+}
+
+.tags{display:flex;flex-wrap:wrap;gap:8px;}
+.tag{
+  font-family:var(--mono);
+  font-size:10px;
+  padding:3px 9px;
+  border-radius:4px;
+  border:1px solid var(--border-hi);
+  color:var(--text-muted);
+  background:rgba(255,255,255,.03);
+}
+
+/* ── CONTAINER ── */
+.container{max-width:940px;margin:0 auto;padding:0 32px 80px;}
+
+/* ── PIPELINE ROW ── */
+.pipeline{
+  display:flex;
+  border:1px solid var(--border);
+  border-radius:8px;
+  overflow:hidden;
+  margin:0 0 52px;
+}
+.ps{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:16px 10px;
+  border-right:1px solid var(--border);
+  position:relative;
+}
+.ps:last-child{border-right:none;}
+.ps.new{background:rgba(201,138,42,.07);}
+.ps .icon{font-size:20px;margin-bottom:6px;}
+.ps .lbl{
+  font-family:var(--display);
+  font-size:9px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--text-faint);
+}
+.ps.new .lbl{color:var(--accent);}
+.ps-arrow{
+  position:absolute;
+  right:-9px;top:50%;
+  transform:translateY(-50%);
+  color:var(--text-faint);
+  font-size:14px;
+  z-index:1;
+}
+.ps:last-child .ps-arrow{display:none;}
+
+/* ── SIDE BAND ── */
+.side-band{
+  display:flex;
+  align-items:baseline;
+  gap:18px;
+  padding:16px 0 10px;
+  margin:52px 0 24px;
+  border-top:1px solid var(--border);
+}
+.side-letter{
+  font-family:var(--display);
+  font-size:68px;
+  line-height:1;
+  color:var(--accent);
+  font-weight:700;
+}
+.side-meta{display:flex;flex-direction:column;}
+.side-title{
+  font-family:var(--display);
+  font-size:12px;
+  letter-spacing:.28em;
+  text-transform:uppercase;
+  color:var(--text-muted);
+  margin-bottom:3px;
+}
+.side-desc{font-size:13px;color:var(--text-faint);}
+
+/* ── TRACK (step card) ── */
+.track{
+  margin-bottom:24px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  overflow:hidden;
+  background:var(--surface);
+}
+.track-header{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:16px 22px;
+  border-bottom:1px solid var(--border);
+  background:rgba(255,255,255,.02);
+}
+.track-num{
+  font-family:var(--display);
+  font-size:11px;
+  letter-spacing:.08em;
+  color:var(--accent);
+  background:var(--accent-dim);
+  border:1px solid var(--accent);
+  border-radius:5px;
+  padding:3px 10px;
+  flex-shrink:0;
+  min-width:40px;
+  text-align:center;
+}
+.track-title{font-size:15px;font-weight:600;color:#fff;flex:1;}
+.badge{
+  font-family:var(--display);
+  font-size:9px;
+  letter-spacing:.08em;
+  padding:3px 9px;
+  border-radius:4px;
+  text-transform:uppercase;
+  font-weight:700;
+  flex-shrink:0;
+}
+.badge-setup  {background:var(--accent-dim);  color:var(--accent);   border:1px solid var(--accent);}
+.badge-claude {background:var(--accent-2-dim);color:var(--accent-2); border:1px solid var(--accent-2);}
+.badge-free   {background:var(--green-dim);   color:var(--green);    border:1px solid #2a5a32;}
+
+.track-body{padding:22px 24px;}
+.track-body p{color:var(--text-muted);margin-bottom:14px;font-size:14px;line-height:1.65;}
+.track-body p:last-child{margin-bottom:0;}
+.track-body strong{color:var(--text);}
+
+/* ── CODE ── */
+.code-label{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:7px 14px;
+  background:#090A12;
+  border:1px solid var(--border-hi);
+  border-bottom:none;
+  border-radius:6px 6px 0 0;
+  font-family:var(--mono);
+  font-size:11px;
+  color:var(--text-muted);
+}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--border-hi);flex-shrink:0;}
+
+pre{
+  background:#090A12;
+  border:1px solid var(--border-hi);
+  border-radius:0 0 6px 6px;
+  padding:18px 20px;
+  overflow-x:auto;
+  font-family:var(--mono);
+  font-size:12.5px;
+  line-height:1.72;
+  margin-bottom:16px;
+  color:var(--text);
+  tab-size:2;
+}
+pre.solo{border-radius:6px;margin-bottom:16px;}
+
+/* syntax spans */
+.k {color:var(--accent-2);}
+.s {color:#8DC490;}
+.c {color:var(--text-faint);font-style:italic;}
+.n {color:var(--accent);}
+.f {color:#D4A878;}
+.yk{color:#A08EE0;}
+.yv{color:#8DC490;}
+.yb{color:var(--accent-2);}
+.yc{color:var(--text-faint);font-style:italic;}
+.ym{color:#E8A060;}
+
+/* ── CALLOUTS ── */
+.callout{
+  display:flex;gap:12px;
+  padding:12px 15px;
+  border-radius:6px;
+  margin:14px 0;
+  font-size:13px;
+  line-height:1.6;
+}
+.ci{flex-shrink:0;font-size:15px;margin-top:1px;}
+.callout.tip  {background:var(--accent-2-dim);border:1px solid #2A5A6A;color:#8FBFCC;}
+.callout.warn {background:var(--accent-dim);  border:1px solid #5A3A10;color:#D4AA70;}
+.callout.info {background:var(--green-dim);   border:1px solid #2A5030;color:#8DC490;}
+.callout.crit {background:var(--red-dim);     border:1px solid #5A2828;color:#D4A0A0;}
+
+/* ── TABLES ── */
+table{width:100%;border-collapse:collapse;font-size:13px;font-family:var(--mono);margin:12px 0;}
+th{text-align:left;padding:9px 13px;background:rgba(255,255,255,.03);border:1px solid var(--border);color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.08em;}
+td{padding:9px 13px;border:1px solid var(--border);color:var(--text-muted);}
+td:first-child{color:var(--text);}
+tr:nth-child(even) td{background:rgba(255,255,255,.015);}
+.free{color:var(--green);}
+.paid{color:var(--accent);}
+
+/* ── CHECKLIST ── */
+.checklist{list-style:none;margin:10px 0;}
+.checklist li{padding:6px 0 6px 26px;position:relative;color:var(--text-muted);font-size:13px;border-bottom:1px solid var(--border);}
+.checklist li:last-child{border-bottom:none;}
+.checklist li::before{content:'□';position:absolute;left:4px;color:var(--text-faint);}
+
+/* ── GROOVE DIVIDER ── */
+.groove{height:1px;background:linear-gradient(to right,transparent,var(--accent-2) 30%,var(--accent-2) 70%,transparent);opacity:.22;margin:44px 0;}
+
+/* ── DIFF HINT ── */
+.diff-block{border-radius:6px;overflow:hidden;margin-bottom:16px;}
+.diff-old{background:#1A0E0E;border:1px solid var(--red-dim);padding:14px 18px;font-family:var(--mono);font-size:12.5px;color:#AA7070;border-bottom:none;border-radius:6px 6px 0 0;}
+.diff-new{background:#0E1A10;border:1px solid var(--green-dim);padding:14px 18px;font-family:var(--mono);font-size:12.5px;color:#8DC490;border-radius:0 0 6px 6px;}
+.diff-label{font-family:var(--mono);font-size:10px;color:var(--text-faint);padding:4px 10px;margin-bottom:0;}
+
+/* ── SUMMARY ── */
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:18px 0;}
+.sc{background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:14px;text-align:center;}
+.sc .icon{font-size:22px;display:block;margin-bottom:6px;}
+.sc .lbl{font-family:var(--display);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted);}
+
+/* ── RESPONSIVE ── */
+@media(max-width:660px){
+  header{flex-direction:column;padding:36px 20px 32px;gap:28px;}
+  #record{width:240px !important;height:240px !important;}
+  .container{padding:0 20px 60px;}
+  .track-body{padding:16px;}
+  .side-letter{font-size:48px;}
+  .pipeline{flex-wrap:wrap;}
+  .ps{min-width:33%;}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important;}}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════ HEADER -->
+<header>
+  <canvas id="record" aria-label="Kollector Scum CI record label — decorative"></canvas>
+  <div class="hd">
+    <p class="eyebrow">KS-CI-001 · Project-Specific Guide</p>
+    <h1>Claude CI for<br>Kollector Scum</h1>
+    <p class="header-sub">Augment your existing GitHub Actions workflow with Claude AI review — adapted for your .NET 8 Clean Architecture, Next.js 15, Coolify deploys, and multi-tenant data model.</p>
+    <div class="tags">
+      <span class="tag">GitHub Actions</span>
+      <span class="tag">.NET 8 / C#</span>
+      <span class="tag">Next.js 15</span>
+      <span class="tag">Claude Haiku 4.5</span>
+      <span class="tag">Non-destructive</span>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════ CONTAINER -->
+<div class="container">
+
+  <!-- PIPELINE OVERVIEW -->
+  <div class="pipeline">
+    <div class="ps">
+      <span class="ps-arrow">›</span>
+      <div class="icon">🔨</div>
+      <div class="lbl">Build</div>
+    </div>
+    <div class="ps">
+      <span class="ps-arrow">›</span>
+      <div class="icon">✅</div>
+      <div class="lbl">Test</div>
+    </div>
+    <div class="ps new">
+      <span class="ps-arrow">›</span>
+      <div class="icon">📊</div>
+      <div class="lbl">Coverage</div>
+    </div>
+    <div class="ps">
+      <span class="ps-arrow">›</span>
+      <div class="icon">🚀</div>
+      <div class="lbl">Deploy</div>
+    </div>
+    <div class="ps new">
+      <span class="ps-arrow">›</span>
+      <div class="icon">🤖</div>
+      <div class="lbl">Claude</div>
+    </div>
+    <div class="ps new">
+      <div class="icon">💬</div>
+      <div class="lbl">PR Review</div>
+    </div>
+  </div>
+
+  <div class="callout tip">
+    <span class="ci">💡</span>
+    <span>Highlighted pipeline stages are new. Build, Test, and Deploy already exist in <code>ci.yml</code> — you are adding coverage collection and the Claude review layer alongside them, not replacing anything.</span>
+  </div>
+
+  <!-- ═══════════ SIDE A -->
+  <div class="side-band">
+    <span class="side-letter">A</span>
+    <div class="side-meta">
+      <span class="side-title">Setup</span>
+      <span class="side-desc">API key · what to add vs. keep · coverage collection</span>
+    </div>
+  </div>
+
+  <!-- A1 -->
+  <div class="track">
+    <div class="track-header">
+      <span class="track-num">A1</span>
+      <span class="track-title">Get Your Anthropic API Key &amp; Add the GitHub Secret</span>
+      <span class="badge badge-setup">Setup</span>
+    </div>
+    <div class="track-body">
+      <p>The only paid component. For CI review work, <strong>claude-haiku-4-5-20251001</strong> is the right call — fast, cheap, and more than capable of code review on your C# services and React components.</p>
+
+      <table>
+        <thead><tr><th>Model</th><th>Input / MTok</th><th>Output / MTok</th><th>Verdict</th></tr></thead>
+        <tbody>
+          <tr><td>claude-haiku-4-5-20251001</td><td class="paid">$1.00</td><td class="paid">$5.00</td><td class="free">✓ Use this — fast &amp; cheap</td></tr>
+          <tr><td>claude-sonnet-4-6</td><td class="paid">$3.00</td><td class="paid">$15.00</td><td>Reserve for deep analysis PRs</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout tip">
+        <span class="ci">💡</span>
+        <span>Go to <strong>console.anthropic.com → API Keys → Create Key</strong>. Copy it immediately.</span>
+      </div>
+
+      <p>Add it to your GitHub repo:</p>
+      <div class="code-label"><span class="dot"></span> GitHub → Settings → Secrets and variables → Actions → New repository secret</div>
+<pre>Name:  ANTHROPIC_API_KEY
+Value: sk-ant-api03-...</pre>
+    </div>
+  </div>
+
+  <!-- A2 -->
+  <div class="track">
+    <div class="track-header">
+      <span class="track-num">A2</span>
+      <span class="track-title">What Already Exists vs. What to Add</span>
+      <span class="badge badge-setup">Setup</span>
+    </div>
+    <div class="track-body">
+      <p>Your existing <code>ci.yml</code> is production-ready — it handles backend + frontend CI, Docker builds, Coolify deploys (staging + production), Cloudflare Pages, and manual dispatch. <strong>Do not replace it.</strong> You are adding three new files alongside it.</p>
+
+      <div class="code-label"><span class="dot"></span> Files to leave untouched</div>
+<pre>.github/
+  workflows/
+    ci.yml                  <span class="c"># ← do not touch (augment in A3 only)</span></pre>
+
+      <div class="code-label"><span class="dot"></span> Files to create</div>
+<pre>.github/
+  workflows/
+    claude-review.yml       <span class="c"># ← new — Claude review trigger (Track B1)</span>
+  scripts/
+    claude_review.py        <span class="c"># ← new — review script (Track B2)</span>
+    missing_tests.py        <span class="c"># ← new — test gap analysis (Track B3)</span>
+coverlet.runsettings        <span class="c"># ← new — coverage thresholds (Track B4)</span></pre>
+
+      <div class="callout warn">
+        <span class="ci">⚠️</span>
+        <span>The tutorial you are following uses a generic <code>ci.yml</code> replacement. Skip that instruction entirely — it would remove your Coolify deploys, Cloudflare Pages integration, the Postgres service container, and your manual dispatch workflow.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- A3 -->
+  <div class="track">
+    <div class="track-header">
+      <span class="track-num">A3</span>
+      <span class="track-title">Add Coverage Collection to Your Existing CI</span>
+      <span class="badge badge-setup">Setup</span>
+    </div>
+    <div class="track-body">
+      <p>Your current <code>dotnet test</code> step runs tests but does not collect or upload coverage. Claude review needs a <code>coverage-report</code> artifact to include coverage data in its analysis. Make these changes to the <code>backend</code> job in <code>ci.yml</code>.</p>
+
+      <div class="callout tip">
+        <span class="ci">💡</span>
+        <span><code>coverlet.collector</code> is already in your test project's <code>.csproj</code> — no new NuGet packages needed.</span>
+      </div>
+
+      <p><strong>Step 1 — replace the test step</strong> (find the existing <code>Run backend tests</code> step and update it):</p>
+
+      <div class="diff-label">BEFORE</div>
+      <div class="diff-block">
+        <div class="diff-old">- name: Run backend tests
+  env:
+    ConnectionStrings__DefaultConnection: Host=localhost;...
+  run: dotnet test backend/KollectorScum.Tests/KollectorScum.Tests.csproj \
+    --configuration Release --no-build \
+    --logger "console;verbosity=minimal"</div>
+        <div class="diff-new">+ name: Run backend tests with coverage
+  env:
+    ConnectionStrings__DefaultConnection: Host=localhost;Port=5432;Database=kollector_test;Username=root;Password=rootpwd
+  run: |
+    dotnet test backend/KollectorScum.Tests/KollectorScum.Tests.csproj \
+      --configuration Release --no-build \
+      --collect:"XPlat Code Coverage" \
+      --settings coverlet.runsettings \
+      --results-directory ./coverage \
+      --logger "console;verbosity=minimal"</div>
+      </div>
+
+      <p><strong>Step 2 — add these two steps immediately after the test step</strong>:</p>
+
+      <div class="code-label"><span class="dot"></span> Add to ci.yml — backend job, after the test step</div>
+<pre>      <span class="yk">- name:</span> <span class="yv">Generate coverage report</span>
+        <span class="yk">run:</span> |
+          dotnet tool install -g dotnet-reportgenerator-globaltool
+          reportgenerator \
+            -reports:<span class="yv">"./coverage/**/coverage.cobertura.xml"</span> \
+            -targetdir:<span class="yv">"./coverage-report"</span> \
+            -reporttypes:<span class="yv">"TextSummary;Cobertura"</span>
+
+      <span class="yk">- name:</span> <span class="yv">Upload coverage artifact</span>
+        <span class="yk">uses:</span> <span class="yv">actions/upload-artifact@v4</span>
+        <span class="yk">with:</span>
+          <span class="yk">name:</span> <span class="yv">coverage-report</span>
+          <span class="yk">path:</span> <span class="yv">./coverage-report</span></pre>
+
+      <div class="callout info">
+        <span class="ci">✓</span>
+        <span>The <code>reportgenerator</code> step produces a <code>Summary.txt</code> file inside the artifact — this is what Claude reads to understand your coverage percentage per namespace.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- A4 -->
+  <div class="track">
+    <div class="track-header">
+      <span class="track-num">A4</span>
+      <span class="track-title">Branch Protection Rules</span>
+      <span class="badge badge-free">Free</span>
+    </div>
+    <div class="track-body">
+      <p>Set up branch protection <em>before</em> you start adding the Claude jobs so CI enforces the full pipeline from the first PR that triggers it.</p>
+      <p>Go to <strong>GitHub → Settings → Branches → Add branch ruleset</strong> for <code>master</code>:</p>
+
+      <ul class="checklist">
+        <li>Require status checks to pass before merging</li>
+        <li>Required checks: <code>Backend Build and Tests</code>, <code>Frontend Lint Test Build</code>, <code>claude-review</code></li>
+        <li>Require branches to be up to date before merging</li>
+        <li>Do not allow bypassing the above settings</li>
+      </ul>
+
+      <div class="callout warn">
+        <span class="ci">⚠️</span>
+        <span>The check names must match the <code>name:</code> field of each job in your workflow files exactly. <code>Backend Build and Tests</code> and <code>Frontend Lint Test Build</code> are the names already in your <code>ci.yml</code>. <code>claude-review</code> is the job ID you will create in Track B1.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SIDE B -->
+  <div class="side-band">
+    <span class="side-letter">B</span>
+    <div class="side-meta">
+      <span class="side-title">Integration</span>
+      <span class="side-desc">Claude workflow · review script · test gap analysis · thresholds · cost control</span>
+    </div>
+  </div>
+
+  <!-- B1 -->
+  <div class="track">
+    <div class="track-header">
+      <span class="track-num">B1</span>
+      <span class="track-title">Claude Review Workflow</span>
+      <span class="badge badge-claude">Claude</span>
+    </div>
+    <div class="track-body">
+      <p>Create this file at <code>.github/workflows/claude-review.yml</code>. It triggers after your main CI workflow completes — the <code>workflow_run</code> name must exactly match the <code>name:</code> field at the top of <code>ci.yml</code>, which is <code>CI</code>.</p>
+
+      <div class="code-label"><span class="dot"></span> .github/workflows/claude-review.yml</div>
+<pre><span class="yk">name:</span> <span class="yv">Claude AI Review</span>
+
+<span class="yk">on:</span>
+  <span class="yk">workflow_run:</span>
+    <span class="yk">workflows:</span> <span class="yv">["CI"]</span>   <span class="yc"># must match name: in ci.yml exactly</span>
+    <span class="yk">types:</span> <span class="yv">[completed]</span>
+    <span class="yk">branches:</span> <span class="yv">[master, dev]</span>
+
+<span class="yk">permissions:</span>
+  <span class="yk">pull-requests:</span> <span class="yv">write</span>
+  <span class="yk">contents:</span> <span class="yv">read</span>
+
+<span class="yk">jobs:</span>
+  <span class="yk">claude-review:</span>
+    <span class="yk">runs-on:</span> <span class="yv">ubuntu-latest</span>
+    <span class="yk">if:</span> <span class="yv">github.event.workflow_run.conclusion == 'success'</span>
+
+    <span class="yk">steps:</span>
+      <span class="yk">- uses:</span> <span class="yv">actions/checkout@v4</span>
+        <span class="yk">with:</span>
+          <span class="yk">fetch-depth:</span> <span class="n">0</span>
+
+      <span class="yk">- name:</span> <span class="yv">Setup Python</span>
+        <span class="yk">uses:</span> <span class="yv">actions/setup-python@v5</span>
+        <span class="yk">with:</span>
+          <span class="yk">python-version:</span> <span class="yv">'3.12'</span>
+
+      <span class="yk">- name:</span> <span class="yv">Install dependencies</span>
+        <span class="yk">run:</span> <span class="yv">pip install anthropic requests</span>
+
+      <span class="yk">- name:</span> <span class="yv">Download coverage artifact</span>
+        <span class="yk">uses:</span> <span class="yv">actions/download-artifact@v4</span>
+        <span class="yk">with:</span>
+          <span class="yk">name:</span> <span class="yv">coverage-report</span>
+          <span class="yk">path:</span> <span class="yv">./coverage-report</span>
+          <span class="yk">run-id:</span> <span class="yv">${{ github.event.workflow_run.id }}</span>
+          <span class="yk">github-token:</span> <span class="yv">${{ secrets.GITHUB_TOKEN }}</span>
+
+      <span class="yk">- name:</span> <span class="yv">Run Claude review</span>
+        <span class="yk">env:</span>
+          <span class="yk">ANTHROPIC_API_KEY:</span> <span class="yv">${{ secrets.ANTHROPIC_API_KEY }}</span>
+          <span class="yk">GITHUB_TOKEN:</span>      <span class="yv">${{ secrets.GITHUB_TOKEN }}</span>
+          <span class="yk">REPO:</span>              <span class="yv">${{ github.repository }}</span>
+          <span class="yk">PR_NUMBER:</span>         <span class="yv">${{ github.event.workflow_run.pull_requests[0].number }}</span>
+          <span class="yk">BASE_SHA:</span>          <span class="yv">${{ github.event.workflow_run.pull_requests[0].base.sha }}</span>
+          <span class="yk">HEAD_SHA:</span>          <span class="yv">${{ github.event.workflow_run.head_sha }}</span>
+        <span class="yk">run:</span> <span class="yv">python .github/scripts/claude_review.py</span>
+
+      <span class="yk">- name:</span> <span class="yv">Run missing test detection</span>
+        <span class="yk">env:</span>
+          <span class="yk">ANTHROPIC_API_KEY:</span> <span class="yv">${{ secrets.ANTHROPIC_API_KEY }}</span>
+        <span class="yk">run:</span> <span class="yv">python .github/scripts/missing_tests.py</span></pre>
+    </div>
+  </div>
+
+  <!-- B2 -->
+  <div class="track">
+    <div class="track-header">
+      <span class="track-num">B2</span>
+      <span class="track-title">The Review Script — claude_review.py</span>
+      <span class="badge badge-claude">Claude</span>
+    </div>
+    <div class="track-body">
+      <p>This script collects the diff, coverage summary, and changed files, then calls Claude with a prompt that knows about Kollector Scum's architecture. The multi-tenancy section is marked critical — a missed <code>UserId</code> scope in a query is a data isolation bug.</p>
+
+      <div class="code-label"><span class="dot"></span> .github/scripts/claude_review.py</div>
+<pre><span class="k">import</span> os, subprocess, json, requests
+<span class="k">import</span> anthropic
+
+<span class="k">def</span> <span class="f">get_diff</span>(base_sha, head_sha):
+    result = subprocess.run(
+        [<span class="s">"git"</span>, <span class="s">"diff"</span>, <span class="s">f"{base_sha}..{head_sha}"</span>,
+         <span class="s">"--"</span>, <span class="s">"*.cs"</span>, <span class="s">"*.tsx"</span>, <span class="s">"*.ts"</span>],
+        capture_output=<span class="k">True</span>, text=<span class="k">True</span>
+    )
+    diff = result.stdout
+    <span class="k">return</span> diff[:<span class="n">6000</span>] + (<span class="s">"\n...[truncated]"</span> <span class="k">if</span> len(diff) > <span class="n">6000</span> <span class="k">else</span> <span class="s">""</span>)
+
+<span class="k">def</span> <span class="f">get_coverage_summary</span>():
+    path = <span class="s">"./coverage-report/Summary.txt"</span>
+    <span class="k">if</span> os.path.exists(path):
+        <span class="k">with</span> open(path) <span class="k">as</span> f:
+            <span class="k">return</span> f.read()[:<span class="n">2000</span>]
+    <span class="k">return</span> <span class="s">"Coverage report not available."</span>
+
+<span class="k">def</span> <span class="f">get_changed_files</span>(base_sha, head_sha):
+    result = subprocess.run(
+        [<span class="s">"git"</span>, <span class="s">"diff"</span>, <span class="s">"--name-only"</span>, <span class="s">f"{base_sha}..{head_sha}"</span>],
+        capture_output=<span class="k">True</span>, text=<span class="k">True</span>
+    )
+    <span class="k">return</span> result.stdout.strip()
+
+<span class="k">def</span> <span class="f">build_prompt</span>(diff, coverage, changed_files):
+    <span class="k">return</span> <span class="s">f"""You are a senior engineer reviewing a pull request for Kollector Scum —
+a multi-tenant vinyl/CD collection catalog SaaS.
+
+Stack: .NET 8 (Clean Architecture) + Next.js 15 (App Router) + PostgreSQL (Supabase)
+Architecture: Controllers → Services → Repositories → EF Core → PostgreSQL
+Multi-tenancy: EVERY user-owned entity has UserId: Guid via IUserOwnedEntity.
+  GenericCrudService&lt;T&gt; auto-scopes ALL queries by IUserContext. This is the
+  most critical invariant — a missing UserId scope leaks cross-tenant data.
+Auth: Google OAuth 2.0 → JWT (NameIdentifier = userId, IsAdmin role).
+Storage: Cloudflare R2 — path format: cover-art-{{env}}/{{userId}}/{{objectName}}
+Discogs: Async import queue (DiscogsImportBackgroundService), 60 req/min rate limit.
+Testing: Moq for unit tests; WebApplicationFactory + TestAuthHandler for integration.
+
+## Changed Files
+{changed_files}
+
+## Code Diff
+```
+{diff}
+```
+
+## Test Coverage Summary
+{coverage}
+
+## Review — cover ALL sections. Say "Nothing to flag." if clean.
+
+### 1. 🏗️ Architecture &amp; Code Quality
+- Clean Architecture layering — no controller accessing a repo directly
+- SOLID violations, unnecessary complexity, missing XML doc comments
+- FluentValidation rules present for all new DTO inputs?
+
+### 2. 🔒 Multi-Tenancy &amp; Security  [CRITICAL]
+- Any query missing .Where(x => x.UserId == userId) or GenericCrudService scoping?
+- Any endpoint reachable without [Authorize]?
+- Injection risks (SQL, XSS, command injection), hardcoded secrets
+
+### 3. 🧪 Test Coverage
+- Which new code paths lack test coverage?
+- Are new service methods tested with Moq? Integration paths with WebApplicationFactory?
+- Suggest 2–3 xUnit tests: Should_ExpectedResult_When_Condition naming
+
+### 4. 🎵 Domain Logic (Vinyl/CD Catalog)
+- Lookup tables (Artist, Genre, Label, Format, Country, Packaging, Store) per-user?
+- Composite unique constraint (UserId, Name) respected?
+- Discogs job state transitions correct? R2 path format correct?
+
+### 5. ⚡ Performance
+- N+1 risks in EF Core — missing .Include() or .ThenInclude()?
+- Pagination applied before .ToList() / materialisation?
+- 5-minute cache TTL respected for lookup tables in GenericCrudService?
+
+### 6. 📋 Summary
+Rate: APPROVE / REQUEST_CHANGES / COMMENT — one sentence justification.
+"""</span>
+
+<span class="k">def</span> <span class="f">call_claude</span>(prompt):
+    client = anthropic.Anthropic(api_key=os.environ[<span class="s">"ANTHROPIC_API_KEY"</span>])
+    msg = client.messages.create(
+        model=<span class="s">"claude-haiku-4-5-20251001"</span>,
+        max_tokens=<span class="n">1500</span>,
+        messages=[{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: prompt}]
+    )
+    <span class="k">return</span> msg.content[<span class="n">0</span>].text
+
+<span class="k">def</span> <span class="f">post_pr_comment</span>(repo, pr_number, body):
+    <span class="k">if not</span> pr_number:
+        print(<span class="s">"No PR number — skipping comment."</span>)
+        <span class="k">return</span>
+    url = <span class="s">f"https://api.github.com/repos/{repo}/issues/{pr_number}/comments"</span>
+    headers = {
+        <span class="s">"Authorization"</span>: <span class="s">f"Bearer {os.environ['GITHUB_TOKEN']}"</span>,
+        <span class="s">"Accept"</span>: <span class="s">"application/vnd.github+json"</span>
+    }
+    comment = <span class="s">f"## 🤖 Claude Code Review\n\n{body}\n\n---\n*claude-haiku-4-5 · Kollector Scum CI*"</span>
+    resp = requests.post(url, headers=headers, json={<span class="s">"body"</span>: comment})
+    print(<span class="s">f"Posted comment: {resp.status_code}"</span>)
+
+<span class="k">if</span> __name__ == <span class="s">"__main__"</span>:
+    base_sha = os.environ.get(<span class="s">"BASE_SHA"</span>, <span class="s">"HEAD~1"</span>)
+    head_sha = os.environ.get(<span class="s">"HEAD_SHA"</span>, <span class="s">"HEAD"</span>)
+    repo     = os.environ.get(<span class="s">"REPO"</span>,     <span class="s">""</span>)
+    pr_num   = os.environ.get(<span class="s">"PR_NUMBER"</span>, <span class="s">""</span>)
+
+    diff     = get_diff(base_sha, head_sha)
+    coverage = get_coverage_summary()
+    files    = get_changed_files(base_sha, head_sha)
+    prompt   = build_prompt(diff, coverage, files)
+    review   = call_claude(prompt)
+
+    print(<span class="s">"=== Claude Review ==="</span>)
+    print(review)
+    post_pr_comment(repo, pr_num, review)</pre>
+    </div>
+  </div>
+
+  <!-- B3 -->
+  <div class="track">
+    <div class="track-header">
+      <span class="track-num">B3</span>
+      <span class="track-title">Missing Test Detection</span>
+      <span class="badge badge-claude">Claude</span>
+    </div>
+    <div class="track-body">
+      <p>A second Claude call that scans your actual source and test file paths. The prompt focuses on the areas most likely to have gaps: multi-tenancy scoping, the generic CRUD service, and the Discogs import pipeline.</p>
+
+      <div class="code-label"><span class="dot"></span> .github/scripts/missing_tests.py</div>
+<pre><span class="k">import</span> os, glob, anthropic
+
+<span class="k">def</span> <span class="f">collect_source_signatures</span>():
+    signatures = []
+    <span class="k">for</span> f <span class="k">in</span> glob.glob(<span class="s">"backend/KollectorScum.Api/**/*.cs"</span>, recursive=<span class="k">True</span>):
+        <span class="k">with</span> open(f) <span class="k">as</span> fh:
+            lines = fh.readlines()
+        sigs = [l.strip() <span class="k">for</span> l <span class="k">in</span> lines
+                <span class="k">if</span> <span class="s">"public"</span> <span class="k">in</span> l <span class="k">and</span> (<span class="s">"void"</span> <span class="k">in</span> l <span class="k">or</span> <span class="s">"Task"</span> <span class="k">in</span> l
+                    <span class="k">or</span> <span class="s">"IEnumerable"</span> <span class="k">in</span> l <span class="k">or</span> <span class="s">"class "</span> <span class="k">in</span> l
+                    <span class="k">or</span> <span class="s">"interface "</span> <span class="k">in</span> l)]
+        <span class="k">if</span> sigs:
+            signatures.append(<span class="s">f"// {f}\n"</span> + <span class="s">"\n"</span>.join(sigs[:<span class="n">20</span>]))
+    <span class="k">return</span> <span class="s">"\n\n"</span>.join(signatures)[:<span class="n">4000</span>]
+
+<span class="k">def</span> <span class="f">collect_existing_tests</span>():
+    tests = []
+    <span class="k">for</span> f <span class="k">in</span> glob.glob(<span class="s">"backend/KollectorScum.Tests/**/*.cs"</span>, recursive=<span class="k">True</span>):
+        <span class="k">with</span> open(f) <span class="k">as</span> fh:
+            lines = fh.readlines()
+        test_names = [l.strip() <span class="k">for</span> l <span class="k">in</span> lines
+                      <span class="k">if</span> <span class="s">"[Fact]"</span> <span class="k">in</span> l <span class="k">or</span> <span class="s">"[Theory]"</span> <span class="k">in</span> l
+                      <span class="k">or</span> (<span class="s">"public"</span> <span class="k">in</span> l <span class="k">and</span> <span class="s">"Task"</span> <span class="k">in</span> l)]
+        tests.extend(test_names[:<span class="n">30</span>])
+    <span class="k">return</span> <span class="s">"\n"</span>.join(tests)[:<span class="n">2000</span>]
+
+client = anthropic.Anthropic(api_key=os.environ[<span class="s">"ANTHROPIC_API_KEY"</span>])
+source = collect_source_signatures()
+tests  = collect_existing_tests()
+
+msg = client.messages.create(
+    model=<span class="s">"claude-haiku-4-5-20251001"</span>,
+    max_tokens=<span class="n">800</span>,
+    messages=[{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: <span class="s">f"""
+You are a test coverage analyst for Kollector Scum — a multi-tenant vinyl/CD
+catalog SaaS. Target coverage: 80%+.
+
+Priority areas to find gaps:
+- UserId scoping in all service methods (multi-tenancy correctness)
+- GenericCrudService&lt;T&gt; — pagination, search, 5-min cache TTL
+- DiscogsImportBackgroundService — job state transitions
+- CloudflareR2StorageService — upload paths, error handling
+- IUserContext — JWT claim extraction
+
+Source signatures:
+{source}
+
+Existing test methods:
+{tests}
+
+List the 5 most important untested methods. For each:
+- Method name and file path
+- Why it matters (especially if multi-tenancy-related)
+- A concrete xUnit test:
+  public async Task Should_ExpectedResult_When_Condition()
+"""}]
+)
+print(msg.content[<span class="n">0</span>].text)</pre>
+    </div>
+  </div>
+
+  <!-- B4 -->
+  <div class="track">
+    <div class="track-header">
+      <span class="track-num">B4</span>
+      <span class="track-title">Coverage Thresholds</span>
+      <span class="badge badge-free">Free</span>
+    </div>
+    <div class="track-body">
+      <p>Your test project already has <code>coverlet.collector</code> installed — use a <code>.runsettings</code> file for thresholds rather than the MSBuild property approach. Create this file at the project root (the same level as <code>kollector-scum.sln</code>).</p>
+
+      <div class="callout info">
+        <span class="ci">✓</span>
+        <span>Migrations and Models are excluded from threshold enforcement — generated code and plain data classes skew the numbers without adding meaningful safety.</span>
+      </div>
+
+      <div class="code-label"><span class="dot"></span> coverlet.runsettings (project root)</div>
+<pre><span class="ym">&lt;?xml version="1.0" encoding="utf-8" ?&gt;</span>
+<span class="ym">&lt;RunSettings&gt;</span>
+  <span class="ym">&lt;DataCollectionRunSettings&gt;</span>
+    <span class="ym">&lt;DataCollectors&gt;</span>
+      <span class="ym">&lt;DataCollector</span> <span class="yk">friendlyName=</span><span class="yv">"XPlat Code Coverage"</span><span class="ym">&gt;</span>
+        <span class="ym">&lt;Configuration&gt;</span>
+          <span class="ym">&lt;Format&gt;</span>cobertura<span class="ym">&lt;/Format&gt;</span>
+          <span class="ym">&lt;Threshold&gt;</span>70<span class="ym">&lt;/Threshold&gt;</span>
+          <span class="ym">&lt;ThresholdType&gt;</span>line,branch,method<span class="ym">&lt;/ThresholdType&gt;</span>
+          <span class="ym">&lt;ThresholdStat&gt;</span>Minimum<span class="ym">&lt;/ThresholdStat&gt;</span>
+          <span class="ym">&lt;ExcludeByFile&gt;</span>
+            **/Migrations/**/*.cs,**/Models/**/*.cs
+          <span class="ym">&lt;/ExcludeByFile&gt;</span>
+        <span class="ym">&lt;/Configuration&gt;</span>
+      <span class="ym">&lt;/DataCollector&gt;</span>
+    <span class="ym">&lt;/DataCollectors&gt;</span>
+  <span class="ym">&lt;/DataCollectionRunSettings&gt;</span>
+<span class="ym">&lt;/RunSettings&gt;</span></pre>
+
+      <p>The <code>--settings coverlet.runsettings</code> flag you added in Track A3 picks this up automatically. For the frontend, add a <code>coverageThreshold</code> block to your existing <code>jest.config.ts</code>:</p>
+
+      <div class="code-label"><span class="dot"></span> frontend/jest.config.ts — add inside the config object</div>
+<pre><span class="k">const</span> config: Config.InitialOptions = {
+  coverageProvider: <span class="s">'v8'</span>,
+  testEnvironment: <span class="s">'jsdom'</span>,
+  <span class="c">// ... your existing settings ...</span>
+  coverageThreshold: {        <span class="c">// ← add this block</span>
+    global: {
+      lines:      <span class="n">70</span>,
+      functions:  <span class="n">70</span>,
+      branches:   <span class="n">60</span>,
+      statements: <span class="n">70</span>,
+    },
+  },
+}</pre>
+    </div>
+  </div>
+
+  <!-- B5 -->
+  <div class="track">
+    <div class="track-header">
+      <span class="track-num">B5</span>
+      <span class="track-title">Cost Control &amp; Tool Stack Reference</span>
+      <span class="badge badge-claude">Claude</span>
+    </div>
+    <div class="track-body">
+      <p>At ~5,000 tokens per PR review with Haiku, this pipeline costs roughly <strong>$0.03 per ten PRs</strong>. A few practices keep it there:</p>
+
+      <table>
+        <thead><tr><th>Technique</th><th>How</th><th>Effect</th></tr></thead>
+        <tbody>
+          <tr><td>Only on non-draft PRs</td><td>Add <code>if: !github.event.pull_request.draft</code></td><td class="free">~30% reduction</td></tr>
+          <tr><td>Diff truncation</td><td>6,000 char cap already in the script</td><td class="free">Caps input tokens</td></tr>
+          <tr><td>Use Haiku not Sonnet</td><td>Model ID in both scripts</td><td class="free">3× cheaper</td></tr>
+          <tr><td>Set spend cap</td><td>console.anthropic.com → Billing → Usage limits → $10/mo</td><td class="free">Safety net</td></tr>
+        </tbody>
+      </table>
+
+      <p style="margin-top:16px;"><strong>Full tool stack — costs at a glance:</strong></p>
+      <table>
+        <thead><tr><th>Tool</th><th>Purpose</th><th>Cost</th></tr></thead>
+        <tbody>
+          <tr><td>GitHub Actions</td><td>CI runner</td><td class="free">Free (private: 2,000 min/mo)</td></tr>
+          <tr><td>xUnit + Moq</td><td>Backend unit &amp; integration tests</td><td class="free">Free / OSS</td></tr>
+          <tr><td>coverlet.collector</td><td>C# coverage — already installed</td><td class="free">Free / OSS</td></tr>
+          <tr><td>ReportGenerator</td><td>Coverage report formatter</td><td class="free">Free / OSS</td></tr>
+          <tr><td>dotnet list --vulnerable</td><td>NuGet dependency security scan</td><td class="free">Built-in</td></tr>
+          <tr><td>Jest</td><td>Frontend unit tests with coverage</td><td class="free">Free / OSS</td></tr>
+          <tr><td>ESLint</td><td>Frontend linting — already configured</td><td class="free">Free / OSS</td></tr>
+          <tr><td>npm audit</td><td>npm dependency security scan</td><td class="free">Built-in</td></tr>
+          <tr><td>Claude Haiku 4.5</td><td>AI code review + test gap analysis</td><td class="paid">~$0.05–0.20/mo</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="groove"></div>
+  <div style="padding:28px;background:linear-gradient(135deg,#1C1D2E,#12131F);border:1px solid var(--accent-dim);border-radius:10px;margin-top:8px;">
+    <p style="font-family:var(--display);font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;">What Claude checks on every PR</p>
+    <div class="summary-grid">
+      <div class="sc"><span class="icon">🏗️</span><span class="lbl">Architecture</span></div>
+      <div class="sc"><span class="icon">🔒</span><span class="lbl">Multi-Tenancy</span></div>
+      <div class="sc"><span class="icon">🧪</span><span class="lbl">Test Gaps</span></div>
+      <div class="sc"><span class="icon">🎵</span><span class="lbl">Domain Logic</span></div>
+      <div class="sc"><span class="icon">⚡</span><span class="lbl">Performance</span></div>
+    </div>
+    <div class="callout tip" style="margin-top:16px;">
+      <span class="ci">🎓</span>
+      <span>The <code>workflow_run</code> trigger in B1 is an event-driven agentic pipeline — CI produces an artifact, Claude consumes it. The structured prompt in B2 is a Human-turn pattern with domain context injection. Both map directly to what you are studying.</span>
+    </div>
+  </div>
+
+  <p style="margin-top:40px;font-family:var(--mono);font-size:11px;color:var(--text-faint);text-align:center;letter-spacing:.08em;">
+    KS-CI-001 · SIDE A: Setup · SIDE B: Integration · Revert tag: <code style="color:var(--accent);">pre-claude-ci</code>
+  </p>
+
+</div>
+
+<!-- ═══════════════════════════════════════════ CANVAS SCRIPT -->
+<script>
+(function () {
+  const canvas = document.getElementById('record');
+  const DPR = Math.min(window.devicePixelRatio || 1, 2);
+  const S = 300;
+  canvas.width  = S * DPR;
+  canvas.height = S * DPR;
+  canvas.style.width  = S + 'px';
+  canvas.style.height = S + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(DPR, DPR);
+  const cx = S / 2, cy = S / 2;
+
+  // Vinyl disc
+  const disc = ctx.createRadialGradient(cx - 20, cy - 20, 0, cx, cy, S / 2);
+  disc.addColorStop(0,   '#1E2038');
+  disc.addColorStop(0.5, '#12131F');
+  disc.addColorStop(1,   '#09090F');
+  ctx.beginPath();
+  ctx.arc(cx, cy, S / 2 - 1, 0, Math.PI * 2);
+  ctx.fillStyle = disc;
+  ctx.fill();
+
+  // Groove rings
+  for (let r = S / 2 - 6; r > 78; r -= 3) {
+    const a = 0.008 + (r / (S / 2)) * 0.018;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(180,190,255,${a})`;
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+  }
+
+  // Teal outer rim
+  ctx.beginPath();
+  ctx.arc(cx, cy, S / 2 - 1, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(74,143,163,0.45)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Label
+  const label = ctx.createRadialGradient(cx - 10, cy - 18, 0, cx, cy, 72);
+  label.addColorStop(0,    '#DFA030');
+  label.addColorStop(0.65, '#C48A24');
+  label.addColorStop(1,    '#8B5E10');
+  ctx.beginPath();
+  ctx.arc(cx, cy, 72, 0, Math.PI * 2);
+  ctx.fillStyle = label;
+  ctx.fill();
+
+  // Label ring
+  ctx.beginPath();
+  ctx.arc(cx, cy, 72, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(74,143,163,0.55)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Label text
+  ctx.fillStyle  = '#1A0E00';
+  ctx.textAlign  = 'center';
+
+  // Catalog
+  ctx.font = 'bold 7.5px "Futura","Century Gothic",sans-serif';
+  ctx.fillText('KS  ·  CI  ·  001', cx, cy - 48);
+
+  // Separator
+  ctx.strokeStyle = 'rgba(26,14,0,0.25)';
+  ctx.lineWidth = 0.5;
+  ctx.beginPath(); ctx.moveTo(cx - 36, cy - 40); ctx.lineTo(cx + 36, cy - 40); ctx.stroke();
+
+  // Title
+  ctx.font = 'bold 13px "Futura","Century Gothic",sans-serif';
+  ctx.fillStyle = '#0D0800';
+  ctx.fillText('KOLLECTOR', cx, cy - 24);
+  ctx.fillText('SCUM', cx, cy - 8);
+
+  // Subtitle
+  ctx.font = '600 6.5px "Futura","Century Gothic",sans-serif';
+  ctx.fillStyle = 'rgba(26,14,0,0.6)';
+  ctx.fillText('CLAUDE-DRIVEN CI', cx, cy + 6);
+
+  // Spindle
+  ctx.beginPath();
+  ctx.arc(cx, cy + 20, 4, 0, Math.PI * 2);
+  ctx.fillStyle = '#12131F';
+  ctx.fill();
+
+  // Bottom separator
+  ctx.strokeStyle = 'rgba(26,14,0,0.25)';
+  ctx.lineWidth = 0.5;
+  ctx.beginPath(); ctx.moveTo(cx - 36, cy + 34); ctx.lineTo(cx + 36, cy + 34); ctx.stroke();
+
+  // Side labels
+  ctx.font = '600 6px "Futura","Century Gothic",sans-serif';
+  ctx.fillStyle = 'rgba(26,14,0,0.55)';
+  ctx.fillText('SIDE A  ·  SIDE B', cx, cy + 46);
+  ctx.font = '500 5.5px "Futura","Century Gothic",sans-serif';
+  ctx.fillStyle = 'rgba(26,14,0,0.38)';
+  ctx.fillText('SETUP  ·  INTEGRATION', cx, cy + 56);
+})();
+</script>
+</body>
+</html>
